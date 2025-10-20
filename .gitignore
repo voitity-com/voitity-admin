@@ -1,0 +1,9 @@
+node_modules
+dist
+src/node_modules
+src/dist
+.DS_Store
+*.log
+.pnpm-debug.log*
+.npmrc
+tsconfig.tsbuildinfo

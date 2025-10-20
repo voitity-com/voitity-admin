@@ -1,0 +1,11 @@
+node_modules
+dist
+src/node_modules
+src/dist
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+npm-debug.log
+yarn-error.log
+*.local
