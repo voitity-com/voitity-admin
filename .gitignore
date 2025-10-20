@@ -7,3 +7,5 @@ src/dist
 .pnpm-debug.log*
 .npmrc
 tsconfig.tsbuildinfo
+src/tsconfig.tsbuildinfo
+src/pnpm-lock.yaml
