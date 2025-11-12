@@ -6,6 +6,7 @@ src/dist
 *.log
 .pnpm-debug.log*
 .npmrc
+src/.env
 tsconfig.tsbuildinfo
 src/tsconfig.tsbuildinfo
 src/pnpm-lock.yaml

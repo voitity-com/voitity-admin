@@ -1,5 +1,6 @@
 'use client';
 
+import type { GoogleProfile } from '@/lib/google/profile';
 import type { User } from '@/types/user';
 
 function generateToken(): string {
@@ -8,7 +9,10 @@ function generateToken(): string {
   return Array.from(arr, (v) => v.toString(16).padStart(2, '0')).join('');
 }
 
-const user = {
+const STORAGE_TOKEN_KEY = 'custom-auth-token';
+const STORAGE_USER_KEY = 'custom-auth-user';
+
+const defaultUser = {
   id: 'USR-000',
   avatar: '/assets/avatar.png',
   firstName: 'Sofia',
@@ -24,7 +28,9 @@ export interface SignUpParams {
 }
 
 export interface SignInWithOAuthParams {
-  provider: 'google' | 'discord';
+  provider: 'google';
+  token: string;
+  profile: GoogleProfile;
 }
 
 export interface SignInWithPasswordParams {
@@ -42,13 +48,22 @@ class AuthClient {
 
     // We do not handle the API, so we'll just generate a token and store it in localStorage.
     const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
+    persistSession(token, defaultUser);
 
     return {};
   }
 
-  async signInWithOAuth(_: SignInWithOAuthParams): Promise<{ error?: string }> {
-    return { error: 'Social authentication not implemented' };
+  async signInWithOAuth(params: SignInWithOAuthParams): Promise<{ error?: string }> {
+    const { provider, profile, token } = params;
+
+    if (provider !== 'google') {
+      return { error: `Unsupported provider: ${provider}` };
+    }
+
+    const user = buildUserFromGoogleProfile(profile);
+    persistSession(token, user);
+
+    return {};
   }
 
   async signInWithPassword(params: SignInWithPasswordParams): Promise<{ error?: string }> {
@@ -62,7 +77,7 @@ class AuthClient {
     }
 
     const token = generateToken();
-    localStorage.setItem('custom-auth-token', token);
+    persistSession(token, defaultUser);
 
     return {};
   }
@@ -79,20 +94,63 @@ class AuthClient {
     // Make API request
 
     // We do not handle the API, so just check if we have a token in localStorage.
-    const token = localStorage.getItem('custom-auth-token');
+    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
 
     if (!token) {
       return { data: null };
     }
 
-    return { data: user };
+    const storedUser = getStoredUser();
+
+    if (!storedUser) {
+      return { data: null };
+    }
+
+    return { data: storedUser };
   }
 
   async signOut(): Promise<{ error?: string }> {
-    localStorage.removeItem('custom-auth-token');
+    localStorage.removeItem(STORAGE_TOKEN_KEY);
+    localStorage.removeItem(STORAGE_USER_KEY);
 
     return {};
   }
 }
 
 export const authClient = new AuthClient();
+
+function persistSession(token: string, user: User): void {
+  localStorage.setItem(STORAGE_TOKEN_KEY, token);
+  localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+}
+
+function getStoredUser(): User | null {
+  const raw = localStorage.getItem(STORAGE_USER_KEY);
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    localStorage.removeItem(STORAGE_USER_KEY);
+    return null;
+  }
+}
+
+function buildUserFromGoogleProfile(profile: GoogleProfile): User {
+  const [firstNameFallback = '', lastNameFallback = ''] = profile.name?.split(' ') ?? [];
+  const firstName = profile.given_name ?? firstNameFallback ?? profile.email;
+  const lastName = profile.family_name ?? lastNameFallback ?? '';
+
+  return {
+    id: profile.sub,
+    avatar: profile.picture,
+    email: profile.email,
+    firstName,
+    lastName,
+    name: profile.name ?? `${firstName} ${lastName}`.trim(),
+    provider: 'google',
+  };
+}

@@ -26,15 +26,12 @@ import { DynamicLogo } from '@/components/core/logo';
 import { toast } from '@/components/core/toaster';
 
 interface OAuthProvider {
-  id: 'google' | 'discord';
+  id: 'google';
   name: string;
   logo: string;
 }
 
-const oAuthProviders = [
-  { id: 'google', name: 'Google', logo: '/assets/logo-google.svg' },
-  { id: 'discord', name: 'Discord', logo: '/assets/logo-discord.svg' },
-] satisfies OAuthProvider[];
+const oAuthProviders = [{ id: 'google', name: 'Google', logo: '/assets/logo-google.svg' }] satisfies OAuthProvider[];
 
 const schema = zod.object({
   firstName: zod.string().min(1, { message: 'First name is required' }),

@@ -20,21 +20,20 @@ import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
+import { fetchGoogleProfile } from '@/lib/google/profile';
+import { requestGoogleAccessToken } from '@/lib/google/oauth';
 import { useUser } from '@/hooks/use-user';
 import { RouterLink } from '@/components/core/link';
 import { DynamicLogo } from '@/components/core/logo';
 import { toast } from '@/components/core/toaster';
 
 interface OAuthProvider {
-  id: 'google' | 'discord';
+  id: 'google';
   name: string;
   logo: string;
 }
 
-const oAuthProviders = [
-  { id: 'google', name: 'Google', logo: '/assets/logo-google.svg' },
-  { id: 'discord', name: 'Discord', logo: '/assets/logo-discord.svg' },
-] satisfies OAuthProvider[];
+const oAuthProviders = [{ id: 'google', name: 'Google', logo: '/assets/logo-google.svg' }] satisfies OAuthProvider[];
 
 const schema = zod.object({
   email: zod.string().min(1, { message: 'Email is required' }).email(),
@@ -59,21 +58,31 @@ export function SignInForm(): React.JSX.Element {
     formState: { errors },
   } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
 
-  const onAuth = React.useCallback(async (providerId: OAuthProvider['id']): Promise<void> => {
+  const handleGoogleAuth = React.useCallback(async (): Promise<void> => {
     setIsPending(true);
+    try {
+      const accessToken = await requestGoogleAccessToken();
+      const profile = await fetchGoogleProfile(accessToken);
+      console.log('Google access token (sign-in):', accessToken);
+      console.log('Google profile (sign-in):', profile);
+      const { error } = await authClient.signInWithOAuth({
+        provider: 'google',
+        token: accessToken,
+        profile,
+      });
 
-    const { error } = await authClient.signInWithOAuth({ provider: providerId });
+      if (error) {
+        throw new Error(error);
+      }
 
-    if (error) {
+      await checkSession?.();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to authenticate with Google';
+      toast.error(message);
+    } finally {
       setIsPending(false);
-      toast.error(error);
-      return;
     }
-
-    setIsPending(false);
-
-    // Redirect to OAuth provider
-  }, []);
+  }, [checkSession]);
 
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
@@ -118,11 +127,7 @@ export function SignInForm(): React.JSX.Element {
                 disabled={isPending}
                 endIcon={<Box alt="" component="img" height={24} src={provider.logo} width={24} />}
                 key={provider.id}
-                onClick={(): void => {
-                  onAuth(provider.id).catch(() => {
-                    // noop
-                  });
-                }}
+                onClick={handleGoogleAuth}
                 variant="outlined"
               >
                 Continue with {provider.name}
