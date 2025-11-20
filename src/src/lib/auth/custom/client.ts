@@ -1,5 +1,6 @@
 'use client';
 
+import { clearApiAccessToken } from '@/lib/auth/custom/api-token';
 import type { GoogleProfile } from '@/lib/google/profile';
 import type { User } from '@/types/user';
 
@@ -112,6 +113,7 @@ class AuthClient {
   async signOut(): Promise<{ error?: string }> {
     localStorage.removeItem(STORAGE_TOKEN_KEY);
     localStorage.removeItem(STORAGE_USER_KEY);
+    clearApiAccessToken();
 
     return {};
   }

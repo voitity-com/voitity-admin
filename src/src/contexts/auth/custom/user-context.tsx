@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import type { User } from '@/types/user';
 import { authClient } from '@/lib/auth/custom/client';
+import { clearApiAccessToken, hasExceededInactivityLimit, updateApiLastActivity } from '@/lib/auth/custom/api-token';
 import { logger } from '@/lib/default-logger';
 
 import type { UserContextValue } from '../types';
@@ -44,6 +45,51 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
       // noop
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Expected
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    let unsubscribed = false;
+
+    const activityEvents = ['click', 'keydown', 'mousemove', 'touchstart'];
+
+    const handleActivity = (): void => {
+      updateApiLastActivity();
+    };
+
+    activityEvents.forEach((event) => window.addEventListener(event, handleActivity, true));
+
+    const handleInactivitySignOut = async (): Promise<void> => {
+      try {
+        const { error } = await authClient.signOut();
+
+        if (error) {
+          logger.error(error);
+        }
+
+        if (!unsubscribed) {
+          setState((prev) => ({ ...prev, user: null, error: null, isLoading: false }));
+        }
+      } catch (err) {
+        logger.error(err);
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      if (hasExceededInactivityLimit()) {
+        clearApiAccessToken();
+        handleInactivitySignOut().catch((err) => logger.error(err));
+      }
+    }, 60 * 1000);
+
+    return () => {
+      unsubscribed = true;
+      activityEvents.forEach((event) => window.removeEventListener(event, handleActivity, true));
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   return <UserContext.Provider value={{ ...state, checkSession }}>{children}</UserContext.Provider>;

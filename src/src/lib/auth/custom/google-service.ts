@@ -1,4 +1,5 @@
 import { config } from '@/config';
+import { saveApiAccessToken } from '@/lib/auth/custom/api-token';
 
 export interface GoogleAuthPayload {
   google_id: string;
@@ -10,7 +11,12 @@ export interface GoogleAuthPayload {
   access_token: string;
 }
 
-async function postGoogleAuth(path: string, payload: GoogleAuthPayload): Promise<unknown> {
+export interface GoogleApiResponse {
+  access_token?: string;
+  [key: string]: unknown;
+}
+
+async function postGoogleAuth(path: string, payload: GoogleAuthPayload): Promise<GoogleApiResponse> {
   const baseUrl = config.api?.baseUrl;
 
   if (!baseUrl) {
@@ -31,9 +37,13 @@ async function postGoogleAuth(path: string, payload: GoogleAuthPayload): Promise
   }
 
   try {
-    return await response.json();
+    const data = (await response.json()) as GoogleApiResponse;
+    if (data.access_token) {
+      saveApiAccessToken(data.access_token);
+    }
+    return data;
   } catch {
-    return undefined;
+    return {};
   }
 }
 
@@ -57,13 +67,13 @@ export function createGoogleAuthPayload(params: {
   };
 }
 
-export async function postGoogleSignIn(payload: GoogleAuthPayload): Promise<unknown> {
+export async function postGoogleSignIn(payload: GoogleAuthPayload): Promise<GoogleApiResponse> {
   const response = await postGoogleAuth('/api/auth/google/sign-in', payload);
   console.log('API response (Google sign-in):', response);
   return response;
 }
 
-export async function postGoogleSignUp(payload: GoogleAuthPayload): Promise<unknown> {
+export async function postGoogleSignUp(payload: GoogleAuthPayload): Promise<GoogleApiResponse> {
   const response = await postGoogleAuth('/api/auth/google/sign-up', payload);
   console.log('API response (Google sign-up):', response);
   return response;
