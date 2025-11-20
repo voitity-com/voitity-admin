@@ -1,5 +1,5 @@
 import { config } from '@/config';
-import { saveApiAccessToken } from '@/lib/auth/custom/api-token';
+import { saveApiAccessToken, getStoredApiToken } from '@/lib/auth/custom/api-token';
 
 export interface GoogleAuthPayload {
   google_id: string;
@@ -40,6 +40,7 @@ async function postGoogleAuth(path: string, payload: GoogleAuthPayload): Promise
     const data = (await response.json()) as GoogleApiResponse;
     if (data.access_token) {
       saveApiAccessToken(data.access_token);
+      console.log('Stored backend access token:', getStoredApiToken());
     }
     return data;
   } catch {
