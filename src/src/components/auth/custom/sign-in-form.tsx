@@ -69,6 +69,8 @@ export function SignInForm(): React.JSX.Element {
       const payload = createGoogleAuthPayload({
         googleId: profile.sub,
         email: profile.email,
+        firstName: profile.given_name || profile.name,
+        lastName: profile.family_name,
         name: profile.name,
         avatar: profile.picture,
         accessToken,

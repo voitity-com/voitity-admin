@@ -3,6 +3,8 @@ import { config } from '@/config';
 export interface GoogleAuthPayload {
   google_id: string;
   email: string;
+  first_name?: string;
+  last_name?: string;
   name?: string;
   avatar?: string;
   access_token: string;
@@ -38,6 +40,8 @@ async function postGoogleAuth(path: string, payload: GoogleAuthPayload): Promise
 export function createGoogleAuthPayload(params: {
   googleId: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
   name?: string;
   avatar?: string;
   accessToken: string;
@@ -45,6 +49,8 @@ export function createGoogleAuthPayload(params: {
   return {
     google_id: params.googleId,
     email: params.email,
+    first_name: params.firstName,
+    last_name: params.lastName,
     name: params.name,
     avatar: params.avatar,
     access_token: params.accessToken,
