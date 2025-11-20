@@ -22,6 +22,7 @@ import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
+import { createGoogleAuthPayload, postGoogleSignIn } from '@/lib/auth/custom/google-service';
 import { useUser } from '@/hooks/use-user';
 import { RouterLink } from '@/components/core/link';
 import { DynamicLogo } from '@/components/core/logo';
@@ -65,6 +66,14 @@ export function SignInForm(): React.JSX.Element {
       const profile = await fetchGoogleProfile(accessToken);
       console.log('Google access token (sign-in):', accessToken);
       console.log('Google profile (sign-in):', profile);
+      const payload = createGoogleAuthPayload({
+        googleId: profile.sub,
+        email: profile.email,
+        name: profile.name,
+        avatar: profile.picture,
+        accessToken,
+      });
+      await postGoogleSignIn(payload);
       const { error } = await authClient.signInWithOAuth({
         provider: 'google',
         token: accessToken,

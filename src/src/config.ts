@@ -29,6 +29,7 @@ export interface Config {
   mapbox: { apiKey?: string };
   gtm?: { id?: string };
   google?: { clientId?: string };
+  api?: { baseUrl?: string };
 }
 
 export const config = {
@@ -61,4 +62,5 @@ export const config = {
   mapbox: { apiKey: import.meta.env.VITE_MAPBOX_API_KEY },
   gtm: { id: import.meta.env.VITE_GOOGLE_TAG_MANAGER_ID },
   google: { clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID },
+  api: { baseUrl: import.meta.env.VITE_API_BASE_URL },
 } satisfies Config;

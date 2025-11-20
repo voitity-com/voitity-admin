@@ -42,6 +42,9 @@ interface ImportMetaEnv {
 
   // Google OAuth
   VITE_GOOGLE_CLIENT_ID?: string;
+
+  // Backend API
+  VITE_API_BASE_URL?: string;
 }
 
 interface ImportMeta {
