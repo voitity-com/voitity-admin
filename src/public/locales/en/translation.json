@@ -1,3 +1,15 @@
 {
-  "languageChanged": "Language changed"
+  "languageChanged": "Language changed",
+  "languages": {
+    "de": "German",
+    "en": "English",
+    "es": "Spanish"
+  },
+  "marketing": {
+    "nav": {
+      "language": "Language",
+      "signIn": "Sign In",
+      "signUp": "Sign Up"
+    }
+  }
 }

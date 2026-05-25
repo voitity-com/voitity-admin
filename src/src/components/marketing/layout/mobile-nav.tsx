@@ -8,6 +8,7 @@ import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { CaretRight as CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
+import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
 import { paths } from '@/paths';
@@ -16,40 +17,7 @@ import { usePathname } from '@/hooks/use-pathname';
 import { RouterLink } from '@/components/core/link';
 import { DynamicLogo } from '@/components/core/logo';
 
-// NOTE: First level elements are groups.
-
-const navItems = [
-  {
-    key: 'group-0',
-    items: [
-      { key: 'home', title: 'Home', href: paths.home },
-      { key: 'components', title: 'Components', href: paths.components.index },
-      {
-        key: 'dashboard',
-        title: 'Dashboard',
-        items: [
-          { key: 'overview', title: 'Overview', href: paths.dashboard.overview },
-          { key: 'analytics', title: 'Customers', href: paths.dashboard.customers.list },
-          { key: 'logistics', title: 'Logistics', href: paths.dashboard.logistics.metrics },
-          { key: 'settings', title: 'Settings', href: paths.dashboard.settings.account },
-          { key: 'file-storage', title: 'File storage', href: paths.dashboard.fileStorage },
-        ],
-      },
-      {
-        key: 'marketing',
-        title: 'Marketing',
-        items: [
-          { key: 'blog', title: 'Blog', href: paths.dashboard.blog.list },
-          { key: 'pricing', title: 'Pricing', href: paths.pricing },
-          { key: 'contact', title: 'Contact', href: paths.contact },
-          { key: 'checkout', title: 'Checkout', href: paths.checkout },
-          { key: 'error', title: 'Error', href: paths.notFound },
-        ],
-      },
-      { key: 'docs', title: 'Docs', href: paths.docs, external: true },
-    ],
-  },
-] satisfies NavItemConfig[];
+import { getAuthNavLinks } from './auth-nav-links';
 
 export interface MobileNavProps {
   onClose?: () => void;
@@ -57,7 +25,22 @@ export interface MobileNavProps {
 }
 
 export function MobileNav({ onClose, open = false }: MobileNavProps): React.JSX.Element {
+  const { t } = useTranslation();
   const pathname = usePathname();
+  const authLinks = getAuthNavLinks();
+  const navItems = React.useMemo(
+    () =>
+      [
+        {
+          key: 'group-0',
+          items: [
+            { key: 'sign-in', title: t('marketing.nav.signIn'), href: authLinks.signIn },
+            { key: 'sign-up', title: t('marketing.nav.signUp'), href: authLinks.signUp },
+          ],
+        },
+      ] satisfies NavItemConfig[],
+    [authLinks.signIn, authLinks.signUp, t]
+  );
 
   return (
     <Dialog

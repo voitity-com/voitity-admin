@@ -6,26 +6,33 @@ import Button from '@mui/material/Button';
 import Container from '@mui/material/Container';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { List as ListIcon } from '@phosphor-icons/react/dist/ssr/List';
+import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
 import { paths } from '@/paths';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { usePathname } from '@/hooks/use-pathname';
+import { usePopover } from '@/hooks/use-popover';
 import { Dropdown } from '@/components/core/dropdown/dropdown';
 import { DropdownPopover } from '@/components/core/dropdown/dropdown-popover';
 import { DropdownTrigger } from '@/components/core/dropdown/dropdown-trigger';
 import { RouterLink } from '@/components/core/link';
 import { Logo } from '@/components/core/logo';
+import { languageFlags, LanguagePopover } from '@/components/dashboard/layout/language-popover';
 
+import { getAuthNavLinks } from './auth-nav-links';
 import { MobileNav } from './mobile-nav';
-import { PagesPopover } from './pages-popover';
 
 export function MainNav(): React.JSX.Element {
   const [openNav, setOpenNav] = React.useState<boolean>(false);
+  const { t } = useTranslation();
   const pathname = usePathname();
+  const authLinks = getAuthNavLinks();
 
   return (
     <React.Fragment>
@@ -46,33 +53,25 @@ export function MainNav(): React.JSX.Element {
             <Box component={RouterLink} href={paths.home} sx={{ display: 'inline-flex' }}>
               <Logo color="light" height={32} width={122} />
             </Box>
-            <Box component="nav" sx={{ display: { xs: 'none', md: 'block' } }}>
-              <Stack component="ul" direction="row" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
-                <NavItem href={paths.components.index} pathname={pathname} title="Components" />
-                <NavItem href={paths.docs} pathname={pathname} title="Documentation" />
-              </Stack>
-            </Box>
           </Stack>
           <Stack
             direction="row"
             spacing={2}
             sx={{ alignItems: 'center', flex: '1 1 auto', justifyContent: 'flex-end' }}
           >
+            <LanguageSwitch />
             <Box component="nav" sx={{ display: { xs: 'none', md: 'block' } }}>
               <Stack component="ul" direction="row" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
-                <NavItem pathname={pathname} title="Pages">
-                  <PagesPopover />
-                </NavItem>
+                <NavItem href={authLinks.signIn} pathname={pathname} title={t('marketing.nav.signIn')} />
               </Stack>
             </Box>
             <Button
-              component="a"
-              href={paths.purchase}
+              component={RouterLink}
+              href={authLinks.signUp}
               sx={{ display: { xs: 'none', md: 'flex' } }}
-              target="_blank"
               variant="contained"
             >
-              Purchase now
+              {t('marketing.nav.signUp')}
             </Button>
             <IconButton
               onClick={() => {
@@ -91,6 +90,30 @@ export function MainNav(): React.JSX.Element {
         }}
         open={openNav}
       />
+    </React.Fragment>
+  );
+}
+
+function LanguageSwitch(): React.JSX.Element {
+  const { i18n, t } = useTranslation();
+  const popover = usePopover<HTMLButtonElement>();
+  const language = getSupportedLanguage(i18n.language);
+  const flag = languageFlags[language];
+
+  return (
+    <React.Fragment>
+      <Tooltip title={t('marketing.nav.language')}>
+        <IconButton
+          onClick={popover.handleOpen}
+          ref={popover.anchorRef}
+          sx={{ color: 'var(--mui-palette-common-white)' }}
+        >
+          <Box sx={{ height: '24px', width: '24px' }}>
+            <Box alt={language} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
+          </Box>
+        </IconButton>
+      </Tooltip>
+      <LanguagePopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
   );
 }

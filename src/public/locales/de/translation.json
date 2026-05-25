@@ -1,3 +1,15 @@
 {
-  "languageChanged": "Sprache geändert"
+  "languageChanged": "Sprache geändert",
+  "languages": {
+    "de": "Deutsch",
+    "en": "Englisch",
+    "es": "Spanisch"
+  },
+  "marketing": {
+    "nav": {
+      "language": "Sprache",
+      "signIn": "Anmelden",
+      "signUp": "Registrieren"
+    }
+  }
 }

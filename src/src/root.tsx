@@ -45,7 +45,7 @@ export function Root({ children }: RootProps): React.JSX.Element {
       <LocalizationProvider>
         <UserProvider>
           <SettingsProvider settings={settings.current}>
-            <I18nProvider language="en">
+            <I18nProvider>
               <ThemeProvider>
                 {children}
                 <SettingsButton />

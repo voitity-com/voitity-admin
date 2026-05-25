@@ -4,6 +4,9 @@ import { Outlet } from 'react-router-dom';
 
 import { AuthStrategy } from '@/lib/auth/strategy';
 import { StrategyGuard } from '@/components/auth/strategy-guard';
+import { Page as ResetPasswordPage } from '@/pages/auth/custom/reset-password';
+import { Page as SignInPage } from '@/pages/auth/custom/sign-in';
+import { Page as SignUpPage } from '@/pages/auth/custom/sign-up';
 
 export const route: RouteObject = {
   path: 'custom',
@@ -15,24 +18,15 @@ export const route: RouteObject = {
   children: [
     {
       path: 'reset-password',
-      lazy: async () => {
-        const { Page } = await import('@/pages/auth/custom/reset-password');
-        return { Component: Page };
-      },
+      element: <ResetPasswordPage />,
     },
     {
       path: 'sign-in',
-      lazy: async () => {
-        const { Page } = await import('@/pages/auth/custom/sign-in');
-        return { Component: Page };
-      },
+      element: <SignInPage />,
     },
     {
       path: 'sign-up',
-      lazy: async () => {
-        const { Page } = await import('@/pages/auth/custom/sign-up');
-        return { Component: Page };
-      },
+      element: <SignUpPage />,
     },
   ],
 };
