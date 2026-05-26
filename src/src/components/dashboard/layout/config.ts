@@ -46,6 +46,13 @@ export const layoutConfig = {
           icon: 'gear',
           matcher: { type: 'startsWith', href: '/dashboard/settings' },
         },
+        {
+          key: 'profiles',
+          title: 'Profiles',
+          titleKey: 'dashboard.nav.items.profiles',
+          href: paths.dashboard.profiles,
+          icon: 'users',
+        },
       ],
     },
   ],

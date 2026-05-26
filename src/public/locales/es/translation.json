@@ -17,6 +17,7 @@
         "integrations": "Integraciones",
         "notifications": "Notificaciones",
         "overview": "Resumen",
+        "profiles": "Perfiles",
         "security": "Seguridad",
         "settings": "Configuración",
         "team": "Equipo"
@@ -24,6 +25,21 @@
       "settingsGroups": {
         "organization": "Organización",
         "personal": "Personal"
+      }
+    },
+    "settings": {
+      "account": {
+        "actions": {
+          "saveChanges": "Guardar cambios"
+        },
+        "basicDetails": "Datos básicos",
+        "fields": {
+          "email": "Correo electrónico",
+          "firstName": "Nombre",
+          "fullName": "Nombre completo",
+          "lastName": "Apellido"
+        },
+        "title": "Cuenta"
       }
     }
   },

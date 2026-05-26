@@ -17,9 +17,11 @@ import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
+import type { User } from '@/types/user';
 import { paths } from '@/paths';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
 import { usePathname } from '@/hooks/use-pathname';
+import { useUser } from '@/hooks/use-user';
 import { RouterLink } from '@/components/core/link';
 
 // NOTE: First level elements are groups.
@@ -97,6 +99,10 @@ const notImplementedLabel = 'ni';
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { user } = useUser();
+  const avatar = typeof user?.avatar === 'string' ? user.avatar : undefined;
+  const name = getUserName(user);
+  const email = typeof user?.email === 'string' ? user.email : '';
 
   return (
     <div>
@@ -122,18 +128,24 @@ export function SideNav(): React.JSX.Element {
               ) : null}
               <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
                 {group.items.map((item) => (
-                  <NavItem {...item} key={item.key} pathname={pathname} title={getNavTitle(item, t)} />
+                  <NavItem
+                    {...item}
+                    key={item.key}
+                    pathname={pathname}
+                    showNotImplemented={item.key !== 'account'}
+                    title={getNavTitle(item, t)}
+                  />
                 ))}
               </Stack>
             </Stack>
           ))}
         </Stack>
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-          <Avatar src="/assets/avatar.png">AV</Avatar>
+          <Avatar src={avatar}>{getUserInitials(name)}</Avatar>
           <div>
-            <Typography variant="subtitle1">Sofia Rivers</Typography>
+            <Typography variant="subtitle1">{name}</Typography>
             <Typography color="text.secondary" variant="caption">
-              sofia@devias.io
+              {email}
             </Typography>
           </div>
         </Stack>
@@ -144,9 +156,18 @@ export function SideNav(): React.JSX.Element {
 
 interface NavItemProps extends NavItemConfig {
   pathname: string;
+  showNotImplemented?: boolean;
 }
 
-function NavItem({ disabled, external, href, icon, pathname, title }: NavItemProps): React.JSX.Element {
+function NavItem({
+  disabled,
+  external,
+  href,
+  icon,
+  pathname,
+  showNotImplemented = true,
+  title,
+}: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ disabled, external, href, pathname });
   const Icon = icon ? icons[icon] : null;
 
@@ -198,7 +219,7 @@ function NavItem({ disabled, external, href, icon, pathname, title }: NavItemPro
             {title}
           </Typography>
         </Box>
-        <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+        {showNotImplemented ? <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} /> : null}
       </Box>
     </Box>
   );
@@ -206,4 +227,25 @@ function NavItem({ disabled, external, href, icon, pathname, title }: NavItemPro
 
 function getNavTitle(item: NavItemConfig, t: TFunction): string {
   return item.titleKey ? t(item.titleKey, { defaultValue: item.title ?? item.titleKey }) : (item.title ?? '');
+}
+
+function getUserName(user: User | null): string {
+  if (user?.name) {
+    return user.name;
+  }
+
+  const firstName = typeof user?.firstName === 'string' ? user.firstName : '';
+  const lastName = typeof user?.lastName === 'string' ? user.lastName : '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
+  return fullName || user?.email || 'User';
+}
+
+function getUserInitials(name: string): string {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('');
 }
