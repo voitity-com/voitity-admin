@@ -12,6 +12,8 @@ import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
 import { UsersThree as UsersThreeIcon } from '@phosphor-icons/react/dist/ssr/UsersThree';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
 import { paths } from '@/paths';
@@ -25,21 +27,54 @@ const navItems = [
   {
     key: 'personal',
     title: 'Personal',
+    titleKey: 'dashboard.nav.settingsGroups.personal',
     items: [
-      { key: 'account', title: 'Account', href: paths.dashboard.settings.account, icon: 'user-circle' },
-      { key: 'notifications', title: 'Notifications', href: paths.dashboard.settings.notifications, icon: 'bell' },
-      { key: 'security', title: 'Security', href: paths.dashboard.settings.security, icon: 'lock-key' },
+      {
+        key: 'account',
+        title: 'Account',
+        titleKey: 'dashboard.nav.items.account',
+        href: paths.dashboard.settings.account,
+        icon: 'user-circle',
+      },
+      {
+        key: 'notifications',
+        title: 'Notifications',
+        titleKey: 'dashboard.nav.items.notifications',
+        href: paths.dashboard.settings.notifications,
+        icon: 'bell',
+      },
+      {
+        key: 'security',
+        title: 'Security',
+        titleKey: 'dashboard.nav.items.security',
+        href: paths.dashboard.settings.security,
+        icon: 'lock-key',
+      },
     ],
   },
   {
     key: 'organization',
     title: 'Organization',
+    titleKey: 'dashboard.nav.settingsGroups.organization',
     items: [
-      { key: 'billing', title: 'Billing & plans', href: paths.dashboard.settings.billing, icon: 'credit-card' },
-      { key: 'team', title: 'Team', href: paths.dashboard.settings.team, icon: 'users-three' },
+      {
+        key: 'billing',
+        title: 'Billing & plans',
+        titleKey: 'dashboard.nav.items.billing',
+        href: paths.dashboard.settings.billing,
+        icon: 'credit-card',
+      },
+      {
+        key: 'team',
+        title: 'Team',
+        titleKey: 'dashboard.nav.items.team',
+        href: paths.dashboard.settings.team,
+        icon: 'users-three',
+      },
       {
         key: 'integrations',
         title: 'Integrations',
+        titleKey: 'dashboard.nav.items.integrations',
         href: paths.dashboard.settings.integrations,
         icon: 'plugs-connected',
       },
@@ -58,6 +93,7 @@ const icons = {
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   return (
     <div>
@@ -77,13 +113,13 @@ export function SideNav(): React.JSX.Element {
               {group.title ? (
                 <div>
                   <Typography color="text.secondary" variant="caption">
-                    {group.title}
+                    {getNavTitle(group, t)}
                   </Typography>
                 </div>
               ) : null}
               <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
                 {group.items.map((item) => (
-                  <NavItem {...item} key={item.key} pathname={pathname} />
+                  <NavItem {...item} key={item.key} pathname={pathname} title={getNavTitle(item, t)} />
                 ))}
               </Stack>
             </Stack>
@@ -162,4 +198,8 @@ function NavItem({ disabled, external, href, icon, pathname, title }: NavItemPro
       </Box>
     </Box>
   );
+}
+
+function getNavTitle(item: NavItemConfig, t: TFunction): string {
+  return item.titleKey ? t(item.titleKey, { defaultValue: item.title ?? item.titleKey }) : (item.title ?? '');
 }

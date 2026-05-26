@@ -5,7 +5,7 @@ import { initReactI18next } from 'react-i18next';
 import { logger } from '@/lib/default-logger';
 
 export const fallbackLanguage = 'en';
-export const supportedLanguages = ['en', 'es', 'de'] as const;
+export const supportedLanguages = ['en', 'es'] as const;
 
 export type SupportedLanguage = (typeof supportedLanguages)[number];
 

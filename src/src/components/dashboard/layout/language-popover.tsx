@@ -16,13 +16,11 @@ export type Language = SupportedLanguage;
 
 export const languageFlags = {
   en: '/assets/flag-uk.svg',
-  de: '/assets/flag-de.svg',
   es: '/assets/flag-es.svg',
 } as const;
 
 const languageOptions = {
   en: { icon: '/assets/flag-uk.svg', labelKey: 'languages.en' },
-  de: { icon: '/assets/flag-de.svg', labelKey: 'languages.de' },
   es: { icon: '/assets/flag-es.svg', labelKey: 'languages.es' },
 } as const;
 

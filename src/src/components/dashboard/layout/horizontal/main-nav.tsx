@@ -17,12 +17,14 @@ import { CaretRight as CaretRightIcon } from '@phosphor-icons/react/dist/ssr/Car
 import { List as ListIcon } from '@phosphor-icons/react/dist/ssr/List';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
 import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
 import type { NavColor } from '@/types/settings';
 import type { User } from '@/types/user';
 import { paths } from '@/paths';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
 import { useDialog } from '@/hooks/use-dialog';
 import { usePathname } from '@/hooks/use-pathname';
@@ -59,6 +61,7 @@ export interface MainNavProps {
 
 export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.JSX.Element {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const [openNav, setOpenNav] = React.useState<boolean>(false);
 
@@ -135,7 +138,7 @@ export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.
             overflowX: 'auto',
           }}
         >
-          {renderNavGroups({ items, pathname })}
+          {renderNavGroups({ items, pathname, t })}
         </Box>
       </Box>
       <MobileNav
@@ -203,7 +206,7 @@ function ContactsButton(): React.JSX.Element {
 function LanguageSwitch(): React.JSX.Element {
   const { i18n } = useTranslation();
   const popover = usePopover<HTMLButtonElement>();
-  const language = (i18n.language || 'en') as Language;
+  const language = getSupportedLanguage(i18n.language) as Language;
   const flag = languageFlags[language];
 
   return (
@@ -273,11 +276,19 @@ function getUserName(user: User | null): string {
   return fullName || user?.email || 'User';
 }
 
-function renderNavGroups({ items = [], pathname }: { items?: NavItemConfig[]; pathname: string }): React.JSX.Element {
+function renderNavGroups({
+  items = [],
+  pathname,
+  t,
+}: {
+  items?: NavItemConfig[];
+  pathname: string;
+  t: TFunction;
+}): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     acc.push(
       <Box component="li" key={curr.key} sx={{ flex: '0 0 auto' }}>
-        {renderNavItems({ pathname, items: curr.items })}
+        {renderNavItems({ pathname, items: curr.items, t })}
       </Box>
     );
 
@@ -291,11 +302,19 @@ function renderNavGroups({ items = [], pathname }: { items?: NavItemConfig[]; pa
   );
 }
 
-function renderNavItems({ items = [], pathname }: { items?: NavItemConfig[]; pathname: string }): React.JSX.Element {
+function renderNavItems({
+  items = [],
+  pathname,
+  t,
+}: {
+  items?: NavItemConfig[];
+  pathname: string;
+  t: TFunction;
+}): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     const { key, ...item } = curr;
 
-    acc.push(<NavItem key={key} pathname={pathname} {...item} />);
+    acc.push(<NavItem key={key} pathname={pathname} t={t} {...item} title={getNavTitle(curr, t)} />);
 
     return acc;
   }, []);
@@ -309,6 +328,7 @@ function renderNavItems({ items = [], pathname }: { items?: NavItemConfig[]; pat
 
 interface NavItemProps extends NavItemConfig {
   pathname: string;
+  t: TFunction;
 }
 
 function NavItem({
@@ -320,6 +340,7 @@ function NavItem({
   label,
   matcher,
   pathname,
+  t,
   title,
 }: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ disabled, external, href, matcher, pathname });
@@ -405,7 +426,7 @@ function NavItem({
           PaperProps={{ sx: { minWidth: '200px', p: 1 } }}
           anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
         >
-          {renderDropdownItems({ pathname, items })}
+          {renderDropdownItems({ pathname, items, t })}
         </DropdownPopover>
       </Dropdown>
     );
@@ -414,17 +435,23 @@ function NavItem({
   return element;
 }
 
+function getNavTitle(item: NavItemConfig, t: TFunction): string {
+  return item.titleKey ? t(item.titleKey, { defaultValue: item.title ?? item.titleKey }) : (item.title ?? '');
+}
+
 function renderDropdownItems({
   items = [],
   pathname,
+  t,
 }: {
   items?: NavItemConfig[];
   pathname: string;
+  t: TFunction;
 }): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     const { key, ...item } = curr;
 
-    acc.push(<DropdownItem key={key} pathname={pathname} {...item} />);
+    acc.push(<DropdownItem key={key} pathname={pathname} t={t} {...item} title={getNavTitle(curr, t)} />);
 
     return acc;
   }, []);
@@ -438,6 +465,7 @@ function renderDropdownItems({
 
 interface DropdownItemProps extends NavItemConfig {
   pathname: string;
+  t: TFunction;
 }
 
 function DropdownItem({
@@ -447,6 +475,7 @@ function DropdownItem({
   href,
   matcher,
   pathname,
+  t,
   title,
 }: DropdownItemProps): React.JSX.Element {
   const active = isNavItemActive({ disabled, external, href, matcher, pathname });
@@ -515,7 +544,7 @@ function DropdownItem({
           PaperProps={{ sx: { minWidth: '200px', p: 1 } }}
           anchorOrigin={{ horizontal: 'right', vertical: 'top' }}
         >
-          {renderDropdownItems({ pathname, items })}
+          {renderDropdownItems({ pathname, items, t })}
         </DropdownPopover>
       </Dropdown>
     );

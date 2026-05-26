@@ -1,9 +1,31 @@
 {
   "languageChanged": "Language changed",
   "languages": {
-    "de": "German",
     "en": "English",
     "es": "Spanish"
+  },
+  "dashboard": {
+    "nav": {
+      "groups": {
+        "dashboards": "Dashboards",
+        "general": "General"
+      },
+      "items": {
+        "account": "Account",
+        "analytics": "Analytics",
+        "billing": "Billing & plans",
+        "integrations": "Integrations",
+        "notifications": "Notifications",
+        "overview": "Overview",
+        "security": "Security",
+        "settings": "Settings",
+        "team": "Team"
+      },
+      "settingsGroups": {
+        "organization": "Organization",
+        "personal": "Personal"
+      }
+    }
   },
   "marketing": {
     "nav": {

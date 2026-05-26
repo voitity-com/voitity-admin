@@ -6,6 +6,8 @@ import Typography from '@mui/material/Typography';
 import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { CaretRight as CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight';
+import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
 import type { NavColor } from '@/types/settings';
@@ -33,6 +35,7 @@ export interface SideNavProps {
 
 export function SideNav({ color = 'evident', items = [] }: SideNavProps): React.JSX.Element {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   const {
     settings: { colorScheme = 'light' },
@@ -76,24 +79,32 @@ export function SideNav({ color = 'evident', items = [] }: SideNavProps): React.
           '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {renderNavGroups({ items, pathname })}
+        {renderNavGroups({ items, pathname, t })}
       </Box>
     </Box>
   );
 }
 
-function renderNavGroups({ items, pathname }: { items: NavItemConfig[]; pathname: string }): React.JSX.Element {
+function renderNavGroups({
+  items,
+  pathname,
+  t,
+}: {
+  items: NavItemConfig[];
+  pathname: string;
+  t: TFunction;
+}): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     acc.push(
       <Stack component="li" key={curr.key} spacing={1.5}>
         {curr.title ? (
           <div>
             <Typography sx={{ color: 'var(--NavGroup-title-color)', fontSize: '0.875rem', fontWeight: 500 }}>
-              {curr.title}
+              {getNavTitle(curr, t)}
             </Typography>
           </div>
         ) : null}
-        <div>{renderNavItems({ depth: 0, items: curr.items, pathname })}</div>
+        <div>{renderNavItems({ depth: 0, items: curr.items, pathname, t })}</div>
       </Stack>
     );
 
@@ -111,10 +122,12 @@ function renderNavItems({
   depth = 0,
   items = [],
   pathname,
+  t,
 }: {
   depth: number;
   items?: NavItemConfig[];
   pathname: string;
+  t: TFunction;
 }): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     const { items: childItems, key, ...item } = curr;
@@ -124,8 +137,8 @@ function renderNavItems({
       : false;
 
     acc.push(
-      <NavItem depth={depth} forceOpen={forceOpen} key={key} pathname={pathname} {...item}>
-        {childItems ? renderNavItems({ depth: depth + 1, pathname, items: childItems }) : null}
+      <NavItem depth={depth} forceOpen={forceOpen} key={key} pathname={pathname} {...item} title={getNavTitle(curr, t)}>
+        {childItems ? renderNavItems({ depth: depth + 1, pathname, items: childItems, t }) : null}
       </NavItem>
     );
 
@@ -137,6 +150,10 @@ function renderNavItems({
       {children}
     </Stack>
   );
+}
+
+function getNavTitle(item: NavItemConfig, t: TFunction): string {
+  return item.titleKey ? t(item.titleKey, { defaultValue: item.title ?? item.titleKey }) : (item.title ?? '');
 }
 
 interface NavItemProps extends Omit<NavItemConfig, 'items'> {

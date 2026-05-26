@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
 import type { User } from '@/types/user';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { useDialog } from '@/hooks/use-dialog';
 import { usePopover } from '@/hooks/use-popover';
 import { useUser } from '@/hooks/use-user';
@@ -154,7 +155,7 @@ function NotificationsButton(): React.JSX.Element {
 function LanguageSwitch(): React.JSX.Element {
   const { i18n } = useTranslation();
   const popover = usePopover<HTMLButtonElement>();
-  const language = (i18n.language || 'en') as Language;
+  const language = getSupportedLanguage(i18n.language) as Language;
   const flag = languageFlags[language];
 
   return (
