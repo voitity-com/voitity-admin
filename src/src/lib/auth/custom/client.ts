@@ -1,31 +1,29 @@
 'use client';
 
-import { clearApiAccessToken } from '@/lib/auth/custom/api-token';
 import type { GoogleProfile } from '@/lib/google/profile';
 import type { User } from '@/types/user';
 
-function generateToken(): string {
-  const arr = new Uint8Array(12);
-  window.crypto.getRandomValues(arr);
-  return Array.from(arr, (v) => v.toString(16).padStart(2, '0')).join('');
-}
-
-const STORAGE_TOKEN_KEY = 'custom-auth-token';
-const STORAGE_USER_KEY = 'custom-auth-user';
-
-const defaultUser = {
-  id: 'USR-000',
-  avatar: '/assets/avatar.png',
-  firstName: 'Sofia',
-  lastName: 'Rivers',
-  email: 'sofia@devias.io',
-} satisfies User;
+import {
+  mapApiUser,
+  postGetToken,
+  postGoogleSignIn,
+  postGoogleSignUp,
+  postLogout,
+  type AuthApiResponse,
+  type GoogleAuthPayload,
+} from './api-client';
+import { clearAuthSession, getAuthSession, persistAuthSession } from './session-store';
 
 export interface SignUpParams {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
+}
+
+export interface GoogleAuthParams {
+  accessToken: string;
+  profile: GoogleProfile;
 }
 
 export interface SignInWithOAuthParams {
@@ -45,42 +43,29 @@ export interface ResetPasswordParams {
 
 class AuthClient {
   async signUp(_: SignUpParams): Promise<{ error?: string }> {
-    // Make API request
-
-    // We do not handle the API, so we'll just generate a token and store it in localStorage.
-    const token = generateToken();
-    persistSession(token, defaultUser);
-
-    return {};
+    return { error: 'Email sign up is not available for this API.' };
   }
 
   async signInWithOAuth(params: SignInWithOAuthParams): Promise<{ error?: string }> {
-    const { provider, profile, token } = params;
+    return this.signInWithGoogle({ accessToken: params.token, profile: params.profile });
+  }
 
-    if (provider !== 'google') {
-      return { error: `Unsupported provider: ${provider}` };
-    }
+  async signInWithGoogle(params: GoogleAuthParams): Promise<{ error?: string }> {
+    return this.authenticateWithGoogle(params, postGoogleSignIn);
+  }
 
-    const user = buildUserFromGoogleProfile(profile);
-    persistSession(token, user);
-
-    return {};
+  async signUpWithGoogle(params: GoogleAuthParams): Promise<{ error?: string }> {
+    return this.authenticateWithGoogle(params, postGoogleSignUp);
   }
 
   async signInWithPassword(params: SignInWithPasswordParams): Promise<{ error?: string }> {
-    const { email, password } = params;
-
-    // Make API request
-
-    // We do not handle the API, so we'll check if the credentials match with the hardcoded ones.
-    if (email !== 'sofia@devias.io' || password !== 'Secret1') {
-      return { error: 'Invalid credentials' };
+    try {
+      const response = await postGetToken(params);
+      persistAuthSession(response.access_token, mapApiUser(response.user, { email: params.email }));
+      return {};
+    } catch (err) {
+      return { error: getErrorMessage(err) };
     }
-
-    const token = generateToken();
-    persistSession(token, defaultUser);
-
-    return {};
   }
 
   async resetPassword(_: ResetPasswordParams): Promise<{ error?: string }> {
@@ -92,59 +77,65 @@ class AuthClient {
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
-    // Make API request
-
-    // We do not handle the API, so just check if we have a token in localStorage.
-    const token = localStorage.getItem(STORAGE_TOKEN_KEY);
-
-    if (!token) {
-      return { data: null };
-    }
-
-    const storedUser = getStoredUser();
-
-    if (!storedUser) {
-      return { data: null };
-    }
-
-    return { data: storedUser };
+    return { data: getAuthSession()?.user ?? null };
   }
 
   async signOut(): Promise<{ error?: string }> {
-    localStorage.removeItem(STORAGE_TOKEN_KEY);
-    localStorage.removeItem(STORAGE_USER_KEY);
-    clearApiAccessToken();
+    const session = getAuthSession();
 
-    return {};
+    try {
+      if (session?.accessToken) {
+        await postLogout(session.accessToken);
+      }
+
+      return {};
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    } finally {
+      clearAuthSession();
+    }
+  }
+
+  private async authenticateWithGoogle(
+    params: GoogleAuthParams,
+    authenticate: (payload: GoogleAuthPayload) => Promise<AuthApiResponse>
+  ): Promise<{ error?: string }> {
+    try {
+      const response = await authenticate(createGoogleAuthPayload(params));
+      persistAuthSession(response.access_token, mapApiUser(response.user, buildUserFromGoogleProfile(params.profile)));
+      return {};
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
   }
 }
 
 export const authClient = new AuthClient();
 
-function persistSession(token: string, user: User): void {
-  localStorage.setItem(STORAGE_TOKEN_KEY, token);
-  localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+function createGoogleAuthPayload({ accessToken, profile }: GoogleAuthParams): GoogleAuthPayload {
+  const { firstName, lastName, name } = getGoogleDisplayName(profile);
+
+  return {
+    google_id: profile.sub,
+    email: profile.email,
+    first_name: firstName,
+    last_name: lastName,
+    name,
+    avatar: profile.picture,
+    access_token: accessToken,
+  };
 }
 
-function getStoredUser(): User | null {
-  const raw = localStorage.getItem(STORAGE_USER_KEY);
-
-  if (!raw) {
-    return null;
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
   }
 
-  try {
-    return JSON.parse(raw) as User;
-  } catch {
-    localStorage.removeItem(STORAGE_USER_KEY);
-    return null;
-  }
+  return 'Authentication request failed';
 }
 
 function buildUserFromGoogleProfile(profile: GoogleProfile): User {
-  const [firstNameFallback = '', lastNameFallback = ''] = profile.name?.split(' ') ?? [];
-  const firstName = profile.given_name ?? firstNameFallback ?? profile.email;
-  const lastName = profile.family_name ?? lastNameFallback ?? '';
+  const { firstName, lastName, name } = getGoogleDisplayName(profile);
 
   return {
     id: profile.sub,
@@ -152,7 +143,19 @@ function buildUserFromGoogleProfile(profile: GoogleProfile): User {
     email: profile.email,
     firstName,
     lastName,
-    name: profile.name ?? `${firstName} ${lastName}`.trim(),
+    name,
     provider: 'google',
+  };
+}
+
+function getGoogleDisplayName(profile: GoogleProfile): { firstName: string; lastName: string; name: string } {
+  const [firstNameFallback = profile.email, ...lastNameParts] = profile.name?.trim().split(/\s+/) ?? [];
+  const firstName = profile.given_name || firstNameFallback || profile.email;
+  const lastName = profile.family_name || lastNameParts.join(' ') || firstName;
+
+  return {
+    firstName,
+    lastName,
+    name: profile.name || `${firstName} ${lastName}`.trim(),
   };
 }

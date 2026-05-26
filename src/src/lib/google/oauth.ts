@@ -6,6 +6,29 @@ const GOOGLE_SCOPE = 'openid profile email';
 
 let scriptPromise: Promise<void> | null = null;
 
+interface GoogleTokenResponse {
+  access_token?: string;
+}
+
+interface GoogleTokenClient {
+  requestAccessToken: (options: { prompt: string }) => void;
+}
+
+interface GoogleTokenClientConfig {
+  callback: (tokenResponse: GoogleTokenResponse) => void;
+  client_id: string;
+  error_callback: (err: { error?: string }) => void;
+  scope: string;
+}
+
+interface GoogleOAuthGlobal {
+  accounts?: {
+    oauth2?: {
+      initTokenClient?: (config: GoogleTokenClientConfig) => GoogleTokenClient;
+    };
+  };
+}
+
 function ensureScript(): Promise<void> {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return Promise.reject(new Error('Google OAuth is only available in the browser'));
@@ -25,8 +48,12 @@ function ensureScript(): Promise<void> {
     script.src = GOOGLE_SCRIPT_SRC;
     script.async = true;
     script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google OAuth script'));
+    script.onload = () => {
+      resolve();
+    };
+    script.onerror = () => {
+      reject(new Error('Failed to load Google OAuth script'));
+    };
     document.head.appendChild(script);
   });
 
@@ -42,30 +69,33 @@ export async function preloadGoogleScript(): Promise<void> {
 }
 
 export async function requestGoogleAccessToken(): Promise<string> {
-  if (!config.google?.clientId) {
-    throw new Error('Missing VITE_GOOGLE_CLIENT_ID env variable');
+  const clientId = config.google?.clientId;
+
+  if (!clientId) {
+    throw new Error('Configure VITE_GOOGLE_CLIENT_ID to get Google profile data from the browser.');
   }
 
   await ensureScript();
 
-  const googleGlobal = (window as typeof window & { google?: any }).google;
+  const googleGlobal = (window as typeof window & { google?: GoogleOAuthGlobal }).google;
+  const initTokenClient = googleGlobal?.accounts?.oauth2?.initTokenClient;
 
-  if (!googleGlobal?.accounts?.oauth2?.initTokenClient) {
+  if (!initTokenClient) {
     throw new Error('Google OAuth client not available');
   }
 
   return new Promise((resolve, reject) => {
-    const client = googleGlobal.accounts.oauth2.initTokenClient({
-      client_id: config.google!.clientId!,
+    const client = initTokenClient({
+      client_id: clientId,
       scope: GOOGLE_SCOPE,
-      callback: (tokenResponse: { access_token?: string }) => {
+      callback: (tokenResponse) => {
         if (!tokenResponse.access_token) {
           reject(new Error('Google did not return an access token'));
           return;
         }
         resolve(tokenResponse.access_token);
       },
-      error_callback: (err: { error: string }) => {
+      error_callback: (err) => {
         reject(new Error(err?.error || 'Google authentication was cancelled'));
       },
     });

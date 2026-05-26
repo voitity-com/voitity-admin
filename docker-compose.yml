@@ -11,6 +11,8 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:8000
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID:-138873704513-5hhvom328gue6p39arfm9gjfr9djj3av.apps.googleusercontent.com}
     volumes:
       - ./src:/app/src
       - /app/src/node_modules
