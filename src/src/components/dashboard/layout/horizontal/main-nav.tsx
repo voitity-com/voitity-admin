@@ -54,6 +54,8 @@ const logoColors = {
   light: { blend_in: 'dark', discrete: 'dark', evident: 'light' },
 } as Record<ColorScheme, Record<NavColor, 'dark' | 'light'>>;
 
+const notImplementedLabel = 'ni';
+
 export interface MainNavProps {
   color?: NavColor;
   items?: NavItemConfig[];
@@ -404,6 +406,7 @@ function NavItem({
           </Typography>
         </Box>
         {label ? <Chip color="primary" label={label} size="small" /> : null}
+        <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
         {external ? (
           <Box sx={{ alignItems: 'center', display: 'flex', flex: '0 0 auto' }}>
             <ArrowSquareOutIcon color="var(--NavItem-icon-color)" fontSize="var(--icon-fontSize-sm)" />
@@ -527,6 +530,7 @@ function DropdownItem({
             {title}
           </Typography>
         </Box>
+        <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20, ml: 1 }} />
         {isBranch ? (
           <Box sx={{ flex: '0 0 auto' }}>
             <CaretRightIcon fontSize="var(--icon-fontSize-sm)" />

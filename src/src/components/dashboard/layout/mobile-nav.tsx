@@ -18,7 +18,8 @@ import { RouterLink } from '@/components/core/link';
 import { Logo } from '@/components/core/logo';
 
 import { icons } from './nav-icons';
-import { WorkspacesSwitch } from './workspaces-switch';
+
+const notImplementedLabel = 'ni';
 
 export interface MobileNavProps {
   onClose?: () => void;
@@ -73,7 +74,6 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps): React.
             <Logo color="light" height={32} width={122} />
           </Box>
         </div>
-        <WorkspacesSwitch />
       </Stack>
       <Box component="nav" sx={{ flex: '1 1 auto', p: 2 }}>
         {renderNavGroups({ items, onClose, pathname, t })}
@@ -280,6 +280,7 @@ function NavItem({
           </Typography>
         </Box>
         {label ? <Chip color="primary" label={label} size="small" /> : null}
+        <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
         {external ? (
           <Box sx={{ alignItems: 'center', display: 'flex', flex: '0 0 auto' }}>
             <ArrowSquareOutIcon color="var(--NavItem-icon-color)" fontSize="var(--icon-fontSize-sm)" />

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -23,6 +24,8 @@ import { CognitoSignOut } from './cognito-sign-out';
 import { CustomSignOut } from './custom-sign-out';
 import { FirebaseSignOut } from './firebase-sign-out';
 import { SupabaseSignOut } from './supabase-sign-out';
+
+const notImplementedLabel = 'ni';
 
 export interface UserPopoverProps {
   anchorEl: null | Element;
@@ -56,19 +59,28 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
           <ListItemIcon>
             <UserIcon />
           </ListItemIcon>
-          Account
+          <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
+            <span>Account</span>
+            <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+          </Box>
         </MenuItem>
         <MenuItem component={RouterLink} href={paths.dashboard.settings.security} onClick={onClose}>
           <ListItemIcon>
             <LockKeyIcon />
           </ListItemIcon>
-          Security
+          <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
+            <span>Security</span>
+            <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+          </Box>
         </MenuItem>
         <MenuItem component={RouterLink} href={paths.dashboard.settings.billing} onClick={onClose}>
           <ListItemIcon>
             <CreditCardIcon />
           </ListItemIcon>
-          Billing
+          <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
+            <span>Billing</span>
+            <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+          </Box>
         </MenuItem>
       </List>
       <Divider />

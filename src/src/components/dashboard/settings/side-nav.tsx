@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
@@ -90,6 +91,8 @@ const icons = {
   'users-three': UsersThreeIcon,
   bell: BellIcon,
 } as Record<string, Icon>;
+
+const notImplementedLabel = 'ni';
 
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
@@ -195,6 +198,7 @@ function NavItem({ disabled, external, href, icon, pathname, title }: NavItemPro
             {title}
           </Typography>
         </Box>
+        <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
       </Box>
     </Box>
   );
