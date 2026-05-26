@@ -12,10 +12,10 @@ import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/Cre
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { User as UserIcon } from '@phosphor-icons/react/dist/ssr/User';
 
-import type { User } from '@/types/user';
 import { config } from '@/config';
 import { paths } from '@/paths';
 import { AuthStrategy } from '@/lib/auth/strategy';
+import { useUser } from '@/hooks/use-user';
 import { RouterLink } from '@/components/core/link';
 
 import { Auth0SignOut } from './auth0-sign-out';
@@ -24,13 +24,6 @@ import { CustomSignOut } from './custom-sign-out';
 import { FirebaseSignOut } from './firebase-sign-out';
 import { SupabaseSignOut } from './supabase-sign-out';
 
-const user = {
-  id: 'USR-000',
-  name: 'Sofia Rivers',
-  avatar: '/assets/avatar.png',
-  email: 'sofia@devias.io',
-} satisfies User;
-
 export interface UserPopoverProps {
   anchorEl: null | Element;
   onClose?: () => void;
@@ -38,6 +31,10 @@ export interface UserPopoverProps {
 }
 
 export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): React.JSX.Element {
+  const { user } = useUser();
+  const name = getUserName(user);
+  const email = typeof user?.email === 'string' ? user.email : '';
+
   return (
     <Popover
       anchorEl={anchorEl}
@@ -48,9 +45,9 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
       transformOrigin={{ horizontal: 'right', vertical: 'top' }}
     >
       <Box sx={{ p: 2 }}>
-        <Typography>{user.name}</Typography>
+        <Typography>{name}</Typography>
         <Typography color="text.secondary" variant="body2">
-          {user.email}
+          {email}
         </Typography>
       </Box>
       <Divider />
@@ -84,4 +81,16 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
       </Box>
     </Popover>
   );
+}
+
+function getUserName(user: null | { email?: string; firstName?: unknown; lastName?: unknown; name?: string }): string {
+  if (user?.name) {
+    return user.name;
+  }
+
+  const firstName = typeof user?.firstName === 'string' ? user.firstName : '';
+  const lastName = typeof user?.lastName === 'string' ? user.lastName : '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
+  return fullName || user?.email || 'User';
 }

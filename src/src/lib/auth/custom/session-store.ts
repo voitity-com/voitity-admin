@@ -20,6 +20,14 @@ export function persistAuthSession(accessToken: string, user: User): void {
   window.localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
 }
 
+export function persistAuthUser(user: User): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
+}
+
 export function getAuthSession(): AuthSession | null {
   if (typeof window === 'undefined') {
     return null;

@@ -29,7 +29,18 @@ export interface GoogleAuthPayload {
 
 interface RequestOptions {
   body?: unknown;
+  method?: 'GET' | 'POST';
   token?: string;
+}
+
+export class ApiRequestError extends Error {
+  public status: number;
+
+  public constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+  }
 }
 
 export async function postGetToken(params: { email: string; password: string }): Promise<AuthApiResponse> {
@@ -46,6 +57,20 @@ export async function postGoogleSignUp(payload: GoogleAuthPayload): Promise<Auth
 
 export async function postLogout(token: string): Promise<void> {
   await requestJson('/api/auth/logout', { token });
+}
+
+export async function getCurrentUser(token: string): Promise<ApiUser> {
+  const response = await requestJson<ApiUser | { data?: ApiUser; user?: ApiUser }>('/api/user', { method: 'GET', token });
+
+  if (hasUserKey(response) && response.user) {
+    return response.user;
+  }
+
+  if (hasDataKey(response) && response.data) {
+    return response.data;
+  }
+
+  return response as ApiUser;
 }
 
 export function mapApiUser(user: ApiUser | undefined, fallback: Partial<User> = {}): User {
@@ -87,11 +112,11 @@ async function requestJson<T = unknown>(path: string, options: RequestOptions = 
   const response = await fetch(`${baseUrl}${path}`, {
     body: options.body ? JSON.stringify(options.body) : undefined,
     headers,
-    method: 'POST',
+    method: options.method ?? 'POST',
   });
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response));
+    throw new ApiRequestError(await getErrorMessage(response), response.status);
   }
 
   if (response.status === 204) {
@@ -99,6 +124,14 @@ async function requestJson<T = unknown>(path: string, options: RequestOptions = 
   }
 
   return (await response.json()) as T;
+}
+
+function hasUserKey(value: ApiUser | { data?: ApiUser; user?: ApiUser }): value is { user?: ApiUser } {
+  return 'user' in value;
+}
+
+function hasDataKey(value: ApiUser | { data?: ApiUser; user?: ApiUser }): value is { data?: ApiUser } {
+  return 'data' in value;
 }
 
 async function getErrorMessage(response: Response): Promise<string> {

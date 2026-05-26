@@ -4,6 +4,8 @@ import type { GoogleProfile } from '@/lib/google/profile';
 import type { User } from '@/types/user';
 
 import {
+  ApiRequestError,
+  getCurrentUser,
   mapApiUser,
   postGetToken,
   postGoogleSignIn,
@@ -12,7 +14,7 @@ import {
   type AuthApiResponse,
   type GoogleAuthPayload,
 } from './api-client';
-import { clearAuthSession, getAuthSession, persistAuthSession } from './session-store';
+import { clearAuthSession, getAuthSession, persistAuthSession, persistAuthUser } from './session-store';
 
 export interface SignUpParams {
   firstName: string;
@@ -51,7 +53,13 @@ class AuthClient {
   }
 
   async signInWithGoogle(params: GoogleAuthParams): Promise<{ error?: string }> {
-    return this.authenticateWithGoogle(params, postGoogleSignIn);
+    const result = await this.authenticateWithGoogle(params, postGoogleSignIn);
+
+    if (result.status === 404) {
+      return this.authenticateWithGoogle(params, postGoogleSignUp);
+    }
+
+    return result;
   }
 
   async signUpWithGoogle(params: GoogleAuthParams): Promise<{ error?: string }> {
@@ -77,7 +85,29 @@ class AuthClient {
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
-    return { data: getAuthSession()?.user ?? null };
+    const session = getAuthSession();
+
+    if (!session) {
+      return { data: null };
+    }
+
+    try {
+      const apiUser = await getCurrentUser(session.accessToken);
+      const user = mapApiUser(apiUser, session.user);
+      persistAuthUser(user);
+      return { data: user };
+    } catch (err) {
+      if (err instanceof ApiRequestError && err.status === 401) {
+        clearAuthSession();
+        return { data: null };
+      }
+
+      if (session.user) {
+        return { data: session.user };
+      }
+
+      return { error: getErrorMessage(err) };
+    }
   }
 
   async signOut(): Promise<{ error?: string }> {
@@ -99,12 +129,16 @@ class AuthClient {
   private async authenticateWithGoogle(
     params: GoogleAuthParams,
     authenticate: (payload: GoogleAuthPayload) => Promise<AuthApiResponse>
-  ): Promise<{ error?: string }> {
+  ): Promise<{ error?: string; status?: number }> {
     try {
       const response = await authenticate(createGoogleAuthPayload(params));
       persistAuthSession(response.access_token, mapApiUser(response.user, buildUserFromGoogleProfile(params.profile)));
       return {};
     } catch (err) {
+      if (err instanceof ApiRequestError) {
+        return { error: err.message, status: err.status };
+      }
+
       return { error: getErrorMessage(err) };
     }
   }

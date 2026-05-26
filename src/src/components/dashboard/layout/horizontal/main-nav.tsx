@@ -28,6 +28,7 @@ import { useDialog } from '@/hooks/use-dialog';
 import { usePathname } from '@/hooks/use-pathname';
 import { usePopover } from '@/hooks/use-popover';
 import { useSettings } from '@/hooks/use-settings';
+import { useUser } from '@/hooks/use-user';
 import { Dropdown } from '@/components/core/dropdown/dropdown';
 import { DropdownPopover } from '@/components/core/dropdown/dropdown-popover';
 import { DropdownTrigger } from '@/components/core/dropdown/dropdown-trigger';
@@ -223,15 +224,11 @@ function LanguageSwitch(): React.JSX.Element {
   );
 }
 
-const user = {
-  id: 'USR-000',
-  name: 'Sofia Rivers',
-  avatar: '/assets/avatar.png',
-  email: 'sofia@devias.io',
-} satisfies User;
-
 function UserButton(): React.JSX.Element {
   const popover = usePopover<HTMLButtonElement>();
+  const { user } = useUser();
+  const avatar = typeof user?.avatar === 'string' ? user.avatar : undefined;
+  const name = getUserName(user);
 
   return (
     <React.Fragment>
@@ -256,12 +253,24 @@ function UserButton(): React.JSX.Element {
           }}
           variant="dot"
         >
-          <Avatar src={user.avatar} />
+          <Avatar alt={name} src={avatar} />
         </Badge>
       </Box>
       <UserPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
   );
+}
+
+function getUserName(user: User | null): string {
+  if (user?.name) {
+    return user.name;
+  }
+
+  const firstName = typeof user?.firstName === 'string' ? user.firstName : '';
+  const lastName = typeof user?.lastName === 'string' ? user.lastName : '';
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+
+  return fullName || user?.email || 'User';
 }
 
 function renderNavGroups({ items = [], pathname }: { items?: NavItemConfig[]; pathname: string }): React.JSX.Element {

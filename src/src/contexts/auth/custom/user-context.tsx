@@ -60,7 +60,9 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
       updateApiLastActivity();
     };
 
-    activityEvents.forEach((event) => window.addEventListener(event, handleActivity, true));
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, handleActivity, true);
+    });
 
     const handleInactivitySignOut = async (): Promise<void> => {
       try {
@@ -81,13 +83,17 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
     const intervalId = window.setInterval(() => {
       if (hasExceededInactivityLimit()) {
         clearApiAccessToken();
-        handleInactivitySignOut().catch((err) => logger.error(err));
+        handleInactivitySignOut().catch((err) => {
+          logger.error(err);
+        });
       }
     }, 60 * 1000);
 
     return () => {
       unsubscribed = true;
-      activityEvents.forEach((event) => window.removeEventListener(event, handleActivity, true));
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, handleActivity, true);
+      });
       window.clearInterval(intervalId);
     };
   }, []);
