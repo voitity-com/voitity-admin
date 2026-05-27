@@ -359,6 +359,13 @@ export const route: RouteObject = {
       ],
     },
     {
+      path: 'profiles',
+      lazy: async () => {
+        const { Page } = await import('@/pages/dashboard/profiles');
+        return { Component: Page };
+      },
+    },
+    {
       path: 'settings',
       element: (
         <SettingsLayout>

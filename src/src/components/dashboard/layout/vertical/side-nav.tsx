@@ -171,6 +171,7 @@ function NavItem({
   forceOpen = false,
   href,
   icon,
+  implemented,
   label,
   matcher,
   pathname,
@@ -266,7 +267,7 @@ function NavItem({
           </Typography>
         </Box>
         {label ? <Chip color="primary" label={label} size="small" /> : null}
-        <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+        {implemented ? null : <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />}
         {external ? (
           <Box sx={{ alignItems: 'center', display: 'flex', flex: '0 0 auto' }}>
             <ArrowSquareOutIcon color="var(--NavItem-icon-color)" fontSize="var(--icon-fontSize-sm)" />

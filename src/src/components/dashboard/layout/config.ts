@@ -52,6 +52,7 @@ export const layoutConfig = {
           titleKey: 'dashboard.nav.items.profiles',
           href: paths.dashboard.profiles,
           icon: 'users',
+          implemented: true,
         },
       ],
     },

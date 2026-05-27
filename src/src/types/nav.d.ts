@@ -4,6 +4,7 @@ export interface NavItemConfig {
   titleKey?: string;
   disabled?: boolean;
   external?: boolean;
+  implemented?: boolean;
   label?: string;
   icon?: string;
   href?: string;
