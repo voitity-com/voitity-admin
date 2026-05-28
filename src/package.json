@@ -58,6 +58,7 @@
     "firebase": "10.8.0",
     "i18next": "23.10.0",
     "i18next-http-backend": "2.5.0",
+    "lamejs": "^1.2.1",
     "mapbox-gl": "3.1.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",

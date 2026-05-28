@@ -65,6 +65,12 @@ export const paths = {
     analytics: '/dashboard/analytics',
     blank: '/dashboard/blank',
     profiles: '/dashboard/profiles',
+    profileDetails: {
+      avatar: (profileId: string) => `/dashboard/profiles/${profileId}/avatar`,
+      data: (profileId: string) => `/dashboard/profiles/${profileId}/data`,
+      profile: (profileId: string) => `/dashboard/profiles/${profileId}/profile`,
+      voice: (profileId: string) => `/dashboard/profiles/${profileId}/voice`,
+    },
     blog: {
       list: '/dashboard/blog',
       details: (postId: string) => `/dashboard/blog/${postId}`,

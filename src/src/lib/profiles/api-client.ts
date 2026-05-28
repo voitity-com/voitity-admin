@@ -34,7 +34,22 @@ interface ProfilesListData {
 
 interface RequestOptions {
   body?: unknown;
+  formData?: FormData;
   method?: 'GET' | 'PATCH' | 'POST' | 'PUT';
+}
+
+export interface Voice {
+  id: number | string;
+  name: string;
+  description?: null | string;
+  language_code?: null | string;
+  profile_id?: number | string;
+}
+
+export interface VoiceSample {
+  id: number | string;
+  voice_id: number | string;
+  file?: string;
 }
 
 export class ProfileApiError extends Error {
@@ -63,6 +78,13 @@ export async function listProfiles(): Promise<Profile[]> {
   return response.profiles ?? [];
 }
 
+export async function getProfile(id: number | string): Promise<Profile> {
+  const response = await requestJson<ApiEnvelope<Profile> | Profile>(`/api/profile/${encodeURIComponent(String(id))}`, {
+    method: 'GET',
+  });
+  return unwrapProfile(response);
+}
+
 export async function createProfile(payload: ProfilePayload): Promise<Profile> {
   const response = await requestJson<ApiEnvelope<Profile> | Profile>('/api/profile', { body: payload, method: 'POST' });
   return unwrapProfile(response);
@@ -85,6 +107,34 @@ export async function updateProfileData(id: number | string, data: Record<string
     }
   );
   return unwrapProfile(response);
+}
+
+export async function createVoice(payload: {
+  description?: string;
+  language_code: string;
+  name: string;
+  profile_id: number | string;
+}): Promise<Voice> {
+  const response = await requestJson<ApiEnvelope<Voice> | Voice>('/api/voice', { body: payload, method: 'POST' });
+  return isApiEnvelope<Voice>(response) ? response.data : response;
+}
+
+export async function uploadVoiceSample(params: {
+  file: File;
+  language_code: string;
+  voiceId: number | string;
+}): Promise<VoiceSample> {
+  const formData = new FormData();
+  formData.append('file', params.file);
+  formData.append('language_code', params.language_code);
+  formData.append('active', 'true');
+
+  const response = await requestJson<ApiEnvelope<VoiceSample> | VoiceSample>(
+    `/api/voice/${encodeURIComponent(String(params.voiceId))}/sample`,
+    { formData, method: 'POST' }
+  );
+
+  return isApiEnvelope<VoiceSample>(response) ? response.data : response;
 }
 
 function unwrapProfile(response: ApiEnvelope<Profile> | Profile): Profile {
@@ -117,7 +167,7 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
   }
 
   const response = await fetch(`${baseUrl}${path}`, {
-    body: options.body ? JSON.stringify(options.body) : undefined,
+    body: options.formData ?? (options.body ? JSON.stringify(options.body) : undefined),
     headers,
     method: options.method ?? 'GET',
   });

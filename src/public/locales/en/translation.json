@@ -41,6 +41,17 @@
         },
         "title": "Account"
       }
+    },
+    "profiles": {
+      "detail": {
+        "nav": {
+          "profile": "Profile",
+          "voice": "Voice"
+        },
+        "voice": {
+          "cloneVoice": "Clone your voice"
+        }
+      }
     }
   },
   "marketing": {

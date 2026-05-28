@@ -41,6 +41,17 @@
         },
         "title": "Cuenta"
       }
+    },
+    "profiles": {
+      "detail": {
+        "nav": {
+          "profile": "Perfil",
+          "voice": "Voz"
+        },
+        "voice": {
+          "cloneVoice": "Clonar su voz"
+        }
+      }
     }
   },
   "marketing": {

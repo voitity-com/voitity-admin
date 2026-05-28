@@ -11,10 +11,11 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { Helmet } from 'react-helmet-async';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { paths } from '@/paths';
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 import { createProfile, listProfiles, updateProfile, updateProfileData } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
@@ -31,6 +32,7 @@ const metadata = { title: `Profiles | Dashboard | ${config.site.name}` } satisfi
 
 export function Page(): React.JSX.Element {
   const { genre, name, sortDir, status } = useExtractSearchParams();
+  const navigate = useNavigate();
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
@@ -165,7 +167,14 @@ export function Page(): React.JSX.Element {
                 </Stack>
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
-                  <ProfilesTable onEdit={handleEditOpen} onEditData={setDataProfile} rows={filteredProfiles} />
+                  <ProfilesTable
+                    onEdit={handleEditOpen}
+                    onEditData={setDataProfile}
+                    onOpen={(profile) => {
+                      navigate(paths.dashboard.profileDetails.profile(String(profile.id)));
+                    }}
+                    rows={filteredProfiles}
+                  />
                 </Box>
               )}
               <Divider />

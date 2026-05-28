@@ -6,6 +6,7 @@ import { Layout as ChatLayout } from '@/components/dashboard/chat/layout';
 import { Layout as JobCompanyLayout } from '@/components/dashboard/jobs/company-layout';
 import { Layout as DashboardLayout } from '@/components/dashboard/layout/layout';
 import { Layout as MailLayout } from '@/components/dashboard/mail/layout';
+import { ProfileLayout } from '@/components/dashboard/profiles/profile-layout';
 import { Layout as SettingsLayout } from '@/components/dashboard/settings/layout';
 import { Layout as SocialProfileLayout } from '@/components/dashboard/social/profile-layout';
 
@@ -360,10 +361,60 @@ export const route: RouteObject = {
     },
     {
       path: 'profiles',
-      lazy: async () => {
-        const { Page } = await import('@/pages/dashboard/profiles');
-        return { Component: Page };
-      },
+      children: [
+        {
+          index: true,
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/profiles');
+            return { Component: Page };
+          },
+        },
+        {
+          path: ':profileId',
+          element: (
+            <ProfileLayout>
+              <Outlet />
+            </ProfileLayout>
+          ),
+          children: [
+            {
+              index: true,
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/profile');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'profile',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/profile');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'data',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/data');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'avatar',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/avatar');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'voice',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/voice');
+                return { Component: Page };
+              },
+            },
+          ],
+        },
+      ],
     },
     {
       path: 'settings',

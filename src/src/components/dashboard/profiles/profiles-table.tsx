@@ -19,10 +19,11 @@ import { useProfilesSelection } from './profiles-selection-context';
 export interface ProfilesTableProps {
   onEdit?: (profile: Profile) => void;
   onEditData?: (profile: Profile) => void;
+  onOpen?: (profile: Profile) => void;
   rows?: Profile[];
 }
 
-export function ProfilesTable({ onEdit, onEditData, rows = [] }: ProfilesTableProps): React.JSX.Element {
+export function ProfilesTable({ onEdit, onEditData, onOpen, rows = [] }: ProfilesTableProps): React.JSX.Element {
   const columns = React.useMemo(() => getColumns({ onEdit, onEditData }), [onEdit, onEditData]);
   const { deselectAll, deselectOne, selectAll, selectOne, selected } = useProfilesSelection();
 
@@ -30,6 +31,10 @@ export function ProfilesTable({ onEdit, onEditData, rows = [] }: ProfilesTablePr
     <React.Fragment>
       <DataTable<Profile>
         columns={columns}
+        hover
+        onClick={(_, row) => {
+          onOpen?.(row);
+        }}
         onDeselectAll={deselectAll}
         onDeselectOne={(_, row) => {
           deselectOne(String(row.id));
@@ -84,7 +89,8 @@ function getColumns({
         <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', minWidth: '260px' }}>
           <Button
             color="secondary"
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation();
               onEdit?.(row);
             }}
             size="small"
@@ -95,7 +101,8 @@ function getColumns({
           </Button>
           <Button
             color="secondary"
-            onClick={() => {
+            onClick={(event) => {
+              event.stopPropagation();
               onEditData?.(row);
             }}
             size="small"
