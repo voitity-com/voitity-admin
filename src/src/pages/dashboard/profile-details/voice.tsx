@@ -29,8 +29,8 @@ import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { Profile, Voice } from '@/lib/profiles/api-client';
-import { createVoice, getProfile, uploadVoiceSample } from '@/lib/profiles/api-client';
+import type { Profile, Voice, VoiceTestAudio } from '@/lib/profiles/api-client';
+import { createVoice, getProfile, testVoiceAudio, uploadVoiceSample } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
 
@@ -51,9 +51,14 @@ export function Page(): React.JSX.Element {
   const [audioUrl, setAudioUrl] = React.useState<string>('');
   const [error, setError] = React.useState<string>('');
   const [sampleDialogOpen, setSampleDialogOpen] = React.useState<boolean>(false);
+  const [testDialogOpen, setTestDialogOpen] = React.useState<boolean>(false);
+  const [testText, setTestText] = React.useState<string>('Hola, esta es una prueba de voz.');
+  const [testAudio, setTestAudio] = React.useState<null | VoiceTestAudio>(null);
+  const [testAudioUrl, setTestAudioUrl] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isCreating, setIsCreating] = React.useState<boolean>(false);
   const [isRecording, setIsRecording] = React.useState<boolean>(false);
+  const [isTestingVoice, setIsTestingVoice] = React.useState<boolean>(false);
   const [isUploading, setIsUploading] = React.useState<boolean>(false);
   const chunksRef = React.useRef<Blob[]>([]);
   const recorderRef = React.useRef<MediaRecorder | null>(null);
@@ -68,6 +73,14 @@ export function Page(): React.JSX.Element {
       stopTracks(streamRef.current);
     };
   }, [audioUrl]);
+
+  React.useEffect(() => {
+    return () => {
+      if (testAudioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(testAudioUrl);
+      }
+    };
+  }, [testAudioUrl]);
 
   const loadProfile = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -201,6 +214,51 @@ export function Page(): React.JSX.Element {
     }
   }, [audioBlob, voiceId]);
 
+  const handleTestDialogClose = React.useCallback((): void => {
+    if (isTestingVoice) {
+      return;
+    }
+
+    setTestDialogOpen(false);
+  }, [isTestingVoice]);
+
+  const handleGetAudio = React.useCallback(async (): Promise<void> => {
+    const text = testText.trim();
+
+    if (!text) {
+      setError('Enter text to generate audio.');
+      return;
+    }
+
+    setIsTestingVoice(true);
+    setError('');
+
+    try {
+      const generatedAudio = await testVoiceAudio({ profile_id: profileId, text });
+      const nextAudioUrl = resolveVoiceTestAudioUrl(generatedAudio);
+
+      if (!nextAudioUrl) {
+        throw new Error('The API did not return audio.');
+      }
+
+      if (testAudioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(testAudioUrl);
+      }
+
+      setTestAudio(generatedAudio);
+      setTestAudioUrl(nextAudioUrl);
+      toast.success('Audio generated');
+    } catch (err) {
+      const message = getErrorMessage(err);
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsTestingVoice(false);
+    }
+  }, [profileId, testAudioUrl, testText]);
+
+  const voiceEnabled = hasProfileVoiceEnabled(profile);
+
   return (
     <React.Fragment>
       <Helmet>
@@ -257,16 +315,29 @@ export function Page(): React.JSX.Element {
                 <Button disabled={isCreating || !voiceName.trim()} onClick={handleCreateVoice} variant="contained">
                   Create voice
                 </Button>
-                <Button
-                  disabled={!voiceId}
-                  onClick={() => {
-                    setSampleDialogOpen(true);
-                  }}
-                  startIcon={<MicrophoneIcon />}
-                  variant="contained"
-                >
-                  {t('dashboard.profiles.detail.voice.cloneVoice')}
-                </Button>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button
+                    disabled={!voiceId}
+                    onClick={() => {
+                      setSampleDialogOpen(true);
+                    }}
+                    startIcon={<MicrophoneIcon />}
+                    variant="contained"
+                  >
+                    {t('dashboard.profiles.detail.voice.cloneVoice')}
+                  </Button>
+                  {voiceEnabled ? (
+                    <Button
+                      color="secondary"
+                      onClick={() => {
+                        setTestDialogOpen(true);
+                      }}
+                      variant="outlined"
+                    >
+                      Test voice
+                    </Button>
+                  ) : null}
+                </Stack>
               </CardActions>
             </React.Fragment>
           )}
@@ -343,6 +414,57 @@ export function Page(): React.JSX.Element {
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        onClose={() => {
+          handleTestDialogClose();
+        }}
+        open={testDialogOpen}
+      >
+        <DialogTitle>Test voice</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2}>
+            {error ? <Alert color="error">{error}</Alert> : null}
+            <FormControl fullWidth>
+              <InputLabel>Text</InputLabel>
+              <OutlinedInput
+                label="Text"
+                multiline
+                onChange={(event) => {
+                  setTestText(event.target.value);
+                }}
+                rows={4}
+                value={testText}
+              />
+              {testAudio?.duration ? <FormHelperText>Duration: {testAudio.duration}s</FormHelperText> : null}
+            </FormControl>
+            {testAudioUrl ? (
+              <Box>
+                <Typography sx={{ mb: 1 }} variant="subtitle2">
+                  Audio
+                </Typography>
+                <Box
+                  component="audio"
+                  controls
+                  key={testAudioUrl}
+                  preload="metadata"
+                  src={testAudioUrl}
+                  sx={{ display: 'block', width: '100%' }}
+                />
+              </Box>
+            ) : null}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button color="secondary" disabled={isTestingVoice} onClick={handleTestDialogClose}>
+            Cancel
+          </Button>
+          <Button disabled={isTestingVoice || !testText.trim()} onClick={handleGetAudio} variant="contained">
+            Get audio
+          </Button>
+        </DialogActions>
+      </Dialog>
     </React.Fragment>
   );
 }
@@ -359,6 +481,38 @@ async function convertAudioBlobToMp3File(blob: Blob): Promise<File> {
   } finally {
     await audioContext.close();
   }
+}
+
+function hasProfileVoiceEnabled(profile: null | Profile): boolean {
+  if (!profile) {
+    return false;
+  }
+
+  const profileRecord = profile as Profile & { voice?: unknown };
+
+  if (profileRecord.voice === true) {
+    return true;
+  }
+
+  return profile.data?.voice === true;
+}
+
+function resolveVoiceTestAudioUrl(audio: VoiceTestAudio): string {
+  if (audio.audio_content) {
+    const audioFormat = audio.audio_format || 'mp3';
+    const mimeType = audioFormat === 'wav' ? 'audio/wav' : 'audio/mpeg';
+    const base64Content = audio.audio_content.includes(',')
+      ? (audio.audio_content.split(',').pop() ?? '')
+      : audio.audio_content;
+    const bytes = Uint8Array.from(atob(base64Content), (character) => character.charCodeAt(0));
+    return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+  }
+
+  if (audio.audio_url) {
+    return audio.audio_url.startsWith('http') ? audio.audio_url : `${config.api.baseUrl}${audio.audio_url}`;
+  }
+
+  return '';
 }
 
 function encodeAudioBufferAsMp3(audioBuffer: AudioBuffer, lamejs: LameJs): Blob {

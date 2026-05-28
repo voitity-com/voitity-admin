@@ -52,6 +52,18 @@ export interface VoiceSample {
   file?: string;
 }
 
+export interface VoiceTestAudio {
+  audio_content?: null | string;
+  audio_format?: null | string;
+  audio_url?: null | string;
+  duration?: null | number;
+  metadata?: Record<string, unknown>;
+  profile_id: number | string;
+  status?: null | string;
+  text: string;
+  voice_id: number | string;
+}
+
 export class ProfileApiError extends Error {
   public status: number;
 
@@ -135,6 +147,17 @@ export async function uploadVoiceSample(params: {
   );
 
   return isApiEnvelope<VoiceSample>(response) ? response.data : response;
+}
+
+export async function testVoiceAudio(payload: {
+  profile_id: number | string;
+  text: string;
+}): Promise<VoiceTestAudio> {
+  const response = await requestJson<ApiEnvelope<VoiceTestAudio> | VoiceTestAudio>('/api/voice/test', {
+    body: payload,
+    method: 'POST',
+  });
+  return isApiEnvelope<VoiceTestAudio>(response) ? response.data : response;
 }
 
 function unwrapProfile(response: ApiEnvelope<Profile> | Profile): Profile {
