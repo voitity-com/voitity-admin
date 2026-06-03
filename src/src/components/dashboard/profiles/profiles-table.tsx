@@ -72,6 +72,11 @@ function getColumns({
       name: 'Name',
       width: '280px',
     },
+    {
+      formatter: (row): string => row.alias || '-',
+      name: 'Alias',
+      width: '160px',
+    },
     { field: 'genre', name: 'Genre', width: '120px' },
     { field: 'personality', name: 'Personality', width: '180px' },
     {
@@ -129,7 +134,7 @@ function renderProfileCell(row: Profile): React.JSX.Element {
           {row.name}
         </Typography>
         <Typography color="text.secondary" noWrap variant="body2">
-          {row.description}
+          {row.alias ? `@${row.alias}` : row.description}
         </Typography>
       </div>
     </Stack>

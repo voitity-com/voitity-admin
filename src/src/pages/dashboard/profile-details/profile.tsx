@@ -32,6 +32,7 @@ const metadata = { title: `Profile | Profiles | Dashboard | ${config.site.name}`
 
 const schema = zod.object({
   active: zod.boolean(),
+  alias: zod.string().max(100, 'Alias must be at most 100 characters'),
   description: zod.string().min(1, 'Description is required').max(500),
   genre: zod.string().min(1, 'Genre is required').max(10),
   name: zod.string().min(1, 'Name is required').max(100),
@@ -42,6 +43,7 @@ type Values = zod.infer<typeof schema>;
 
 const defaultValues = {
   active: true,
+  alias: '',
   description: '',
   genre: '',
   name: '',
@@ -85,7 +87,7 @@ export function Page(): React.JSX.Element {
 
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
-      const payload: ProfilePayload = values;
+      const payload: ProfilePayload = toPayload(values);
 
       try {
         const updatedProfile = await updateProfile(profileId, payload);
@@ -128,6 +130,17 @@ export function Page(): React.JSX.Element {
                         <InputLabel>Name</InputLabel>
                         <OutlinedInput {...field} label="Name" />
                         {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
+                      </FormControl>
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="alias"
+                    render={({ field }) => (
+                      <FormControl error={Boolean(errors.alias)}>
+                        <InputLabel>Alias</InputLabel>
+                        <OutlinedInput {...field} label="Alias" />
+                        {errors.alias ? <FormHelperText>{errors.alias.message}</FormHelperText> : null}
                       </FormControl>
                     )}
                   />
@@ -199,10 +212,18 @@ export function Page(): React.JSX.Element {
 function toValues(profile: Profile): Values {
   return {
     active: profile.active ?? true,
+    alias: profile.alias ?? '',
     description: profile.description ?? '',
     genre: profile.genre ?? '',
     name: profile.name ?? '',
     personality: profile.personality ?? '',
+  };
+}
+
+function toPayload(values: Values): ProfilePayload {
+  return {
+    ...values,
+    alias: values.alias.trim() || null,
   };
 }
 

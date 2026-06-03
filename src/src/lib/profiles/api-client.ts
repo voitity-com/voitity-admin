@@ -4,6 +4,7 @@ import { getStoredApiToken } from '@/lib/auth/custom/api-token';
 export interface Profile {
   id: number | string;
   user_id?: number | string;
+  alias?: null | string;
   name: string;
   description: string;
   genre: string;
@@ -16,6 +17,7 @@ export interface Profile {
 
 export interface ProfilePayload {
   name: string;
+  alias?: null | string;
   description: string;
   genre: string;
   personality: string;

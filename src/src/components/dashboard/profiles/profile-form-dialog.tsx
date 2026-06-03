@@ -22,6 +22,7 @@ import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 
 const schema = zod.object({
   active: zod.boolean(),
+  alias: zod.string().max(100, 'Alias must be at most 100 characters'),
   description: zod.string().min(1, 'Description is required').max(500),
   genre: zod.string().min(1, 'Genre is required').max(10),
   name: zod.string().min(1, 'Name is required').max(100),
@@ -33,6 +34,7 @@ type Values = zod.infer<typeof schema>;
 function getDefaultValues(profile?: null | Profile): Values {
   return {
     active: profile?.active ?? true,
+    alias: profile?.alias ?? '',
     description: profile?.description ?? '',
     genre: profile?.genre ?? '',
     name: profile?.name ?? '',
@@ -66,7 +68,7 @@ export function ProfileFormDialog({
 
   const handleFormSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
-      await onSubmit(values);
+      await onSubmit(toPayload(values));
     },
     [onSubmit]
   );
@@ -87,6 +89,17 @@ export function ProfileFormDialog({
                   <InputLabel>Name</InputLabel>
                   <OutlinedInput {...field} />
                   {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
+              name="alias"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.alias)}>
+                  <InputLabel>Alias</InputLabel>
+                  <OutlinedInput {...field} label="Alias" />
+                  {errors.alias ? <FormHelperText>{errors.alias.message}</FormHelperText> : null}
                 </FormControl>
               )}
             />
@@ -153,4 +166,11 @@ export function ProfileFormDialog({
       </form>
     </Dialog>
   );
+}
+
+function toPayload(values: Values): ProfilePayload {
+  return {
+    ...values,
+    alias: values.alias.trim() || null,
+  };
 }
