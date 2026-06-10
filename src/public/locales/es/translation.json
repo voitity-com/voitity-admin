@@ -83,12 +83,29 @@
           "zoom": "Zoom"
         },
         "data": {
+          "addItem": "Agregar {{item}}",
+          "emptySection": "Aún no hay elementos.",
           "errors": {
             "invalidJson": "JSON inválido.",
             "jsonObject": "Los datos deben ser un objeto JSON."
           },
           "field": "JSON de datos",
+          "fields": {
+            "company": "Empresa",
+            "description": "Descripción",
+            "name": "Nombre",
+            "placeLiving": "Lugar de residencia",
+            "role": "Rol",
+            "url": "URL"
+          },
+          "itemTitle": "Elemento {{index}}",
+          "removeItem": "Quitar",
           "subheader": "Actualizar datos del perfil",
+          "tabs": {
+            "me": "Yo",
+            "projects": "Proyectos",
+            "work": "Trabajo"
+          },
           "title": "Datos",
           "toasts": {
             "updated": "Datos del perfil actualizados"

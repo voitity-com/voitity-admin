@@ -8,11 +8,15 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import CircularProgress from '@mui/material/CircularProgress';
+import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -26,11 +30,34 @@ import { toast } from '@/components/core/toaster';
 
 const metadata = { title: `Data | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
+type JsonPrimitive = boolean | null | number | string;
+type JsonValue = JsonObject | JsonPrimitive | JsonValue[];
+
+// Recursive JSON object types require an index signature in TypeScript.
+// eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style -- Recursive JSON object types require an index signature in TypeScript.
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+const defaultData = {
+  me: {
+    description: '',
+    'place-living': '',
+  },
+  projects: [],
+  work: [],
+} satisfies JsonObject;
+
+const tabKeys = ['me', 'work', 'projects'] as const;
+
+type TabKey = (typeof tabKeys)[number];
+
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
   const [profile, setProfile] = React.useState<null | Profile>(null);
-  const [value, setValue] = React.useState<string>('{}');
+  const [data, setData] = React.useState<JsonObject>(defaultData);
+  const [activeTab, setActiveTab] = React.useState<TabKey>('me');
   const [error, setError] = React.useState<string>('');
   const [fieldError, setFieldError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -44,7 +71,7 @@ export function Page(): React.JSX.Element {
     try {
       const nextProfile = await getProfile(profileId);
       setProfile(nextProfile);
-      setValue(JSON.stringify(nextProfile.data ?? {}, null, 2));
+      setData(normalizeData(nextProfile.data));
     } catch (err) {
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
@@ -64,28 +91,75 @@ export function Page(): React.JSX.Element {
     setIsSubmitting(true);
 
     try {
-      const parsed = JSON.parse(value || '{}') as unknown;
-
-      if (!isRecord(parsed)) {
-        setFieldError(t('dashboard.profiles.detail.data.errors.jsonObject'));
-        return;
-      }
-
-      const updatedProfile = await updateProfileData(profileId, parsed);
+      const updatedProfile = await updateProfileData(profileId, data);
       setProfile(updatedProfile);
-      setValue(JSON.stringify(updatedProfile.data ?? {}, null, 2));
+      setData(normalizeData(updatedProfile.data));
       toast.success(t('dashboard.profiles.detail.data.toasts.updated'));
     } catch (err) {
-      const message =
-        err instanceof SyntaxError
-          ? t('dashboard.profiles.detail.data.errors.invalidJson')
-          : getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
+      const message = getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
       setFieldError(message);
       toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [profileId, t, value]);
+  }, [data, profileId, t]);
+
+  const handleObjectFieldChange = React.useCallback((section: string, field: string, value: string): void => {
+    setData((current) => {
+      const sectionValue = getObjectValue(current[section]);
+
+      return {
+        ...current,
+        [section]: {
+          ...sectionValue,
+          [field]: value,
+        },
+      };
+    });
+  }, []);
+
+  const handleArrayItemFieldChange = React.useCallback(
+    (section: string, index: number, field: string, value: string): void => {
+      setData((current) => {
+        const sectionValue = getArrayValue(current[section]);
+        const nextSectionValue = [...sectionValue];
+        const item = getObjectValue(nextSectionValue[index]);
+
+        nextSectionValue[index] = {
+          ...item,
+          [field]: value,
+        };
+
+        return {
+          ...current,
+          [section]: nextSectionValue,
+        };
+      });
+    },
+    []
+  );
+
+  const handleAddArrayItem = React.useCallback((section: 'projects' | 'work'): void => {
+    setData((current) => {
+      const sectionValue = getArrayValue(current[section]);
+
+      return {
+        ...current,
+        [section]: [...sectionValue, getDefaultArrayItem(section)],
+      };
+    });
+  }, []);
+
+  const handleRemoveArrayItem = React.useCallback((section: string, index: number): void => {
+    setData((current) => {
+      const sectionValue = getArrayValue(current[section]);
+
+      return {
+        ...current,
+        [section]: sectionValue.filter((_, itemIndex: number) => itemIndex !== index),
+      };
+    });
+  }, []);
 
   return (
     <React.Fragment>
@@ -105,20 +179,61 @@ export function Page(): React.JSX.Element {
             </Stack>
           ) : (
             <React.Fragment>
+              <Tabs
+                onChange={(_, value: TabKey) => {
+                  setActiveTab(value);
+                }}
+                sx={{ px: 3 }}
+                value={activeTab}
+                variant="scrollable"
+              >
+                {tabKeys.map((key) => (
+                  <Tab key={key} label={t(`dashboard.profiles.detail.data.tabs.${key}`)} value={key} />
+                ))}
+              </Tabs>
+              <Divider />
               <CardContent>
-                <FormControl error={Boolean(fieldError)} fullWidth>
-                  <InputLabel>{t('dashboard.profiles.detail.data.field')}</InputLabel>
-                  <OutlinedInput
-                    label={t('dashboard.profiles.detail.data.field')}
-                    minRows={16}
-                    multiline
-                    onChange={(event) => {
-                      setValue(event.target.value);
-                    }}
-                    value={value}
-                  />
-                  {fieldError ? <FormHelperText>{fieldError}</FormHelperText> : null}
-                </FormControl>
+                <Stack spacing={3}>
+                  {activeTab === 'me' ? (
+                    <ObjectSection
+                      data={getObjectValue(data.me)}
+                      onFieldChange={(field, value) => {
+                        handleObjectFieldChange('me', field, value);
+                      }}
+                    />
+                  ) : null}
+                  {activeTab === 'work' ? (
+                    <ArraySection
+                      items={getArrayValue(data.work)}
+                      onAddItem={() => {
+                        handleAddArrayItem('work');
+                      }}
+                      onFieldChange={(index, field, value) => {
+                        handleArrayItemFieldChange('work', index, field, value);
+                      }}
+                      onRemoveItem={(index) => {
+                        handleRemoveArrayItem('work', index);
+                      }}
+                      section="work"
+                    />
+                  ) : null}
+                  {activeTab === 'projects' ? (
+                    <ArraySection
+                      items={getArrayValue(data.projects)}
+                      onAddItem={() => {
+                        handleAddArrayItem('projects');
+                      }}
+                      onFieldChange={(index, field, value) => {
+                        handleArrayItemFieldChange('projects', index, field, value);
+                      }}
+                      onRemoveItem={(index) => {
+                        handleRemoveArrayItem('projects', index);
+                      }}
+                      section="projects"
+                    />
+                  ) : null}
+                  {fieldError ? <FormHelperText error>{fieldError}</FormHelperText> : null}
+                </Stack>
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', p: 3, pt: 0 }}>
                 <Button disabled={isSubmitting} onClick={handleSubmit} variant="contained">
@@ -133,10 +248,197 @@ export function Page(): React.JSX.Element {
   );
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
+function isRecord(value: unknown): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function ObjectSection({
+  data,
+  onFieldChange,
+}: {
+  data: JsonObject;
+  onFieldChange: (field: string, value: string) => void;
+}): React.JSX.Element {
+  return (
+    <Stack spacing={2}>
+      {Object.entries(data).map(([field, value]) => (
+        <DataField
+          field={field}
+          key={field}
+          onChange={(nextValue) => {
+            onFieldChange(field, nextValue);
+          }}
+          value={value}
+        />
+      ))}
+    </Stack>
+  );
+}
+
+function ArraySection({
+  items,
+  onAddItem,
+  onFieldChange,
+  onRemoveItem,
+  section,
+}: {
+  items: JsonValue[];
+  onAddItem: () => void;
+  onFieldChange: (index: number, field: string, value: string) => void;
+  onRemoveItem: (index: number) => void;
+  section: 'projects' | 'work';
+}): React.JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <Stack spacing={2}>
+      {items.length ? (
+        items.map((item, index) => (
+          <Stack
+            // eslint-disable-next-line react/no-array-index-key -- Items are edited in place and are not reordered; value-based keys remount inputs while typing.
+            key={`${section}-${index}`}
+            spacing={2}
+            sx={{
+              border: '1px solid var(--mui-palette-divider)',
+              borderRadius: 1,
+              p: 2,
+            }}
+          >
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
+              <Typography sx={{ flex: '1 1 auto' }} variant="subtitle2">
+                {t('dashboard.profiles.detail.data.itemTitle', { index: index + 1 })}
+              </Typography>
+              <Button
+                color="secondary"
+                onClick={() => {
+                  onRemoveItem(index);
+                }}
+                size="small"
+                variant="outlined"
+              >
+                {t('dashboard.profiles.detail.data.removeItem')}
+              </Button>
+            </Stack>
+            {isRecord(item) ? (
+              <ObjectSection
+                data={item}
+                onFieldChange={(field, value) => {
+                  onFieldChange(index, field, value);
+                }}
+              />
+            ) : (
+              <Typography color="text.secondary" variant="body2">
+                {String(item ?? '')}
+              </Typography>
+            )}
+          </Stack>
+        ))
+      ) : (
+        <Typography color="text.secondary" variant="body2">
+          {t('dashboard.profiles.detail.data.emptySection')}
+        </Typography>
+      )}
+      <Button onClick={onAddItem} sx={{ alignSelf: 'flex-start' }} variant="outlined">
+        {t('dashboard.profiles.detail.data.addItem', {
+          item: t(`dashboard.profiles.detail.data.tabs.${section}`).toLowerCase(),
+        })}
+      </Button>
+    </Stack>
+  );
+}
+
+function DataField({
+  field,
+  onChange,
+  value,
+}: {
+  field: string;
+  onChange: (value: string) => void;
+  value: JsonValue;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const textValue = getFieldTextValue(value);
+  const multiline = field === 'description' || textValue.length > 80;
+
+  return (
+    <FormControl fullWidth>
+      <InputLabel>{getFieldLabel(field, t)}</InputLabel>
+      <OutlinedInput
+        label={getFieldLabel(field, t)}
+        minRows={multiline ? 4 : undefined}
+        multiline={multiline}
+        onChange={(event) => {
+          onChange(event.target.value);
+        }}
+        value={textValue}
+      />
+    </FormControl>
+  );
+}
+
+function normalizeData(value: unknown): JsonObject {
+  if (!isRecord(value)) {
+    return defaultData;
+  }
+
+  return {
+    ...value,
+    me: isRecord(value.me) ? value.me : defaultData.me,
+    projects: Array.isArray(value.projects) ? (value.projects as JsonValue[]) : [],
+    work: Array.isArray(value.work) ? (value.work as JsonValue[]) : [],
+  };
+}
+
+function getObjectValue(value: JsonValue | undefined): JsonObject {
+  return isRecord(value) ? value : {};
+}
+
+function getArrayValue(value: JsonValue | undefined): JsonValue[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function getDefaultArrayItem(section: 'projects' | 'work'): JsonObject {
+  if (section === 'work') {
+    return { company: '', description: '', role: '' };
+  }
+
+  return { description: '', name: '', url: '' };
+}
+
+function getFieldTextValue(value: JsonValue): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (value === null) {
+    return '';
+  }
+
+  return JSON.stringify(value, null, 2);
+}
+
+function getFieldLabel(field: string, t: (key: string) => string): string {
+  const keyMap: Record<string, string> = {
+    company: 'company',
+    description: 'description',
+    name: 'name',
+    'place-living': 'placeLiving',
+    role: 'role',
+    url: 'url',
+  };
+  const translationKey = keyMap[field];
+
+  if (translationKey) {
+    return t(`dashboard.profiles.detail.data.fields.${translationKey}`);
+  }
+
+  return field;
 }

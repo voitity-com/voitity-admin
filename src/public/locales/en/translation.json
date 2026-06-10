@@ -83,12 +83,29 @@
           "zoom": "Zoom"
         },
         "data": {
+          "addItem": "Add {{item}}",
+          "emptySection": "No items yet.",
           "errors": {
             "invalidJson": "Invalid JSON.",
             "jsonObject": "Data must be a JSON object."
           },
           "field": "Data JSON",
+          "fields": {
+            "company": "Company",
+            "description": "Description",
+            "name": "Name",
+            "placeLiving": "Place living",
+            "role": "Role",
+            "url": "URL"
+          },
+          "itemTitle": "Item {{index}}",
+          "removeItem": "Remove",
           "subheader": "Update profile data",
+          "tabs": {
+            "me": "Me",
+            "projects": "Projects",
+            "work": "Work"
+          },
           "title": "Data",
           "toasts": {
             "updated": "Profile data updated"
