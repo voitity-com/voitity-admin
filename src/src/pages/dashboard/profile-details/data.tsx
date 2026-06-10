@@ -39,25 +39,25 @@ interface JsonObject {
   [key: string]: JsonValue;
 }
 
-const defaultData = {
+const fallbackData = {
   me: {
     description: '',
     'place-living': '',
   },
-  projects: [],
-  work: [],
 } satisfies JsonObject;
 
-const tabKeys = ['me', 'work', 'projects'] as const;
+const tabKeys = ['me', 'work', 'projects', 'networks'] as const;
 
 type TabKey = (typeof tabKeys)[number];
+type ArraySectionKey = Exclude<TabKey, 'me'>;
+type SectionKey = string;
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
   const [profile, setProfile] = React.useState<null | Profile>(null);
-  const [data, setData] = React.useState<JsonObject>(defaultData);
-  const [activeTab, setActiveTab] = React.useState<TabKey>('me');
+  const [data, setData] = React.useState<JsonObject>(fallbackData);
+  const [activeTab, setActiveTab] = React.useState<SectionKey>('me');
   const [error, setError] = React.useState<string>('');
   const [fieldError, setFieldError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -79,6 +79,13 @@ export function Page(): React.JSX.Element {
       setIsLoading(false);
     }
   }, [profileId, t]);
+  const visibleTabs = React.useMemo(() => getVisibleTabs(data), [data]);
+
+  React.useEffect(() => {
+    if (!visibleTabs.includes(activeTab)) {
+      setActiveTab(visibleTabs[0] ?? 'me');
+    }
+  }, [activeTab, visibleTabs]);
 
   React.useEffect(() => {
     loadProfile().catch((err) => {
@@ -139,7 +146,7 @@ export function Page(): React.JSX.Element {
     []
   );
 
-  const handleAddArrayItem = React.useCallback((section: 'projects' | 'work'): void => {
+  const handleAddArrayItem = React.useCallback((section: ArraySectionKey): void => {
     setData((current) => {
       const sectionValue = getArrayValue(current[section]);
 
@@ -180,15 +187,15 @@ export function Page(): React.JSX.Element {
           ) : (
             <React.Fragment>
               <Tabs
-                onChange={(_, value: TabKey) => {
+                onChange={(_, value: SectionKey) => {
                   setActiveTab(value);
                 }}
                 sx={{ px: 3 }}
                 value={activeTab}
                 variant="scrollable"
               >
-                {tabKeys.map((key) => (
-                  <Tab key={key} label={t(`dashboard.profiles.detail.data.tabs.${key}`)} value={key} />
+                {visibleTabs.map((key) => (
+                  <Tab key={key} label={getTabLabel(key, t)} value={key} />
                 ))}
               </Tabs>
               <Divider />
@@ -230,6 +237,33 @@ export function Page(): React.JSX.Element {
                         handleRemoveArrayItem('projects', index);
                       }}
                       section="projects"
+                    />
+                  ) : null}
+                  {activeTab === 'networks' ? (
+                    <ArraySection
+                      items={getArrayValue(data.networks)}
+                      onAddItem={() => {
+                        handleAddArrayItem('networks');
+                      }}
+                      onFieldChange={(index, field, value) => {
+                        handleArrayItemFieldChange('networks', index, field, value);
+                      }}
+                      onRemoveItem={(index) => {
+                        handleRemoveArrayItem('networks', index);
+                      }}
+                      section="networks"
+                    />
+                  ) : null}
+                  {!isKnownTab(activeTab) ? (
+                    <GenericSection
+                      onArrayFieldChange={(index, field, value) => {
+                        handleArrayItemFieldChange(activeTab, index, field, value);
+                      }}
+                      onFieldChange={(field, value) => {
+                        handleObjectFieldChange(activeTab, field, value);
+                      }}
+                      section={activeTab}
+                      value={data[activeTab]}
                     />
                   ) : null}
                   {fieldError ? <FormHelperText error>{fieldError}</FormHelperText> : null}
@@ -285,12 +319,14 @@ function ArraySection({
   onFieldChange,
   onRemoveItem,
   section,
+  showControls = true,
 }: {
   items: JsonValue[];
   onAddItem: () => void;
   onFieldChange: (index: number, field: string, value: string) => void;
   onRemoveItem: (index: number) => void;
-  section: 'projects' | 'work';
+  section: string;
+  showControls?: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -312,16 +348,18 @@ function ArraySection({
               <Typography sx={{ flex: '1 1 auto' }} variant="subtitle2">
                 {t('dashboard.profiles.detail.data.itemTitle', { index: index + 1 })}
               </Typography>
-              <Button
-                color="secondary"
-                onClick={() => {
-                  onRemoveItem(index);
-                }}
-                size="small"
-                variant="outlined"
-              >
-                {t('dashboard.profiles.detail.data.removeItem')}
-              </Button>
+              {showControls ? (
+                <Button
+                  color="secondary"
+                  onClick={() => {
+                    onRemoveItem(index);
+                  }}
+                  size="small"
+                  variant="outlined"
+                >
+                  {t('dashboard.profiles.detail.data.removeItem')}
+                </Button>
+              ) : null}
             </Stack>
             {isRecord(item) ? (
               <ObjectSection
@@ -342,12 +380,57 @@ function ArraySection({
           {t('dashboard.profiles.detail.data.emptySection')}
         </Typography>
       )}
-      <Button onClick={onAddItem} sx={{ alignSelf: 'flex-start' }} variant="outlined">
-        {t('dashboard.profiles.detail.data.addItem', {
-          item: t(`dashboard.profiles.detail.data.tabs.${section}`).toLowerCase(),
-        })}
-      </Button>
+      {showControls ? (
+        <Button onClick={onAddItem} sx={{ alignSelf: 'flex-start' }} variant="outlined">
+          {t('dashboard.profiles.detail.data.addItem', {
+            item: getTabLabel(section, t).toLowerCase(),
+          })}
+        </Button>
+      ) : null}
     </Stack>
+  );
+}
+
+function GenericSection({
+  onArrayFieldChange,
+  onFieldChange,
+  section,
+  value,
+}: {
+  onArrayFieldChange: (index: number, field: string, value: string) => void;
+  onFieldChange: (field: string, value: string) => void;
+  section: string;
+  value: JsonValue | undefined;
+}): React.JSX.Element {
+  if (Array.isArray(value)) {
+    return (
+      <ArraySection
+        items={value}
+        onAddItem={() => {
+          return undefined;
+        }}
+        onFieldChange={onArrayFieldChange}
+        onRemoveItem={() => {
+          return undefined;
+        }}
+        section={section}
+        showControls={false}
+      />
+    );
+  }
+
+  if (isRecord(value)) {
+    return <ObjectSection data={value} onFieldChange={onFieldChange} />;
+  }
+
+  return (
+    <DataField
+      field={section}
+      onChange={(nextValue) => {
+        onFieldChange(section, nextValue);
+      }}
+      value={value ?? ''}
+    />
   );
 }
 
@@ -382,15 +465,30 @@ function DataField({
 
 function normalizeData(value: unknown): JsonObject {
   if (!isRecord(value)) {
-    return defaultData;
+    return fallbackData;
   }
 
-  return {
-    ...value,
-    me: isRecord(value.me) ? value.me : defaultData.me,
-    projects: Array.isArray(value.projects) ? (value.projects as JsonValue[]) : [],
-    work: Array.isArray(value.work) ? (value.work as JsonValue[]) : [],
-  };
+  return value;
+}
+
+function getVisibleTabs(data: JsonObject): SectionKey[] {
+  const knownTabs = tabKeys.filter((key) => Object.hasOwn(data, key));
+  const extraTabs = Object.keys(data).filter((key) => !isKnownTab(key));
+  const visibleTabs = [...knownTabs, ...extraTabs];
+
+  return visibleTabs.length ? visibleTabs : ['me'];
+}
+
+function getTabLabel(key: string, t: (key: string) => string): string {
+  if (isKnownTab(key)) {
+    return t(`dashboard.profiles.detail.data.tabs.${key}`);
+  }
+
+  return key ? `${key.charAt(0).toUpperCase()}${key.slice(1)}` : key;
+}
+
+function isKnownTab(key: string): key is TabKey {
+  return (tabKeys as readonly string[]).includes(key);
 }
 
 function getObjectValue(value: JsonValue | undefined): JsonObject {
@@ -401,9 +499,13 @@ function getArrayValue(value: JsonValue | undefined): JsonValue[] {
   return Array.isArray(value) ? value : [];
 }
 
-function getDefaultArrayItem(section: 'projects' | 'work'): JsonObject {
+function getDefaultArrayItem(section: ArraySectionKey): JsonObject {
   if (section === 'work') {
     return { company: '', description: '', role: '' };
+  }
+
+  if (section === 'networks') {
+    return { name: '', url: '', username: '' };
   }
 
   return { description: '', name: '', url: '' };
@@ -433,6 +535,7 @@ function getFieldLabel(field: string, t: (key: string) => string): string {
     'place-living': 'placeLiving',
     role: 'role',
     url: 'url',
+    username: 'username',
   };
   const translationKey = keyMap[field];
 

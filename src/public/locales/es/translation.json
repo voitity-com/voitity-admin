@@ -96,13 +96,15 @@
             "name": "Nombre",
             "placeLiving": "Lugar de residencia",
             "role": "Rol",
-            "url": "URL"
+            "url": "URL",
+            "username": "Usuario"
           },
           "itemTitle": "Elemento {{index}}",
           "removeItem": "Quitar",
           "subheader": "Actualizar datos del perfil",
           "tabs": {
             "me": "Yo",
+            "networks": "Redes",
             "projects": "Proyectos",
             "work": "Trabajo"
           },

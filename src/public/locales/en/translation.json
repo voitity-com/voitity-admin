@@ -96,13 +96,15 @@
             "name": "Name",
             "placeLiving": "Place living",
             "role": "Role",
-            "url": "URL"
+            "url": "URL",
+            "username": "Username"
           },
           "itemTitle": "Item {{index}}",
           "removeItem": "Remove",
           "subheader": "Update profile data",
           "tabs": {
             "me": "Me",
+            "networks": "Networks",
             "projects": "Projects",
             "work": "Work"
           },
