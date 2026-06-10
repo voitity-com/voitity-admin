@@ -16,6 +16,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { paths } from '@/paths';
+import { getProfileAvatar } from '@/lib/avatar/api-client';
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 import { createProfile, listProfiles, updateProfile, updateProfileData } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
@@ -45,7 +46,23 @@ export function Page(): React.JSX.Element {
     setError('');
 
     try {
-      setProfiles(await listProfiles());
+      const nextProfiles = await listProfiles();
+      const profilesWithAvatars = await Promise.all(
+        nextProfiles.map(async (profile) => {
+          if (profile.avatar !== undefined) {
+            return profile;
+          }
+
+          try {
+            return { ...profile, avatar: await getProfileAvatar(profile.id) };
+          } catch (err) {
+            logger.error(err);
+            return profile;
+          }
+        })
+      );
+
+      setProfiles(profilesWithAvatars);
     } catch (err) {
       const message = getErrorMessage(err);
       logger.error(err);

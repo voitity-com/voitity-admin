@@ -1,15 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
+import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 
+import { config } from '@/config';
+import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import type { Profile } from '@/lib/profiles/api-client';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -68,17 +69,24 @@ function getColumns({
 }): ColumnDef<Profile>[] {
   return [
     {
-      formatter: renderProfileCell,
+      formatter: renderAvatarCell,
+      name: 'Avatar',
+      width: '88px',
+    },
+    {
+      formatter: (row): React.JSX.Element => (
+        <Typography sx={{ whiteSpace: 'nowrap' }} variant="subtitle2">
+          {row.name}
+        </Typography>
+      ),
       name: 'Name',
-      width: '280px',
+      width: '260px',
     },
     {
       formatter: (row): string => row.alias || '-',
       name: 'Alias',
-      width: '160px',
+      width: '180px',
     },
-    { field: 'genre', name: 'Genre', width: '120px' },
-    { field: 'personality', name: 'Personality', width: '180px' },
     {
       formatter: renderStatusCell,
       name: 'Status',
@@ -125,19 +133,60 @@ function getColumns({
   ];
 }
 
-function renderProfileCell(row: Profile): React.JSX.Element {
+function renderAvatarCell(row: Profile): React.JSX.Element {
+  const media = getAvatarMedia(row.avatar ?? null);
+
+  if (!media) {
+    return (
+      <Box
+        sx={{
+          alignItems: 'center',
+          bgcolor: 'background.level2',
+          borderRadius: '50%',
+          color: 'text.secondary',
+          display: 'flex',
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          height: 56,
+          justifyContent: 'center',
+          overflow: 'hidden',
+          width: 56,
+        }}
+      >
+        {getInitials(row.name)}
+      </Box>
+    );
+  }
+
   return (
-    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-      <Avatar>{getInitials(row.name)}</Avatar>
-      <div>
-        <Typography sx={{ whiteSpace: 'nowrap' }} variant="subtitle2">
-          {row.name}
-        </Typography>
-        <Typography color="text.secondary" noWrap variant="body2">
-          {row.alias ? `@${row.alias}` : row.description}
-        </Typography>
-      </div>
-    </Stack>
+    <Box
+      sx={{
+        border: '1px solid var(--mui-palette-divider)',
+        borderRadius: '50%',
+        height: 56,
+        overflow: 'hidden',
+        width: 56,
+      }}
+    >
+      {media.type === 'video' ? (
+        <Box
+          autoPlay
+          component="video"
+          loop
+          muted
+          playsInline
+          src={resolveAssetUrl(media.file)}
+          sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+        />
+      ) : (
+        <Box
+          alt={`${row.name} avatar`}
+          component="img"
+          src={resolveAssetUrl(media.file)}
+          sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+        />
+      )}
+    </Box>
   );
 }
 
@@ -167,4 +216,40 @@ function formatDate(value?: null | string): string {
   }
 
   return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+}
+
+function getAvatarMedia(avatar: null | ProfileAvatar): null | { file: string; type: 'image' | 'video' } {
+  if (avatar?.ai_video?.file) {
+    return { file: avatar.ai_video.file, type: 'video' };
+  }
+
+  const file = avatar?.file || avatar?.ai_image?.file || '';
+
+  if (!file) {
+    return null;
+  }
+
+  return { file, type: isVideoFile(file) ? 'video' : 'image' };
+}
+
+function resolveAssetUrl(file: string): string {
+  if (/^(?:blob:|data:|https?:\/\/)/i.test(file)) {
+    return file;
+  }
+
+  const baseUrl = config.api?.baseUrl ?? '';
+
+  if (file.startsWith('/')) {
+    return `${baseUrl}${file}`;
+  }
+
+  if (file.startsWith('storage/')) {
+    return `${baseUrl}/${file}`;
+  }
+
+  return `${baseUrl}/storage/${file}`;
+}
+
+function isVideoFile(file: string): boolean {
+  return /\.(?:m4v|mov|mp4|ogg|webm)(?:\?.*)?$/i.test(file);
 }

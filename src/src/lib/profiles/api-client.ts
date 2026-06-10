@@ -1,10 +1,12 @@
 import { config } from '@/config';
+import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import { getStoredApiToken } from '@/lib/auth/custom/api-token';
 
 export interface Profile {
   id: number | string;
   user_id?: number | string;
   alias?: null | string;
+  avatar?: null | ProfileAvatar;
   name: string;
   description: string;
   genre: string;
