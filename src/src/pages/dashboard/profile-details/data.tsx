@@ -14,6 +14,7 @@ import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
@@ -27,6 +28,7 @@ const metadata = { title: `Data | Profiles | Dashboard | ${config.site.name}` } 
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
+  const { t } = useTranslation();
   const [profile, setProfile] = React.useState<null | Profile>(null);
   const [value, setValue] = React.useState<string>('{}');
   const [error, setError] = React.useState<string>('');
@@ -45,11 +47,11 @@ export function Page(): React.JSX.Element {
       setValue(JSON.stringify(nextProfile.data ?? {}, null, 2));
     } catch (err) {
       logger.error(err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
     } finally {
       setIsLoading(false);
     }
-  }, [profileId]);
+  }, [profileId, t]);
 
   React.useEffect(() => {
     loadProfile().catch((err) => {
@@ -65,22 +67,25 @@ export function Page(): React.JSX.Element {
       const parsed = JSON.parse(value || '{}') as unknown;
 
       if (!isRecord(parsed)) {
-        setFieldError('Data must be a JSON object.');
+        setFieldError(t('dashboard.profiles.detail.data.errors.jsonObject'));
         return;
       }
 
       const updatedProfile = await updateProfileData(profileId, parsed);
       setProfile(updatedProfile);
       setValue(JSON.stringify(updatedProfile.data ?? {}, null, 2));
-      toast.success('Profile data updated');
+      toast.success(t('dashboard.profiles.detail.data.toasts.updated'));
     } catch (err) {
-      const message = err instanceof SyntaxError ? 'Invalid JSON.' : getErrorMessage(err);
+      const message =
+        err instanceof SyntaxError
+          ? t('dashboard.profiles.detail.data.errors.invalidJson')
+          : getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
       setFieldError(message);
       toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [profileId, value]);
+  }, [profileId, t, value]);
 
   return (
     <React.Fragment>
@@ -90,7 +95,10 @@ export function Page(): React.JSX.Element {
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
         <Card>
-          <CardHeader subheader={profile ? profile.name : 'Update Profile Data'} title="Data" />
+          <CardHeader
+            subheader={profile ? profile.name : t('dashboard.profiles.detail.data.subheader')}
+            title={t('dashboard.profiles.detail.data.title')}
+          />
           {isLoading ? (
             <Stack sx={{ alignItems: 'center', p: 4 }}>
               <CircularProgress />
@@ -99,9 +107,9 @@ export function Page(): React.JSX.Element {
             <React.Fragment>
               <CardContent>
                 <FormControl error={Boolean(fieldError)} fullWidth>
-                  <InputLabel>Data JSON</InputLabel>
+                  <InputLabel>{t('dashboard.profiles.detail.data.field')}</InputLabel>
                   <OutlinedInput
-                    label="Data JSON"
+                    label={t('dashboard.profiles.detail.data.field')}
                     minRows={16}
                     multiline
                     onChange={(event) => {
@@ -114,7 +122,7 @@ export function Page(): React.JSX.Element {
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', p: 3, pt: 0 }}>
                 <Button disabled={isSubmitting} onClick={handleSubmit} variant="contained">
-                  Save data
+                  {t('dashboard.profiles.actions.saveData')}
                 </Button>
               </CardActions>
             </React.Fragment>
@@ -129,6 +137,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong';
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }

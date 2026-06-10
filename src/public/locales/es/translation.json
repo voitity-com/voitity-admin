@@ -43,14 +43,167 @@
       }
     },
     "profiles": {
+      "actions": {
+        "add": "Agregar",
+        "apply": "Aplicar",
+        "cancel": "Cancelar",
+        "clearFilters": "Limpiar filtros",
+        "createProfile": "Crear perfil",
+        "createVoice": "Crear voz",
+        "getAudio": "Generar audio",
+        "save": "Guardar",
+        "saveChanges": "Guardar cambios",
+        "saveData": "Guardar datos",
+        "sendSample": "Enviar muestra",
+        "startRecording": "Iniciar grabación",
+        "stop": "Detener",
+        "uploadImage": "Subir imagen"
+      },
       "detail": {
+        "avatar": {
+          "alt": {
+            "empty": "No hay avatar cargado",
+            "preview": "Vista previa del recorte de avatar",
+            "profile": "Avatar del perfil"
+          },
+          "dialogTitle": "Editar avatar",
+          "editAriaLabel": "Editar avatar",
+          "errors": {
+            "prepareImage": "No se pudo preparar la imagen del avatar.",
+            "selectImage": "Selecciona una imagen primero.",
+            "unsupportedFile": "Usa una imagen JPG, PNG o WEBP."
+          },
+          "noAvatar": "No hay avatar cargado.",
+          "saving": "Guardando...",
+          "subheader": "Avatar del perfil",
+          "title": "Avatar",
+          "toasts": {
+            "generationStarted": "Generación de avatar iniciada"
+          },
+          "zoom": "Zoom"
+        },
+        "data": {
+          "errors": {
+            "invalidJson": "JSON inválido.",
+            "jsonObject": "Los datos deben ser un objeto JSON."
+          },
+          "field": "JSON de datos",
+          "subheader": "Actualizar datos del perfil",
+          "title": "Datos",
+          "toasts": {
+            "updated": "Datos del perfil actualizados"
+          }
+        },
+        "errors": {
+          "generic": "Algo salió mal"
+        },
         "nav": {
+          "avatar": "Avatar",
+          "data": "Datos",
           "profile": "Perfil",
           "voice": "Voz"
         },
+        "profile": {
+          "subheader": "Actualizar información del perfil",
+          "title": "Perfil",
+          "toasts": {
+            "updated": "Perfil actualizado"
+          }
+        },
         "voice": {
-          "cloneVoice": "Clonar su voz"
+          "audio": "Audio",
+          "cloneVoice": "Clonar voz",
+          "createSubheader": "Crear voz y subir una muestra de voz",
+          "duration": "Duración: {{duration}}s",
+          "errors": {
+            "audioNotReturned": "La API no devolvió audio.",
+            "createBeforeUpload": "Crea una voz antes de subir una muestra.",
+            "encoderFailed": "No se pudo cargar el codificador MP3.",
+            "enterText": "Ingresa texto para generar audio.",
+            "microphoneAccess": "No se pudo acceder al micrófono.",
+            "recordBeforeSend": "Graba una muestra de voz antes de enviarla.",
+            "recordingUnsupported": "Este navegador no soporta grabación de audio."
+          },
+          "fields": {
+            "description": "Descripción",
+            "languageCode": "Código de idioma: {{code}}",
+            "text": "Texto",
+            "voiceName": "Nombre de la voz"
+          },
+          "preview": "Vista previa",
+          "readText": "Lee este texto",
+          "sampleText": "Hola, este es un ejemplo de mi voz para configurar mi perfil. Estoy leyendo este texto de forma clara y natural para crear una muestra de voz.",
+          "testTextDefault": "Hola, esta es una prueba de voz.",
+          "testVoice": "Probar voz",
+          "title": "Voz",
+          "toasts": {
+            "audioGenerated": "Audio generado",
+            "sampleUploaded": "Muestra de voz subida",
+            "voiceCreated": "Voz creada"
+          },
+          "voiceId": "ID de voz: {{id}}",
+          "voiceNameDefault": "Voz de {{name}}"
         }
+      },
+      "empty": "No se encontraron perfiles",
+      "errors": {
+        "generic": "Algo salió mal"
+      },
+      "fields": {
+        "active": "Activo",
+        "alias": "Alias",
+        "avatar": "Avatar",
+        "description": "Descripción",
+        "genre": "Género",
+        "name": "Nombre",
+        "personality": "Personalidad",
+        "status": "Estado",
+        "updated": "Actualizado"
+      },
+      "filters": {
+        "filterByGenre": "Filtrar por género",
+        "filterByName": "Filtrar por nombre",
+        "selected": "{{count}} seleccionados",
+        "sort": {
+          "newest": "Más recientes",
+          "oldest": "Más antiguos"
+        },
+        "tabs": {
+          "active": "Activos",
+          "all": "Todos",
+          "inactive": "Inactivos"
+        }
+      },
+      "pagination": {
+        "displayedRows": "{{from}}-{{to}} de {{total}}",
+        "firstPage": "Ir a la primera página",
+        "lastPage": "Ir a la última página",
+        "moreThan": "más de {{to}}",
+        "nextPage": "Ir a la página siguiente",
+        "previousPage": "Ir a la página anterior",
+        "rowsPerPage": "Filas por página:"
+      },
+      "form": {
+        "createTitle": "Crear perfil",
+        "editTitle": "Editar perfil",
+        "validation": {
+          "aliasMax": "El alias debe tener máximo 100 caracteres",
+          "descriptionRequired": "La descripción es obligatoria",
+          "genreRequired": "El género es obligatorio",
+          "nameRequired": "El nombre es obligatorio",
+          "personalityRequired": "La personalidad es obligatoria"
+        }
+      },
+      "list": {
+        "description": "Administra los perfiles asociados al usuario autenticado.",
+        "title": "Perfiles",
+        "toasts": {
+          "created": "Perfil creado"
+        }
+      },
+      "status": {
+        "active": "Activo",
+        "inactive": "Inactivo"
       }
     }
   },

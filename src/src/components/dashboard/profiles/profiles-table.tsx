@@ -4,6 +4,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 
 import { config } from '@/config';
 import type { ProfileAvatar } from '@/lib/avatar/api-client';
@@ -19,7 +20,9 @@ export interface ProfilesTableProps {
 }
 
 export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.JSX.Element {
-  const columns = React.useMemo(() => getColumns(), []);
+  const { i18n, t } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const columns = React.useMemo(() => getColumns({ language, t }), [language, t]);
   const { deselectAll, deselectOne, selectAll, selectOne, selected } = useProfilesSelection();
 
   return (
@@ -46,7 +49,7 @@ export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.
       {!rows.length ? (
         <Box sx={{ p: 3 }}>
           <Typography color="text.secondary" sx={{ textAlign: 'center' }} variant="body2">
-            No profiles found
+            {t('dashboard.profiles.empty')}
           </Typography>
         </Box>
       ) : null}
@@ -54,11 +57,11 @@ export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.
   );
 }
 
-function getColumns(): ColumnDef<Profile>[] {
+function getColumns({ language, t }: { language: string; t: (key: string) => string }): ColumnDef<Profile>[] {
   return [
     {
-      formatter: renderAvatarCell,
-      name: 'Avatar',
+      formatter: (row): React.JSX.Element => renderAvatarCell(row, t),
+      name: t('dashboard.profiles.fields.avatar'),
       width: '88px',
     },
     {
@@ -67,28 +70,28 @@ function getColumns(): ColumnDef<Profile>[] {
           {row.name}
         </Typography>
       ),
-      name: 'Name',
+      name: t('dashboard.profiles.fields.name'),
       width: '260px',
     },
     {
       formatter: (row): string => row.alias || '-',
-      name: 'Alias',
+      name: t('dashboard.profiles.fields.alias'),
       width: '180px',
     },
     {
-      formatter: renderStatusCell,
-      name: 'Status',
+      formatter: (row): React.JSX.Element => renderStatusCell(row, t),
+      name: t('dashboard.profiles.fields.status'),
       width: '120px',
     },
     {
-      formatter: (row): string => formatDate(row.updated_at),
-      name: 'Updated',
+      formatter: (row): string => formatDate(row.updated_at, language),
+      name: t('dashboard.profiles.fields.updated'),
       width: '160px',
     },
   ];
 }
 
-function renderAvatarCell(row: Profile): React.JSX.Element {
+function renderAvatarCell(row: Profile, t: (key: string) => string): React.JSX.Element {
   const media = getAvatarMedia(row.avatar ?? null);
 
   if (!media) {
@@ -135,7 +138,7 @@ function renderAvatarCell(row: Profile): React.JSX.Element {
         />
       ) : (
         <Box
-          alt={`${row.name} avatar`}
+          alt={t('dashboard.profiles.detail.avatar.alt.profile')}
           component="img"
           src={resolveAssetUrl(media.file)}
           sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
@@ -145,11 +148,11 @@ function renderAvatarCell(row: Profile): React.JSX.Element {
   );
 }
 
-function renderStatusCell(row: Profile): React.JSX.Element {
+function renderStatusCell(row: Profile, t: (key: string) => string): React.JSX.Element {
   return (
     <Chip
       color={row.active ? 'success' : 'default'}
-      label={row.active ? 'Active' : 'Inactive'}
+      label={row.active ? t('dashboard.profiles.status.active') : t('dashboard.profiles.status.inactive')}
       size="small"
       variant="outlined"
     />
@@ -165,12 +168,12 @@ function getInitials(name: string): string {
     .join('');
 }
 
-function formatDate(value?: null | string): string {
+function formatDate(value: null | string | undefined, language: string): string {
   if (!value) {
     return '-';
   }
 
-  return new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 }
 
 function getAvatarMedia(avatar: null | ProfileAvatar): null | { file: string; type: 'image' | 'video' } {

@@ -22,6 +22,7 @@ import Typography from '@mui/material/Typography';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
@@ -51,6 +52,7 @@ interface DragState {
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
+  const { t } = useTranslation();
   const [avatar, setAvatar] = React.useState<null | ProfileAvatar>(null);
   const [error, setError] = React.useState<string>('');
   const [fieldError, setFieldError] = React.useState<string>('');
@@ -77,11 +79,11 @@ export function Page(): React.JSX.Element {
       setStatus(nextAvatar?.status ?? '');
     } catch (err) {
       logger.error(err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
     } finally {
       setIsLoading(false);
     }
-  }, [profileId]);
+  }, [profileId, t]);
 
   React.useEffect(() => {
     loadAvatar().catch((err) => {
@@ -106,7 +108,7 @@ export function Page(): React.JSX.Element {
       }
 
       if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        setFieldError('Use a JPG, PNG, or WEBP image.');
+        setFieldError(t('dashboard.profiles.detail.avatar.errors.unsupportedFile'));
         return;
       }
 
@@ -120,7 +122,7 @@ export function Page(): React.JSX.Element {
       setPosition({ x: 0, y: 0 });
       event.target.value = '';
     },
-    [previewUrl]
+    [previewUrl, t]
   );
 
   const handleOpenDialog = React.useCallback((): void => {
@@ -176,7 +178,7 @@ export function Page(): React.JSX.Element {
 
   const handleSave = React.useCallback(async (): Promise<void> => {
     if (!previewUrl) {
-      setFieldError('Select an image first.');
+      setFieldError(t('dashboard.profiles.detail.avatar.errors.selectImage'));
       return;
     }
 
@@ -184,21 +186,26 @@ export function Page(): React.JSX.Element {
     setFieldError('');
 
     try {
-      const croppedFile = await createCroppedAvatarFile(previewUrl, position, zoom);
+      const croppedFile = await createCroppedAvatarFile(
+        previewUrl,
+        position,
+        zoom,
+        t('dashboard.profiles.detail.avatar.errors.prepareImage')
+      );
       const generated = await generateAvatar(profileId, croppedFile);
       setStatus(generated.status || 'processing');
       setAvatar((current) => (current ? { ...current, status: generated.status || 'processing' } : current));
-      toast.success('Avatar generation started');
+      toast.success(t('dashboard.profiles.detail.avatar.toasts.generationStarted'));
       handleCloseDialog();
     } catch (err) {
       logger.error(err);
-      const message = getErrorMessage(err);
+      const message = getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
       setFieldError(message);
       toast.error(message);
     } finally {
       setIsSaving(false);
     }
-  }, [handleCloseDialog, position, previewUrl, profileId, zoom]);
+  }, [handleCloseDialog, position, previewUrl, profileId, t, zoom]);
 
   return (
     <React.Fragment>
@@ -210,8 +217,8 @@ export function Page(): React.JSX.Element {
         <Card>
           <CardHeader
             action={status ? <Chip color={status === 'processing' ? 'warning' : 'default'} label={status} /> : null}
-            subheader="Profile avatar"
-            title="Avatar"
+            subheader={t('dashboard.profiles.detail.avatar.subheader')}
+            title={t('dashboard.profiles.detail.avatar.title')}
           />
           {isLoading ? (
             <Stack sx={{ alignItems: 'center', p: 4 }}>
@@ -242,7 +249,11 @@ export function Page(): React.JSX.Element {
                       />
                     ) : (
                       <Box
-                        alt={avatarFile ? 'Profile avatar' : 'No avatar loaded'}
+                        alt={
+                          avatarFile
+                            ? String(t('dashboard.profiles.detail.avatar.alt.profile'))
+                            : String(t('dashboard.profiles.detail.avatar.alt.empty'))
+                        }
                         component="img"
                         src={avatarUrl}
                         sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
@@ -250,7 +261,7 @@ export function Page(): React.JSX.Element {
                     )}
                   </Box>
                   <IconButton
-                    aria-label="Edit avatar"
+                    aria-label={t('dashboard.profiles.detail.avatar.editAriaLabel')}
                     onClick={handleOpenDialog}
                     sx={{
                       bgcolor: 'background.paper',
@@ -267,7 +278,7 @@ export function Page(): React.JSX.Element {
                 </Box>
                 {!avatarFile ? (
                   <Typography color="text.secondary" variant="body2">
-                    No avatar loaded.
+                    {t('dashboard.profiles.detail.avatar.noAvatar')}
                   </Typography>
                 ) : null}
               </Stack>
@@ -282,11 +293,11 @@ export function Page(): React.JSX.Element {
         open={dialogOpen}
         slotProps={{ backdrop: { sx: { bgcolor: 'rgba(15, 23, 42, 0.72)' } } }}
       >
-        <DialogTitle>Edit avatar</DialogTitle>
+        <DialogTitle>{t('dashboard.profiles.detail.avatar.dialogTitle')}</DialogTitle>
         <DialogContent>
           <Stack spacing={3} sx={{ pt: 1 }}>
             <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
-              Upload image
+              {t('dashboard.profiles.actions.uploadImage')}
               <input accept="image/jpeg,image/png,image/webp" hidden onChange={handleFileChange} type="file" />
             </Button>
             {previewUrl ? (
@@ -316,7 +327,7 @@ export function Page(): React.JSX.Element {
                   }}
                 >
                 <Box
-                  alt="Avatar crop preview"
+                  alt={String(t('dashboard.profiles.detail.avatar.alt.preview'))}
                   component="img"
                   draggable={false}
                   src={previewUrl}
@@ -336,7 +347,7 @@ export function Page(): React.JSX.Element {
                 </Box>
                 <FormControl>
                   <Typography gutterBottom variant="subtitle2">
-                    Zoom
+                    {t('dashboard.profiles.detail.avatar.zoom')}
                   </Typography>
                   <Slider
                     max={3}
@@ -357,10 +368,10 @@ export function Page(): React.JSX.Element {
         </DialogContent>
         <DialogActions>
           <Button disabled={isSaving} onClick={handleCloseDialog}>
-            Cancel
+            {t('dashboard.profiles.actions.cancel')}
           </Button>
           <Button disabled={isSaving || !previewUrl} onClick={handleSave} variant="contained">
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? t('dashboard.profiles.detail.avatar.saving') : t('dashboard.profiles.actions.save')}
           </Button>
         </DialogActions>
       </Dialog>
@@ -397,9 +408,10 @@ function isVideoFile(file: string): boolean {
 async function createCroppedAvatarFile(
   imageUrl: string,
   position: { x: number; y: number },
-  zoom: number
+  zoom: number,
+  errorMessage: string
 ): Promise<File> {
-  const image = await loadImage(imageUrl);
+  const image = await loadImage(imageUrl, errorMessage);
   const canvas = document.createElement('canvas');
   canvas.height = avatarSize;
   canvas.width = avatarSize;
@@ -407,7 +419,7 @@ async function createCroppedAvatarFile(
   const context = canvas.getContext('2d');
 
   if (!context) {
-    throw new Error('Could not prepare avatar image.');
+    throw new Error(errorMessage);
   }
 
   const baseScale = Math.max(avatarSize / image.naturalWidth, avatarSize / image.naturalHeight);
@@ -423,7 +435,7 @@ async function createCroppedAvatarFile(
   const blob = await new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((nextBlob) => {
       if (!nextBlob) {
-        reject(new Error('Could not prepare avatar image.'));
+        reject(new Error(errorMessage));
         return;
       }
 
@@ -434,19 +446,19 @@ async function createCroppedAvatarFile(
   return new File([blob], 'avatar.png', { type: 'image/png' });
 }
 
-async function loadImage(src: string): Promise<HTMLImageElement> {
+async function loadImage(src: string, errorMessage: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
       resolve(image);
     };
     image.onerror = () => {
-      reject(new Error('Could not load selected image.'));
+      reject(new Error(errorMessage));
     };
     image.src = src;
   });
 }
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong';
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }

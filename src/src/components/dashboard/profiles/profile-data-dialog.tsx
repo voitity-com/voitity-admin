@@ -11,6 +11,7 @@ import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Typography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 
 import type { Profile } from '@/lib/profiles/api-client';
 
@@ -27,6 +28,7 @@ export function ProfileDataDialog({
   open = false,
   profile,
 }: ProfileDataDialogProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [value, setValue] = React.useState<string>(formatData(profile?.data));
   const [error, setError] = React.useState<string>('');
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
@@ -44,22 +46,26 @@ export function ProfileDataDialog({
       const parsed = JSON.parse(value || '{}') as unknown;
 
       if (!isRecord(parsed)) {
-        setError('Data must be a JSON object.');
+        setError(t('dashboard.profiles.detail.data.errors.jsonObject'));
         return;
       }
 
       await onSubmit(parsed);
     } catch (err) {
-      setError(err instanceof SyntaxError ? 'Invalid JSON.' : 'Unable to update profile data.');
+      setError(
+        err instanceof SyntaxError
+          ? t('dashboard.profiles.detail.data.errors.invalidJson')
+          : t('dashboard.profiles.detail.errors.generic')
+      );
     } finally {
       setIsSubmitting(false);
     }
-  }, [onSubmit, value]);
+  }, [onSubmit, t, value]);
 
   return (
     <Dialog fullWidth maxWidth="md" onClose={onClose} open={open}>
       <Box sx={{ p: 3 }}>
-        <Typography variant="h5">Profile data</Typography>
+        <Typography variant="h5">{t('dashboard.profiles.detail.data.title')}</Typography>
         {profile ? (
           <Typography color="text.secondary" variant="body2">
             {profile.name}
@@ -68,9 +74,9 @@ export function ProfileDataDialog({
       </Box>
       <DialogContent>
         <FormControl error={Boolean(error)} fullWidth>
-          <InputLabel>Data JSON</InputLabel>
+          <InputLabel>{t('dashboard.profiles.detail.data.field')}</InputLabel>
           <OutlinedInput
-            label="Data JSON"
+            label={t('dashboard.profiles.detail.data.field')}
             minRows={12}
             multiline
             onChange={(event) => {
@@ -83,10 +89,10 @@ export function ProfileDataDialog({
       </DialogContent>
       <DialogActions sx={{ p: 3 }}>
         <Button color="secondary" disabled={isSubmitting} onClick={onClose}>
-          Cancel
+          {t('dashboard.profiles.actions.cancel')}
         </Button>
         <Button disabled={isSubmitting} onClick={handleSubmit} variant="contained">
-          Save data
+          {t('dashboard.profiles.actions.saveData')}
         </Button>
       </DialogActions>
     </Dialog>

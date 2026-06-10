@@ -18,6 +18,7 @@ import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import { Helmet } from 'react-helmet-async';
 import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { z as zod } from 'zod';
 
@@ -30,16 +31,25 @@ import { toast } from '@/components/core/toaster';
 
 const metadata = { title: `Profile | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
-const schema = zod.object({
-  active: zod.boolean(),
-  alias: zod.string().max(100, 'Alias must be at most 100 characters'),
-  description: zod.string().min(1, 'Description is required').max(500),
-  genre: zod.string().min(1, 'Genre is required').max(10),
-  name: zod.string().min(1, 'Name is required').max(100),
-  personality: zod.string().min(1, 'Personality is required').max(200),
-});
+interface Values {
+  active: boolean;
+  alias: string;
+  description: string;
+  genre: string;
+  name: string;
+  personality: string;
+}
 
-type Values = zod.infer<typeof schema>;
+function createSchema(t: (key: string) => string): zod.ZodType<Values> {
+  return zod.object({
+    active: zod.boolean(),
+    alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
+    description: zod.string().min(1, t('dashboard.profiles.form.validation.descriptionRequired')).max(500),
+    genre: zod.string().min(1, t('dashboard.profiles.form.validation.genreRequired')).max(10),
+    name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
+    personality: zod.string().min(1, t('dashboard.profiles.form.validation.personalityRequired')).max(200),
+  });
+}
 
 const defaultValues = {
   active: true,
@@ -52,6 +62,8 @@ const defaultValues = {
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
+  const { t } = useTranslation();
+  const schema = React.useMemo(() => createSchema(t), [t]);
   const [profile, setProfile] = React.useState<null | Profile>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
@@ -73,11 +85,11 @@ export function Page(): React.JSX.Element {
       reset(toValues(nextProfile));
     } catch (err) {
       logger.error(err);
-      setError(getErrorMessage(err));
+      setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
     } finally {
       setIsLoading(false);
     }
-  }, [profileId, reset]);
+  }, [profileId, reset, t]);
 
   React.useEffect(() => {
     loadProfile().catch((err) => {
@@ -93,13 +105,13 @@ export function Page(): React.JSX.Element {
         const updatedProfile = await updateProfile(profileId, payload);
         setProfile(updatedProfile);
         reset(toValues(updatedProfile));
-        toast.success('Profile updated');
+        toast.success(t('dashboard.profiles.detail.profile.toasts.updated'));
       } catch (err) {
-        toast.error(getErrorMessage(err));
+        toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
         throw err;
       }
     },
-    [profileId, reset]
+    [profileId, reset, t]
   );
 
   return (
@@ -111,8 +123,8 @@ export function Page(): React.JSX.Element {
         {error ? <Alert color="error">{error}</Alert> : null}
         <Card>
           <CardHeader
-            subheader={profile ? `ID ${profile.id}` : 'Update profile information'}
-            title={profile?.name ?? 'Profile'}
+            subheader={profile ? `ID ${profile.id}` : t('dashboard.profiles.detail.profile.subheader')}
+            title={profile?.name ?? t('dashboard.profiles.detail.profile.title')}
           />
           {isLoading ? (
             <Stack sx={{ alignItems: 'center', p: 4 }}>
@@ -127,8 +139,8 @@ export function Page(): React.JSX.Element {
                     name="name"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.name)}>
-                        <InputLabel>Name</InputLabel>
-                        <OutlinedInput {...field} label="Name" />
+                        <InputLabel>{t('dashboard.profiles.fields.name')}</InputLabel>
+                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.name')} />
                         {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
                       </FormControl>
                     )}
@@ -138,8 +150,8 @@ export function Page(): React.JSX.Element {
                     name="alias"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.alias)}>
-                        <InputLabel>Alias</InputLabel>
-                        <OutlinedInput {...field} label="Alias" />
+                        <InputLabel>{t('dashboard.profiles.fields.alias')}</InputLabel>
+                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.alias')} />
                         {errors.alias ? <FormHelperText>{errors.alias.message}</FormHelperText> : null}
                       </FormControl>
                     )}
@@ -149,8 +161,8 @@ export function Page(): React.JSX.Element {
                     name="description"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.description)}>
-                        <InputLabel>Description</InputLabel>
-                        <OutlinedInput {...field} label="Description" multiline rows={3} />
+                        <InputLabel>{t('dashboard.profiles.fields.description')}</InputLabel>
+                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.description')} multiline rows={3} />
                         {errors.description ? <FormHelperText>{errors.description.message}</FormHelperText> : null}
                       </FormControl>
                     )}
@@ -160,8 +172,8 @@ export function Page(): React.JSX.Element {
                     name="genre"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.genre)}>
-                        <InputLabel>Genre</InputLabel>
-                        <OutlinedInput {...field} label="Genre" />
+                        <InputLabel>{t('dashboard.profiles.fields.genre')}</InputLabel>
+                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.genre')} />
                         {errors.genre ? <FormHelperText>{errors.genre.message}</FormHelperText> : null}
                       </FormControl>
                     )}
@@ -171,8 +183,8 @@ export function Page(): React.JSX.Element {
                     name="personality"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.personality)}>
-                        <InputLabel>Personality</InputLabel>
-                        <OutlinedInput {...field} label="Personality" />
+                        <InputLabel>{t('dashboard.profiles.fields.personality')}</InputLabel>
+                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.personality')} />
                         {errors.personality ? <FormHelperText>{errors.personality.message}</FormHelperText> : null}
                       </FormControl>
                     )}
@@ -190,7 +202,7 @@ export function Page(): React.JSX.Element {
                             }}
                           />
                         }
-                        label="Active"
+                        label={t('dashboard.profiles.fields.active')}
                       />
                     )}
                   />
@@ -198,7 +210,7 @@ export function Page(): React.JSX.Element {
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', p: 3, pt: 0 }}>
                 <Button disabled={isSubmitting} type="submit" variant="contained">
-                  Save changes
+                  {t('dashboard.profiles.actions.saveChanges')}
                 </Button>
               </CardActions>
             </form>
@@ -227,6 +239,6 @@ function toPayload(values: Values): ProfilePayload {
   };
 }
 
-function getErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : 'Something went wrong';
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }

@@ -12,6 +12,7 @@ import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { paths } from '@/paths';
@@ -45,15 +46,16 @@ export function ProfilesFilters({
 }: ProfilesFiltersProps): React.JSX.Element {
   const { genre, name, status } = filters;
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const selection = useProfilesSelection();
 
   const tabs = React.useMemo(
     () => [
-      { label: 'All', value: '', count: totals.all },
-      { label: 'Active', value: 'active', count: totals.active },
-      { label: 'Inactive', value: 'inactive', count: totals.inactive },
+      { label: t('dashboard.profiles.filters.tabs.all'), value: '', count: totals.all },
+      { label: t('dashboard.profiles.filters.tabs.active'), value: 'active', count: totals.active },
+      { label: t('dashboard.profiles.filters.tabs.inactive'), value: 'inactive', count: totals.inactive },
     ],
-    [totals]
+    [totals, t]
   );
 
   const updateSearchParams = React.useCallback(
@@ -136,45 +138,45 @@ export function ProfilesFilters({
         <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: '1 1 auto', flexWrap: 'wrap' }}>
           <FilterButton
             displayValue={name}
-            label="Name"
+            label={t('dashboard.profiles.fields.name')}
             onFilterApply={(value) => {
               handleNameChange(value as string);
             }}
             onFilterDelete={() => {
               handleNameChange();
             }}
-            popover={<TextFilterPopover title="Filter by name" />}
+            popover={<TextFilterPopover applyLabel={t('dashboard.profiles.actions.apply')} title={t('dashboard.profiles.filters.filterByName')} />}
             value={name}
           />
           <FilterButton
             displayValue={genre}
-            label="Genre"
+            label={t('dashboard.profiles.fields.genre')}
             onFilterApply={(value) => {
               handleGenreChange(value as string);
             }}
             onFilterDelete={() => {
               handleGenreChange();
             }}
-            popover={<TextFilterPopover title="Filter by genre" />}
+            popover={<TextFilterPopover applyLabel={t('dashboard.profiles.actions.apply')} title={t('dashboard.profiles.filters.filterByGenre')} />}
             value={genre}
           />
-          {hasFilters ? <Button onClick={handleClearFilters}>Clear filters</Button> : null}
+          {hasFilters ? <Button onClick={handleClearFilters}>{t('dashboard.profiles.actions.clearFilters')}</Button> : null}
         </Stack>
         {selection.selectedAny ? (
           <Typography color="text.secondary" variant="body2">
-            {selection.selected.size} selected
+            {t('dashboard.profiles.filters.selected', { count: selection.selected.size })}
           </Typography>
         ) : null}
         <Select name="sort" onChange={handleSortChange} sx={{ maxWidth: '100%', width: '120px' }} value={sortDir}>
-          <Option value="desc">Newest</Option>
-          <Option value="asc">Oldest</Option>
+          <Option value="desc">{t('dashboard.profiles.filters.sort.newest')}</Option>
+          <Option value="asc">{t('dashboard.profiles.filters.sort.oldest')}</Option>
         </Select>
       </Stack>
     </div>
   );
 }
 
-function TextFilterPopover({ title }: { title: string }): React.JSX.Element {
+function TextFilterPopover({ applyLabel, title }: { applyLabel: string; title: string }): React.JSX.Element {
   const { anchorEl, onApply, onClose, open, value: initialValue } = useFilterContext();
   const [value, setValue] = React.useState<string>('');
 
@@ -203,7 +205,7 @@ function TextFilterPopover({ title }: { title: string }): React.JSX.Element {
         }}
         variant="contained"
       >
-        Apply
+        {applyLabel}
       </Button>
     </FilterPopover>
   );

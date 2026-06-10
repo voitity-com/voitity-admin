@@ -11,6 +11,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
@@ -33,6 +34,7 @@ const metadata = { title: `Profiles | Dashboard | ${config.site.name}` } satisfi
 export function Page(): React.JSX.Element {
   const { genre, name, sortDir, status } = useExtractSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
@@ -61,13 +63,13 @@ export function Page(): React.JSX.Element {
 
       setProfiles(profilesWithAvatars);
     } catch (err) {
-      const message = getErrorMessage(err);
+      const message = getErrorMessage(err, t('dashboard.profiles.errors.generic'));
       logger.error(err);
       setError(message);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     loadProfiles().catch((err) => {
@@ -87,16 +89,16 @@ export function Page(): React.JSX.Element {
     async (payload: ProfilePayload): Promise<void> => {
       try {
         await createProfile(payload);
-        toast.success('Profile created');
+        toast.success(t('dashboard.profiles.list.toasts.created'));
 
         handleFormClose();
         await loadProfiles();
       } catch (err) {
-        toast.error(getErrorMessage(err));
+        toast.error(getErrorMessage(err, t('dashboard.profiles.errors.generic')));
         throw err;
       }
     },
-    [handleFormClose, loadProfiles]
+    [handleFormClose, loadProfiles, t]
   );
 
   const filteredProfiles = React.useMemo(
@@ -128,14 +130,14 @@ export function Page(): React.JSX.Element {
         <Stack spacing={4}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
             <Box sx={{ flex: '1 1 auto' }}>
-              <Typography variant="h4">Profiles</Typography>
+              <Typography variant="h4">{t('dashboard.profiles.list.title')}</Typography>
               <Typography color="text.secondary" variant="body2">
-                Manage the profiles attached to the logged-in user.
+                {t('dashboard.profiles.list.description')}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button onClick={handleCreateOpen} startIcon={<PlusIcon />} variant="contained">
-                Add
+                {t('dashboard.profiles.actions.add')}
               </Button>
             </Box>
           </Stack>
@@ -220,10 +222,6 @@ function applyFilters(rows: Profile[], { genre, name, status }: Filters): Profil
   });
 }
 
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-
-  return 'Something went wrong';
+function getErrorMessage(error: unknown, fallback: string): string {
+  return error instanceof Error ? error.message : fallback;
 }

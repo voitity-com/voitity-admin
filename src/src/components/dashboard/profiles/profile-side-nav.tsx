@@ -39,13 +39,13 @@ export function ProfileSideNav(): React.JSX.Element {
       },
       {
         key: 'data',
-        title: 'Data',
+        title: t('dashboard.profiles.detail.nav.data'),
         href: paths.dashboard.profileDetails.data(profileId),
         icon: 'data',
       },
       {
         key: 'avatar',
-        title: 'Avatar',
+        title: t('dashboard.profiles.detail.nav.avatar'),
         href: paths.dashboard.profileDetails.avatar(profileId),
         icon: 'avatar',
       },

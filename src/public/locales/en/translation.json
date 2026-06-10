@@ -43,14 +43,167 @@
       }
     },
     "profiles": {
+      "actions": {
+        "add": "Add",
+        "apply": "Apply",
+        "cancel": "Cancel",
+        "clearFilters": "Clear filters",
+        "createProfile": "Create profile",
+        "createVoice": "Create voice",
+        "getAudio": "Get audio",
+        "save": "Save",
+        "saveChanges": "Save changes",
+        "saveData": "Save data",
+        "sendSample": "Send sample",
+        "startRecording": "Start recording",
+        "stop": "Stop",
+        "uploadImage": "Upload image"
+      },
       "detail": {
+        "avatar": {
+          "alt": {
+            "empty": "No avatar loaded",
+            "preview": "Avatar crop preview",
+            "profile": "Profile avatar"
+          },
+          "dialogTitle": "Edit avatar",
+          "editAriaLabel": "Edit avatar",
+          "errors": {
+            "prepareImage": "Could not prepare avatar image.",
+            "selectImage": "Select an image first.",
+            "unsupportedFile": "Use a JPG, PNG, or WEBP image."
+          },
+          "noAvatar": "No avatar loaded.",
+          "saving": "Saving...",
+          "subheader": "Profile avatar",
+          "title": "Avatar",
+          "toasts": {
+            "generationStarted": "Avatar generation started"
+          },
+          "zoom": "Zoom"
+        },
+        "data": {
+          "errors": {
+            "invalidJson": "Invalid JSON.",
+            "jsonObject": "Data must be a JSON object."
+          },
+          "field": "Data JSON",
+          "subheader": "Update profile data",
+          "title": "Data",
+          "toasts": {
+            "updated": "Profile data updated"
+          }
+        },
+        "errors": {
+          "generic": "Something went wrong"
+        },
         "nav": {
+          "avatar": "Avatar",
+          "data": "Data",
           "profile": "Profile",
           "voice": "Voice"
         },
+        "profile": {
+          "subheader": "Update profile information",
+          "title": "Profile",
+          "toasts": {
+            "updated": "Profile updated"
+          }
+        },
         "voice": {
-          "cloneVoice": "Clone your voice"
+          "audio": "Audio",
+          "cloneVoice": "Clone your voice",
+          "createSubheader": "Create voice and upload a voice sample",
+          "duration": "Duration: {{duration}}s",
+          "errors": {
+            "audioNotReturned": "The API did not return audio.",
+            "createBeforeUpload": "Create a voice before uploading a sample.",
+            "encoderFailed": "MP3 encoder failed to load.",
+            "enterText": "Enter text to generate audio.",
+            "microphoneAccess": "Unable to access the microphone.",
+            "recordBeforeSend": "Record a voice sample before sending it.",
+            "recordingUnsupported": "Audio recording is not supported by this browser."
+          },
+          "fields": {
+            "description": "Description",
+            "languageCode": "Language code: {{code}}",
+            "text": "Text",
+            "voiceName": "Voice name"
+          },
+          "preview": "Preview",
+          "readText": "Read this text",
+          "sampleText": "Hello, this is an example of my voice to configure my profile. I am reading this text clearly and naturally to create a voice sample.",
+          "testTextDefault": "Hello, this is a voice test.",
+          "testVoice": "Test voice",
+          "title": "Voice",
+          "toasts": {
+            "audioGenerated": "Audio generated",
+            "sampleUploaded": "Voice sample uploaded",
+            "voiceCreated": "Voice created"
+          },
+          "voiceId": "Voice ID: {{id}}",
+          "voiceNameDefault": "{{name}} Voice"
         }
+      },
+      "empty": "No profiles found",
+      "errors": {
+        "generic": "Something went wrong"
+      },
+      "fields": {
+        "active": "Active",
+        "alias": "Alias",
+        "avatar": "Avatar",
+        "description": "Description",
+        "genre": "Genre",
+        "name": "Name",
+        "personality": "Personality",
+        "status": "Status",
+        "updated": "Updated"
+      },
+      "filters": {
+        "filterByGenre": "Filter by genre",
+        "filterByName": "Filter by name",
+        "selected": "{{count}} selected",
+        "sort": {
+          "newest": "Newest",
+          "oldest": "Oldest"
+        },
+        "tabs": {
+          "active": "Active",
+          "all": "All",
+          "inactive": "Inactive"
+        }
+      },
+      "pagination": {
+        "displayedRows": "{{from}}-{{to}} of {{total}}",
+        "firstPage": "Go to first page",
+        "lastPage": "Go to last page",
+        "moreThan": "more than {{to}}",
+        "nextPage": "Go to next page",
+        "previousPage": "Go to previous page",
+        "rowsPerPage": "Rows per page:"
+      },
+      "form": {
+        "createTitle": "Create profile",
+        "editTitle": "Edit profile",
+        "validation": {
+          "aliasMax": "Alias must be at most 100 characters",
+          "descriptionRequired": "Description is required",
+          "genreRequired": "Genre is required",
+          "nameRequired": "Name is required",
+          "personalityRequired": "Personality is required"
+        }
+      },
+      "list": {
+        "description": "Manage the profiles attached to the logged-in user.",
+        "title": "Profiles",
+        "toasts": {
+          "created": "Profile created"
+        }
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
       }
     }
   },
