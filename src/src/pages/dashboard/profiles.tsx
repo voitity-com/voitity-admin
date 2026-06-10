@@ -18,10 +18,9 @@ import { config } from '@/config';
 import { paths } from '@/paths';
 import { getProfileAvatar } from '@/lib/avatar/api-client';
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
-import { createProfile, listProfiles, updateProfile, updateProfileData } from '@/lib/profiles/api-client';
+import { createProfile, listProfiles } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
-import { ProfileDataDialog } from '@/components/dashboard/profiles/profile-data-dialog';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 import { ProfilesFilters } from '@/components/dashboard/profiles/profiles-filters';
 import type { Filters, SortDir } from '@/components/dashboard/profiles/profiles-filters';
@@ -37,8 +36,6 @@ export function Page(): React.JSX.Element {
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
-  const [formProfile, setFormProfile] = React.useState<null | Profile>(null);
-  const [dataProfile, setDataProfile] = React.useState<null | Profile>(null);
   const [formOpen, setFormOpen] = React.useState<boolean>(false);
 
   const loadProfiles = React.useCallback(async (): Promise<void> => {
@@ -79,30 +76,18 @@ export function Page(): React.JSX.Element {
   }, [loadProfiles]);
 
   const handleCreateOpen = React.useCallback((): void => {
-    setFormProfile(null);
-    setFormOpen(true);
-  }, []);
-
-  const handleEditOpen = React.useCallback((profile: Profile): void => {
-    setFormProfile(profile);
     setFormOpen(true);
   }, []);
 
   const handleFormClose = React.useCallback((): void => {
     setFormOpen(false);
-    setFormProfile(null);
   }, []);
 
   const handleFormSubmit = React.useCallback(
     async (payload: ProfilePayload): Promise<void> => {
       try {
-        if (formProfile) {
-          await updateProfile(formProfile.id, payload);
-          toast.success('Profile updated');
-        } else {
-          await createProfile(payload);
-          toast.success('Profile created');
-        }
+        await createProfile(payload);
+        toast.success('Profile created');
 
         handleFormClose();
         await loadProfiles();
@@ -111,26 +96,7 @@ export function Page(): React.JSX.Element {
         throw err;
       }
     },
-    [formProfile, handleFormClose, loadProfiles]
-  );
-
-  const handleDataSubmit = React.useCallback(
-    async (data: Record<string, unknown>): Promise<void> => {
-      if (!dataProfile) {
-        return;
-      }
-
-      try {
-        await updateProfileData(dataProfile.id, data);
-        toast.success('Profile data updated');
-        setDataProfile(null);
-        await loadProfiles();
-      } catch (err) {
-        toast.error(getErrorMessage(err));
-        throw err;
-      }
-    },
-    [dataProfile, loadProfiles]
+    [handleFormClose, loadProfiles]
   );
 
   const filteredProfiles = React.useMemo(
@@ -185,8 +151,6 @@ export function Page(): React.JSX.Element {
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
                   <ProfilesTable
-                    onEdit={handleEditOpen}
-                    onEditData={setDataProfile}
                     onOpen={(profile) => {
                       navigate(paths.dashboard.profileDetails.profile(String(profile.id)));
                     }}
@@ -200,15 +164,7 @@ export function Page(): React.JSX.Element {
           </ProfilesSelectionProvider>
         </Stack>
       </Box>
-      <ProfileFormDialog onClose={handleFormClose} onSubmit={handleFormSubmit} open={formOpen} profile={formProfile} />
-      <ProfileDataDialog
-        onClose={() => {
-          setDataProfile(null);
-        }}
-        onSubmit={handleDataSubmit}
-        open={Boolean(dataProfile)}
-        profile={dataProfile}
-      />
+      <ProfileFormDialog onClose={handleFormClose} onSubmit={handleFormSubmit} open={formOpen} profile={null} />
     </React.Fragment>
   );
 }

@@ -2,12 +2,8 @@
 
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
-import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 
 import { config } from '@/config';
 import type { ProfileAvatar } from '@/lib/avatar/api-client';
@@ -18,14 +14,12 @@ import { DataTable } from '@/components/core/data-table';
 import { useProfilesSelection } from './profiles-selection-context';
 
 export interface ProfilesTableProps {
-  onEdit?: (profile: Profile) => void;
-  onEditData?: (profile: Profile) => void;
   onOpen?: (profile: Profile) => void;
   rows?: Profile[];
 }
 
-export function ProfilesTable({ onEdit, onEditData, onOpen, rows = [] }: ProfilesTableProps): React.JSX.Element {
-  const columns = React.useMemo(() => getColumns({ onEdit, onEditData }), [onEdit, onEditData]);
+export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.JSX.Element {
+  const columns = React.useMemo(() => getColumns(), []);
   const { deselectAll, deselectOne, selectAll, selectOne, selected } = useProfilesSelection();
 
   return (
@@ -60,13 +54,7 @@ export function ProfilesTable({ onEdit, onEditData, onOpen, rows = [] }: Profile
   );
 }
 
-function getColumns({
-  onEdit,
-  onEditData,
-}: {
-  onEdit?: (profile: Profile) => void;
-  onEditData?: (profile: Profile) => void;
-}): ColumnDef<Profile>[] {
+function getColumns(): ColumnDef<Profile>[] {
   return [
     {
       formatter: renderAvatarCell,
@@ -96,39 +84,6 @@ function getColumns({
       formatter: (row): string => formatDate(row.updated_at),
       name: 'Updated',
       width: '160px',
-    },
-    {
-      formatter: (row): React.JSX.Element => (
-        <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end', minWidth: '260px' }}>
-          <Button
-            color="secondary"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEdit?.(row);
-            }}
-            size="small"
-            startIcon={<PencilSimpleIcon />}
-            variant="outlined"
-          >
-            Update profile
-          </Button>
-          <Button
-            color="secondary"
-            onClick={(event) => {
-              event.stopPropagation();
-              onEditData?.(row);
-            }}
-            size="small"
-            startIcon={<DatabaseIcon />}
-            variant="outlined"
-          >
-            Update data
-          </Button>
-        </Stack>
-      ),
-      name: 'Actions',
-      align: 'right',
-      width: '300px',
     },
   ];
 }
