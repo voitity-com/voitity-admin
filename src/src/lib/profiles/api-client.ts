@@ -42,6 +42,35 @@ interface RequestOptions {
   method?: 'GET' | 'PATCH' | 'POST' | 'PUT';
 }
 
+export interface ProfileChat {
+  id?: number | string;
+  chat_id?: number | string;
+  profile_id?: number | string;
+  title?: null | string;
+  name?: null | string;
+  subject?: null | string;
+  message?: null | string;
+  last_message?: null | string;
+  content?: null | string;
+  text?: null | string;
+  preview?: null | string;
+  status?: null | string;
+  api_messages_count?: null | number;
+  created_at?: null | string;
+  last_message_at?: null | string;
+  openai_messages_count?: null | number;
+  updated_at?: null | string;
+  [key: string]: unknown;
+}
+
+export interface ProfileChatsPage {
+  chats: ProfileChat[];
+  lastPage?: null | number;
+  page: number;
+  perPage?: null | number;
+  total?: null | number;
+}
+
 export interface Voice {
   id: number | string;
   name: string;
@@ -125,6 +154,19 @@ export async function updateProfileData(id: number | string, data: Record<string
   return unwrapProfile(response);
 }
 
+export async function listProfileChats(params: {
+  page?: number;
+  profileId: number | string;
+}): Promise<ProfileChatsPage> {
+  const searchParams = new URLSearchParams({
+    page: String(params.page ?? 1),
+    profile_id: String(params.profileId),
+  });
+  const response = await requestJson<unknown>(`/api/profile/chats?${searchParams.toString()}`, { method: 'GET' });
+
+  return normalizeChatsResponse(response, params.page ?? 1);
+}
+
 export async function createVoice(payload: {
   description?: string;
   language_code: string;
@@ -170,6 +212,156 @@ function unwrapProfile(response: ApiEnvelope<Profile> | Profile): Profile {
 
 function isApiEnvelope<T>(response: unknown): response is ApiEnvelope<T> {
   return typeof response === 'object' && response !== null && 'message' in response && 'data' in response;
+}
+
+function normalizeChatsResponse(response: unknown, fallbackPage: number): ProfileChatsPage {
+  const candidate = getResponseData(response);
+  const chatsSource = getChatsSource(candidate) ?? getChatsSource(response) ?? [];
+  const chats = Array.isArray(chatsSource) ? (chatsSource as ProfileChat[]) : [];
+  const paginationSource = getPaginationSource(candidate) ?? getPaginationSource(response);
+  const page = getNumberField(paginationSource, ['current_page', 'currentPage', 'page']) ?? fallbackPage;
+  const perPage =
+    getNumberField(paginationSource, ['per_page', 'perPage', 'limit']) ??
+    getNumberField(candidate, ['per_page', 'perPage', 'limit']);
+  const total =
+    getNumberField(paginationSource, ['total', 'count']) ?? getNumberField(candidate, ['total', 'count']);
+  const lastPage =
+    getNumberField(paginationSource, ['last_page', 'lastPage', 'pages']) ??
+    getNumberField(candidate, ['last_page', 'lastPage', 'pages']);
+
+  return { chats, lastPage, page, perPage, total };
+}
+
+function getResponseData(response: unknown): unknown {
+  if (!isRecord(response) || !('data' in response)) {
+    return response;
+  }
+
+  return response.data;
+}
+
+function getChatsSource(value: unknown): unknown[] | undefined {
+  const directArray = getUnknownArray(value);
+
+  if (directArray) {
+    return directArray;
+  }
+
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  const knownArray = getFirstArrayField(value, [
+    'chats',
+    'profile_chats',
+    'profileChats',
+    'conversations',
+    'threads',
+    'items',
+    'results',
+    'records',
+    'data',
+  ]);
+
+  if (knownArray) {
+    return knownArray;
+  }
+
+  const nestedSource = getFirstRecordField(value, [
+    'chats',
+    'profile_chats',
+    'profileChats',
+    'profile',
+    'conversation',
+    'conversations',
+    'threads',
+    'items',
+    'results',
+    'records',
+    'data',
+  ]);
+
+  if (nestedSource) {
+    return getChatsSource(nestedSource);
+  }
+
+  return undefined;
+}
+
+function getPaginationSource(value: unknown): Record<string, unknown> | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  if (isRecord(value.meta)) {
+    return value.meta;
+  }
+
+  if (isRecord(value.pagination)) {
+    return value.pagination;
+  }
+
+  if (isRecord(value.chats)) {
+    return value.chats;
+  }
+
+  return value;
+}
+
+function getNumberField(value: unknown, fields: string[]): number | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'number') {
+      return rawValue;
+    }
+
+    if (typeof rawValue === 'string') {
+      const parsedValue = Number(rawValue);
+
+      if (Number.isFinite(parsedValue)) {
+        return parsedValue;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getUnknownArray(value: unknown): unknown[] | undefined {
+  return Array.isArray(value) ? (value as unknown[]) : undefined;
+}
+
+function getFirstArrayField(value: Record<string, unknown>, fields: string[]): unknown[] | undefined {
+  for (const field of fields) {
+    const arrayValue = getUnknownArray(value[field]);
+
+    if (arrayValue) {
+      return arrayValue;
+    }
+  }
+
+  return undefined;
+}
+
+function getFirstRecordField(value: Record<string, unknown>, fields: string[]): Record<string, unknown> | undefined {
+  for (const field of fields) {
+    const recordValue = value[field];
+
+    if (isRecord(recordValue)) {
+      return recordValue;
+    }
+  }
+
+  return undefined;
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {

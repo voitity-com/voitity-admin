@@ -115,8 +115,22 @@
         },
         "chats": {
           "empty": "Aún no hay chats configurados.",
+          "fields": {
+            "ai": "AI",
+            "api": "API",
+            "createdAt": "Fecha de creación",
+            "id": "ID",
+            "lastMessage": "Último mensaje"
+          },
+          "pagination": {
+            "next": "Siguiente",
+            "page": "Página {{page}}",
+            "previous": "Anterior",
+            "total": "{{total}} chats"
+          },
           "subheader": "Configuración y conversaciones del perfil",
-          "title": "Chats"
+          "title": "Chats",
+          "untitled": "Chat sin título"
         },
         "errors": {
           "generic": "Algo salió mal"
