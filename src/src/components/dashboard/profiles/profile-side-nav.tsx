@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
+import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
@@ -19,6 +20,7 @@ import { RouterLink } from '@/components/core/link';
 
 const icons = {
   avatar: ImageIcon,
+  chats: ChatsCircleIcon,
   data: DatabaseIcon,
   profile: UserCircleIcon,
   voice: MicrophoneIcon,
@@ -48,6 +50,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.avatar'),
         href: paths.dashboard.profileDetails.avatar(profileId),
         icon: 'avatar',
+      },
+      {
+        key: 'chats',
+        title: t('dashboard.profiles.detail.nav.chats'),
+        href: paths.dashboard.profileDetails.chats(profileId),
+        icon: 'chats',
       },
       {
         key: 'voice',

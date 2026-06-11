@@ -113,11 +113,17 @@
             "updated": "Profile data updated"
           }
         },
+        "chats": {
+          "empty": "No chats configured yet.",
+          "subheader": "Profile chat settings and conversations",
+          "title": "Chats"
+        },
         "errors": {
           "generic": "Something went wrong"
         },
         "nav": {
           "avatar": "Avatar",
+          "chats": "Chats",
           "data": "Data",
           "profile": "Profile",
           "voice": "Voice"

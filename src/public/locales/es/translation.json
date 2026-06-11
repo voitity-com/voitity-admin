@@ -113,11 +113,17 @@
             "updated": "Datos del perfil actualizados"
           }
         },
+        "chats": {
+          "empty": "Aún no hay chats configurados.",
+          "subheader": "Configuración y conversaciones del perfil",
+          "title": "Chats"
+        },
         "errors": {
           "generic": "Algo salió mal"
         },
         "nav": {
           "avatar": "Avatar",
+          "chats": "Chats",
           "data": "Datos",
           "profile": "Perfil",
           "voice": "Voz"
