@@ -2,9 +2,7 @@
 
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
-import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -12,20 +10,23 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { paths } from '@/paths';
 import type { ProfileChat, ProfileChatsPage } from '@/lib/profiles/api-client';
 import { listProfileChats } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
+import { ProfileChatPagination } from '@/components/dashboard/profiles/profile-chat-pagination';
 
 const metadata = { title: `Chats | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { i18n, t } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
@@ -75,6 +76,10 @@ export function Page(): React.JSX.Element {
   const currentPage = chatsPage.page || page;
   const hasPreviousPage = currentPage > 1;
   const hasNextPage = hasNextPageAvailable(chatsPage);
+  const totalLabel =
+    typeof chatsPage.total === 'number'
+      ? t('dashboard.profiles.detail.chats.pagination.total', { total: chatsPage.total })
+      : null;
 
   return (
     <React.Fragment>
@@ -98,7 +103,16 @@ export function Page(): React.JSX.Element {
                 {chatsPage.chats.length ? (
                   <DataTable<ProfileChat>
                     columns={getColumns({ language, t })}
+                    hover
+                    onClick={(_, chat) => {
+                      const chatId = getChatId(chat);
+
+                      if (chatId) {
+                        navigate(paths.dashboard.profileDetails.chat(profileId, chatId));
+                      }
+                    }}
                     rows={chatsPage.chats}
+                    uniqueRowId={getChatRowId}
                   />
                 ) : (
                   <Typography color="text.secondary" variant="body2">
@@ -106,49 +120,30 @@ export function Page(): React.JSX.Element {
                   </Typography>
                 )}
               </CardContent>
-              <CardActions
-                sx={{
-                  alignItems: 'center',
-                  borderTop: '1px solid var(--mui-palette-divider)',
-                  justifyContent: 'space-between',
-                  px: 3,
-                }}
-              >
-                <Typography color="text.secondary" variant="body2">
-                  {t('dashboard.profiles.detail.chats.pagination.page', { page: currentPage })}
-                  {typeof chatsPage.total === 'number'
-                    ? ` · ${t('dashboard.profiles.detail.chats.pagination.total', { total: chatsPage.total })}`
-                    : null}
-                </Typography>
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    color="secondary"
-                    disabled={!hasPreviousPage || isLoading}
-                    onClick={() => {
-                      handlePageChange(currentPage - 1);
-                    }}
-                    variant="outlined"
-                  >
-                    {t('dashboard.profiles.detail.chats.pagination.previous')}
-                  </Button>
-                  <Button
-                    color="secondary"
-                    disabled={!hasNextPage || isLoading}
-                    onClick={() => {
-                      handlePageChange(currentPage + 1);
-                    }}
-                    variant="outlined"
-                  >
-                    {t('dashboard.profiles.detail.chats.pagination.next')}
-                  </Button>
-                </Stack>
-              </CardActions>
+              <ProfileChatPagination
+                currentPage={currentPage}
+                disabled={isLoading}
+                hasNextPage={hasNextPage}
+                hasPreviousPage={hasPreviousPage}
+                onPageChange={handlePageChange}
+                totalLabel={totalLabel}
+              />
             </React.Fragment>
           )}
         </Card>
       </Stack>
     </React.Fragment>
   );
+}
+
+function getChatId(chat: ProfileChat): null | string {
+  const id = chat.id ?? chat.chat_id;
+
+  return id === null || id === undefined ? null : String(id);
+}
+
+function getChatRowId(chat: ProfileChat): string {
+  return getChatId(chat) ?? `${chat.created_at ?? 'chat'}-${chat.updated_at ?? 'row'}`;
 }
 
 function getColumns({

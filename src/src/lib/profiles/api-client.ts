@@ -71,6 +71,37 @@ export interface ProfileChatsPage {
   total?: null | number;
 }
 
+export interface ProfileChatMessage {
+  id?: number | string;
+  chat_id?: number | string;
+  profile_id?: number | string;
+  createdAt?: null | string;
+  role?: null | string;
+  sender?: null | string;
+  source?: null | string;
+  type?: null | string;
+  content?: null | string;
+  message?: null | string;
+  text?: null | string;
+  body?: null | string;
+  created_at?: null | string;
+  date?: null | string;
+  sentAt?: null | string;
+  sent_at?: null | string;
+  timestamp?: null | string;
+  updatedAt?: null | string;
+  updated_at?: null | string;
+  [key: string]: unknown;
+}
+
+export interface ProfileChatMessagesPage {
+  lastPage?: null | number;
+  messages: ProfileChatMessage[];
+  page: number;
+  perPage?: null | number;
+  total?: null | number;
+}
+
 export interface Voice {
   id: number | string;
   name: string;
@@ -167,6 +198,23 @@ export async function listProfileChats(params: {
   return normalizeChatsResponse(response, params.page ?? 1);
 }
 
+export async function listProfileChatMessages(params: {
+  chatId: number | string;
+  page?: number;
+  profileId: number | string;
+}): Promise<ProfileChatMessagesPage> {
+  const searchParams = new URLSearchParams({
+    chat_id: String(params.chatId),
+    page: String(params.page ?? 1),
+    profile_id: String(params.profileId),
+  });
+  const response = await requestJson<unknown>(`/api/profile/chats/messages?${searchParams.toString()}`, {
+    method: 'GET',
+  });
+
+  return normalizeChatMessagesResponse(response, params.page ?? 1);
+}
+
 export async function createVoice(payload: {
   description?: string;
   language_code: string;
@@ -215,10 +263,44 @@ function isApiEnvelope<T>(response: unknown): response is ApiEnvelope<T> {
 }
 
 function normalizeChatsResponse(response: unknown, fallbackPage: number): ProfileChatsPage {
+  const result = normalizePaginatedCollection(response, fallbackPage, {
+    arrayFields: ['chats', 'profile_chats', 'profileChats', 'conversations', 'threads', 'items', 'results', 'records', 'data'],
+    nestedFields: [
+      'chats',
+      'profile_chats',
+      'profileChats',
+      'profile',
+      'conversation',
+      'conversations',
+      'threads',
+      'items',
+      'results',
+      'records',
+      'data',
+    ],
+  });
+
+  return { ...result, chats: result.items as ProfileChat[] };
+}
+
+function normalizeChatMessagesResponse(response: unknown, fallbackPage: number): ProfileChatMessagesPage {
+  const result = normalizePaginatedCollection(response, fallbackPage, {
+    arrayFields: ['messages', 'chat_messages', 'chatMessages', 'items', 'results', 'records', 'data'],
+    nestedFields: ['messages', 'chat_messages', 'chatMessages', 'chat', 'conversation', 'items', 'results', 'records', 'data'],
+  });
+  const messages = (result.items as ProfileChatMessage[]).sort(compareMessagesChronologically);
+
+  return { ...result, messages };
+}
+
+function normalizePaginatedCollection(
+  response: unknown,
+  fallbackPage: number,
+  options: { arrayFields: string[]; nestedFields: string[] }
+): { items: unknown[]; lastPage?: null | number; page: number; perPage?: null | number; total?: null | number } {
   const candidate = getResponseData(response);
-  const chatsSource = getChatsSource(candidate) ?? getChatsSource(response) ?? [];
-  const chats = Array.isArray(chatsSource) ? (chatsSource as ProfileChat[]) : [];
-  const paginationSource = getPaginationSource(candidate) ?? getPaginationSource(response);
+  const items = getCollectionSource(candidate, options) ?? getCollectionSource(response, options) ?? [];
+  const paginationSource = getPaginationSource(candidate, options.nestedFields) ?? getPaginationSource(response, options.nestedFields);
   const page = getNumberField(paginationSource, ['current_page', 'currentPage', 'page']) ?? fallbackPage;
   const perPage =
     getNumberField(paginationSource, ['per_page', 'perPage', 'limit']) ??
@@ -229,7 +311,7 @@ function normalizeChatsResponse(response: unknown, fallbackPage: number): Profil
     getNumberField(paginationSource, ['last_page', 'lastPage', 'pages']) ??
     getNumberField(candidate, ['last_page', 'lastPage', 'pages']);
 
-  return { chats, lastPage, page, perPage, total };
+  return { items, lastPage, page, perPage, total };
 }
 
 function getResponseData(response: unknown): unknown {
@@ -240,7 +322,10 @@ function getResponseData(response: unknown): unknown {
   return response.data;
 }
 
-function getChatsSource(value: unknown): unknown[] | undefined {
+function getCollectionSource(
+  value: unknown,
+  options: { arrayFields: string[]; nestedFields: string[] }
+): unknown[] | undefined {
   const directArray = getUnknownArray(value);
 
   if (directArray) {
@@ -251,44 +336,22 @@ function getChatsSource(value: unknown): unknown[] | undefined {
     return undefined;
   }
 
-  const knownArray = getFirstArrayField(value, [
-    'chats',
-    'profile_chats',
-    'profileChats',
-    'conversations',
-    'threads',
-    'items',
-    'results',
-    'records',
-    'data',
-  ]);
+  const knownArray = getFirstArrayField(value, options.arrayFields);
 
   if (knownArray) {
     return knownArray;
   }
 
-  const nestedSource = getFirstRecordField(value, [
-    'chats',
-    'profile_chats',
-    'profileChats',
-    'profile',
-    'conversation',
-    'conversations',
-    'threads',
-    'items',
-    'results',
-    'records',
-    'data',
-  ]);
+  const nestedSource = getFirstRecordField(value, options.nestedFields);
 
   if (nestedSource) {
-    return getChatsSource(nestedSource);
+    return getCollectionSource(nestedSource, options);
   }
 
   return undefined;
 }
 
-function getPaginationSource(value: unknown): Record<string, unknown> | undefined {
+function getPaginationSource(value: unknown, nestedFields: string[]): Record<string, unknown> | undefined {
   if (!isRecord(value)) {
     return undefined;
   }
@@ -301,8 +364,10 @@ function getPaginationSource(value: unknown): Record<string, unknown> | undefine
     return value.pagination;
   }
 
-  if (isRecord(value.chats)) {
-    return value.chats;
+  const nestedSource = getFirstRecordField(value, nestedFields);
+
+  if (nestedSource) {
+    return nestedSource;
   }
 
   return value;
@@ -362,6 +427,30 @@ function getFirstRecordField(value: Record<string, unknown>, fields: string[]): 
   }
 
   return undefined;
+}
+
+function compareMessagesChronologically(a: ProfileChatMessage, b: ProfileChatMessage): number {
+  return getMessageTimestamp(a) - getMessageTimestamp(b);
+}
+
+function getMessageTimestamp(message: ProfileChatMessage): number {
+  const date =
+    message.created_at ??
+    message.createdAt ??
+    message.sent_at ??
+    message.sentAt ??
+    message.timestamp ??
+    message.date ??
+    message.updated_at ??
+    message.updatedAt;
+
+  if (!date) {
+    return 0;
+  }
+
+  const timestamp = new Date(date).getTime();
+
+  return Number.isFinite(timestamp) ? timestamp : 0;
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {

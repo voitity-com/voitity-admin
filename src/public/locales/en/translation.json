@@ -122,11 +122,31 @@
             "id": "ID",
             "lastMessage": "Last message"
           },
+          "messages": {
+            "backToChats": "Back to chats",
+            "empty": "No messages found.",
+            "fields": {
+              "date": "Date",
+              "message": "Message",
+              "role": "Role"
+            },
+            "roles": {
+              "ai": "AI",
+              "api": "API",
+              "assistant": "Assistant",
+              "openai": "AI",
+              "system": "System",
+              "user": "User"
+            },
+            "subheader": "Messages in chronological order",
+            "title": "Chat {{chatId}}"
+          },
           "pagination": {
             "next": "Next",
             "page": "Page {{page}}",
             "previous": "Previous",
-            "total": "{{total}} chats"
+            "total": "{{total}} chats",
+            "messagesTotal": "{{total}} messages"
           },
           "subheader": "Profile chat settings and conversations",
           "title": "Chats",

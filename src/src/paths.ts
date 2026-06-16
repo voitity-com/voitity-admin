@@ -67,6 +67,7 @@ export const paths = {
     profiles: '/dashboard/profiles',
     profileDetails: {
       avatar: (profileId: string) => `/dashboard/profiles/${profileId}/avatar`,
+      chat: (profileId: string, chatId: string) => `/dashboard/profiles/${profileId}/chats/${chatId}`,
       chats: (profileId: string) => `/dashboard/profiles/${profileId}/chats`,
       data: (profileId: string) => `/dashboard/profiles/${profileId}/data`,
       profile: (profileId: string) => `/dashboard/profiles/${profileId}/profile`,

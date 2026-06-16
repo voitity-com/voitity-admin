@@ -413,6 +413,13 @@ export const route: RouteObject = {
               },
             },
             {
+              path: 'chats/:chatId',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/chat-messages');
+                return { Component: Page };
+              },
+            },
+            {
               path: 'voice',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/voice');
