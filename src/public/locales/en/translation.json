@@ -40,6 +40,56 @@
           "lastName": "Last name"
         },
         "title": "Account"
+      },
+      "billing": {
+        "empty": "No subscription information was returned.",
+        "emptySection": "No items were returned.",
+        "errors": {
+          "generic": "Could not load subscription limits."
+        },
+        "fields": {
+          "available": "Available",
+          "billingCycle": "Billing cycle",
+          "cancelAt": "Cancel at",
+          "createdAt": "Created at",
+          "current": "Current",
+          "currentPeriodEnd": "Current period end",
+          "currentPeriodStart": "Current period start",
+          "endsAt": "Ends at",
+          "expiresAt": "Expires at",
+          "limit": "Limit",
+          "name": "Name",
+          "plan": "Plan",
+          "planName": "Plan name",
+          "remaining": "Remaining",
+          "renewsAt": "Renews at",
+          "status": "Status",
+          "subscription": "Subscription",
+          "trialEndsAt": "Trial ends at",
+          "updatedAt": "Updated at",
+          "used": "Used"
+        },
+        "pageTitle": "Billing & plans",
+        "sections": {
+          "features": "Features",
+          "limits": "Limits",
+          "plan": "Plan",
+          "quota": "Quota",
+          "quotas": "Quotas",
+          "subscription": "Subscription",
+          "usage": "Usage"
+        },
+        "subheader": "Information loaded from your current subscription.",
+        "title": "Subscription limits",
+        "values": {
+          "empty": "-",
+          "no": "No",
+          "remaining": "{{remaining}} remaining",
+          "unlimited": "Unlimited",
+          "used": "{{used}} used",
+          "usedOfLimit": "{{used}} of {{limit}}",
+          "yes": "Yes"
+        }
       }
     },
     "profiles": {

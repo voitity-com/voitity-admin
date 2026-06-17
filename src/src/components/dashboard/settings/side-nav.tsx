@@ -132,7 +132,7 @@ export function SideNav(): React.JSX.Element {
                     {...item}
                     key={item.key}
                     pathname={pathname}
-                    showNotImplemented={item.key !== 'account'}
+                    showNotImplemented={!['account', 'billing'].includes(item.key)}
                     title={getNavTitle(item, t)}
                   />
                 ))}

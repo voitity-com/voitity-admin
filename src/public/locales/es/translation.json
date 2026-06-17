@@ -40,6 +40,56 @@
           "lastName": "Apellido"
         },
         "title": "Cuenta"
+      },
+      "billing": {
+        "empty": "No se recibió información de la suscripción.",
+        "emptySection": "No se recibieron elementos.",
+        "errors": {
+          "generic": "No se pudieron cargar los límites de la suscripción."
+        },
+        "fields": {
+          "available": "Disponible",
+          "billingCycle": "Ciclo de facturación",
+          "cancelAt": "Cancelar en",
+          "createdAt": "Creado en",
+          "current": "Actual",
+          "currentPeriodEnd": "Fin del período actual",
+          "currentPeriodStart": "Inicio del período actual",
+          "endsAt": "Finaliza en",
+          "expiresAt": "Expira en",
+          "limit": "Límite",
+          "name": "Nombre",
+          "plan": "Plan",
+          "planName": "Nombre del plan",
+          "remaining": "Restante",
+          "renewsAt": "Renueva en",
+          "status": "Estado",
+          "subscription": "Suscripción",
+          "trialEndsAt": "Fin del período de prueba",
+          "updatedAt": "Actualizado en",
+          "used": "Usado"
+        },
+        "pageTitle": "Facturación y planes",
+        "sections": {
+          "features": "Características",
+          "limits": "Límites",
+          "plan": "Plan",
+          "quota": "Cuota",
+          "quotas": "Cuotas",
+          "subscription": "Suscripción",
+          "usage": "Uso"
+        },
+        "subheader": "Información cargada desde tu suscripción actual.",
+        "title": "Límites de suscripción",
+        "values": {
+          "empty": "-",
+          "no": "No",
+          "remaining": "{{remaining}} restantes",
+          "unlimited": "Ilimitado",
+          "used": "{{used}} usados",
+          "usedOfLimit": "{{used}} de {{limit}}",
+          "yes": "Sí"
+        }
       }
     },
     "profiles": {
