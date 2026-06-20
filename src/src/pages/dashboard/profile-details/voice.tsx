@@ -30,7 +30,7 @@ import { useParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { Profile, Voice, VoiceTestAudio } from '@/lib/profiles/api-client';
-import { createVoice, getProfile, testVoiceAudio, uploadVoiceSample } from '@/lib/profiles/api-client';
+import { createVoice, getProfile, processVoiceSample, testVoiceAudio, uploadVoiceSample } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
 
@@ -200,7 +200,8 @@ export function Page(): React.JSX.Element {
 
     try {
       const file = await convertAudioBlobToMp3File(audioBlob, t('dashboard.profiles.detail.voice.errors.encoderFailed'));
-      await uploadVoiceSample({ file, language_code: languageCode, voiceId });
+      const voiceSample = await uploadVoiceSample({ file, language_code: languageCode, voiceId });
+      await processVoiceSample({ sampleId: voiceSample.id, voiceId });
       toast.success(t('dashboard.profiles.detail.voice.toasts.sampleUploaded'));
       setSampleDialogOpen(false);
     } catch (err) {

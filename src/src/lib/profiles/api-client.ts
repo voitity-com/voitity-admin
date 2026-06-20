@@ -116,6 +116,14 @@ export interface VoiceSample {
   file?: string;
 }
 
+export interface VoiceProviderRequest {
+  id: number | string;
+  voice_id: number | string;
+  voice_sample_id: number | string;
+  source?: null | string;
+  status?: null | string;
+}
+
 export interface VoiceTestAudio {
   audio_content?: null | string;
   audio_format?: null | string;
@@ -241,6 +249,18 @@ export async function uploadVoiceSample(params: {
   );
 
   return isApiEnvelope<VoiceSample>(response) ? response.data : response;
+}
+
+export async function processVoiceSample(params: {
+  sampleId: number | string;
+  voiceId: number | string;
+}): Promise<VoiceProviderRequest> {
+  const response = await requestJson<ApiEnvelope<VoiceProviderRequest> | VoiceProviderRequest>(
+    `/api/voice/${encodeURIComponent(String(params.voiceId))}/sample/${encodeURIComponent(String(params.sampleId))}/process`,
+    { method: 'POST' }
+  );
+
+  return isApiEnvelope<VoiceProviderRequest>(response) ? response.data : response;
 }
 
 export async function testVoiceAudio(payload: {
