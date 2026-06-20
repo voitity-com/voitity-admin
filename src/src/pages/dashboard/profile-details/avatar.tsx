@@ -64,10 +64,13 @@ export function Page(): React.JSX.Element {
   const [position, setPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [dragState, setDragState] = React.useState<DragState | null>(null);
   const [status, setStatus] = React.useState<string>('');
+  const [isPollingAvatar, setIsPollingAvatar] = React.useState<boolean>(false);
+  const [pendingAiImageId, setPendingAiImageId] = React.useState<string>('');
 
   const avatarFile = getAvatarFile(avatar);
   const avatarUrl = avatarFile ? resolveAssetUrl(avatarFile) : emptyAvatarSrc;
   const isVideo = avatarFile ? isVideoFile(avatarFile) : false;
+  const displayStatus = isPollingAvatar ? 'processing' : status;
 
   const loadAvatar = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -90,6 +93,70 @@ export function Page(): React.JSX.Element {
       logger.error(err);
     });
   }, [loadAvatar]);
+
+  React.useEffect(() => {
+    if (!isPollingAvatar) {
+      return undefined;
+    }
+
+    let isCancelled = false;
+    let attempts = 0;
+    const maxAttempts = 48;
+
+    const pollAvatar = async (): Promise<void> => {
+      attempts += 1;
+
+      try {
+        const nextAvatar = await getProfileAvatar(profileId);
+
+        if (isCancelled) {
+          return;
+        }
+
+        if (nextAvatar) {
+          setAvatar(nextAvatar);
+
+          const nextAiImageId = nextAvatar.ai_image?.id ? String(nextAvatar.ai_image.id) : '';
+          const hasVideo = Boolean(nextAvatar.ai_video?.file || nextAvatar.file);
+          const matchesPendingImage = pendingAiImageId ? nextAiImageId === pendingAiImageId : true;
+
+          if (matchesPendingImage && hasVideo) {
+            setStatus(nextAvatar.status ?? 'active');
+            setPendingAiImageId('');
+            setIsPollingAvatar(false);
+            return;
+          }
+        }
+
+        setStatus('processing');
+
+        if (attempts >= maxAttempts) {
+          setIsPollingAvatar(false);
+        }
+      } catch (err) {
+        logger.error(err);
+
+        if (!isCancelled) {
+          setStatus('processing');
+        }
+      }
+    };
+
+    pollAvatar().catch((err) => {
+      logger.error(err);
+    });
+
+    const intervalId = window.setInterval(() => {
+      pollAvatar().catch((err) => {
+        logger.error(err);
+      });
+    }, 10000);
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [isPollingAvatar, pendingAiImageId, profileId]);
 
   React.useEffect(() => {
     return () => {
@@ -193,7 +260,9 @@ export function Page(): React.JSX.Element {
         t('dashboard.profiles.detail.avatar.errors.prepareImage')
       );
       const generated = await generateAvatar(profileId, croppedFile);
-      setStatus(generated.status || 'processing');
+      setPendingAiImageId(String(generated.id));
+      setIsPollingAvatar(true);
+      setStatus('processing');
       setAvatar((current) => (current ? { ...current, status: generated.status || 'processing' } : current));
       toast.success(t('dashboard.profiles.detail.avatar.toasts.generationStarted'));
       handleCloseDialog();
@@ -216,7 +285,14 @@ export function Page(): React.JSX.Element {
         {error ? <Alert color="error">{error}</Alert> : null}
         <Card>
           <CardHeader
-            action={status ? <Chip color={status === 'processing' ? 'warning' : 'default'} label={status} /> : null}
+            action={
+              displayStatus ? (
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  {isPollingAvatar ? <CircularProgress size={16} /> : null}
+                  <Chip color={getStatusColor(displayStatus)} label={displayStatus} />
+                </Stack>
+              ) : null
+            }
             subheader={t('dashboard.profiles.detail.avatar.subheader')}
             title={t('dashboard.profiles.detail.avatar.title')}
           />
@@ -403,6 +479,24 @@ function resolveAssetUrl(file: string): string {
 
 function isVideoFile(file: string): boolean {
   return /\.(?:m4v|mov|mp4|ogg|webm)(?:\?.*)?$/i.test(file);
+}
+
+function getStatusColor(status: string): 'default' | 'error' | 'success' | 'warning' {
+  const value = status.toLowerCase();
+
+  if (['processing', 'pending', 'queued', 'running'].includes(value)) {
+    return 'warning';
+  }
+
+  if (['active', 'completed', 'generated', 'ready', 'succeeded'].includes(value)) {
+    return 'success';
+  }
+
+  if (['error', 'failed'].includes(value)) {
+    return 'error';
+  }
+
+  return 'default';
 }
 
 async function createCroppedAvatarFile(
