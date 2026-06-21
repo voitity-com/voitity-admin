@@ -86,9 +86,18 @@ export function Page(): React.JSX.Element {
 
     try {
       const nextProfile = await getProfile(profileId);
+      const nextVoiceId = getProfileVoiceId(nextProfile);
+
       setProfile(nextProfile);
+      setVoiceId(nextVoiceId);
       setVoiceName((current) => current || t('dashboard.profiles.detail.voice.voiceNameDefault', { name: nextProfile.name }));
       setVoiceDescription((current) => current || nextProfile.description || '');
+
+      if (nextVoiceId) {
+        storeVoiceId(profileId, nextVoiceId);
+      } else {
+        clearStoredVoiceId(profileId);
+      }
     } catch (err) {
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
@@ -491,13 +500,25 @@ function hasProfileVoiceEnabled(profile: null | Profile): boolean {
     return false;
   }
 
-  const profileRecord = profile as Profile & { voice?: unknown };
-
-  if (profileRecord.voice === true) {
+  if (profile.voice === true) {
     return true;
   }
 
   return profile.data?.voice === true;
+}
+
+function getProfileVoiceId(profile: Profile): string {
+  if (profile.voice_id !== null && profile.voice_id !== undefined && String(profile.voice_id).trim()) {
+    return String(profile.voice_id);
+  }
+
+  const dataVoiceId = profile.data?.voice_id;
+
+  if ((typeof dataVoiceId === 'string' || typeof dataVoiceId === 'number') && String(dataVoiceId).trim()) {
+    return String(dataVoiceId);
+  }
+
+  return '';
 }
 
 function resolveVoiceTestAudioUrl(audio: VoiceTestAudio): string {
@@ -613,6 +634,14 @@ function storeVoiceId(profileId: string, voiceId: string): void {
   }
 
   window.localStorage.setItem(getVoiceStorageKey(profileId), voiceId);
+}
+
+function clearStoredVoiceId(profileId: string): void {
+  if (typeof window === 'undefined' || !profileId) {
+    return;
+  }
+
+  window.localStorage.removeItem(getVoiceStorageKey(profileId));
 }
 
 function stopTracks(stream: MediaStream | null): void {
