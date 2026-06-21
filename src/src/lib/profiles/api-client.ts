@@ -12,6 +12,8 @@ export interface Profile {
   genre: string;
   personality: string;
   active?: boolean;
+  voice?: boolean;
+  voice_id?: null | number | string;
   data?: null | Record<string, unknown>;
   created_at?: null | string;
   updated_at?: null | string;
