@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
@@ -28,7 +29,9 @@ import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { RadialBar, RadialBarChart } from 'recharts';
 
+import { paths } from '@/paths';
 import { NoSsr } from '@/components/core/no-ssr';
+import { RouterLink } from '@/components/core/link';
 import type {
   JsonObject,
   JsonValue,
@@ -96,8 +99,9 @@ export function SubscriptionLimits({ data, language, plansData }: SubscriptionLi
 
 export function SubscriptionBilling({ data, language, plansData }: SubscriptionLimitsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const hasActiveSubscription = hasActiveSubscriptionData(data);
   const subscription = getCurrentSubscription(data, plansData, t);
-  const cycles = getBillingCycles({ language, plansData, subscription, t });
+  const cycles = getBillingCycles({ hasActiveSubscription, language, plansData, subscription, t });
 
   if (!Object.keys(data).length && !plansData?.plans.length) {
     return (
@@ -123,7 +127,11 @@ export function SubscriptionBilling({ data, language, plansData }: SubscriptionL
   return (
     <Grid container spacing={3}>
       <Grid lg={5} xs={12}>
-        <CurrentPlanCard language={language} subscription={subscription} t={t} />
+        {hasActiveSubscription ? (
+          <CurrentPlanCard language={language} subscription={subscription} t={t} />
+        ) : (
+          <NoActiveSubscriptionCard t={t} />
+        )}
       </Grid>
       <Grid lg={7} xs={12}>
         <BillingCyclesCard cycles={cycles} language={language} planName={subscription.planName} t={t} />
@@ -134,9 +142,66 @@ export function SubscriptionBilling({ data, language, plansData }: SubscriptionL
 
 export function SubscriptionUsage({ data, language }: SubscriptionLimitsProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  if (!hasActiveSubscriptionData(data)) {
+    return <SubscriptionRequiredCard t={t} />;
+  }
+
   const metrics = getUsageMetrics(data, t);
 
   return <UsageOverview language={language} metrics={metrics} t={t} />;
+}
+
+function NoActiveSubscriptionCard({ t }: { t: TFunction }): React.JSX.Element {
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Stack spacing={3}>
+          <Avatar
+            sx={{
+              '--Avatar-size': '48px',
+              bgcolor: 'background.level1',
+              color: 'text.primary',
+            }}
+          >
+            <CreditCardIcon fontSize="var(--Icon-fontSize)" />
+          </Avatar>
+          <Box>
+            <Typography color="text.secondary" variant="overline">
+              {t('dashboard.settings.billing.noActive.eyebrow')}
+            </Typography>
+            <Typography sx={{ mt: 0.5 }} variant="h5">
+              {t('dashboard.settings.billing.noActive.title')}
+            </Typography>
+            <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+              {t('dashboard.settings.billing.noActive.subheader')}
+            </Typography>
+          </Box>
+        </Stack>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SubscriptionRequiredCard({ t }: { t: TFunction }): React.JSX.Element {
+  return (
+    <Card>
+      <CardHeader
+        avatar={
+          <Avatar>
+            <GaugeIcon fontSize="var(--Icon-fontSize)" />
+          </Avatar>
+        }
+        subheader={t('dashboard.settings.usage.empty.subheader')}
+        title={t('dashboard.settings.usage.empty.title')}
+      />
+      <CardContent>
+        <Button component={RouterLink} href={paths.dashboard.settings.billing} startIcon={<CreditCardIcon />} variant="contained">
+          {t('dashboard.settings.usage.empty.action')}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
 
 function CurrentPlanCard({
@@ -555,12 +620,36 @@ function getCurrentSubscription(
   };
 }
 
+function hasActiveSubscriptionData(data: JsonObject): boolean {
+  const subscription = getRecordField(data, ['subscription']);
+
+  if (!subscription) {
+    return false;
+  }
+
+  if (subscription.active === false) {
+    return false;
+  }
+
+  return Boolean(
+    subscription.id ||
+      subscription.plan ||
+      subscription.plan_id ||
+      subscription.planId ||
+      subscription.name ||
+      subscription.plan_name ||
+      subscription.planName
+  );
+}
+
 function getBillingCycles({
+  hasActiveSubscription,
   language,
   plansData,
   subscription,
   t,
 }: {
+  hasActiveSubscription: boolean;
   language: string;
   plansData?: SubscriptionPlans;
   subscription: CurrentSubscription;
@@ -599,7 +688,7 @@ function getBillingCycles({
       label: t('dashboard.settings.billing.cycles.monthly.label'),
       priceUsd: monthlyPrice,
       recommended: false,
-      selected: subscription.interval === 'monthly',
+      selected: hasActiveSubscription && subscription.interval === 'monthly',
     },
     {
       currency,
@@ -609,7 +698,7 @@ function getBillingCycles({
       label: t('dashboard.settings.billing.cycles.annual.label'),
       priceUsd: annualPrice,
       recommended: true,
-      selected: subscription.interval === 'annual',
+      selected: hasActiveSubscription && subscription.interval === 'annual',
     },
   ];
 }

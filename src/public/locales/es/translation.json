@@ -90,6 +90,11 @@
         "errors": {
           "generic": "No se pudieron cargar los límites de la suscripción."
         },
+        "noActive": {
+          "eyebrow": "Sin suscripción activa",
+          "subheader": "Aún no hay un plan activo en esta cuenta. Elige el ciclo mensual o anual para activar Starter.",
+          "title": "Elige tu plan"
+        },
         "currentPlan": {
           "eyebrow": "Plan adquirido",
           "fallbackName": "Starter",
@@ -199,6 +204,11 @@
         }
       },
       "usage": {
+        "empty": {
+          "action": "Ir a Facturación y planes",
+          "subheader": "Adquiere una suscripción para activar tus límites y comenzar a ver el consumo de créditos.",
+          "title": "Necesitas una suscripción activa"
+        },
         "errors": {
           "generic": "No se pudieron cargar los límites de uso."
         },

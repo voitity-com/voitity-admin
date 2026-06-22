@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { SubscriptionLimits } from '@/lib/subscription/api-client';
-import { getSubscriptionLimits } from '@/lib/subscription/api-client';
+import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
 import { logger } from '@/lib/default-logger';
 import { SubscriptionUsage } from '@/components/dashboard/settings/subscription-limits';
 
@@ -30,6 +30,12 @@ export function Page(): React.JSX.Element {
     try {
       setLimits(await getSubscriptionLimits());
     } catch (err) {
+      if (isMissingActiveSubscriptionError(err)) {
+        setLimits({});
+
+        return;
+      }
+
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.settings.usage.errors.generic')));
     } finally {
@@ -69,4 +75,8 @@ export function Page(): React.JSX.Element {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function isMissingActiveSubscriptionError(error: unknown): boolean {
+  return error instanceof SubscriptionApiError && error.status === 404;
 }

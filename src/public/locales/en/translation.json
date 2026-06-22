@@ -90,6 +90,11 @@
         "errors": {
           "generic": "Could not load subscription limits."
         },
+        "noActive": {
+          "eyebrow": "No active subscription",
+          "subheader": "There is no active plan on this account yet. Choose monthly or annual billing to activate Starter.",
+          "title": "Choose your plan"
+        },
         "currentPlan": {
           "eyebrow": "Purchased plan",
           "fallbackName": "Starter",
@@ -199,6 +204,11 @@
         }
       },
       "usage": {
+        "empty": {
+          "action": "Go to Billing & plans",
+          "subheader": "Acquire a subscription to activate your limits and start seeing credit usage.",
+          "title": "You need an active subscription"
+        },
         "errors": {
           "generic": "Could not load usage limits."
         },
