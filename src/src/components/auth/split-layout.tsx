@@ -4,7 +4,9 @@ import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
@@ -13,6 +15,10 @@ import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { ShieldCheck as ShieldCheckIcon } from '@phosphor-icons/react/dist/ssr/ShieldCheck';
 import { useTranslation } from 'react-i18next';
+
+import { getSupportedLanguage } from '@/lib/i18n';
+import { usePopover } from '@/hooks/use-popover';
+import { languageFlags, LanguagePopover } from '@/components/dashboard/layout/language-popover';
 
 export interface SplitLayoutProps {
   children: React.ReactNode;
@@ -131,7 +137,10 @@ export function SplitLayout({ children }: SplitLayoutProps): React.JSX.Element {
           </Box>
         </Stack>
       </Box>
-      <Box sx={{ boxShadow: 'var(--mui-shadows-8)', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ boxShadow: 'var(--mui-shadows-8)', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+        <Box sx={{ position: 'absolute', right: 24, top: 24, zIndex: 1 }}>
+          <LanguageSwitch />
+        </Box>
         <Box
           sx={{
             alignItems: 'center',
@@ -146,5 +155,25 @@ export function SplitLayout({ children }: SplitLayoutProps): React.JSX.Element {
         </Box>
       </Box>
     </Box>
+  );
+}
+
+function LanguageSwitch(): React.JSX.Element {
+  const { i18n, t } = useTranslation();
+  const popover = usePopover<HTMLButtonElement>();
+  const language = getSupportedLanguage(i18n.language);
+  const flag = languageFlags[language];
+
+  return (
+    <React.Fragment>
+      <Tooltip title={t('auth.language')}>
+        <IconButton aria-label={t('auth.language')} onClick={popover.handleOpen} ref={popover.anchorRef}>
+          <Box sx={{ height: '24px', width: '24px' }}>
+            <Box alt={language} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
+          </Box>
+        </IconButton>
+      </Tooltip>
+      <LanguagePopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
+    </React.Fragment>
   );
 }
