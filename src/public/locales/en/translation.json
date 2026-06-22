@@ -4,6 +4,48 @@
     "en": "English",
     "es": "Spanish"
   },
+  "auth": {
+    "language": "Language",
+    "signIn": {
+      "actions": {
+        "submit": "Sign in"
+      },
+      "continueWith": "Continue with {{provider}}",
+      "divider": "or",
+      "errors": {
+        "googleAuth": "Unable to authenticate with Google"
+      },
+      "fields": {
+        "email": "Email address",
+        "password": "Password"
+      },
+      "metaTitle": "Sign in",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up",
+      "title": "Sign in",
+      "validation": {
+        "emailInvalid": "Enter a valid email address",
+        "emailRequired": "Email is required",
+        "passwordRequired": "Password is required"
+      }
+    },
+    "split": {
+      "description": "Create and maintain public profiles where an avatar can chat, answer with audio, and use verified information from the profile.",
+      "eyebrow": "Interactive profile admin",
+      "highlights": {
+        "avatar": "Authorized avatars",
+        "chat": "Public chat",
+        "context": "Verified context",
+        "voice": "Voice responses"
+      },
+      "title": "Manage conversational profiles with image, voice, and context.",
+      "workflow": {
+        "conversations": "Review conversations",
+        "media": "Manage avatar and voice",
+        "profiles": "Build profiles"
+      }
+    }
+  },
   "dashboard": {
     "nav": {
       "groups": {

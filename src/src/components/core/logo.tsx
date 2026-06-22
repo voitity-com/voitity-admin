@@ -19,15 +19,19 @@ export interface LogoProps {
 }
 
 export function Logo({ color = 'dark', emblem, height = HEIGHT, width = WIDTH }: LogoProps): React.JSX.Element {
-  let url: string;
+  const url = emblem ? '/assets/logo-emblem.png' : '/assets/logo.png';
+  const filter = color === 'light' && !emblem ? 'brightness(0) invert(1)' : undefined;
 
-  if (emblem) {
-    url = color === 'light' ? '/assets/logo-emblem.svg' : '/assets/logo-emblem--dark.svg';
-  } else {
-    url = color === 'light' ? '/assets/logo.svg' : '/assets/logo--dark.svg';
-  }
-
-  return <Box alt="logo" component="img" height={height} src={url} width={width} />;
+  return (
+    <Box
+      alt="Voitity"
+      component="img"
+      height={height}
+      src={url}
+      sx={{ filter, objectFit: 'contain' }}
+      width={width}
+    />
+  );
 }
 
 export interface DynamicLogoProps {
