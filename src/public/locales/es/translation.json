@@ -4,6 +4,24 @@
     "en": "Inglés",
     "es": "Español"
   },
+  "auth": {
+    "split": {
+      "description": "Crea y mantiene perfiles públicos donde un avatar conversa, responde con audio y usa información verificada del perfil.",
+      "eyebrow": "Administración de perfiles interactivos",
+      "highlights": {
+        "avatar": "Avatares autorizados",
+        "chat": "Chat público",
+        "context": "Contexto verificado",
+        "voice": "Respuestas con voz"
+      },
+      "title": "Administra perfiles conversacionales con imagen, voz y contexto.",
+      "workflow": {
+        "conversations": "Revisa conversaciones",
+        "media": "Gestiona avatar y voz",
+        "profiles": "Crea perfiles"
+      }
+    }
+  },
   "dashboard": {
     "nav": {
       "groups": {

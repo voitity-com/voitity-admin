@@ -1,8 +1,8 @@
 import * as React from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 
-import { Page as HomePage } from '@/pages/marketing/home';
+import { paths } from '@/paths';
 import { Page as NotFoundPage } from '@/pages/not-found';
 import { Layout as MarketingLayout } from '@/components/marketing/layout/layout';
 
@@ -11,6 +11,7 @@ import { route as componentsRoute } from './components';
 import { route as dashboardRoute } from './dashboard';
 
 export const routes: RouteObject[] = [
+  { index: true, element: <Navigate replace to={paths.auth.custom.signIn} /> },
   {
     element: (
       <MarketingLayout>
@@ -18,7 +19,6 @@ export const routes: RouteObject[] = [
       </MarketingLayout>
     ),
     children: [
-      { index: true, element: <HomePage /> },
       {
         path: 'pricing',
         lazy: async () => {

@@ -4,6 +4,24 @@
     "en": "English",
     "es": "Spanish"
   },
+  "auth": {
+    "split": {
+      "description": "Create and maintain public profiles where an avatar can chat, answer with audio, and use verified information from the profile.",
+      "eyebrow": "Interactive profile admin",
+      "highlights": {
+        "avatar": "Authorized avatars",
+        "chat": "Public chat",
+        "context": "Verified context",
+        "voice": "Voice responses"
+      },
+      "title": "Manage conversational profiles with image, voice, and context.",
+      "workflow": {
+        "conversations": "Review conversations",
+        "media": "Manage avatar and voice",
+        "profiles": "Build profiles"
+      }
+    }
+  },
   "dashboard": {
     "nav": {
       "groups": {
