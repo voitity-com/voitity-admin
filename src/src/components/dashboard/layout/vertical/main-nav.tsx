@@ -4,6 +4,7 @@ import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
@@ -153,23 +154,29 @@ function NotificationsButton(): React.JSX.Element {
 }
 
 function LanguageSwitch(): React.JSX.Element {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const popover = usePopover<HTMLButtonElement>();
   const language = getSupportedLanguage(i18n.language) as Language;
   const flag = languageFlags[language];
 
   return (
     <React.Fragment>
-      <Tooltip title="Language">
-        <IconButton
+      <Tooltip title={t('marketing.nav.language')}>
+        <Button
+          aria-label={`${t('marketing.nav.language')}: ${language.toUpperCase()}`}
+          color="inherit"
           onClick={popover.handleOpen}
           ref={popover.anchorRef}
-          sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
+          size="small"
+          sx={{ display: { xs: 'none', lg: 'inline-flex' }, minWidth: 'auto', px: 1 }}
         >
-          <Box sx={{ height: '24px', width: '24px' }}>
-            <Box alt={language} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
+          <Box sx={{ height: '22px', mr: 0.75, width: '22px' }}>
+            <Box alt={language.toUpperCase()} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
           </Box>
-        </IconButton>
+          <Box component="span" sx={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}>
+            {language.toUpperCase()}
+          </Box>
+        </Button>
       </Tooltip>
       <LanguagePopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>

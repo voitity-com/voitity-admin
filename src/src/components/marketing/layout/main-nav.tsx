@@ -103,15 +103,21 @@ function LanguageSwitch(): React.JSX.Element {
   return (
     <React.Fragment>
       <Tooltip title={t('marketing.nav.language')}>
-        <IconButton
+        <Button
+          aria-label={`${t('marketing.nav.language')}: ${language.toUpperCase()}`}
+          color="inherit"
           onClick={popover.handleOpen}
           ref={popover.anchorRef}
-          sx={{ color: 'var(--mui-palette-common-white)' }}
+          size="small"
+          sx={{ color: 'var(--mui-palette-common-white)', minWidth: 'auto', px: 1 }}
         >
-          <Box sx={{ height: '24px', width: '24px' }}>
-            <Box alt={language} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
+          <Box sx={{ height: '22px', mr: 0.75, width: '22px' }}>
+            <Box alt={language.toUpperCase()} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
           </Box>
-        </IconButton>
+          <Box component="span" sx={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}>
+            {language.toUpperCase()}
+          </Box>
+        </Button>
       </Tooltip>
       <LanguagePopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>

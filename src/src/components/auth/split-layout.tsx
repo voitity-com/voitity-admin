@@ -3,8 +3,8 @@
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Chip from '@mui/material/Chip';
-import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
@@ -167,11 +167,21 @@ function LanguageSwitch(): React.JSX.Element {
   return (
     <React.Fragment>
       <Tooltip title={t('auth.language')}>
-        <IconButton aria-label={t('auth.language')} onClick={popover.handleOpen} ref={popover.anchorRef}>
-          <Box sx={{ height: '24px', width: '24px' }}>
-            <Box alt={language} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
+        <Button
+          aria-label={`${t('auth.language')}: ${language.toUpperCase()}`}
+          color="inherit"
+          onClick={popover.handleOpen}
+          ref={popover.anchorRef}
+          size="small"
+          sx={{ minWidth: 'auto', px: 1 }}
+        >
+          <Box sx={{ height: '22px', mr: 0.75, width: '22px' }}>
+            <Box alt={language.toUpperCase()} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
           </Box>
-        </IconButton>
+          <Box component="span" sx={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}>
+            {language.toUpperCase()}
+          </Box>
+        </Button>
       </Tooltip>
       <LanguagePopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
