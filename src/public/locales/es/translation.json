@@ -62,7 +62,8 @@
         "profiles": "Perfiles",
         "security": "Seguridad",
         "settings": "Configuración",
-        "team": "Equipo"
+        "team": "Equipo",
+        "usage": "Uso"
       },
       "settingsGroups": {
         "organization": "Organización",
@@ -89,11 +90,37 @@
         "errors": {
           "generic": "No se pudieron cargar los límites de la suscripción."
         },
+        "currentPlan": {
+          "eyebrow": "Plan adquirido",
+          "fallbackName": "Starter",
+          "subheader": "Este es el plan activo para la cuenta."
+        },
+        "cycles": {
+          "annual": {
+            "description": "Para mantener el perfil activo todo el año con mejor precio.",
+            "label": "Anual",
+            "period": "USD /año"
+          },
+          "bestValue": "Mejor precio",
+          "monthly": {
+            "description": "Para crear y validar un perfil conversacional completo.",
+            "label": "Mensual",
+            "period": "USD /mes"
+          },
+          "selected": "Seleccionado",
+          "subheader": "Compara el ciclo mensual y anual del plan Starter.",
+          "title": "Ciclo de facturación"
+        },
         "fields": {
           "available": "Disponible",
+          "avatarImages": "Imágenes de avatar",
+          "avatarVideoSeconds": "Segundos de video avatar",
           "billingCycle": "Ciclo de facturación",
           "cancelAt": "Cancelar en",
+          "chatMessages": "Mensajes de chat",
           "createdAt": "Creado en",
+          "credits": "Créditos",
+          "currency": "Moneda",
           "current": "Actual",
           "currentPeriodEnd": "Fin del período actual",
           "currentPeriodStart": "Inicio del período actual",
@@ -103,15 +130,34 @@
           "name": "Nombre",
           "plan": "Plan",
           "planName": "Nombre del plan",
+          "profiles": "Perfiles",
           "remaining": "Restante",
           "renewsAt": "Renueva en",
+          "startedAt": "Inició en",
           "status": "Estado",
           "subscription": "Suscripción",
           "trialEndsAt": "Fin del período de prueba",
+          "ttsCharacters": "Caracteres TTS",
           "updatedAt": "Actualizado en",
-          "used": "Usado"
+          "used": "Usado",
+          "voiceClones": "Clones de voz"
         },
         "pageTitle": "Facturación y planes",
+        "planFeatures": {
+          "avatar": "1 imagen de avatar y 5 segundos de video",
+          "chat": {
+            "annual": "1000 mensajes de chat mensuales con 500 créditos",
+            "monthly": "1000 mensajes de chat con 500 créditos"
+          },
+          "credits": "1000 créditos mensuales incluidos",
+          "profile": "1 perfil publicado",
+          "savings": "Ahorro de {{amount}} frente al pago mensual",
+          "tts": {
+            "annual": "10.000 caracteres TTS mensuales con 500 créditos",
+            "monthly": "10.000 caracteres TTS con 500 créditos"
+          },
+          "voice": "1 clon de voz autorizado"
+        },
         "sections": {
           "features": "Características",
           "limits": "Límites",
@@ -121,8 +167,27 @@
           "subscription": "Suscripción",
           "usage": "Uso"
         },
+        "status": {
+          "active": "Activo",
+          "canceled": "Cancelado",
+          "cancelled": "Cancelado",
+          "expired": "Expirado",
+          "failed": "Fallido",
+          "inactive": "Inactivo",
+          "paid": "Pagado",
+          "pastDue": "Pago vencido",
+          "pending": "Pendiente",
+          "trialing": "En prueba"
+        },
         "subheader": "Información cargada desde tu suscripción actual.",
         "title": "Límites de suscripción",
+        "usage": {
+          "progress": "{{progress}} usado",
+          "remainingSummary": "{{remaining}} disponibles para el período actual.",
+          "subheader": "Seguimiento del consumo frente a lo incluido en el plan.",
+          "title": "Uso de límites",
+          "unlimitedSummary": "Este límite no tiene tope definido."
+        },
         "values": {
           "empty": "-",
           "no": "No",
@@ -132,6 +197,12 @@
           "usedOfLimit": "{{used}} de {{limit}}",
           "yes": "Sí"
         }
+      },
+      "usage": {
+        "errors": {
+          "generic": "No se pudieron cargar los límites de uso."
+        },
+        "pageTitle": "Uso"
       }
     },
     "profiles": {

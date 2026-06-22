@@ -60,6 +60,7 @@ export const paths = {
       notifications: '/dashboard/settings/notifications',
       security: '/dashboard/settings/security',
       team: '/dashboard/settings/team',
+      usage: '/dashboard/settings/usage',
     },
     academy: { browse: '/dashboard/academy', details: (courseId: string) => `/dashboard/academy/courses/${courseId}` },
     analytics: '/dashboard/analytics',

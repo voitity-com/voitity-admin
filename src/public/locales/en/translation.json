@@ -62,7 +62,8 @@
         "profiles": "Profiles",
         "security": "Security",
         "settings": "Settings",
-        "team": "Team"
+        "team": "Team",
+        "usage": "Usage"
       },
       "settingsGroups": {
         "organization": "Organization",
@@ -89,11 +90,37 @@
         "errors": {
           "generic": "Could not load subscription limits."
         },
+        "currentPlan": {
+          "eyebrow": "Purchased plan",
+          "fallbackName": "Starter",
+          "subheader": "This is the active plan for the account."
+        },
+        "cycles": {
+          "annual": {
+            "description": "For keeping the profile active all year at a better price.",
+            "label": "Annual",
+            "period": "USD /year"
+          },
+          "bestValue": "Best value",
+          "monthly": {
+            "description": "For creating and validating a complete conversational profile.",
+            "label": "Monthly",
+            "period": "USD /month"
+          },
+          "selected": "Selected",
+          "subheader": "Compare the monthly and annual cycle for the Starter plan.",
+          "title": "Billing cycle"
+        },
         "fields": {
           "available": "Available",
+          "avatarImages": "Avatar images",
+          "avatarVideoSeconds": "Avatar video seconds",
           "billingCycle": "Billing cycle",
           "cancelAt": "Cancel at",
+          "chatMessages": "Chat messages",
           "createdAt": "Created at",
+          "credits": "Credits",
+          "currency": "Currency",
           "current": "Current",
           "currentPeriodEnd": "Current period end",
           "currentPeriodStart": "Current period start",
@@ -103,15 +130,34 @@
           "name": "Name",
           "plan": "Plan",
           "planName": "Plan name",
+          "profiles": "Profiles",
           "remaining": "Remaining",
           "renewsAt": "Renews at",
+          "startedAt": "Started at",
           "status": "Status",
           "subscription": "Subscription",
           "trialEndsAt": "Trial ends at",
+          "ttsCharacters": "TTS characters",
           "updatedAt": "Updated at",
-          "used": "Used"
+          "used": "Used",
+          "voiceClones": "Voice clones"
         },
         "pageTitle": "Billing & plans",
+        "planFeatures": {
+          "avatar": "1 avatar image and 5 seconds of video",
+          "chat": {
+            "annual": "1000 monthly chat messages with 500 credits",
+            "monthly": "1000 chat messages with 500 credits"
+          },
+          "credits": "1000 monthly credits included",
+          "profile": "1 published profile",
+          "savings": "Save {{amount}} compared with monthly billing",
+          "tts": {
+            "annual": "10,000 monthly TTS characters with 500 credits",
+            "monthly": "10,000 TTS characters with 500 credits"
+          },
+          "voice": "1 authorized voice clone"
+        },
         "sections": {
           "features": "Features",
           "limits": "Limits",
@@ -121,8 +167,27 @@
           "subscription": "Subscription",
           "usage": "Usage"
         },
+        "status": {
+          "active": "Active",
+          "canceled": "Canceled",
+          "cancelled": "Canceled",
+          "expired": "Expired",
+          "failed": "Failed",
+          "inactive": "Inactive",
+          "paid": "Paid",
+          "pastDue": "Past due",
+          "pending": "Pending",
+          "trialing": "Trialing"
+        },
         "subheader": "Information loaded from your current subscription.",
         "title": "Subscription limits",
+        "usage": {
+          "progress": "{{progress}} used",
+          "remainingSummary": "{{remaining}} available for the current period.",
+          "subheader": "Track consumption against what is included in the plan.",
+          "title": "Limit usage",
+          "unlimitedSummary": "This limit has no defined cap."
+        },
         "values": {
           "empty": "-",
           "no": "No",
@@ -132,6 +197,12 @@
           "usedOfLimit": "{{used}} of {{limit}}",
           "yes": "Yes"
         }
+      },
+      "usage": {
+        "errors": {
+          "generic": "Could not load usage limits."
+        },
+        "pageTitle": "Usage"
       }
     },
     "profiles": {

@@ -453,6 +453,13 @@ export const route: RouteObject = {
           },
         },
         {
+          path: 'usage',
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/settings/usage');
+            return { Component: Page };
+          },
+        },
+        {
           path: 'notifications',
           lazy: async () => {
             const { Page } = await import('@/pages/dashboard/settings/notifications');

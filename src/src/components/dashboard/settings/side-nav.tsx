@@ -9,6 +9,7 @@ import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
+import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
@@ -68,6 +69,13 @@ const navItems = [
         icon: 'credit-card',
       },
       {
+        key: 'usage',
+        title: 'Usage',
+        titleKey: 'dashboard.nav.items.usage',
+        href: paths.dashboard.settings.usage,
+        icon: 'gauge',
+      },
+      {
         key: 'team',
         title: 'Team',
         titleKey: 'dashboard.nav.items.team',
@@ -87,6 +95,7 @@ const navItems = [
 
 const icons = {
   'credit-card': CreditCardIcon,
+  gauge: GaugeIcon,
   'lock-key': LockKeyIcon,
   'plugs-connected': PlugsConnectedIcon,
   'user-circle': UserCircleIcon,
@@ -132,7 +141,7 @@ export function SideNav(): React.JSX.Element {
                     {...item}
                     key={item.key}
                     pathname={pathname}
-                    showNotImplemented={!['account', 'billing'].includes(item.key)}
+                    showNotImplemented={!['account', 'billing', 'usage'].includes(item.key)}
                     title={getNavTitle(item, t)}
                   />
                 ))}

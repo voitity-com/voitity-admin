@@ -9,53 +9,39 @@ import { useTranslation } from 'react-i18next';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { SubscriptionLimits, SubscriptionPlans } from '@/lib/subscription/api-client';
-import { getSubscriptionLimits, getSubscriptionPlans } from '@/lib/subscription/api-client';
+import type { SubscriptionLimits } from '@/lib/subscription/api-client';
+import { getSubscriptionLimits } from '@/lib/subscription/api-client';
 import { logger } from '@/lib/default-logger';
-import { SubscriptionBilling } from '@/components/dashboard/settings/subscription-limits';
+import { SubscriptionUsage } from '@/components/dashboard/settings/subscription-limits';
 
-const metadata = { title: `Billing | Settings | Dashboard | ${config.site.name}` } satisfies Metadata;
-
-interface BillingState {
-  limits: SubscriptionLimits;
-  plans: SubscriptionPlans;
-}
+const metadata = { title: `Usage | Settings | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 export function Page(): React.JSX.Element {
   const { i18n, t } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
-  const [billing, setBilling] = React.useState<BillingState | null>(null);
+  const [limits, setLimits] = React.useState<SubscriptionLimits | null>(null);
   const [error, setError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
-  const loadBilling = React.useCallback(async (): Promise<void> => {
+  const loadLimits = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
 
     try {
-      const limits = await getSubscriptionLimits();
-      let plans: SubscriptionPlans = { plans: [] };
-
-      try {
-        plans = await getSubscriptionPlans();
-      } catch (plansError) {
-        logger.error(plansError);
-      }
-
-      setBilling({ limits, plans });
+      setLimits(await getSubscriptionLimits());
     } catch (err) {
       logger.error(err);
-      setError(getErrorMessage(err, t('dashboard.settings.billing.errors.generic')));
+      setError(getErrorMessage(err, t('dashboard.settings.usage.errors.generic')));
     } finally {
       setIsLoading(false);
     }
   }, [t]);
 
   React.useEffect(() => {
-    loadBilling().catch((err) => {
+    loadLimits().catch((err) => {
       logger.error(err);
     });
-  }, [loadBilling]);
+  }, [loadLimits]);
 
   return (
     <React.Fragment>
@@ -64,7 +50,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={4}>
         <div>
-          <Typography variant="h4">{t('dashboard.settings.billing.pageTitle')}</Typography>
+          <Typography variant="h4">{t('dashboard.settings.usage.pageTitle')}</Typography>
         </div>
         {error ? <Alert color="error">{error}</Alert> : null}
         {isLoading ? (
@@ -73,8 +59,8 @@ export function Page(): React.JSX.Element {
               <CircularProgress />
             </Stack>
           </Card>
-        ) : billing ? (
-          <SubscriptionBilling data={billing.limits} language={language} plansData={billing.plans} />
+        ) : limits ? (
+          <SubscriptionUsage data={limits} language={language} />
         ) : null}
       </Stack>
     </React.Fragment>
