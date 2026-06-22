@@ -21,6 +21,24 @@ interface RequestOptions {
 
 export type SubscriptionLimits = JsonObject;
 
+export interface SubscriptionPlan {
+  credits?: JsonObject;
+  currency: string;
+  id: string;
+  interval: string;
+  limits?: JsonObject;
+  name: string;
+  price_usd: null | number;
+  purchasable?: boolean;
+}
+
+export interface SubscriptionPlans {
+  display_currency?: string;
+  exchange_rate?: number;
+  plans: SubscriptionPlan[];
+  processing_currency?: string;
+}
+
 export class SubscriptionApiError extends Error {
   public status: number;
 
@@ -35,6 +53,12 @@ export async function getSubscriptionLimits(): Promise<SubscriptionLimits> {
   const response = await requestJson<unknown>('/api/subscription/limits', { method: 'GET' });
 
   return normalizeSubscriptionLimitsResponse(response);
+}
+
+export async function getSubscriptionPlans(): Promise<SubscriptionPlans> {
+  const response = await requestJson<unknown>('/api/subscription/plans', { method: 'GET' });
+
+  return normalizeSubscriptionPlansResponse(response);
 }
 
 function normalizeSubscriptionLimitsResponse(response: unknown): SubscriptionLimits {
@@ -55,6 +79,55 @@ function normalizeSubscriptionLimitsResponse(response: unknown): SubscriptionLim
   }
 
   return {};
+}
+
+function normalizeSubscriptionPlansResponse(response: unknown): SubscriptionPlans {
+  const data = getResponseData(response);
+
+  if (Array.isArray(data)) {
+    return { plans: data.map(normalizeSubscriptionPlan).filter(isSubscriptionPlan) };
+  }
+
+  if (!isRecord(data)) {
+    return { plans: [] };
+  }
+
+  const rawPlans = Array.isArray(data.plans) ? data.plans : [];
+
+  return {
+    display_currency: getStringField(data, ['display_currency', 'displayCurrency']),
+    exchange_rate: getNumberField(data, ['exchange_rate', 'exchangeRate']),
+    plans: rawPlans.map(normalizeSubscriptionPlan).filter(isSubscriptionPlan),
+    processing_currency: getStringField(data, ['processing_currency', 'processingCurrency']),
+  };
+}
+
+function normalizeSubscriptionPlan(value: unknown): SubscriptionPlan | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const id = getStringField(value, ['id', 'plan', 'slug']);
+  const name = getStringField(value, ['name', 'plan_name', 'planName']);
+
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    credits: isRecord(value.credits) ? value.credits : undefined,
+    currency: getStringField(value, ['currency']) ?? 'USD',
+    id,
+    interval: getStringField(value, ['interval', 'billing_cycle', 'billingCycle']) ?? 'monthly',
+    limits: isRecord(value.limits) ? value.limits : undefined,
+    name,
+    price_usd: getNullableNumberField(value, ['price_usd', 'priceUsd', 'price']),
+    purchasable: typeof value.purchasable === 'boolean' ? value.purchasable : undefined,
+  };
+}
+
+function isSubscriptionPlan(value: SubscriptionPlan | null): value is SubscriptionPlan {
+  return value !== null;
 }
 
 function getResponseData(response: unknown): unknown {
@@ -87,6 +160,62 @@ function getFirstRecordField(value: JsonObject, fields: string[]): JsonObject | 
   }
 
   return undefined;
+}
+
+function getStringField(value: JsonObject, fields: string[]): string | undefined {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'string' && rawValue) {
+      return rawValue;
+    }
+  }
+
+  return undefined;
+}
+
+function getNumberField(value: JsonObject, fields: string[]): number | undefined {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+      return rawValue;
+    }
+
+    if (typeof rawValue === 'string') {
+      const parsedValue = Number(rawValue);
+
+      if (Number.isFinite(parsedValue)) {
+        return parsedValue;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+function getNullableNumberField(value: JsonObject, fields: string[]): null | number {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (rawValue === null) {
+      return null;
+    }
+
+    if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+      return rawValue;
+    }
+
+    if (typeof rawValue === 'string') {
+      const parsedValue = Number(rawValue);
+
+      if (Number.isFinite(parsedValue)) {
+        return parsedValue;
+      }
+    }
+  }
+
+  return null;
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {

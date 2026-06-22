@@ -62,7 +62,8 @@
         "profiles": "Perfiles",
         "security": "Seguridad",
         "settings": "Configuración",
-        "team": "Equipo"
+        "team": "Equipo",
+        "usage": "Uso"
       },
       "settingsGroups": {
         "organization": "Organización",
@@ -87,13 +88,64 @@
         "empty": "No se recibió información de la suscripción.",
         "emptySection": "No se recibieron elementos.",
         "errors": {
+          "checkout": "No se pudo iniciar el checkout de pago.",
+          "checkoutUrl": "No se recibió la URL del checkout de pago.",
           "generic": "No se pudieron cargar los límites de la suscripción."
+        },
+        "actions": {
+          "acquirePlan": "Adquirir plan",
+          "cancel": "Cancelar",
+          "continueToPayment": "Continuar al pago seguro",
+          "processing": "Preparando pago",
+          "selectCycle": "Seleccionar {{cycle}}",
+          "selected": "Seleccionado"
+        },
+        "noActive": {
+          "eyebrow": "Sin suscripción activa",
+          "subheader": "Aún no hay un plan activo en esta cuenta. Elige el ciclo mensual o anual para activar Starter.",
+          "title": "Elige tu plan"
+        },
+        "currentPlan": {
+          "eyebrow": "Plan adquirido",
+          "fallbackName": "Starter",
+          "subheader": "Este es el plan activo para la cuenta."
+        },
+        "cycles": {
+          "annual": {
+            "description": "Para mantener el perfil activo todo el año con mejor precio.",
+            "label": "Anual",
+            "period": "USD /año"
+          },
+          "bestValue": "Mejor precio",
+          "monthly": {
+            "description": "Para crear y validar un perfil conversacional completo.",
+            "label": "Mensual",
+            "period": "USD /mes"
+          },
+          "selected": "Seleccionado",
+          "subheader": "Compara el ciclo mensual y anual del plan Starter.",
+          "title": "Ciclo de facturación",
+          "unavailable": "No disponible"
+        },
+        "checkout": {
+          "displayPrice": "Precio mostrado",
+          "planValue": "Starter {{cycle}}",
+          "processingAmount": "Monto procesado",
+          "subheader": "Revisa el ciclo seleccionado y acepta los términos de renovación antes de ir a Wompi.",
+          "summaryTitle": "Resumen del pago",
+          "title": "Checkout",
+          "wompiNotice": "El plan se muestra en USD. Wompi procesa el pago en COP usando la tasa de cambio configurada."
         },
         "fields": {
           "available": "Disponible",
+          "avatarImages": "Imágenes de avatar",
+          "avatarVideoSeconds": "Segundos de video avatar",
           "billingCycle": "Ciclo de facturación",
           "cancelAt": "Cancelar en",
+          "chatMessages": "Mensajes de chat",
           "createdAt": "Creado en",
+          "credits": "Créditos",
+          "currency": "Moneda",
           "current": "Actual",
           "currentPeriodEnd": "Fin del período actual",
           "currentPeriodStart": "Inicio del período actual",
@@ -103,15 +155,63 @@
           "name": "Nombre",
           "plan": "Plan",
           "planName": "Nombre del plan",
+          "profiles": "Perfiles",
           "remaining": "Restante",
           "renewsAt": "Renueva en",
+          "startedAt": "Inició en",
           "status": "Estado",
           "subscription": "Suscripción",
           "trialEndsAt": "Fin del período de prueba",
+          "ttsCharacters": "Caracteres TTS",
           "updatedAt": "Actualizado en",
-          "used": "Usado"
+          "used": "Usado",
+          "voiceClones": "Clones de voz"
         },
         "pageTitle": "Facturación y planes",
+        "paymentResult": {
+          "actions": {
+            "backToBilling": "Volver a facturación y planes",
+            "refresh": "Consultar de nuevo",
+            "viewUsage": "Ver uso"
+          },
+          "amount": "Monto",
+          "autoRefresh": "Actualización automática",
+          "cardTitle": "Estado del pago",
+          "errors": {
+            "generic": "No se pudo cargar el estado del pago."
+          },
+          "missing": {
+            "subheader": "Inicia un nuevo checkout desde Facturación y planes.",
+            "title": "No se encontró un pago pendiente"
+          },
+          "pageTitle": "Resultado del pago",
+          "paidAt": "Pagado en",
+          "reference": "Referencia",
+          "status": {
+            "approved": "Tu pago fue aprobado y la suscripción se está activando.",
+            "failed": "El pago no fue aprobado. Puedes volver a Facturación y planes e intentarlo de nuevo.",
+            "pending": "El pago aún está pendiente. Esta página consultará de nuevo automáticamente.",
+            "unknown": "El pago devolvió un estado desconocido."
+          }
+        },
+        "planFeatures": {
+          "avatar": "{{images}} imágenes de avatar y {{seconds}} segundos de video",
+          "chat": {
+            "annual": "1000 mensajes de chat mensuales con 500 créditos",
+            "monthly": "1000 mensajes de chat con 500 créditos"
+          },
+          "chatMessages": "{{countLabel}} mensajes de chat incluidos",
+          "credits": "{{countLabel}} créditos incluidos",
+          "profile": "1 perfil publicado",
+          "profiles": "{{countLabel}} perfiles incluidos",
+          "savings": "Ahorro de {{amount}} frente al pago mensual",
+          "tts": {
+            "annual": "10.000 caracteres TTS mensuales con 500 créditos",
+            "monthly": "10.000 caracteres TTS con 500 créditos"
+          },
+          "ttsCharacters": "{{countLabel}} caracteres TTS incluidos",
+          "voice": "{{countLabel}} clones de voz autorizados"
+        },
         "sections": {
           "features": "Características",
           "limits": "Límites",
@@ -121,8 +221,36 @@
           "subscription": "Suscripción",
           "usage": "Uso"
         },
+        "status": {
+          "active": "Activo",
+          "approved": "Aprobado",
+          "canceled": "Cancelado",
+          "cancelled": "Cancelado",
+          "declined": "Rechazado",
+          "error": "Error",
+          "expired": "Expirado",
+          "failed": "Fallido",
+          "inactive": "Inactivo",
+          "paid": "Pagado",
+          "pastDue": "Pago vencido",
+          "pending": "Pendiente",
+          "trialing": "En prueba",
+          "voided": "Anulado"
+        },
         "subheader": "Información cargada desde tu suscripción actual.",
         "title": "Límites de suscripción",
+        "terms": {
+          "acceptance": "Acepto los términos de suscripción y autorizo pagos recurrentes.",
+          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that plan limits apply to the selected billing period.",
+          "title": "Términos de suscripción"
+        },
+        "usage": {
+          "progress": "{{progress}} usado",
+          "remainingSummary": "{{remaining}} disponibles para el período actual.",
+          "subheader": "Seguimiento del consumo frente a lo incluido en el plan.",
+          "title": "Uso de límites",
+          "unlimitedSummary": "Este límite no tiene tope definido."
+        },
         "values": {
           "empty": "-",
           "no": "No",
@@ -132,6 +260,17 @@
           "usedOfLimit": "{{used}} de {{limit}}",
           "yes": "Sí"
         }
+      },
+      "usage": {
+        "empty": {
+          "action": "Ir a Facturación y planes",
+          "subheader": "Adquiere una suscripción para activar tus límites y comenzar a ver el consumo de créditos.",
+          "title": "Necesitas una suscripción activa"
+        },
+        "errors": {
+          "generic": "No se pudieron cargar los límites de uso."
+        },
+        "pageTitle": "Uso"
       }
     },
     "profiles": {

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type { RouteObject } from 'react-router-dom';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { paths } from '@/paths';
 import { Page as NotFoundPage } from '@/pages/not-found';
@@ -56,6 +56,10 @@ export const routes: RouteObject[] = [
     ],
   },
   {
+    path: 'checkout/result',
+    element: <LegacyCheckoutResultRedirect />,
+  },
+  {
     path: 'checkout',
     lazy: async () => {
       const { Page } = await import('@/pages/checkout');
@@ -80,3 +84,9 @@ export const routes: RouteObject[] = [
   dashboardRoute,
   { path: '*', element: <NotFoundPage /> },
 ];
+
+function LegacyCheckoutResultRedirect(): React.JSX.Element {
+  const location = useLocation();
+
+  return <Navigate replace to={`${paths.dashboard.settings.billingPaymentResult}${location.search}`} />;
+}

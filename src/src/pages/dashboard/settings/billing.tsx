@@ -9,26 +9,50 @@ import { useTranslation } from 'react-i18next';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { SubscriptionLimits } from '@/lib/subscription/api-client';
-import { getSubscriptionLimits } from '@/lib/subscription/api-client';
+import type { SubscriptionLimits, SubscriptionPlan, SubscriptionPlans } from '@/lib/subscription/api-client';
+import { getSubscriptionLimits, getSubscriptionPlans, SubscriptionApiError } from '@/lib/subscription/api-client';
+import { createWompiCheckout, savePendingPaymentOrderId } from '@/lib/payments/api-client';
 import { logger } from '@/lib/default-logger';
-import { SubscriptionLimits as SubscriptionLimitsView } from '@/components/dashboard/settings/subscription-limits';
+import { SubscriptionBilling } from '@/components/dashboard/settings/subscription-limits';
 
 const metadata = { title: `Billing | Settings | Dashboard | ${config.site.name}` } satisfies Metadata;
+
+interface BillingState {
+  limits: SubscriptionLimits;
+  plans: SubscriptionPlans;
+}
 
 export function Page(): React.JSX.Element {
   const { i18n, t } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
-  const [limits, setLimits] = React.useState<null | SubscriptionLimits>(null);
+  const [billing, setBilling] = React.useState<BillingState | null>(null);
   const [error, setError] = React.useState<string>('');
+  const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
-  const loadLimits = React.useCallback(async (): Promise<void> => {
+  const loadBilling = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
 
     try {
-      setLimits(await getSubscriptionLimits());
+      let limits: SubscriptionLimits = {};
+      let plans: SubscriptionPlans = { plans: [] };
+
+      try {
+        plans = await getSubscriptionPlans();
+      } catch (plansError) {
+        logger.error(plansError);
+      }
+
+      try {
+        limits = await getSubscriptionLimits();
+      } catch (limitsError) {
+        if (!isMissingActiveSubscriptionError(limitsError)) {
+          throw limitsError;
+        }
+      }
+
+      setBilling({ limits, plans });
     } catch (err) {
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.settings.billing.errors.generic')));
@@ -38,10 +62,34 @@ export function Page(): React.JSX.Element {
   }, [t]);
 
   React.useEffect(() => {
-    loadLimits().catch((err) => {
+    loadBilling().catch((err) => {
       logger.error(err);
     });
-  }, [loadLimits]);
+  }, [loadBilling]);
+
+  const handleStartCheckout = React.useCallback(
+    async (plan: SubscriptionPlan): Promise<void> => {
+      setError('');
+      setIsCheckoutPending(true);
+
+      try {
+        const checkout = await createWompiCheckout({ plan: plan.id });
+        const checkoutUrl = checkout.checkout.checkout_url ?? checkout.payment_order.checkout_url;
+
+        if (!checkoutUrl) {
+          throw new Error(t('dashboard.settings.billing.errors.checkoutUrl'));
+        }
+
+        savePendingPaymentOrderId(checkout.payment_order.id);
+        window.location.assign(checkoutUrl);
+      } catch (err) {
+        logger.error(err);
+        setError(getErrorMessage(err, t('dashboard.settings.billing.errors.checkout')));
+        setIsCheckoutPending(false);
+      }
+    },
+    [t]
+  );
 
   return (
     <React.Fragment>
@@ -59,8 +107,14 @@ export function Page(): React.JSX.Element {
               <CircularProgress />
             </Stack>
           </Card>
-        ) : limits ? (
-          <SubscriptionLimitsView data={limits} language={language} />
+        ) : billing ? (
+          <SubscriptionBilling
+            data={billing.limits}
+            isCheckoutPending={isCheckoutPending}
+            language={language}
+            onStartCheckout={handleStartCheckout}
+            plansData={billing.plans}
+          />
         ) : null}
       </Stack>
     </React.Fragment>
@@ -69,4 +123,8 @@ export function Page(): React.JSX.Element {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function isMissingActiveSubscriptionError(error: unknown): boolean {
+  return error instanceof SubscriptionApiError && error.status === 404;
 }
