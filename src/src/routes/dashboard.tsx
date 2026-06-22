@@ -453,6 +453,13 @@ export const route: RouteObject = {
           },
         },
         {
+          path: 'billing/payment-result',
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/settings/billing-payment-result');
+            return { Component: Page };
+          },
+        },
+        {
           path: 'usage',
           lazy: async () => {
             const { Page } = await import('@/pages/dashboard/settings/usage');

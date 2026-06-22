@@ -56,6 +56,7 @@ export const paths = {
     settings: {
       account: '/dashboard/settings/account',
       billing: '/dashboard/settings/billing',
+      billingPaymentResult: '/dashboard/settings/billing/payment-result',
       integrations: '/dashboard/settings/integrations',
       notifications: '/dashboard/settings/notifications',
       security: '/dashboard/settings/security',

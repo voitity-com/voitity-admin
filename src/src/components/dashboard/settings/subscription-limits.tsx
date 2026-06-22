@@ -2,17 +2,26 @@
 
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
+import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Unstable_Grid2';
+import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { CheckCircle as CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle';
@@ -46,6 +55,11 @@ export interface SubscriptionLimitsProps {
   plansData?: SubscriptionPlans;
 }
 
+export interface SubscriptionBillingProps extends SubscriptionLimitsProps {
+  isCheckoutPending?: boolean;
+  onStartCheckout?: (plan: SubscriptionPlan) => Promise<void>;
+}
+
 type BillingInterval = 'annual' | 'monthly';
 
 interface CurrentSubscription {
@@ -63,10 +77,15 @@ interface CurrentSubscription {
 interface BillingCycleOption {
   currency: string;
   description: string;
+  disabled: boolean;
   features: string[];
   interval: BillingInterval;
   label: string;
+  plan?: SubscriptionPlan;
+  planId?: string;
   priceUsd?: number;
+  processingAmount?: number;
+  processingCurrency?: string;
   recommended: boolean;
   selected: boolean;
 }
@@ -97,11 +116,52 @@ export function SubscriptionLimits({ data, language, plansData }: SubscriptionLi
   );
 }
 
-export function SubscriptionBilling({ data, language, plansData }: SubscriptionLimitsProps): React.JSX.Element {
+export function SubscriptionBilling({
+  data,
+  isCheckoutPending = false,
+  language,
+  onStartCheckout,
+  plansData,
+}: SubscriptionBillingProps): React.JSX.Element {
   const { t } = useTranslation();
   const hasActiveSubscription = hasActiveSubscriptionData(data);
+  const [acceptedTerms, setAcceptedTerms] = React.useState<boolean>(false);
+  const [checkoutPlanId, setCheckoutPlanId] = React.useState<string | undefined>();
   const subscription = getCurrentSubscription(data, plansData, t);
-  const cycles = getBillingCycles({ hasActiveSubscription, language, plansData, subscription, t });
+
+  React.useEffect(() => {
+    if (hasActiveSubscription) {
+      setAcceptedTerms(false);
+      setCheckoutPlanId(undefined);
+    }
+  }, [hasActiveSubscription]);
+
+  const cycles = getBillingCycles({ hasActiveSubscription, language, plansData, selectedPlanId: checkoutPlanId, subscription, t });
+  const checkoutCycle = cycles.find((cycle) => cycle.planId === checkoutPlanId && !cycle.disabled);
+  const selectedPlan = checkoutCycle?.plan;
+  const canStartCheckout = Boolean(!hasActiveSubscription && acceptedTerms && selectedPlan && onStartCheckout && !isCheckoutPending);
+
+  const handleOpenCheckout = React.useCallback((planId: string): void => {
+    setAcceptedTerms(false);
+    setCheckoutPlanId(planId);
+  }, []);
+
+  const handleCloseCheckout = React.useCallback((): void => {
+    if (isCheckoutPending) {
+      return;
+    }
+
+    setAcceptedTerms(false);
+    setCheckoutPlanId(undefined);
+  }, [isCheckoutPending]);
+
+  const handleStartCheckout = React.useCallback(async (): Promise<void> => {
+    if (!selectedPlan || !onStartCheckout) {
+      return;
+    }
+
+    await onStartCheckout(selectedPlan);
+  }, [onStartCheckout, selectedPlan]);
 
   if (!Object.keys(data).length && !plansData?.plans.length) {
     return (
@@ -134,8 +194,29 @@ export function SubscriptionBilling({ data, language, plansData }: SubscriptionL
         )}
       </Grid>
       <Grid lg={7} xs={12}>
-        <BillingCyclesCard cycles={cycles} language={language} planName={subscription.planName} t={t} />
+        <BillingCyclesCard
+          cycles={cycles}
+          hasActiveSubscription={hasActiveSubscription}
+          language={language}
+          onSelectPlan={handleOpenCheckout}
+          planName={subscription.planName}
+          t={t}
+        />
       </Grid>
+      {!hasActiveSubscription ? (
+        <CheckoutAgreementDialog
+          acceptedTerms={acceptedTerms}
+          canStartCheckout={canStartCheckout}
+          cycle={checkoutCycle}
+          isCheckoutPending={isCheckoutPending}
+          language={language}
+          onAcceptedTermsChange={setAcceptedTerms}
+          onClose={handleCloseCheckout}
+          onStartCheckout={handleStartCheckout}
+          open={Boolean(checkoutCycle)}
+          t={t}
+        />
+      ) : null}
     </Grid>
   );
 }
@@ -304,12 +385,16 @@ function CurrentPlanCard({
 
 function BillingCyclesCard({
   cycles,
+  hasActiveSubscription,
   language,
+  onSelectPlan,
   planName,
   t,
 }: {
   cycles: BillingCycleOption[];
+  hasActiveSubscription: boolean;
   language: string;
+  onSelectPlan: (planId: string) => void;
   planName: string;
   t: TFunction;
 }): React.JSX.Element {
@@ -328,7 +413,14 @@ function BillingCyclesCard({
         <Grid container spacing={2}>
           {cycles.map((cycle) => (
             <Grid key={cycle.interval} md={6} xs={12}>
-              <BillingCycleCard cycle={cycle} language={language} planName={planName} t={t} />
+              <BillingCycleCard
+                cycle={cycle}
+                hasActiveSubscription={hasActiveSubscription}
+                language={language}
+                onSelectPlan={onSelectPlan}
+                planName={planName}
+                t={t}
+              />
             </Grid>
           ))}
         </Grid>
@@ -339,22 +431,29 @@ function BillingCyclesCard({
 
 function BillingCycleCard({
   cycle,
+  hasActiveSubscription,
   language,
+  onSelectPlan,
   planName,
   t,
 }: {
   cycle: BillingCycleOption;
+  hasActiveSubscription: boolean;
   language: string;
+  onSelectPlan: (planId: string) => void;
   planName: string;
   t: TFunction;
 }): React.JSX.Element {
+  const isSelectable = !hasActiveSubscription && !cycle.disabled && cycle.planId;
+
   return (
     <Card
       sx={{
-        borderColor: cycle.selected ? 'primary.main' : 'divider',
+        borderColor: cycle.selected ? 'primary.main' : cycle.disabled ? 'divider' : 'neutral.300',
         borderRadius: 1,
         borderWidth: cycle.selected ? 2 : 1,
         height: '100%',
+        opacity: cycle.disabled ? 0.62 : 1,
       }}
       variant="outlined"
     >
@@ -367,6 +466,9 @@ function BillingCycleCard({
             size="small"
             variant="soft"
           />
+          {cycle.disabled ? (
+            <Chip color="default" label={t('dashboard.settings.billing.cycles.unavailable')} size="small" variant="soft" />
+          ) : null}
           {cycle.recommended ? (
             <Chip color="primary" label={t('dashboard.settings.billing.cycles.bestValue')} size="small" variant="soft" />
           ) : null}
@@ -398,8 +500,166 @@ function BillingCycleCard({
             </Stack>
           ))}
         </Stack>
+
+        {!hasActiveSubscription ? (
+          <Box sx={{ flex: '1 1 auto', minHeight: 0 }} />
+        ) : null}
+
+        {!hasActiveSubscription ? (
+          <Button
+            disabled={!isSelectable}
+            fullWidth
+            onClick={() => {
+              if (cycle.planId) {
+                onSelectPlan(cycle.planId);
+              }
+            }}
+            startIcon={<CreditCardIcon />}
+            variant="contained"
+          >
+            {t('dashboard.settings.billing.actions.acquirePlan')}
+          </Button>
+        ) : null}
       </Stack>
     </Card>
+  );
+}
+
+function CheckoutAgreementDialog({
+  acceptedTerms,
+  canStartCheckout,
+  cycle,
+  isCheckoutPending,
+  language,
+  onAcceptedTermsChange,
+  onClose,
+  onStartCheckout,
+  open,
+  t,
+}: {
+  acceptedTerms: boolean;
+  canStartCheckout: boolean;
+  cycle?: BillingCycleOption;
+  isCheckoutPending: boolean;
+  language: string;
+  onAcceptedTermsChange: (value: boolean) => void;
+  onClose: () => void;
+  onStartCheckout: () => Promise<void>;
+  open: boolean;
+  t: TFunction;
+}): React.JSX.Element {
+  const processingAmount = cycle?.processingAmount;
+  const processingCurrency = cycle?.processingCurrency ?? 'COP';
+
+  return (
+    <Dialog fullWidth maxWidth="md" onClose={onClose} open={open}>
+      <DialogTitle>{t('dashboard.settings.billing.checkout.title')}</DialogTitle>
+      <DialogContent dividers>
+        <Typography color="text.secondary" sx={{ mb: 3 }} variant="body2">
+          {t('dashboard.settings.billing.checkout.subheader')}
+        </Typography>
+        <Grid container spacing={3}>
+          <Grid md={5} xs={12}>
+            <Card sx={{ borderRadius: 1, height: '100%' }} variant="outlined">
+              <Stack spacing={2} sx={{ p: 2.5 }}>
+                <Typography variant="subtitle2">{t('dashboard.settings.billing.checkout.summaryTitle')}</Typography>
+                <Stack divider={<Divider />} spacing={0}>
+                  <SummaryRow
+                    label={t('dashboard.settings.billing.fields.plan')}
+                    value={
+                      cycle
+                        ? t('dashboard.settings.billing.checkout.planValue', { cycle: cycle.label })
+                        : t('dashboard.settings.billing.values.empty')
+                    }
+                  />
+                  <SummaryRow
+                    label={t('dashboard.settings.billing.fields.billingCycle')}
+                    value={cycle ? getIntervalLabel(cycle.interval, t) : t('dashboard.settings.billing.values.empty')}
+                  />
+                  <SummaryRow
+                    label={t('dashboard.settings.billing.checkout.displayPrice')}
+                    value={
+                      cycle
+                        ? formatCurrency(cycle.priceUsd, cycle.currency, language)
+                        : t('dashboard.settings.billing.values.empty')
+                    }
+                  />
+                  <SummaryRow
+                    label={t('dashboard.settings.billing.checkout.processingAmount')}
+                    value={
+                      typeof processingAmount === 'number'
+                        ? formatCurrency(processingAmount, processingCurrency, language)
+                        : t('dashboard.settings.billing.values.empty')
+                    }
+                  />
+                </Stack>
+                <Alert severity="info" variant="outlined">
+                  {t('dashboard.settings.billing.checkout.wompiNotice')}
+                </Alert>
+              </Stack>
+            </Card>
+          </Grid>
+          <Grid md={7} xs={12}>
+            <Stack spacing={2.5}>
+              <Box>
+                <Typography variant="subtitle2">{t('dashboard.settings.billing.terms.title')}</Typography>
+                <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+                  {t('dashboard.settings.billing.terms.body', {
+                    interval: cycle ? getIntervalLabel(cycle.interval, t).toLowerCase() : '',
+                  })}
+                </Typography>
+              </Box>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={acceptedTerms}
+                    onChange={(event) => {
+                      onAcceptedTermsChange(event.target.checked);
+                    }}
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    {t('dashboard.settings.billing.terms.acceptance')}
+                  </Typography>
+                }
+              />
+            </Stack>
+          </Grid>
+        </Grid>
+      </DialogContent>
+      <DialogActions sx={{ px: 3, py: 2 }}>
+        <Button disabled={isCheckoutPending} onClick={onClose} variant="outlined">
+          {t('dashboard.settings.billing.actions.cancel')}
+        </Button>
+        <Button
+          disabled={!canStartCheckout}
+          endIcon={isCheckoutPending ? undefined : <ArrowSquareOutIcon />}
+          onClick={() => {
+            void onStartCheckout();
+          }}
+          startIcon={isCheckoutPending ? <CircularProgress color="inherit" size={16} /> : <CreditCardIcon />}
+          variant="contained"
+        >
+          {isCheckoutPending
+            ? t('dashboard.settings.billing.actions.processing')
+            : t('dashboard.settings.billing.actions.continueToPayment')}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }): React.JSX.Element {
+  return (
+    <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between', py: 1.25 }}>
+      <Typography color="text.secondary" variant="body2">
+        {label}
+      </Typography>
+      <Typography sx={{ textAlign: 'right' }} variant="subtitle2">
+        {value}
+      </Typography>
+    </Stack>
   );
 }
 
@@ -646,12 +906,14 @@ function getBillingCycles({
   hasActiveSubscription,
   language,
   plansData,
+  selectedPlanId,
   subscription,
   t,
 }: {
   hasActiveSubscription: boolean;
   language: string;
   plansData?: SubscriptionPlans;
+  selectedPlanId?: string;
   subscription: CurrentSubscription;
   t: TFunction;
 }): BillingCycleOption[] {
@@ -674,6 +936,7 @@ function getBillingCycles({
         ? Math.round(monthlyPrice * 10 * 100) / 100
         : undefined);
   const currency = monthlyPlan?.currency ?? annualPlan?.currency ?? subscription.currency;
+  const processingCurrency = plansData?.processing_currency ?? 'COP';
   const savings =
     typeof monthlyPrice === 'number' && typeof annualPrice === 'number'
       ? Math.max(monthlyPrice * 12 - annualPrice, 0)
@@ -683,24 +946,46 @@ function getBillingCycles({
     {
       currency,
       description: t('dashboard.settings.billing.cycles.monthly.description'),
-      features: getPlanFeatures({ interval: 'monthly', language, savings, t, currency }),
+      disabled: !isPurchasablePlan(monthlyPlan),
+      features: getPlanFeatures({ interval: 'monthly', language, plan: monthlyPlan, savings, t, currency }),
       interval: 'monthly',
       label: t('dashboard.settings.billing.cycles.monthly.label'),
+      plan: monthlyPlan,
+      planId: monthlyPlan?.id,
       priceUsd: monthlyPrice,
+      processingAmount: getProcessingAmount(monthlyPrice, plansData?.exchange_rate),
+      processingCurrency,
       recommended: false,
-      selected: hasActiveSubscription && subscription.interval === 'monthly',
+      selected: hasActiveSubscription ? subscription.interval === 'monthly' : monthlyPlan?.id === selectedPlanId,
     },
     {
       currency,
       description: t('dashboard.settings.billing.cycles.annual.description'),
-      features: getPlanFeatures({ interval: 'annual', language, savings, t, currency }),
+      disabled: !isPurchasablePlan(annualPlan),
+      features: getPlanFeatures({ interval: 'annual', language, plan: annualPlan, savings, t, currency }),
       interval: 'annual',
       label: t('dashboard.settings.billing.cycles.annual.label'),
+      plan: annualPlan,
+      planId: annualPlan?.id,
       priceUsd: annualPrice,
+      processingAmount: getProcessingAmount(annualPrice, plansData?.exchange_rate),
+      processingCurrency,
       recommended: true,
-      selected: hasActiveSubscription && subscription.interval === 'annual',
+      selected: hasActiveSubscription ? subscription.interval === 'annual' : annualPlan?.id === selectedPlanId,
     },
   ];
+}
+
+function isPurchasablePlan(plan: SubscriptionPlan | undefined): plan is SubscriptionPlan {
+  return Boolean(plan && plan.purchasable !== false && typeof plan.price_usd === 'number' && plan.price_usd > 0);
+}
+
+function getProcessingAmount(priceUsd: number | undefined, exchangeRate: number | undefined): number | undefined {
+  if (typeof priceUsd !== 'number' || typeof exchangeRate !== 'number' || exchangeRate <= 0) {
+    return undefined;
+  }
+
+  return Math.round(priceUsd * exchangeRate * 100) / 100;
 }
 
 function findPlanByInterval(plans: SubscriptionPlan[], interval: BillingInterval): SubscriptionPlan | undefined {
@@ -711,22 +996,37 @@ function getPlanFeatures({
   currency,
   interval,
   language,
+  plan,
   savings,
   t,
 }: {
   currency: string;
   interval: BillingInterval;
   language: string;
+  plan?: SubscriptionPlan;
   savings?: number;
   t: TFunction;
 }): string[] {
   const features = [
-    t('dashboard.settings.billing.planFeatures.profile'),
-    t('dashboard.settings.billing.planFeatures.avatar'),
-    t('dashboard.settings.billing.planFeatures.voice'),
-    t(`dashboard.settings.billing.planFeatures.chat.${interval}`),
-    t(`dashboard.settings.billing.planFeatures.tts.${interval}`),
-    t('dashboard.settings.billing.planFeatures.credits'),
+    t('dashboard.settings.billing.planFeatures.profiles', {
+      countLabel: formatNumber(getPlanLimit(plan, 'profiles') ?? 1, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.avatar', {
+      images: formatNumber(getPlanLimit(plan, 'avatar_images') ?? 1, language),
+      seconds: formatNumber(getPlanLimit(plan, 'avatar_video_seconds') ?? 5, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.voice', {
+      countLabel: formatNumber(getPlanLimit(plan, 'voice_clones') ?? 1, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.chatMessages', {
+      countLabel: formatNumber(getPlanLimit(plan, 'chat_messages') ?? 1000, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.ttsCharacters', {
+      countLabel: formatNumber(getPlanLimit(plan, 'tts_characters') ?? 10000, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.credits', {
+      countLabel: formatNumber(getPlanCreditsTotal(plan) ?? 1000, language),
+    }),
   ];
 
   if (interval === 'annual' && typeof savings === 'number' && savings > 0) {
@@ -738,6 +1038,32 @@ function getPlanFeatures({
   }
 
   return features;
+}
+
+function getPlanLimit(plan: SubscriptionPlan | undefined, metric: string): number | undefined {
+  const value = plan?.limits?.[metric];
+
+  return getNumericJsonValue(value);
+}
+
+function getPlanCreditsTotal(plan: SubscriptionPlan | undefined): number | undefined {
+  return getNumericJsonValue(plan?.credits?.total);
+}
+
+function getNumericJsonValue(value: JsonValue | undefined): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const parsedValue = Number(value);
+
+    if (Number.isFinite(parsedValue)) {
+      return parsedValue;
+    }
+  }
+
+  return undefined;
 }
 
 function getUsageMetrics(data: JsonObject, t: TFunction): UsageMetric[] {

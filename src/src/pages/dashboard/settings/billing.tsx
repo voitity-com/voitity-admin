@@ -9,8 +9,9 @@ import { useTranslation } from 'react-i18next';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { SubscriptionLimits, SubscriptionPlans } from '@/lib/subscription/api-client';
+import type { SubscriptionLimits, SubscriptionPlan, SubscriptionPlans } from '@/lib/subscription/api-client';
 import { getSubscriptionLimits, getSubscriptionPlans, SubscriptionApiError } from '@/lib/subscription/api-client';
+import { createWompiCheckout, savePendingPaymentOrderId } from '@/lib/payments/api-client';
 import { logger } from '@/lib/default-logger';
 import { SubscriptionBilling } from '@/components/dashboard/settings/subscription-limits';
 
@@ -26,6 +27,7 @@ export function Page(): React.JSX.Element {
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [billing, setBilling] = React.useState<BillingState | null>(null);
   const [error, setError] = React.useState<string>('');
+  const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
   const loadBilling = React.useCallback(async (): Promise<void> => {
@@ -65,6 +67,30 @@ export function Page(): React.JSX.Element {
     });
   }, [loadBilling]);
 
+  const handleStartCheckout = React.useCallback(
+    async (plan: SubscriptionPlan): Promise<void> => {
+      setError('');
+      setIsCheckoutPending(true);
+
+      try {
+        const checkout = await createWompiCheckout({ plan: plan.id });
+        const checkoutUrl = checkout.checkout.checkout_url ?? checkout.payment_order.checkout_url;
+
+        if (!checkoutUrl) {
+          throw new Error(t('dashboard.settings.billing.errors.checkoutUrl'));
+        }
+
+        savePendingPaymentOrderId(checkout.payment_order.id);
+        window.location.assign(checkoutUrl);
+      } catch (err) {
+        logger.error(err);
+        setError(getErrorMessage(err, t('dashboard.settings.billing.errors.checkout')));
+        setIsCheckoutPending(false);
+      }
+    },
+    [t]
+  );
+
   return (
     <React.Fragment>
       <Helmet>
@@ -82,7 +108,13 @@ export function Page(): React.JSX.Element {
             </Stack>
           </Card>
         ) : billing ? (
-          <SubscriptionBilling data={billing.limits} language={language} plansData={billing.plans} />
+          <SubscriptionBilling
+            data={billing.limits}
+            isCheckoutPending={isCheckoutPending}
+            language={language}
+            onStartCheckout={handleStartCheckout}
+            plansData={billing.plans}
+          />
         ) : null}
       </Stack>
     </React.Fragment>

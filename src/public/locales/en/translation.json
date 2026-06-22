@@ -88,7 +88,17 @@
         "empty": "No subscription information was returned.",
         "emptySection": "No items were returned.",
         "errors": {
+          "checkout": "Could not start the payment checkout.",
+          "checkoutUrl": "The payment checkout URL was not returned.",
           "generic": "Could not load subscription limits."
+        },
+        "actions": {
+          "acquirePlan": "Acquire plan",
+          "cancel": "Cancel",
+          "continueToPayment": "Continue to secure payment",
+          "processing": "Preparing payment",
+          "selectCycle": "Select {{cycle}}",
+          "selected": "Selected"
         },
         "noActive": {
           "eyebrow": "No active subscription",
@@ -114,7 +124,17 @@
           },
           "selected": "Selected",
           "subheader": "Compare the monthly and annual cycle for the Starter plan.",
-          "title": "Billing cycle"
+          "title": "Billing cycle",
+          "unavailable": "Unavailable"
+        },
+        "checkout": {
+          "displayPrice": "Displayed price",
+          "planValue": "Starter {{cycle}}",
+          "processingAmount": "Processed amount",
+          "subheader": "Review the selected cycle and accept the renewal terms before going to Wompi.",
+          "summaryTitle": "Payment summary",
+          "title": "Checkout",
+          "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
         },
         "fields": {
           "available": "Available",
@@ -148,20 +168,49 @@
           "voiceClones": "Voice clones"
         },
         "pageTitle": "Billing & plans",
+        "paymentResult": {
+          "actions": {
+            "backToBilling": "Back to Billing & plans",
+            "refresh": "Check again",
+            "viewUsage": "View usage"
+          },
+          "amount": "Amount",
+          "autoRefresh": "Auto-refreshing",
+          "cardTitle": "Payment status",
+          "errors": {
+            "generic": "Could not load the payment status."
+          },
+          "missing": {
+            "subheader": "Start a new checkout from Billing & plans.",
+            "title": "No pending payment was found"
+          },
+          "pageTitle": "Payment result",
+          "paidAt": "Paid at",
+          "reference": "Reference",
+          "status": {
+            "approved": "Your payment was approved and the subscription is being activated.",
+            "failed": "The payment was not approved. You can return to Billing & plans and try again.",
+            "pending": "The payment is still pending. This page will check again automatically.",
+            "unknown": "The payment returned an unknown status."
+          }
+        },
         "planFeatures": {
-          "avatar": "1 avatar image and 5 seconds of video",
+          "avatar": "{{images}} avatar images and {{seconds}} seconds of video",
           "chat": {
             "annual": "1000 monthly chat messages with 500 credits",
             "monthly": "1000 chat messages with 500 credits"
           },
-          "credits": "1000 monthly credits included",
+          "chatMessages": "{{countLabel}} chat messages included",
+          "credits": "{{countLabel}} credits included",
           "profile": "1 published profile",
+          "profiles": "{{countLabel}} profiles included",
           "savings": "Save {{amount}} compared with monthly billing",
           "tts": {
             "annual": "10,000 monthly TTS characters with 500 credits",
             "monthly": "10,000 TTS characters with 500 credits"
           },
-          "voice": "1 authorized voice clone"
+          "ttsCharacters": "{{countLabel}} TTS characters included",
+          "voice": "{{countLabel}} authorized voice clones"
         },
         "sections": {
           "features": "Features",
@@ -174,18 +223,27 @@
         },
         "status": {
           "active": "Active",
+          "approved": "Approved",
           "canceled": "Canceled",
           "cancelled": "Canceled",
+          "declined": "Declined",
+          "error": "Error",
           "expired": "Expired",
           "failed": "Failed",
           "inactive": "Inactive",
           "paid": "Paid",
           "pastDue": "Past due",
           "pending": "Pending",
-          "trialing": "Trialing"
+          "trialing": "Trialing",
+          "voided": "Voided"
         },
         "subheader": "Information loaded from your current subscription.",
         "title": "Subscription limits",
+        "terms": {
+          "acceptance": "I accept the subscription terms and authorize recurring payments.",
+          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that plan limits apply to the selected billing period.",
+          "title": "Subscription terms"
+        },
         "usage": {
           "progress": "{{progress}} used",
           "remainingSummary": "{{remaining}} available for the current period.",
