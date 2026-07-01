@@ -391,6 +391,7 @@
           "chats": "Chats",
           "data": "Data",
           "profile": "Profile",
+          "socialNetworks": "Social Networks",
           "voice": "Voice"
         },
         "profile": {
@@ -399,6 +400,29 @@
           "toasts": {
             "updated": "Profile updated"
           }
+        },
+        "socialNetworks": {
+          "addNetwork": "Add social network",
+          "empty": "No social networks added yet.",
+          "errors": {
+            "catalog": "Could not load supported social networks.",
+            "duplicate": "This social network is already added.",
+            "generic": "Could not update social networks.",
+            "networkRequired": "Select a social network.",
+            "urlInvalid": "Enter a valid URL.",
+            "urlRequired": "Enter the profile URL."
+          },
+          "fields": {
+            "network": "Network",
+            "url": "URL"
+          },
+          "remove": "Remove",
+          "subheader": "Add links visitors can use to find this profile on social platforms.",
+          "title": "Social Networks",
+          "toasts": {
+            "updated": "Social networks updated"
+          },
+          "unavailable": "All supported social networks are already added."
         },
         "voice": {
           "audio": "Audio",

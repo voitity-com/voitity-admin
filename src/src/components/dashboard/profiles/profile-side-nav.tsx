@@ -9,6 +9,7 @@ import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/C
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr/ShareNetwork';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
@@ -23,6 +24,7 @@ const icons = {
   chats: ChatsCircleIcon,
   data: DatabaseIcon,
   profile: UserCircleIcon,
+  socialNetworks: ShareNetworkIcon,
   voice: MicrophoneIcon,
 } as Record<string, Icon>;
 
@@ -44,6 +46,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.data'),
         href: paths.dashboard.profileDetails.data(profileId),
         icon: 'data',
+      },
+      {
+        key: 'socialNetworks',
+        title: t('dashboard.profiles.detail.nav.socialNetworks'),
+        href: paths.dashboard.profileDetails.socialNetworks(profileId),
+        icon: 'socialNetworks',
       },
       {
         key: 'avatar',

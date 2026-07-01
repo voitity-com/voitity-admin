@@ -391,6 +391,7 @@
           "chats": "Chats",
           "data": "Datos",
           "profile": "Perfil",
+          "socialNetworks": "Redes Sociales",
           "voice": "Voz"
         },
         "profile": {
@@ -399,6 +400,29 @@
           "toasts": {
             "updated": "Perfil actualizado"
           }
+        },
+        "socialNetworks": {
+          "addNetwork": "Agregar red social",
+          "empty": "Aún no hay redes sociales agregadas.",
+          "errors": {
+            "catalog": "No se pudieron cargar las redes sociales disponibles.",
+            "duplicate": "Esta red social ya está agregada.",
+            "generic": "No se pudieron actualizar las redes sociales.",
+            "networkRequired": "Selecciona una red social.",
+            "urlInvalid": "Ingresa una URL válida.",
+            "urlRequired": "Ingresa la URL del perfil."
+          },
+          "fields": {
+            "network": "Red social",
+            "url": "URL"
+          },
+          "remove": "Quitar",
+          "subheader": "Agrega enlaces para que los visitantes encuentren este perfil en redes sociales.",
+          "title": "Redes Sociales",
+          "toasts": {
+            "updated": "Redes sociales actualizadas"
+          },
+          "unavailable": "Todas las redes sociales disponibles ya están agregadas."
         },
         "voice": {
           "audio": "Audio",

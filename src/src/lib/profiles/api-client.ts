@@ -15,9 +15,12 @@ export interface Profile {
   voice?: boolean;
   voice_id?: null | number | string;
   data?: null | Record<string, unknown>;
+  networks?: null | ProfileNetworks;
   created_at?: null | string;
   updated_at?: null | string;
 }
+
+export type ProfileNetworks = Record<string, string>;
 
 export interface ProfilePayload {
   name: string;
@@ -36,6 +39,12 @@ interface ApiEnvelope<T> {
 interface ProfilesListData {
   profiles: Profile[];
   total?: number;
+}
+
+export interface SocialNetworkDefinition {
+  icon: string;
+  key: string;
+  name: string;
 }
 
 interface RequestOptions {
@@ -189,6 +198,34 @@ export async function updateProfileData(id: number | string, data: Record<string
     `/api/profile/${encodeURIComponent(String(id))}/data`,
     {
       body: { data },
+      method: 'PUT',
+    }
+  );
+  return unwrapProfile(response);
+}
+
+export async function listProfileSocialNetworks(): Promise<SocialNetworkDefinition[]> {
+  const response = await requestJson<
+    ApiEnvelope<{ networks?: Record<string, { icon?: null | string; name?: null | string }> }> | {
+      networks?: Record<string, { icon?: null | string; name?: null | string }>;
+    }
+  >('/api/profile/social-networks', { method: 'GET' });
+  const payload = isApiEnvelope<{ networks?: Record<string, { icon?: null | string; name?: null | string }> }>(response)
+    ? response.data
+    : response;
+
+  return Object.entries(payload.networks ?? {}).map(([key, value]) => ({
+    icon: value.icon ?? '',
+    key,
+    name: value.name ?? key,
+  }));
+}
+
+export async function updateProfileNetworks(id: number | string, networks: ProfileNetworks): Promise<Profile> {
+  const response = await requestJson<ApiEnvelope<Profile> | Profile>(
+    `/api/profile/${encodeURIComponent(String(id))}/data/networks`,
+    {
+      body: { networks },
       method: 'PUT',
     }
   );

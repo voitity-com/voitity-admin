@@ -46,7 +46,7 @@ const fallbackData = {
   },
 } satisfies JsonObject;
 
-const tabKeys = ['me', 'work', 'projects', 'networks'] as const;
+const tabKeys = ['me', 'work', 'projects'] as const;
 
 type TabKey = (typeof tabKeys)[number];
 type ArraySectionKey = Exclude<TabKey, 'me'>;
@@ -237,21 +237,6 @@ export function Page(): React.JSX.Element {
                         handleRemoveArrayItem('projects', index);
                       }}
                       section="projects"
-                    />
-                  ) : null}
-                  {activeTab === 'networks' ? (
-                    <ArraySection
-                      items={getArrayValue(data.networks)}
-                      onAddItem={() => {
-                        handleAddArrayItem('networks');
-                      }}
-                      onFieldChange={(index, field, value) => {
-                        handleArrayItemFieldChange('networks', index, field, value);
-                      }}
-                      onRemoveItem={(index) => {
-                        handleRemoveArrayItem('networks', index);
-                      }}
-                      section="networks"
                     />
                   ) : null}
                   {!isKnownTab(activeTab) ? (
@@ -473,7 +458,7 @@ function normalizeData(value: unknown): JsonObject {
 
 function getVisibleTabs(data: JsonObject): SectionKey[] {
   const knownTabs = tabKeys.filter((key) => Object.hasOwn(data, key));
-  const extraTabs = Object.keys(data).filter((key) => !isKnownTab(key));
+  const extraTabs = Object.keys(data).filter((key) => !isKnownTab(key) && key !== 'networks');
   const visibleTabs = [...knownTabs, ...extraTabs];
 
   return visibleTabs.length ? visibleTabs : ['me'];
@@ -502,10 +487,6 @@ function getArrayValue(value: JsonValue | undefined): JsonValue[] {
 function getDefaultArrayItem(section: ArraySectionKey): JsonObject {
   if (section === 'work') {
     return { company: '', description: '', role: '' };
-  }
-
-  if (section === 'networks') {
-    return { name: '', url: '', username: '' };
   }
 
   return { description: '', name: '', url: '' };

@@ -399,6 +399,13 @@ export const route: RouteObject = {
               },
             },
             {
+              path: 'social-networks',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/social-networks');
+                return { Component: Page };
+              },
+            },
+            {
               path: 'avatar',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/avatar');
