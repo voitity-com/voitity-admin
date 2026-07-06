@@ -473,7 +473,7 @@
         "voice": {
           "audio": "Audio",
           "cloneVoice": "Clone your voice",
-          "cloneIntroDescription": "We will show you a guided text to read out loud. The ideal recording is close to 3 minutes and should sound natural, clear, and free of background noise.",
+          "cloneIntroDescription": "When recording starts, a text will appear for you to read out loud. The full reading can take up to 3 minutes.",
           "cloneIntroTitle": "Prepare your voice sample",
           "continueReading": "Keep reading",
           "countdownTitle": "Get ready, recording starts when the countdown ends.",
@@ -487,13 +487,20 @@
             "enterText": "Enter text to generate audio.",
             "microphoneAccess": "Unable to access the microphone.",
             "recordBeforeSend": "Record a voice sample before sending it.",
+            "recordingStartFailed": "Recording could not be started. Please try again.",
             "recordingUnsupported": "Audio recording is not supported by this browser."
           },
           "fields": {
             "description": "Description",
+            "language": "Language",
             "languageCode": "Language code: {{code}}",
+            "languageHelper": "Used for voice cloning and sample uploads.",
             "text": "Text",
             "voiceName": "Voice name"
+          },
+          "languages": {
+            "en": "English",
+            "es": "Spanish"
           },
           "naturalVoice": "Use your normal voice",
           "pauseRecording": "Pause",
@@ -512,6 +519,7 @@
             "part5": "Now I will keep reading continuously so the sample has enough duration. It is normal to breathe, make brief pauses, and continue naturally. I do not need to act or exaggerate the tone. I only need to speak as I would in a real conversation, keeping a comfortable distance from the microphone and avoiding bumps or sudden noises.",
             "part6": "To finish, I will close this sample with the same clarity I used at the start. This recording will help create a more accurate voice reference, so it is important to listen to the full audio before sending it. If I notice noise, cuts, or very low volume, I can record again and replace this sample."
           },
+          "saveSample": "Save sample",
           "sampleText": "Hello, this is an example of my voice to configure my profile. I am reading this text clearly and naturally to create a voice sample.",
           "scriptPart": "Part {{current}} of {{total}}",
           "stopRecording": "Stop recording",
@@ -521,10 +529,12 @@
           "toasts": {
             "audioGenerated": "Audio generated",
             "sampleUploaded": "Voice sample uploaded",
-            "voiceCreated": "Voice created"
+            "voiceCreated": "Voice created",
+            "voiceSaved": "Voice saved"
           },
           "uploadingSample": "Sending...",
           "voiceId": "Voice ID: {{id}}",
+          "voiceNameFallback": "Profile voice",
           "voiceNameDefault": "{{name}} Voice"
         }
       },

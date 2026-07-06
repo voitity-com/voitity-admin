@@ -473,7 +473,7 @@
         "voice": {
           "audio": "Audio",
           "cloneVoice": "Clonar voz",
-          "cloneIntroDescription": "Te mostraremos un texto guiado para leer en voz alta. La grabación ideal dura cerca de 3 minutos y debe sonar natural, clara y sin ruido de fondo.",
+          "cloneIntroDescription": "Al iniciar la grabación aparecerá un texto para leer en voz alta. La lectura completa puede durar hasta 3 minutos.",
           "cloneIntroTitle": "Prepara tu muestra de voz",
           "continueReading": "Seguir leyendo",
           "countdownTitle": "Prepárate, la grabación empezará al terminar la cuenta.",
@@ -487,13 +487,20 @@
             "enterText": "Ingresa texto para generar audio.",
             "microphoneAccess": "No se pudo acceder al micrófono.",
             "recordBeforeSend": "Graba una muestra de voz antes de enviarla.",
+            "recordingStartFailed": "No se pudo iniciar la grabación. Intenta de nuevo.",
             "recordingUnsupported": "Este navegador no soporta grabación de audio."
           },
           "fields": {
             "description": "Descripción",
+            "language": "Idioma",
             "languageCode": "Código de idioma: {{code}}",
+            "languageHelper": "Se usará al clonar la voz y al subir muestras.",
             "text": "Texto",
             "voiceName": "Nombre de la voz"
+          },
+          "languages": {
+            "en": "Inglés",
+            "es": "Español"
           },
           "naturalVoice": "Lee con tu voz normal",
           "pauseRecording": "Pausar",
@@ -512,6 +519,7 @@
             "part5": "Ahora mantengo una lectura continua para que la muestra tenga suficiente duración. Es normal respirar, hacer pausas breves y continuar con naturalidad. No necesito actuar ni exagerar el tono. Solo debo hablar como lo haría en una conversación real, manteniendo una distancia cómoda del micrófono y evitando golpes, ruidos o movimientos bruscos.",
             "part6": "Para terminar, voy a cerrar esta muestra con la misma claridad con la que empecé. Esta grabación servirá para crear una referencia de voz más precisa, por eso es importante que el audio se escuche completo antes de enviarlo. Si noto ruido, cortes o un volumen muy bajo, puedo grabar de nuevo y reemplazar esta muestra."
           },
+          "saveSample": "Guardar muestra",
           "sampleText": "Hola, este es un ejemplo de mi voz para configurar mi perfil. Estoy leyendo este texto de forma clara y natural para crear una muestra de voz.",
           "scriptPart": "Parte {{current}} de {{total}}",
           "stopRecording": "Detener grabación",
@@ -521,10 +529,12 @@
           "toasts": {
             "audioGenerated": "Audio generado",
             "sampleUploaded": "Muestra de voz subida",
-            "voiceCreated": "Voz creada"
+            "voiceCreated": "Voz creada",
+            "voiceSaved": "Voz guardada"
           },
           "uploadingSample": "Enviando...",
           "voiceId": "ID de voz: {{id}}",
+          "voiceNameFallback": "Voz del perfil",
           "voiceNameDefault": "Voz de {{name}}"
         }
       },
