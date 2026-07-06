@@ -16,10 +16,14 @@ import DialogTitle from '@mui/material/DialogTitle';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
+import LinearProgress from '@mui/material/LinearProgress';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { Pause as PauseIcon } from '@phosphor-icons/react/dist/ssr/Pause';
+import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
 import { Stop as StopIcon } from '@phosphor-icons/react/dist/ssr/Stop';
 import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
 import lamejsScriptUrl from 'lamejs/lame.min.js?url';
@@ -29,14 +33,22 @@ import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { Profile, Voice, VoiceTestAudio } from '@/lib/profiles/api-client';
-import { createVoice, getProfile, processVoiceSample, testVoiceAudio, uploadVoiceSample } from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
+import type { Profile, Voice, VoiceTestAudio } from '@/lib/profiles/api-client';
+import {
+  createVoice,
+  getProfile,
+  processVoiceSample,
+  testVoiceAudio,
+  uploadVoiceSample,
+} from '@/lib/profiles/api-client';
 import { toast } from '@/components/core/toaster';
 
 const metadata = { title: `Voice | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const languageCode = 'es';
 let lameJsPromise: null | Promise<LameJs> = null;
+
+type SampleRecordingStep = 'intro' | 'countdown' | 'recording' | 'review';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -49,6 +61,13 @@ export function Page(): React.JSX.Element {
   const [audioUrl, setAudioUrl] = React.useState<string>('');
   const [error, setError] = React.useState<string>('');
   const [sampleDialogOpen, setSampleDialogOpen] = React.useState<boolean>(false);
+  const [sampleStep, setSampleStep] = React.useState<SampleRecordingStep>('intro');
+  const [countdown, setCountdown] = React.useState<number>(3);
+  const [recordingSeconds, setRecordingSeconds] = React.useState<number>(0);
+  const [scriptPartIndex, setScriptPartIndex] = React.useState<number>(0);
+  const [playbackSeconds, setPlaybackSeconds] = React.useState<number>(0);
+  const [playbackDuration, setPlaybackDuration] = React.useState<number>(0);
+  const [isSampleAudioPlaying, setIsSampleAudioPlaying] = React.useState<boolean>(false);
   const [testDialogOpen, setTestDialogOpen] = React.useState<boolean>(false);
   const [testText, setTestText] = React.useState<string>(() => t('dashboard.profiles.detail.voice.testTextDefault'));
   const [testAudio, setTestAudio] = React.useState<null | VoiceTestAudio>(null);
@@ -60,7 +79,20 @@ export function Page(): React.JSX.Element {
   const [isUploading, setIsUploading] = React.useState<boolean>(false);
   const chunksRef = React.useRef<Blob[]>([]);
   const recorderRef = React.useRef<MediaRecorder | null>(null);
+  const sampleAudioRef = React.useRef<HTMLAudioElement | null>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
+
+  const sampleScriptParts = React.useMemo(
+    () => [
+      t('dashboard.profiles.detail.voice.sampleScript.part1'),
+      t('dashboard.profiles.detail.voice.sampleScript.part2'),
+      t('dashboard.profiles.detail.voice.sampleScript.part3'),
+      t('dashboard.profiles.detail.voice.sampleScript.part4'),
+      t('dashboard.profiles.detail.voice.sampleScript.part5'),
+      t('dashboard.profiles.detail.voice.sampleScript.part6'),
+    ],
+    [t]
+  );
 
   React.useEffect(() => {
     return () => {
@@ -80,6 +112,56 @@ export function Page(): React.JSX.Element {
     };
   }, [testAudioUrl]);
 
+  React.useEffect(() => {
+    setPlaybackSeconds(0);
+    setPlaybackDuration(0);
+    setIsSampleAudioPlaying(false);
+  }, [audioUrl]);
+
+  React.useEffect(() => {
+    if (sampleStep !== 'countdown') {
+      return undefined;
+    }
+
+    if (countdown <= 0) {
+      const recorder = recorderRef.current;
+
+      if (!recorder) {
+        setSampleStep('intro');
+        return undefined;
+      }
+
+      chunksRef.current = [];
+      recorder.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+      setSampleStep('recording');
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setCountdown((current) => current - 1);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [countdown, sampleStep]);
+
+  React.useEffect(() => {
+    if (!isRecording) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      setRecordingSeconds((current) => current + 1);
+    }, 1000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isRecording]);
+
   const loadProfile = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
@@ -90,7 +172,9 @@ export function Page(): React.JSX.Element {
 
       setProfile(nextProfile);
       setVoiceId(nextVoiceId);
-      setVoiceName((current) => current || t('dashboard.profiles.detail.voice.voiceNameDefault', { name: nextProfile.name }));
+      setVoiceName(
+        (current) => current || t('dashboard.profiles.detail.voice.voiceNameDefault', { name: nextProfile.name })
+      );
       setVoiceDescription((current) => current || nextProfile.description || '');
 
       if (nextVoiceId) {
@@ -149,11 +233,15 @@ export function Page(): React.JSX.Element {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
 
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl);
-        setAudioUrl('');
-      }
-
+      sampleAudioRef.current?.pause();
+      setAudioBlob(null);
+      setAudioUrl('');
+      setPlaybackSeconds(0);
+      setPlaybackDuration(0);
+      setIsSampleAudioPlaying(false);
+      setScriptPartIndex(0);
+      setCountdown(3);
+      setRecordingSeconds(0);
       chunksRef.current = [];
       streamRef.current = stream;
       recorderRef.current = recorder;
@@ -167,31 +255,83 @@ export function Page(): React.JSX.Element {
         const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
         setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
+        setSampleStep('review');
         stopTracks(stream);
         streamRef.current = null;
         recorderRef.current = null;
       };
 
-      recorder.start();
-      setIsRecording(true);
+      setSampleStep('countdown');
     } catch (err) {
       logger.error(err);
       setError(t('dashboard.profiles.detail.voice.errors.microphoneAccess'));
     }
-  }, [audioUrl, t]);
+  }, [t]);
 
   const handleStopRecording = React.useCallback((): void => {
-    recorderRef.current?.stop();
+    if (recorderRef.current?.state === 'recording') {
+      recorderRef.current.stop();
+    }
+
     setIsRecording(false);
   }, []);
 
+  const handleOpenSampleDialog = React.useCallback((): void => {
+    setError('');
+    setSampleStep(audioBlob && audioUrl ? 'review' : 'intro');
+    setCountdown(3);
+    setRecordingSeconds(0);
+    setScriptPartIndex(0);
+    setSampleDialogOpen(true);
+  }, [audioBlob, audioUrl]);
+
   const handleSampleDialogClose = React.useCallback((): void => {
-    if (isRecording) {
+    if (isRecording || isUploading || sampleStep === 'countdown') {
       return;
     }
 
+    sampleAudioRef.current?.pause();
+    setIsSampleAudioPlaying(false);
     setSampleDialogOpen(false);
-  }, [isRecording]);
+  }, [isRecording, isUploading, sampleStep]);
+
+  const handleNextScriptPart = React.useCallback((): void => {
+    setScriptPartIndex((current) => Math.min(current + 1, sampleScriptParts.length - 1));
+  }, [sampleScriptParts.length]);
+
+  const handleRecordAgain = React.useCallback((): void => {
+    handleStartRecording().catch((err) => {
+      logger.error(err);
+    });
+  }, [handleStartRecording]);
+
+  const handleToggleSamplePlayback = React.useCallback((): void => {
+    const audio = sampleAudioRef.current;
+
+    if (!audio) {
+      return;
+    }
+
+    if (audio.paused) {
+      if (audio.ended || (Number.isFinite(audio.duration) && audio.currentTime >= audio.duration)) {
+        audio.currentTime = 0;
+        setPlaybackSeconds(0);
+      }
+
+      audio
+        .play()
+        .then(() => {
+          setIsSampleAudioPlaying(true);
+        })
+        .catch((err: unknown) => {
+          logger.error(err);
+        });
+      return;
+    }
+
+    audio.pause();
+    setIsSampleAudioPlaying(false);
+  }, []);
 
   const handleUploadSample = React.useCallback(async (): Promise<void> => {
     if (!voiceId) {
@@ -208,10 +348,20 @@ export function Page(): React.JSX.Element {
     setError('');
 
     try {
-      const file = await convertAudioBlobToMp3File(audioBlob, t('dashboard.profiles.detail.voice.errors.encoderFailed'));
+      const file = await convertAudioBlobToMp3File(
+        audioBlob,
+        t('dashboard.profiles.detail.voice.errors.encoderFailed')
+      );
       const voiceSample = await uploadVoiceSample({ file, language_code: languageCode, voiceId });
       await processVoiceSample({ sampleId: voiceSample.id, voiceId });
       toast.success(t('dashboard.profiles.detail.voice.toasts.sampleUploaded'));
+      sampleAudioRef.current?.pause();
+      setAudioBlob(null);
+      setAudioUrl('');
+      setPlaybackSeconds(0);
+      setPlaybackDuration(0);
+      setIsSampleAudioPlaying(false);
+      setSampleStep('intro');
       setSampleDialogOpen(false);
     } catch (err) {
       const message = getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
@@ -266,6 +416,9 @@ export function Page(): React.JSX.Element {
   }, [profileId, t, testAudioUrl, testText]);
 
   const voiceEnabled = hasProfileVoiceEnabled(profile);
+  const isLastScriptPart = scriptPartIndex >= sampleScriptParts.length - 1;
+  const playbackProgress = playbackDuration > 0 ? Math.min(100, (playbackSeconds / playbackDuration) * 100) : 0;
+  const scriptProgress = ((scriptPartIndex + 1) / sampleScriptParts.length) * 100;
 
   return (
     <React.Fragment>
@@ -328,9 +481,7 @@ export function Page(): React.JSX.Element {
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <Button
                     disabled={!voiceId}
-                    onClick={() => {
-                      setSampleDialogOpen(true);
-                    }}
+                    onClick={handleOpenSampleDialog}
                     startIcon={<MicrophoneIcon />}
                     variant="contained"
                   >
@@ -355,73 +506,312 @@ export function Page(): React.JSX.Element {
       </Stack>
       <Dialog
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
         onClose={() => {
-          if (isRecording) {
-            return;
-          }
-
           handleSampleDialogClose();
         }}
         open={sampleDialogOpen}
       >
         <DialogTitle>{t('dashboard.profiles.detail.voice.cloneVoice')}</DialogTitle>
         <DialogContent>
-          <Stack spacing={2}>
+          <Stack spacing={3}>
             {error ? <Alert color="error">{error}</Alert> : null}
             <Box
               sx={{
-                bgcolor: 'var(--mui-palette-background-level1)',
+                border: '1px solid var(--mui-palette-divider)',
                 borderRadius: 1,
-                p: 2,
+                overflow: 'hidden',
               }}
             >
-              <Typography variant="subtitle2">{t('dashboard.profiles.detail.voice.readText')}</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-                {t('dashboard.profiles.detail.voice.sampleText')}
-              </Typography>
-            </Box>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-              <Button
-                disabled={isRecording || isUploading}
-                onClick={handleStartRecording}
-                startIcon={<MicrophoneIcon />}
-                variant="outlined"
+              <Box
+                sx={{
+                  bgcolor: 'var(--mui-palette-background-level1)',
+                  borderBottom: '1px solid var(--mui-palette-divider)',
+                  p: 2.5,
+                }}
               >
-                {t('dashboard.profiles.actions.startRecording')}
-              </Button>
-              <Button
-                color="secondary"
-                disabled={!isRecording}
-                onClick={handleStopRecording}
-                startIcon={<StopIcon />}
-                variant="outlined"
-              >
-                {t('dashboard.profiles.actions.stop')}
-              </Button>
-            </Stack>
-            {audioUrl ? (
-              <Box>
-                <Typography sx={{ mb: 1 }} variant="subtitle2">
-                  {t('dashboard.profiles.detail.voice.preview')}
-                </Typography>
-                <Box component="audio" controls src={audioUrl} sx={{ display: 'block', width: '100%' }} />
+                <Stack spacing={1}>
+                  <Stack
+                    direction={{ xs: 'column', sm: 'row' }}
+                    spacing={1.5}
+                    sx={{ alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: 'space-between' }}
+                  >
+                    <Typography variant="h6">{t('dashboard.profiles.detail.voice.cloneIntroTitle')}</Typography>
+                    <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                      <MicrophoneIcon size={20} weight="fill" />
+                      <Typography color="text.secondary" variant="body2">
+                        {t('dashboard.profiles.detail.voice.estimatedDuration')}
+                      </Typography>
+                    </Stack>
+                  </Stack>
+                  <Typography color="text.secondary" variant="body2">
+                    {t('dashboard.profiles.detail.voice.cloneIntroDescription')}
+                  </Typography>
+                </Stack>
               </Box>
-            ) : null}
+
+              <Box sx={{ p: 2.5 }}>
+                <Stack spacing={2.5}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                    <Alert color="info" icon={false} sx={{ flex: 1 }}>
+                      {t('dashboard.profiles.detail.voice.quietPlace')}
+                    </Alert>
+                    <Alert color="info" icon={false} sx={{ flex: 1 }}>
+                      {t('dashboard.profiles.detail.voice.naturalVoice')}
+                    </Alert>
+                  </Stack>
+
+                  {sampleStep === 'intro' ? (
+                    <Stack spacing={2}>
+                      <Box
+                        sx={{
+                          border: '1px solid var(--mui-palette-divider)',
+                          borderRadius: 1,
+                          p: 2,
+                        }}
+                      >
+                        <Typography color="text.secondary" variant="caption">
+                          {t('dashboard.profiles.detail.voice.scriptPart', {
+                            current: scriptPartIndex + 1,
+                            total: sampleScriptParts.length,
+                          })}
+                        </Typography>
+                        <Typography sx={{ mt: 1, whiteSpace: 'pre-line' }} variant="body1">
+                          {sampleScriptParts[scriptPartIndex]}
+                        </Typography>
+                      </Box>
+                      <Button
+                        disabled={isUploading}
+                        onClick={handleStartRecording}
+                        size="large"
+                        startIcon={<MicrophoneIcon />}
+                        variant="contained"
+                      >
+                        {t('dashboard.profiles.actions.startRecording')}
+                      </Button>
+                    </Stack>
+                  ) : null}
+
+                  {sampleStep === 'countdown' ? (
+                    <Stack spacing={2.5} sx={{ alignItems: 'center', textAlign: 'center' }}>
+                      <Box
+                        sx={{
+                          alignItems: 'center',
+                          bgcolor: 'var(--mui-palette-primary-main)',
+                          borderRadius: '50%',
+                          color: 'var(--mui-palette-primary-contrastText)',
+                          display: 'flex',
+                          fontSize: 56,
+                          fontWeight: 700,
+                          height: 112,
+                          justifyContent: 'center',
+                          lineHeight: 1,
+                          width: 112,
+                        }}
+                      >
+                        {countdown}
+                      </Box>
+                      <Typography color="text.secondary" variant="body2">
+                        {t('dashboard.profiles.detail.voice.countdownTitle')}
+                      </Typography>
+                      <Box
+                        sx={{
+                          border: '1px solid var(--mui-palette-divider)',
+                          borderRadius: 1,
+                          p: 2,
+                          textAlign: 'left',
+                          width: '100%',
+                        }}
+                      >
+                        <Typography color="text.secondary" variant="caption">
+                          {t('dashboard.profiles.detail.voice.scriptPart', {
+                            current: scriptPartIndex + 1,
+                            total: sampleScriptParts.length,
+                          })}
+                        </Typography>
+                        <Typography sx={{ mt: 1, whiteSpace: 'pre-line' }} variant="body1">
+                          {sampleScriptParts[scriptPartIndex]}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  ) : null}
+
+                  {sampleStep === 'recording' ? (
+                    <Stack spacing={2.5}>
+                      <Box
+                        sx={{
+                          alignItems: 'center',
+                          bgcolor: 'rgba(244, 67, 54, 0.08)',
+                          border: '1px solid rgba(244, 67, 54, 0.24)',
+                          borderRadius: 1,
+                          color: 'var(--mui-palette-error-main)',
+                          display: 'flex',
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          gap: 1.5,
+                          justifyContent: 'space-between',
+                          p: 2,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            '@keyframes voiceRecordingPulse': {
+                              '0%': { boxShadow: '0 0 0 0 rgba(244, 67, 54, 0.45)' },
+                              '70%': { boxShadow: '0 0 0 12px rgba(244, 67, 54, 0)' },
+                              '100%': { boxShadow: '0 0 0 0 rgba(244, 67, 54, 0)' },
+                            },
+                            animation: 'voiceRecordingPulse 1.3s infinite',
+                            bgcolor: 'var(--mui-palette-error-main)',
+                            borderRadius: '50%',
+                            flex: '0 0 auto',
+                            height: 14,
+                            width: 14,
+                          }}
+                        />
+                        <Box sx={{ flex: '1 1 auto' }}>
+                          <Typography fontWeight={700} variant="subtitle2">
+                            {t('dashboard.profiles.detail.voice.recordingLive')}
+                          </Typography>
+                          <Typography color="text.secondary" variant="body2">
+                            {formatDuration(recordingSeconds)}
+                          </Typography>
+                        </Box>
+                        <Button
+                          color="error"
+                          onClick={handleStopRecording}
+                          startIcon={<StopIcon />}
+                          sx={{ alignSelf: { xs: 'stretch', sm: 'center' } }}
+                          variant="contained"
+                        >
+                          {t('dashboard.profiles.detail.voice.stopRecording')}
+                        </Button>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          border: '1px solid var(--mui-palette-divider)',
+                          borderRadius: 1,
+                          p: 2,
+                        }}
+                      >
+                        <Stack spacing={1.5}>
+                          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Typography color="text.secondary" variant="caption">
+                              {t('dashboard.profiles.detail.voice.scriptPart', {
+                                current: scriptPartIndex + 1,
+                                total: sampleScriptParts.length,
+                              })}
+                            </Typography>
+                            <Typography color="text.secondary" variant="caption">
+                              {Math.round(scriptProgress)}%
+                            </Typography>
+                          </Stack>
+                          <LinearProgress value={scriptProgress} variant="determinate" />
+                          <Typography sx={{ minHeight: 112, whiteSpace: 'pre-line' }} variant="body1">
+                            {sampleScriptParts[scriptPartIndex]}
+                          </Typography>
+                          <Button
+                            disabled={isLastScriptPart}
+                            endIcon={<ArrowRightIcon />}
+                            onClick={handleNextScriptPart}
+                            variant="outlined"
+                          >
+                            {t('dashboard.profiles.detail.voice.continueReading')}
+                          </Button>
+                        </Stack>
+                      </Box>
+                    </Stack>
+                  ) : null}
+
+                  {sampleStep === 'review' && audioUrl ? (
+                    <Stack spacing={2.5}>
+                      <Alert color="success">{t('dashboard.profiles.detail.voice.recordingReady')}</Alert>
+                      <Box
+                        sx={{
+                          border: '1px solid var(--mui-palette-divider)',
+                          borderRadius: 1,
+                          p: 2,
+                        }}
+                      >
+                        <Box
+                          component="audio"
+                          key={audioUrl}
+                          onEnded={(event: React.SyntheticEvent<HTMLAudioElement>) => {
+                            setIsSampleAudioPlaying(false);
+                            setPlaybackSeconds(event.currentTarget.duration || playbackDuration);
+                          }}
+                          onLoadedMetadata={(event: React.SyntheticEvent<HTMLAudioElement>) => {
+                            const nextDuration = Number.isFinite(event.currentTarget.duration)
+                              ? event.currentTarget.duration
+                              : 0;
+                            setPlaybackDuration(nextDuration);
+                          }}
+                          onPause={() => {
+                            setIsSampleAudioPlaying(false);
+                          }}
+                          onPlay={() => {
+                            setIsSampleAudioPlaying(true);
+                          }}
+                          onTimeUpdate={(event: React.SyntheticEvent<HTMLAudioElement>) => {
+                            setPlaybackSeconds(event.currentTarget.currentTime);
+                          }}
+                          preload="metadata"
+                          ref={sampleAudioRef}
+                          src={audioUrl}
+                          sx={{ display: 'none' }}
+                        />
+                        <Stack spacing={1.5}>
+                          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
+                            <Button
+                              onClick={handleToggleSamplePlayback}
+                              startIcon={isSampleAudioPlaying ? <PauseIcon /> : <PlayIcon />}
+                              variant="contained"
+                            >
+                              {isSampleAudioPlaying
+                                ? t('dashboard.profiles.detail.voice.pauseRecording')
+                                : t('dashboard.profiles.detail.voice.playRecording')}
+                            </Button>
+                            <Typography color="text.secondary" variant="body2">
+                              {formatDuration(playbackSeconds)} / {formatDuration(playbackDuration)}
+                            </Typography>
+                          </Stack>
+                          <LinearProgress value={playbackProgress} variant="determinate" />
+                        </Stack>
+                      </Box>
+                      <Button
+                        disabled={isUploading}
+                        onClick={handleRecordAgain}
+                        startIcon={<MicrophoneIcon />}
+                        variant="outlined"
+                      >
+                        {t('dashboard.profiles.detail.voice.recordAgain')}
+                      </Button>
+                    </Stack>
+                  ) : null}
+                </Stack>
+              </Box>
+            </Box>
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button color="secondary" disabled={isRecording || isUploading} onClick={handleSampleDialogClose}>
+        <DialogActions sx={{ justifyContent: 'space-between', p: 3, pt: 0 }}>
+          <Button
+            color="secondary"
+            disabled={isRecording || isUploading || sampleStep === 'countdown'}
+            onClick={handleSampleDialogClose}
+          >
             {t('dashboard.profiles.actions.cancel')}
           </Button>
-          <Button
-            disabled={isUploading || isRecording || !voiceId || !audioBlob}
-            onClick={handleUploadSample}
-            startIcon={<UploadSimpleIcon />}
-            variant="contained"
-          >
-            {t('dashboard.profiles.actions.sendSample')}
-          </Button>
+          {sampleStep === 'review' ? (
+            <Button
+              disabled={isUploading || isRecording || !voiceId || !audioBlob}
+              onClick={handleUploadSample}
+              startIcon={<UploadSimpleIcon />}
+              variant="contained"
+            >
+              {isUploading
+                ? t('dashboard.profiles.detail.voice.uploadingSample')
+                : t('dashboard.profiles.actions.sendSample')}
+            </Button>
+          ) : null}
         </DialogActions>
       </Dialog>
       <Dialog
@@ -448,7 +838,9 @@ export function Page(): React.JSX.Element {
                 value={testText}
               />
               {testAudio?.duration ? (
-                <FormHelperText>{t('dashboard.profiles.detail.voice.duration', { duration: testAudio.duration })}</FormHelperText>
+                <FormHelperText>
+                  {t('dashboard.profiles.detail.voice.duration', { duration: testAudio.duration })}
+                </FormHelperText>
               ) : null}
             </FormControl>
             {testAudioUrl ? (
@@ -479,6 +871,14 @@ export function Page(): React.JSX.Element {
       </Dialog>
     </React.Fragment>
   );
+}
+
+function formatDuration(value: number): string {
+  const totalSeconds = Math.max(0, Math.floor(value));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
 async function convertAudioBlobToMp3File(blob: Blob, encoderErrorMessage: string): Promise<File> {
@@ -526,7 +926,7 @@ function resolveVoiceTestAudioUrl(audio: VoiceTestAudio): string {
     const audioFormat = audio.audio_format || 'mp3';
     const mimeType = audioFormat === 'wav' ? 'audio/wav' : 'audio/mpeg';
     const base64Content = audio.audio_content.includes(',')
-      ? (audio.audio_content.split(',').pop() ?? '')
+      ? audio.audio_content.split(',').pop() ?? ''
       : audio.audio_content;
     const bytes = Uint8Array.from(atob(base64Content), (character) => character.charCodeAt(0));
     return URL.createObjectURL(new Blob([bytes], { type: mimeType }));
@@ -564,7 +964,9 @@ function encodeAudioBufferAsMp3(audioBuffer: AudioBuffer, lamejs: LameJs): Blob 
 }
 
 function getMonoSamples(audioBuffer: AudioBuffer): Int16Array {
-  const channels = Array.from({ length: audioBuffer.numberOfChannels }, (_, index) => audioBuffer.getChannelData(index));
+  const channels = Array.from({ length: audioBuffer.numberOfChannels }, (_, index) =>
+    audioBuffer.getChannelData(index)
+  );
   const samples = new Int16Array(audioBuffer.length);
 
   for (let sampleIndex = 0; sampleIndex < audioBuffer.length; sampleIndex += 1) {
@@ -578,7 +980,11 @@ function getMonoSamples(audioBuffer: AudioBuffer): Int16Array {
 }
 
 interface LameJs {
-  Mp3Encoder: new (channels: number, sampleRate: number, kbps: number) => {
+  Mp3Encoder: new (
+    channels: number,
+    sampleRate: number,
+    kbps: number
+  ) => {
     encodeBuffer: (left: Int16Array, right?: Int16Array) => Int8Array;
     flush: () => Int8Array;
   };

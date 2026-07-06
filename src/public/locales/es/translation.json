@@ -473,8 +473,13 @@
         "voice": {
           "audio": "Audio",
           "cloneVoice": "Clonar voz",
+          "cloneIntroDescription": "Te mostraremos un texto guiado para leer en voz alta. La grabación ideal dura cerca de 3 minutos y debe sonar natural, clara y sin ruido de fondo.",
+          "cloneIntroTitle": "Prepara tu muestra de voz",
+          "continueReading": "Seguir leyendo",
+          "countdownTitle": "Prepárate, la grabación empezará al terminar la cuenta.",
           "createSubheader": "Crear voz y subir una muestra de voz",
           "duration": "Duración: {{duration}}s",
+          "estimatedDuration": "Lectura aproximada: 3 minutos",
           "errors": {
             "audioNotReturned": "La API no devolvió audio.",
             "createBeforeUpload": "Crea una voz antes de subir una muestra.",
@@ -490,9 +495,26 @@
             "text": "Texto",
             "voiceName": "Nombre de la voz"
           },
+          "naturalVoice": "Lee con tu voz normal",
+          "pauseRecording": "Pausar",
+          "playRecording": "Reproducir",
           "preview": "Vista previa",
+          "quietPlace": "Busca un lugar silencioso",
           "readText": "Lee este texto",
+          "recordAgain": "Grabar de nuevo",
+          "recordingLive": "Grabando",
+          "recordingReady": "Grabación lista. Reprodúcela antes de enviarla.",
+          "sampleScript": {
+            "part1": "Hola, gracias por escucharme. Voy a leer este texto con una voz tranquila, natural y constante. Quiero que esta muestra capture mi forma normal de hablar, con pausas claras entre las ideas y una pronunciación limpia. Si alguna palabra suena difícil, la leeré con calma, sin acelerar, para que el sistema pueda reconocer mi tono correctamente.",
+            "part2": "Cuando converso con alguien, intento mantener un ritmo amable y fácil de seguir. Algunas frases serán cortas, otras serán un poco más largas, porque una voz real cambia de energía según lo que está diciendo. Haré pequeñas pausas al final de cada oración y continuaré leyendo de manera estable, como si estuviera explicando algo importante a otra persona.",
+            "part3": "También puedo describir una escena cotidiana. Imagina una mañana luminosa, una mesa con café recién servido y una agenda abierta con tareas del día. La persona revisa sus prioridades, responde mensajes pendientes y organiza su tiempo. Hablar de situaciones simples ayuda a registrar distintos sonidos, entonaciones y combinaciones de palabras con mayor variedad.",
+            "part4": "Si necesito dar una instrucción, la diría de forma clara. Primero revisa la información principal, luego confirma que los datos estén correctos y finalmente guarda los cambios. Este tipo de lectura tiene un tono más directo, pero sigue siendo cercano. Mantendré la voz firme, sin gritar, y procuraré que cada palabra se entienda sin esfuerzo.",
+            "part5": "Ahora mantengo una lectura continua para que la muestra tenga suficiente duración. Es normal respirar, hacer pausas breves y continuar con naturalidad. No necesito actuar ni exagerar el tono. Solo debo hablar como lo haría en una conversación real, manteniendo una distancia cómoda del micrófono y evitando golpes, ruidos o movimientos bruscos.",
+            "part6": "Para terminar, voy a cerrar esta muestra con la misma claridad con la que empecé. Esta grabación servirá para crear una referencia de voz más precisa, por eso es importante que el audio se escuche completo antes de enviarlo. Si noto ruido, cortes o un volumen muy bajo, puedo grabar de nuevo y reemplazar esta muestra."
+          },
           "sampleText": "Hola, este es un ejemplo de mi voz para configurar mi perfil. Estoy leyendo este texto de forma clara y natural para crear una muestra de voz.",
+          "scriptPart": "Parte {{current}} de {{total}}",
+          "stopRecording": "Detener grabación",
           "testTextDefault": "Hola, esta es una prueba de voz.",
           "testVoice": "Probar voz",
           "title": "Voz",
@@ -501,6 +523,7 @@
             "sampleUploaded": "Muestra de voz subida",
             "voiceCreated": "Voz creada"
           },
+          "uploadingSample": "Enviando...",
           "voiceId": "ID de voz: {{id}}",
           "voiceNameDefault": "Voz de {{name}}"
         }
