@@ -13,9 +13,15 @@ import CircularProgress from '@mui/material/CircularProgress';
 import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
+import IconButton from '@mui/material/IconButton';
+import InputAdornment from '@mui/material/InputAdornment';
 import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
+import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { Helmet } from 'react-helmet-async';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -24,12 +30,18 @@ import { z as zod } from 'zod';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
+import type { Profile, ProfileAudioTranscriptionField, ProfilePayload } from '@/lib/profiles/api-client';
 import { getProfile, updateProfile } from '@/lib/profiles/api-client';
+import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
+import { ProfileAudioTranscriptionDialog } from '@/components/dashboard/profiles/profile-audio-transcription-dialog';
 
 const metadata = { title: `Profile | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
+const profileTextFieldLimits = {
+  description: { max: 500, min: 1 },
+  personality: { max: 200, min: 1 },
+} satisfies Record<ProfileAudioTranscriptionField, { max: number; min: number }>;
 
 interface Values {
   active: boolean;
@@ -44,10 +56,19 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
   return zod.object({
     active: zod.boolean(),
     alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
-    description: zod.string().min(1, t('dashboard.profiles.form.validation.descriptionRequired')).max(500),
-    genre: zod.string().min(1, t('dashboard.profiles.form.validation.genreRequired')).max(10),
+    description: zod
+      .string()
+      .min(profileTextFieldLimits.description.min, t('dashboard.profiles.form.validation.descriptionRequired'))
+      .max(profileTextFieldLimits.description.max),
+    genre: zod
+      .string()
+      .min(1, t('dashboard.profiles.form.validation.genreRequired'))
+      .refine(isProfileGenre, t('dashboard.profiles.form.validation.genreInvalid')),
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
-    personality: zod.string().min(1, t('dashboard.profiles.form.validation.personalityRequired')).max(200),
+    personality: zod
+      .string()
+      .min(profileTextFieldLimits.personality.min, t('dashboard.profiles.form.validation.personalityRequired'))
+      .max(profileTextFieldLimits.personality.max),
   });
 }
 
@@ -55,7 +76,7 @@ const defaultValues = {
   active: true,
   alias: '',
   description: '',
-  genre: '',
+  genre: 'na',
   name: '',
   personality: '',
 } satisfies Values;
@@ -67,13 +88,22 @@ export function Page(): React.JSX.Element {
   const [profile, setProfile] = React.useState<null | Profile>(null);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
+  const [audioField, setAudioField] = React.useState<ProfileAudioTranscriptionField | null>(null);
 
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
+  } = useForm<Values>({ defaultValues, mode: 'onChange', resolver: zodResolver(schema) });
+  const descriptionValue = watch('description');
+  const personalityValue = watch('personality');
+  const activeAudioField = audioField ?? 'description';
+  const activeAudioFieldLabel = t(`dashboard.profiles.fields.${activeAudioField}`);
+  const activeAudioFieldValue = activeAudioField === 'description' ? descriptionValue : personalityValue;
+  const activeAudioFieldLimits = profileTextFieldLimits[activeAudioField];
 
   const loadProfile = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -159,21 +189,52 @@ export function Page(): React.JSX.Element {
                   <Controller
                     control={control}
                     name="description"
-                    render={({ field }) => (
-                      <FormControl error={Boolean(errors.description)}>
-                        <InputLabel>{t('dashboard.profiles.fields.description')}</InputLabel>
-                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.description')} multiline rows={3} />
-                        {errors.description ? <FormHelperText>{errors.description.message}</FormHelperText> : null}
-                      </FormControl>
-                    )}
+                    render={({ field }) => {
+                      const limitState = getProfileFieldLimitState(field.value, profileTextFieldLimits.description, t);
+
+                      return (
+                        <FormControl error={Boolean(errors.description) || limitState.hasError}>
+                          <InputLabel>{t('dashboard.profiles.fields.description')}</InputLabel>
+                          <OutlinedInput
+                            {...field}
+                            endAdornment={
+                              <AudioInputAdornment
+                                align="start"
+                                label={t('dashboard.profiles.detail.profile.audio.open', {
+                                  field: t('dashboard.profiles.fields.description'),
+                                })}
+                                onClick={() => {
+                                  setAudioField('description');
+                                }}
+                              />
+                            }
+                            label={t('dashboard.profiles.fields.description')}
+                            multiline
+                            rows={3}
+                          />
+                          <FormHelperText>{limitState.message}</FormHelperText>
+                        </FormControl>
+                      );
+                    }}
                   />
                   <Controller
                     control={control}
                     name="genre"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.genre)}>
-                        <InputLabel>{t('dashboard.profiles.fields.genre')}</InputLabel>
-                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.genre')} />
+                        <InputLabel id="profile-genre-label">{t('dashboard.profiles.fields.genre')}</InputLabel>
+                        <Select
+                          {...field}
+                          label={t('dashboard.profiles.fields.genre')}
+                          labelId="profile-genre-label"
+                          value={normalizeProfileGenre(field.value)}
+                        >
+                          {profileGenreValues.map((value) => (
+                            <MenuItem key={value} value={value}>
+                              {t(`dashboard.profiles.genreOptions.${value}`)}
+                            </MenuItem>
+                          ))}
+                        </Select>
                         {errors.genre ? <FormHelperText>{errors.genre.message}</FormHelperText> : null}
                       </FormControl>
                     )}
@@ -181,13 +242,30 @@ export function Page(): React.JSX.Element {
                   <Controller
                     control={control}
                     name="personality"
-                    render={({ field }) => (
-                      <FormControl error={Boolean(errors.personality)}>
-                        <InputLabel>{t('dashboard.profiles.fields.personality')}</InputLabel>
-                        <OutlinedInput {...field} label={t('dashboard.profiles.fields.personality')} />
-                        {errors.personality ? <FormHelperText>{errors.personality.message}</FormHelperText> : null}
-                      </FormControl>
-                    )}
+                    render={({ field }) => {
+                      const limitState = getProfileFieldLimitState(field.value, profileTextFieldLimits.personality, t);
+
+                      return (
+                        <FormControl error={Boolean(errors.personality) || limitState.hasError}>
+                          <InputLabel>{t('dashboard.profiles.fields.personality')}</InputLabel>
+                          <OutlinedInput
+                            {...field}
+                            endAdornment={
+                              <AudioInputAdornment
+                                label={t('dashboard.profiles.detail.profile.audio.open', {
+                                  field: t('dashboard.profiles.fields.personality'),
+                                })}
+                                onClick={() => {
+                                  setAudioField('personality');
+                                }}
+                              />
+                            }
+                            label={t('dashboard.profiles.fields.personality')}
+                          />
+                          <FormHelperText>{limitState.message}</FormHelperText>
+                        </FormControl>
+                      );
+                    }}
                   />
                   <Controller
                     control={control}
@@ -217,8 +295,91 @@ export function Page(): React.JSX.Element {
           )}
         </Card>
       </Stack>
+      <ProfileAudioTranscriptionDialog
+        currentValue={activeAudioFieldValue}
+        field={activeAudioField}
+        fieldLabel={activeAudioFieldLabel}
+        maxLength={activeAudioFieldLimits.max}
+        minLength={activeAudioFieldLimits.min}
+        onApply={(value) => {
+          if (!audioField) {
+            return;
+          }
+
+          setValue(audioField, value, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+        }}
+        onClose={() => {
+          setAudioField(null);
+        }}
+        open={audioField !== null}
+        profileId={profileId}
+      />
     </React.Fragment>
   );
+}
+
+function AudioInputAdornment({
+  align = 'center',
+  label,
+  onClick,
+}: {
+  align?: 'center' | 'start';
+  label: string;
+  onClick: () => void;
+}): React.JSX.Element {
+  return (
+    <InputAdornment
+      position="end"
+      sx={
+        align === 'start'
+          ? { alignSelf: 'flex-start', mt: 0.5 }
+          : { alignSelf: 'center', height: '100%', maxHeight: 'none' }
+      }
+    >
+      <Tooltip title={label}>
+        <IconButton aria-label={label} edge="end" onClick={onClick}>
+          <MicrophoneIcon />
+        </IconButton>
+      </Tooltip>
+    </InputAdornment>
+  );
+}
+
+function getProfileFieldLimitState(
+  value: string,
+  limits: { max: number; min: number },
+  t: (key: string, options?: Record<string, unknown>) => string
+): { hasError: boolean; message: string } {
+  const characters = Array.from(value).length;
+
+  if (characters < limits.min) {
+    return {
+      hasError: true,
+      message: t('dashboard.profiles.detail.profile.fieldLimits.belowMinimum', {
+        count: limits.min - characters,
+        min: limits.min,
+      }),
+    };
+  }
+
+  if (characters > limits.max) {
+    return {
+      hasError: true,
+      message: t('dashboard.profiles.detail.profile.fieldLimits.exceedsMaximum', {
+        count: characters - limits.max,
+        max: limits.max,
+      }),
+    };
+  }
+
+  return {
+    hasError: false,
+    message: t('dashboard.profiles.detail.profile.fieldLimits.valid', {
+      count: characters,
+      max: limits.max,
+      min: limits.min,
+    }),
+  };
 }
 
 function toValues(profile: Profile): Values {
@@ -226,7 +387,7 @@ function toValues(profile: Profile): Values {
     active: profile.active ?? true,
     alias: profile.alias ?? '',
     description: profile.description ?? '',
-    genre: profile.genre ?? '',
+    genre: normalizeProfileGenre(profile.genre),
     name: profile.name ?? '',
     personality: profile.personality ?? '',
   };
@@ -234,8 +395,12 @@ function toValues(profile: Profile): Values {
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    ...values,
+    active: values.active,
     alias: values.alias.trim() || null,
+    description: values.description,
+    genre: toProfileGenre(values.genre),
+    name: values.name,
+    personality: values.personality,
   };
 }
 

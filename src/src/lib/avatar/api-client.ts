@@ -12,7 +12,11 @@ interface RequestOptions {
   method?: 'GET' | 'POST';
 }
 
+export type ProfileAvatarStatus = 'active' | 'failed' | 'inactive' | 'processing';
+
 export interface ProfileAvatar {
+  ai_video_id?: null | number | string;
+  aiimage_id?: null | number | string;
   ai_image?: null | {
     file?: null | string;
     id: number | string;
@@ -24,18 +28,30 @@ export interface ProfileAvatar {
     status?: null | string;
   };
   file?: null | string;
+  has_processing_avatar?: boolean;
   id: number | string;
   profile_id: number | string;
-  status?: null | string;
+  processing_avatar?: null | ProfileAvatar;
+  status?: null | ProfileAvatarStatus;
+  created_at?: null | string;
+  updated_at?: null | string;
 }
 
 export interface GeneratedAvatar {
+  avatar?: null | ProfileAvatar;
   file?: null | string;
   id: number | string;
   profile_id?: null | number | string;
   source?: null | string;
   source_id?: null | string;
-  status?: null | string;
+  status?: null | ProfileAvatarStatus;
+}
+
+export interface ProfileAvatarHistory {
+  active_avatar?: null | ProfileAvatar;
+  avatars: ProfileAvatar[];
+  processing_avatar?: null | ProfileAvatar;
+  total: number;
 }
 
 export class AvatarApiError extends Error {
@@ -76,6 +92,30 @@ export async function generateAvatar(profileId: number | string, image: File): P
   });
 
   return isApiEnvelope<GeneratedAvatar>(response) ? response.data : response;
+}
+
+export async function listProfileAvatarHistory(profileId: number | string): Promise<ProfileAvatarHistory> {
+  const response = await requestJson<ApiEnvelope<ProfileAvatarHistory> | ProfileAvatarHistory>(
+    `/api/avatar/${encodeURIComponent(String(profileId))}/history`,
+    { method: 'GET' }
+  );
+
+  return isApiEnvelope<ProfileAvatarHistory>(response) ? response.data : response;
+}
+
+export async function activateProfileAvatar(
+  profileId: number | string,
+  avatarId: number | string
+): Promise<ProfileAvatar> {
+  const response = await requestJson<ApiEnvelope<ProfileAvatar> | ProfileAvatar>(
+    `/api/avatar/${encodeURIComponent(String(profileId))}/activate`,
+    {
+      body: { avatar_id: avatarId },
+      method: 'POST',
+    }
+  );
+
+  return isApiEnvelope<ProfileAvatar>(response) ? response.data : response;
 }
 
 function isApiEnvelope<T>(response: unknown): response is ApiEnvelope<T> {

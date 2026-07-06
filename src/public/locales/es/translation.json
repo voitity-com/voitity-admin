@@ -297,6 +297,7 @@
             "preview": "Vista previa del recorte de avatar",
             "profile": "Avatar del perfil"
           },
+          "currentAvatar": "Avatar actual",
           "dialogTitle": "Editar avatar",
           "editAriaLabel": "Editar avatar",
           "errors": {
@@ -304,13 +305,31 @@
             "selectImage": "Selecciona una imagen primero.",
             "unsupportedFile": "Usa una imagen JPG, PNG o WEBP."
           },
+          "historyEmpty": "Aún no hay avatares generados.",
           "noAvatar": "No hay avatar cargado.",
+          "previousAvatar": "Avatar anterior",
+          "processingMessage": "Hay un nuevo avatar en procesamiento. Podrás editar cuando termine.",
           "saving": "Guardando...",
+          "selectHint": "Seleccionar este avatar",
+          "status": {
+            "active": "Activo",
+            "failed": "Fallido",
+            "inactive": "Anterior",
+            "processing": "Procesando",
+            "unknown": "Desconocido"
+          },
           "subheader": "Avatar del perfil",
+          "tabs": {
+            "history": "Avatares anteriores",
+            "upload": "Subir imagen"
+          },
           "title": "Avatar",
           "toasts": {
+            "avatarActivated": "Avatar activado",
             "generationStarted": "Generación de avatar iniciada"
           },
+          "unavailableHint": "No disponible para seleccionar",
+          "uploadHint": "Sube una imagen JPG, PNG o WEBP para generar un nuevo avatar.",
           "zoom": "Zoom"
         },
         "data": {
@@ -395,6 +414,33 @@
           "voice": "Voz"
         },
         "profile": {
+          "audio": {
+            "append": "Agregar al final",
+            "applyMode": "Aplicar transcripción",
+            "errors": {
+              "emptyTranscription": "La transcripción no devolvió texto.",
+              "microphoneAccess": "No se pudo acceder al micrófono.",
+              "recordFirst": "Graba un audio antes de transcribirlo.",
+              "recordingUnsupported": "Este navegador no soporta grabación de audio."
+            },
+            "limitHint": "Mínimo {{min}} carácter. Máximo {{max}} caracteres.",
+            "open": "Grabar audio para {{field}}",
+            "preview": "Reproducir grabación",
+            "ready": "Listo para grabar",
+            "recordAgain": "Grabar de nuevo",
+            "recording": "Grabando audio",
+            "replace": "Reemplazar contenido",
+            "title": "Grabar {{field}}",
+            "toasts": {
+              "applied": "Transcripción aplicada"
+            },
+            "transcribeAndApply": "Transcribir y aplicar"
+          },
+          "fieldLimits": {
+            "belowMinimum": "Falta {{count}} carácter mínimo.",
+            "exceedsMaximum": "Te pasaste por {{count}} caracteres. Máximo {{max}}.",
+            "valid": "{{count}}/{{max}} caracteres. Mínimo {{min}}."
+          },
           "subheader": "Actualizar información del perfil",
           "title": "Perfil",
           "toasts": {
@@ -503,10 +549,16 @@
         "validation": {
           "aliasMax": "El alias debe tener máximo 100 caracteres",
           "descriptionRequired": "La descripción es obligatoria",
+          "genreInvalid": "Selecciona un género válido",
           "genreRequired": "El género es obligatorio",
           "nameRequired": "El nombre es obligatorio",
           "personalityRequired": "La personalidad es obligatoria"
         }
+      },
+      "genreOptions": {
+        "female": "Mujer",
+        "male": "Hombre",
+        "na": "Sin Respuesta"
       },
       "list": {
         "description": "Administra los perfiles asociados al usuario autenticado.",
