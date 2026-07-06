@@ -4,6 +4,7 @@ import * as React from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ButtonBase from '@mui/material/ButtonBase';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
@@ -13,12 +14,15 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
-import FormHelperText from '@mui/material/FormHelperText';
 import IconButton from '@mui/material/IconButton';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
+import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
 import { Helmet } from 'react-helmet-async';
@@ -28,7 +32,7 @@ import { useParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { ProfileAvatar } from '@/lib/avatar/api-client';
-import { generateAvatar, getProfileAvatar } from '@/lib/avatar/api-client';
+import { activateProfileAvatar, generateAvatar, listProfileAvatarHistory } from '@/lib/avatar/api-client';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
 
@@ -50,36 +54,49 @@ interface DragState {
   y: number;
 }
 
+type AvatarDialogTab = 'history' | 'upload';
+
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
   const [avatar, setAvatar] = React.useState<null | ProfileAvatar>(null);
+  const [avatars, setAvatars] = React.useState<ProfileAvatar[]>([]);
+  const [processingAvatar, setProcessingAvatar] = React.useState<null | ProfileAvatar>(null);
   const [error, setError] = React.useState<string>('');
   const [fieldError, setFieldError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isActivating, setIsActivating] = React.useState<boolean>(false);
   const [isSaving, setIsSaving] = React.useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = React.useState<boolean>(false);
+  const [dialogTab, setDialogTab] = React.useState<AvatarDialogTab>('history');
   const [previewUrl, setPreviewUrl] = React.useState<string>('');
   const [zoom, setZoom] = React.useState<number>(1);
   const [position, setPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [dragState, setDragState] = React.useState<DragState | null>(null);
   const [status, setStatus] = React.useState<string>('');
   const [isPollingAvatar, setIsPollingAvatar] = React.useState<boolean>(false);
-  const [pendingAiImageId, setPendingAiImageId] = React.useState<string>('');
 
   const avatarFile = getAvatarFile(avatar);
   const avatarUrl = avatarFile ? resolveAssetUrl(avatarFile) : emptyAvatarSrc;
   const isVideo = avatarFile ? isVideoFile(avatarFile) : false;
-  const displayStatus = isPollingAvatar ? 'processing' : status;
+  const isAvatarProcessing = Boolean(processingAvatar) || isPollingAvatar;
+  const displayStatus = isAvatarProcessing ? 'processing' : status;
+  const activeAvatarId = avatar?.status === 'active' ? String(avatar.id) : '';
 
   const loadAvatar = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
     setError('');
 
     try {
-      const nextAvatar = await getProfileAvatar(profileId);
-      setAvatar(nextAvatar);
-      setStatus(nextAvatar?.status ?? '');
+      const history = await listProfileAvatarHistory(profileId);
+      const nextActiveAvatar = history.active_avatar ?? null;
+      const nextProcessingAvatar = history.processing_avatar ?? null;
+
+      setAvatars(history.avatars);
+      setProcessingAvatar(nextProcessingAvatar);
+      setAvatar(nextActiveAvatar ?? nextProcessingAvatar);
+      setStatus(nextProcessingAvatar ? 'processing' : nextActiveAvatar?.status ?? '');
+      setIsPollingAvatar(Boolean(nextProcessingAvatar));
     } catch (err) {
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
@@ -107,25 +124,23 @@ export function Page(): React.JSX.Element {
       attempts += 1;
 
       try {
-        const nextAvatar = await getProfileAvatar(profileId);
+        const history = await listProfileAvatarHistory(profileId);
 
         if (isCancelled) {
           return;
         }
 
-        if (nextAvatar) {
-          setAvatar(nextAvatar);
+        const nextActiveAvatar = history.active_avatar ?? null;
+        const nextProcessingAvatar = history.processing_avatar ?? null;
 
-          const nextAiImageId = nextAvatar.ai_image?.id ? String(nextAvatar.ai_image.id) : '';
-          const hasVideo = Boolean(nextAvatar.ai_video?.file || nextAvatar.file);
-          const matchesPendingImage = pendingAiImageId ? nextAiImageId === pendingAiImageId : true;
+        setAvatars(history.avatars);
+        setProcessingAvatar(nextProcessingAvatar);
+        setAvatar(nextActiveAvatar ?? nextProcessingAvatar);
 
-          if (matchesPendingImage && hasVideo) {
-            setStatus(nextAvatar.status ?? 'active');
-            setPendingAiImageId('');
-            setIsPollingAvatar(false);
-            return;
-          }
+        if (!nextProcessingAvatar) {
+          setStatus(nextActiveAvatar?.status ?? '');
+          setIsPollingAvatar(false);
+          return;
         }
 
         setStatus('processing');
@@ -156,7 +171,7 @@ export function Page(): React.JSX.Element {
       isCancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [isPollingAvatar, pendingAiImageId, profileId]);
+  }, [isPollingAvatar, profileId]);
 
   React.useEffect(() => {
     return () => {
@@ -193,12 +208,17 @@ export function Page(): React.JSX.Element {
   );
 
   const handleOpenDialog = React.useCallback((): void => {
+    if (isAvatarProcessing) {
+      return;
+    }
+
+    setDialogTab(avatars.length > 0 ? 'history' : 'upload');
     setDialogOpen(true);
     setFieldError('');
-  }, []);
+  }, [avatars.length, isAvatarProcessing]);
 
   const handleCloseDialog = React.useCallback((): void => {
-    if (isSaving) {
+    if (isSaving || isActivating) {
       return;
     }
 
@@ -211,7 +231,7 @@ export function Page(): React.JSX.Element {
       URL.revokeObjectURL(previewUrl);
       setPreviewUrl('');
     }
-  }, [isSaving, previewUrl]);
+  }, [isActivating, isSaving, previewUrl]);
 
   const handlePointerDown = React.useCallback(
     (event: React.PointerEvent<HTMLDivElement>): void => {
@@ -260,10 +280,16 @@ export function Page(): React.JSX.Element {
         t('dashboard.profiles.detail.avatar.errors.prepareImage')
       );
       const generated = await generateAvatar(profileId, croppedFile);
-      setPendingAiImageId(String(generated.id));
+      const generatedAvatar = generated.avatar ?? null;
+
+      if (generatedAvatar) {
+        setProcessingAvatar(generatedAvatar);
+        setAvatars((current) => upsertAvatar(current, generatedAvatar));
+        setAvatar((current) => current ?? generatedAvatar);
+      }
+
       setIsPollingAvatar(true);
       setStatus('processing');
-      setAvatar((current) => (current ? { ...current, status: generated.status || 'processing' } : current));
       toast.success(t('dashboard.profiles.detail.avatar.toasts.generationStarted'));
       handleCloseDialog();
     } catch (err) {
@@ -275,6 +301,47 @@ export function Page(): React.JSX.Element {
       setIsSaving(false);
     }
   }, [handleCloseDialog, position, previewUrl, profileId, t, zoom]);
+
+  const handleActivateAvatar = React.useCallback(
+    async (nextAvatar: ProfileAvatar): Promise<void> => {
+      if (isAvatarProcessing || !isAvatarSelectable(nextAvatar)) {
+        return;
+      }
+
+      setIsActivating(true);
+      setFieldError('');
+
+      try {
+        const activatedAvatar = await activateProfileAvatar(profileId, nextAvatar.id);
+
+        setAvatar(activatedAvatar);
+        setStatus(activatedAvatar.status ?? 'active');
+        setAvatars((current) =>
+          current.map((item) => {
+            if (String(item.id) === String(activatedAvatar.id)) {
+              return activatedAvatar;
+            }
+
+            if (item.status === 'active') {
+              return { ...item, status: 'inactive' };
+            }
+
+            return item;
+          })
+        );
+        toast.success(t('dashboard.profiles.detail.avatar.toasts.avatarActivated'));
+        handleCloseDialog();
+      } catch (err) {
+        logger.error(err);
+        const message = getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
+        setFieldError(message);
+        toast.error(message);
+      } finally {
+        setIsActivating(false);
+      }
+    },
+    [handleCloseDialog, isAvatarProcessing, profileId, t]
+  );
 
   return (
     <React.Fragment>
@@ -288,8 +355,8 @@ export function Page(): React.JSX.Element {
             action={
               displayStatus ? (
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-                  {isPollingAvatar ? <CircularProgress size={16} /> : null}
-                  <Chip color={getStatusColor(displayStatus)} label={displayStatus} />
+                  {isAvatarProcessing ? <CircularProgress size={16} /> : null}
+                  <Chip color={getStatusColor(displayStatus)} label={getStatusLabel(displayStatus, t)} />
                 </Stack>
               ) : null
             }
@@ -303,7 +370,14 @@ export function Page(): React.JSX.Element {
           ) : (
             <CardContent>
               <Stack spacing={3} sx={{ alignItems: 'center' }}>
-                <Box sx={{ height: { xs: 280, sm: avatarSize }, position: 'relative', width: { xs: 280, sm: avatarSize } }}>
+                {isAvatarProcessing ? (
+                  <Alert color="warning" sx={{ width: '100%' }}>
+                    {t('dashboard.profiles.detail.avatar.processingMessage')}
+                  </Alert>
+                ) : null}
+                <Box
+                  sx={{ height: { xs: 280, sm: avatarSize }, position: 'relative', width: { xs: 280, sm: avatarSize } }}
+                >
                   <Box
                     sx={{
                       border: '1px solid var(--mui-palette-divider)',
@@ -338,6 +412,7 @@ export function Page(): React.JSX.Element {
                   </Box>
                   <IconButton
                     aria-label={t('dashboard.profiles.detail.avatar.editAriaLabel')}
+                    disabled={isAvatarProcessing}
                     onClick={handleOpenDialog}
                     sx={{
                       bgcolor: 'background.paper',
@@ -347,6 +422,7 @@ export function Page(): React.JSX.Element {
                       top: { xs: 18, sm: 28 },
                       zIndex: 1,
                       '&:hover': { bgcolor: 'background.paper' },
+                      '&.Mui-disabled': { bgcolor: 'background.paper', opacity: 0.68 },
                     }}
                   >
                     <PencilSimpleIcon />
@@ -364,99 +440,274 @@ export function Page(): React.JSX.Element {
       </Stack>
       <Dialog
         fullWidth
-        maxWidth="sm"
+        maxWidth="md"
         onClose={handleCloseDialog}
         open={dialogOpen}
         slotProps={{ backdrop: { sx: { bgcolor: 'rgba(15, 23, 42, 0.72)' } } }}
       >
         <DialogTitle>{t('dashboard.profiles.detail.avatar.dialogTitle')}</DialogTitle>
         <DialogContent>
-          <Stack spacing={3} sx={{ pt: 1 }}>
-            <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
-              {t('dashboard.profiles.actions.uploadImage')}
-              <input accept="image/jpeg,image/png,image/webp" hidden onChange={handleFileChange} type="file" />
-            </Button>
-            {previewUrl ? (
+          <Stack spacing={2.5} sx={{ pt: 1 }}>
+            <Tabs
+              onChange={(_, value: AvatarDialogTab) => {
+                setDialogTab(value);
+                setFieldError('');
+              }}
+              value={dialogTab}
+              variant="fullWidth"
+            >
+              <Tab
+                icon={<ImagesSquareIcon />}
+                iconPosition="start"
+                label={t('dashboard.profiles.detail.avatar.tabs.history')}
+                value="history"
+              />
+              <Tab
+                icon={<UploadSimpleIcon />}
+                iconPosition="start"
+                label={t('dashboard.profiles.detail.avatar.tabs.upload')}
+                value="upload"
+              />
+            </Tabs>
+            <Divider />
+
+            {fieldError ? <Alert color="error">{fieldError}</Alert> : null}
+
+            {dialogTab === 'history' ? (
+              <AvatarHistoryGrid
+                activeAvatarId={activeAvatarId}
+                avatars={avatars}
+                disabled={isActivating || isSaving}
+                onSelect={(nextAvatar) => {
+                  handleActivateAvatar(nextAvatar).catch((err) => {
+                    logger.error(err);
+                  });
+                }}
+                t={t}
+              />
+            ) : (
               <React.Fragment>
-                <Box
-                  onPointerDown={handlePointerDown}
-                  onPointerMove={handlePointerMove}
-                  onPointerUp={handlePointerUp}
-                  sx={{
-                    alignItems: 'center',
-                    aspectRatio: '1 / 1',
-                    backgroundColor: 'background.default',
-                    backgroundImage:
-                      'linear-gradient(var(--mui-palette-divider) 1px, transparent 1px), linear-gradient(90deg, var(--mui-palette-divider) 1px, transparent 1px)',
-                    backgroundSize: '32px 32px',
-                    border: '1px solid var(--mui-palette-divider)',
-                    borderRadius: 1,
-                    cursor: 'grab',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    maxWidth: avatarSize,
-                    mx: 'auto',
-                    overflow: 'hidden',
-                    position: 'relative',
-                    touchAction: 'none',
-                    width: '100%',
-                  }}
-                >
-                <Box
-                  alt={String(t('dashboard.profiles.detail.avatar.alt.preview'))}
-                  component="img"
-                  draggable={false}
-                  src={previewUrl}
-                  sx={{
-                    height: '100%',
-                    left: '50%',
-                    objectFit: 'cover',
-                    pointerEvents: 'none',
-                    position: 'absolute',
-                    top: '50%',
-                    transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px)) scale(${zoom})`,
-                    transformOrigin: 'center',
-                    userSelect: 'none',
-                    width: '100%',
-                  }}
-                />
-                </Box>
-                <FormControl>
-                  <Typography gutterBottom variant="subtitle2">
-                    {t('dashboard.profiles.detail.avatar.zoom')}
+                <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
+                  {t('dashboard.profiles.actions.uploadImage')}
+                  <input accept="image/jpeg,image/png,image/webp" hidden onChange={handleFileChange} type="file" />
+                </Button>
+                {previewUrl ? (
+                  <React.Fragment>
+                    <Box
+                      onPointerDown={handlePointerDown}
+                      onPointerMove={handlePointerMove}
+                      onPointerUp={handlePointerUp}
+                      sx={{
+                        alignItems: 'center',
+                        aspectRatio: '1 / 1',
+                        backgroundColor: 'background.default',
+                        backgroundImage:
+                          'linear-gradient(var(--mui-palette-divider) 1px, transparent 1px), linear-gradient(90deg, var(--mui-palette-divider) 1px, transparent 1px)',
+                        backgroundSize: '32px 32px',
+                        border: '1px solid var(--mui-palette-divider)',
+                        borderRadius: 1,
+                        cursor: 'grab',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        maxWidth: avatarSize,
+                        mx: 'auto',
+                        overflow: 'hidden',
+                        position: 'relative',
+                        touchAction: 'none',
+                        width: '100%',
+                      }}
+                    >
+                      <Box
+                        alt={String(t('dashboard.profiles.detail.avatar.alt.preview'))}
+                        component="img"
+                        draggable={false}
+                        src={previewUrl}
+                        sx={{
+                          height: '100%',
+                          left: '50%',
+                          objectFit: 'cover',
+                          pointerEvents: 'none',
+                          position: 'absolute',
+                          top: '50%',
+                          transform: `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px)) scale(${zoom})`,
+                          transformOrigin: 'center',
+                          userSelect: 'none',
+                          width: '100%',
+                        }}
+                      />
+                    </Box>
+                    <FormControl>
+                      <Typography gutterBottom variant="subtitle2">
+                        {t('dashboard.profiles.detail.avatar.zoom')}
+                      </Typography>
+                      <Slider
+                        max={3}
+                        min={1}
+                        onChange={(_, value) => {
+                          setZoom(value as number);
+                        }}
+                        step={0.05}
+                        value={zoom}
+                      />
+                    </FormControl>
+                  </React.Fragment>
+                ) : (
+                  <Typography color="text.secondary" variant="body2">
+                    {t('dashboard.profiles.detail.avatar.uploadHint')}
                   </Typography>
-                  <Slider
-                    max={3}
-                    min={1}
-                    onChange={(_, value) => {
-                      setZoom(value as number);
-                    }}
-                    step={0.05}
-                    value={zoom}
-                  />
-                  {fieldError ? <FormHelperText error>{fieldError}</FormHelperText> : null}
-                </FormControl>
+                )}
               </React.Fragment>
-            ) : fieldError ? (
-              <FormHelperText error>{fieldError}</FormHelperText>
-            ) : null}
+            )}
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button disabled={isSaving} onClick={handleCloseDialog}>
+          <Button disabled={isSaving || isActivating} onClick={handleCloseDialog}>
             {t('dashboard.profiles.actions.cancel')}
           </Button>
-          <Button disabled={isSaving || !previewUrl} onClick={handleSave} variant="contained">
-            {isSaving ? t('dashboard.profiles.detail.avatar.saving') : t('dashboard.profiles.actions.save')}
-          </Button>
+          {dialogTab === 'upload' ? (
+            <Button disabled={isSaving || !previewUrl} onClick={handleSave} variant="contained">
+              {isSaving ? t('dashboard.profiles.detail.avatar.saving') : t('dashboard.profiles.actions.save')}
+            </Button>
+          ) : null}
         </DialogActions>
       </Dialog>
     </React.Fragment>
   );
 }
 
+function AvatarHistoryGrid({
+  activeAvatarId,
+  avatars,
+  disabled,
+  onSelect,
+  t,
+}: {
+  activeAvatarId: string;
+  avatars: ProfileAvatar[];
+  disabled: boolean;
+  onSelect: (avatar: ProfileAvatar) => void;
+  t: ReturnType<typeof useTranslation>['t'];
+}): React.JSX.Element {
+  if (!avatars.length) {
+    return (
+      <Box
+        sx={{
+          alignItems: 'center',
+          border: '1px dashed var(--mui-palette-divider)',
+          borderRadius: 1,
+          display: 'flex',
+          minHeight: 180,
+          justifyContent: 'center',
+          p: 3,
+          textAlign: 'center',
+        }}
+      >
+        <Stack spacing={1} sx={{ alignItems: 'center' }}>
+          <ImagesSquareIcon fontSize="var(--icon-fontSize-lg)" />
+          <Typography color="text.secondary" variant="body2">
+            {t('dashboard.profiles.detail.avatar.historyEmpty')}
+          </Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gap: 2.5,
+        gridTemplateColumns: 'repeat(auto-fill, minmax(92px, 112px))',
+        justifyContent: 'center',
+      }}
+    >
+      {avatars.map((item) => {
+        const file = getAvatarFile(item);
+        const isVideo = file ? isVideoFile(file) : false;
+        const isActive = String(item.id) === activeAvatarId || item.status === 'active';
+        const canSelect = !disabled && !isActive && isAvatarSelectable(item);
+
+        return (
+          <ButtonBase
+            aria-label={
+              isActive
+                ? String(t('dashboard.profiles.detail.avatar.currentAvatar'))
+                : String(t('dashboard.profiles.detail.avatar.previousAvatar'))
+            }
+            disabled={!canSelect}
+            key={item.id}
+            onClick={() => {
+              onSelect(item);
+            }}
+            sx={{
+              aspectRatio: '1 / 1',
+              border: '5px solid',
+              borderColor: isActive ? 'success.main' : 'transparent',
+              borderRadius: '50%',
+              boxShadow: isActive
+                ? '0 0 0 2px var(--mui-palette-background-paper)'
+                : '0 0 0 1px var(--mui-palette-divider)',
+              display: 'block',
+              overflow: 'hidden',
+              width: '100%',
+              '&.Mui-disabled': {
+                opacity: isActive ? 1 : 0.42,
+              },
+              '&:hover': {
+                borderColor: canSelect ? 'success.light' : undefined,
+              },
+            }}
+          >
+            {file ? (
+              isVideo ? (
+                <Box
+                  autoPlay
+                  component="video"
+                  loop
+                  muted
+                  playsInline
+                  src={resolveAssetUrl(file)}
+                  sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+                />
+              ) : (
+                <Box
+                  alt={String(t('dashboard.profiles.detail.avatar.alt.profile'))}
+                  component="img"
+                  src={resolveAssetUrl(file)}
+                  sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+                />
+              )
+            ) : (
+              <Box
+                alt={String(t('dashboard.profiles.detail.avatar.alt.empty'))}
+                component="img"
+                src={emptyAvatarSrc}
+                sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+              />
+            )}
+          </ButtonBase>
+        );
+      })}
+    </Box>
+  );
+}
+
 function getAvatarFile(avatar: null | ProfileAvatar): string {
   return avatar?.ai_video?.file || avatar?.file || avatar?.ai_image?.file || '';
+}
+
+function isAvatarSelectable(avatar: ProfileAvatar): boolean {
+  return ['active', 'inactive'].includes(String(avatar.status ?? '').toLowerCase()) && Boolean(getAvatarFile(avatar));
+}
+
+function upsertAvatar(avatars: ProfileAvatar[], avatar: ProfileAvatar): ProfileAvatar[] {
+  const exists = avatars.some((item) => String(item.id) === String(avatar.id));
+
+  if (!exists) {
+    return [avatar, ...avatars];
+  }
+
+  return avatars.map((item) => (String(item.id) === String(avatar.id) ? avatar : item));
 }
 
 function resolveAssetUrl(file: string): string {
@@ -497,6 +748,16 @@ function getStatusColor(status: string): 'default' | 'error' | 'success' | 'warn
   }
 
   return 'default';
+}
+
+function getStatusLabel(status: string, t: ReturnType<typeof useTranslation>['t']): string {
+  const value = status.toLowerCase();
+
+  if (['active', 'failed', 'inactive', 'processing'].includes(value)) {
+    return t(`dashboard.profiles.detail.avatar.status.${value}`);
+  }
+
+  return status || t('dashboard.profiles.detail.avatar.status.unknown');
 }
 
 async function createCroppedAvatarFile(

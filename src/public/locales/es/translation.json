@@ -297,6 +297,7 @@
             "preview": "Vista previa del recorte de avatar",
             "profile": "Avatar del perfil"
           },
+          "currentAvatar": "Avatar actual",
           "dialogTitle": "Editar avatar",
           "editAriaLabel": "Editar avatar",
           "errors": {
@@ -304,13 +305,31 @@
             "selectImage": "Selecciona una imagen primero.",
             "unsupportedFile": "Usa una imagen JPG, PNG o WEBP."
           },
+          "historyEmpty": "Aún no hay avatares generados.",
           "noAvatar": "No hay avatar cargado.",
+          "previousAvatar": "Avatar anterior",
+          "processingMessage": "Hay un nuevo avatar en procesamiento. Podrás editar cuando termine.",
           "saving": "Guardando...",
+          "selectHint": "Seleccionar este avatar",
+          "status": {
+            "active": "Activo",
+            "failed": "Fallido",
+            "inactive": "Anterior",
+            "processing": "Procesando",
+            "unknown": "Desconocido"
+          },
           "subheader": "Avatar del perfil",
+          "tabs": {
+            "history": "Avatares anteriores",
+            "upload": "Subir imagen"
+          },
           "title": "Avatar",
           "toasts": {
+            "avatarActivated": "Avatar activado",
             "generationStarted": "Generación de avatar iniciada"
           },
+          "unavailableHint": "No disponible para seleccionar",
+          "uploadHint": "Sube una imagen JPG, PNG o WEBP para generar un nuevo avatar.",
           "zoom": "Zoom"
         },
         "data": {
