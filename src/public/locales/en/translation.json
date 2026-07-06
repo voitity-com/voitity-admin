@@ -395,6 +395,33 @@
           "voice": "Voice"
         },
         "profile": {
+          "audio": {
+            "append": "Append to the end",
+            "applyMode": "Apply transcription",
+            "errors": {
+              "emptyTranscription": "The transcription did not return text.",
+              "microphoneAccess": "Unable to access the microphone.",
+              "recordFirst": "Record audio before transcribing it.",
+              "recordingUnsupported": "Audio recording is not supported by this browser."
+            },
+            "limitHint": "Minimum {{min}} character. Maximum {{max}} characters.",
+            "open": "Record audio for {{field}}",
+            "preview": "Play recording",
+            "ready": "Ready to record",
+            "recordAgain": "Record again",
+            "recording": "Recording audio",
+            "replace": "Replace content",
+            "title": "Record {{field}}",
+            "toasts": {
+              "applied": "Transcription applied"
+            },
+            "transcribeAndApply": "Transcribe and apply"
+          },
+          "fieldLimits": {
+            "belowMinimum": "{{count}} minimum character missing.",
+            "exceedsMaximum": "{{count}} characters over. Maximum {{max}}.",
+            "valid": "{{count}}/{{max}} characters. Minimum {{min}}."
+          },
           "subheader": "Update profile information",
           "title": "Profile",
           "toasts": {
@@ -503,10 +530,16 @@
         "validation": {
           "aliasMax": "Alias must be at most 100 characters",
           "descriptionRequired": "Description is required",
+          "genreInvalid": "Select a valid genre",
           "genreRequired": "Genre is required",
           "nameRequired": "Name is required",
           "personalityRequired": "Personality is required"
         }
+      },
+      "genreOptions": {
+        "female": "Female",
+        "male": "Male",
+        "na": "No Answer"
       },
       "list": {
         "description": "Manage the profiles attached to the logged-in user.",

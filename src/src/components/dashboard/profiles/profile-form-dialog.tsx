@@ -12,7 +12,9 @@ import FormControl from '@mui/material/FormControl';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Controller, useForm } from 'react-hook-form';
@@ -20,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { z as zod } from 'zod';
 
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
+import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 
 interface Values {
   active: boolean;
@@ -35,7 +38,10 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
     active: zod.boolean(),
     alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
     description: zod.string().min(1, t('dashboard.profiles.form.validation.descriptionRequired')).max(500),
-    genre: zod.string().min(1, t('dashboard.profiles.form.validation.genreRequired')).max(10),
+    genre: zod
+      .string()
+      .min(1, t('dashboard.profiles.form.validation.genreRequired'))
+      .refine(isProfileGenre, t('dashboard.profiles.form.validation.genreInvalid')),
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
     personality: zod.string().min(1, t('dashboard.profiles.form.validation.personalityRequired')).max(200),
   });
@@ -46,7 +52,7 @@ function getDefaultValues(profile?: null | Profile): Values {
     active: profile?.active ?? true,
     alias: profile?.alias ?? '',
     description: profile?.description ?? '',
-    genre: profile?.genre ?? '',
+    genre: normalizeProfileGenre(profile?.genre),
     name: profile?.name ?? '',
     personality: profile?.personality ?? '',
   };
@@ -133,8 +139,19 @@ export function ProfileFormDialog({
               name="genre"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.genre)}>
-                  <InputLabel>{t('dashboard.profiles.fields.genre')}</InputLabel>
-                  <OutlinedInput {...field} label={t('dashboard.profiles.fields.genre')} />
+                  <InputLabel id="profile-form-genre-label">{t('dashboard.profiles.fields.genre')}</InputLabel>
+                  <Select
+                    {...field}
+                    label={t('dashboard.profiles.fields.genre')}
+                    labelId="profile-form-genre-label"
+                    value={normalizeProfileGenre(field.value)}
+                  >
+                    {profileGenreValues.map((value) => (
+                      <MenuItem key={value} value={value}>
+                        {t(`dashboard.profiles.genreOptions.${value}`)}
+                      </MenuItem>
+                    ))}
+                  </Select>
                   {errors.genre ? <FormHelperText>{errors.genre.message}</FormHelperText> : null}
                 </FormControl>
               )}
@@ -184,7 +201,11 @@ export function ProfileFormDialog({
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    ...values,
+    active: values.active,
     alias: values.alias.trim() || null,
+    description: values.description,
+    genre: toProfileGenre(values.genre),
+    name: values.name,
+    personality: values.personality,
   };
 }

@@ -1,6 +1,7 @@
 import { config } from '@/config';
 import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import { getStoredApiToken } from '@/lib/auth/custom/api-token';
+import type { ProfileGenre } from '@/lib/profiles/profile-genre';
 
 export interface Profile {
   id: number | string;
@@ -26,7 +27,7 @@ export interface ProfilePayload {
   name: string;
   alias?: null | string;
   description: string;
-  genre: string;
+  genre: ProfileGenre;
   personality: string;
   active?: boolean;
 }
@@ -145,6 +146,26 @@ export interface VoiceTestAudio {
   status?: null | string;
   text: string;
   voice_id: number | string;
+}
+
+export type ProfileAudioTranscriptionField = 'description' | 'personality';
+
+export interface ProfileAudioTranscription {
+  below_minimum?: boolean;
+  characters?: number;
+  confidence?: null | number;
+  detected_language?: null | string;
+  duration?: null | number;
+  exceeds_limit?: boolean;
+  field?: null | ProfileAudioTranscriptionField;
+  limits?: null | {
+    max: number;
+    min: number;
+  };
+  source?: null | string;
+  status?: null | string;
+  text: string;
+  word_count?: number;
 }
 
 export class ProfileApiError extends Error {
@@ -311,6 +332,33 @@ export async function testVoiceAudio(payload: {
     method: 'POST',
   });
   return isApiEnvelope<VoiceTestAudio>(response) ? response.data : response;
+}
+
+export async function transcribeProfileAudio(
+  profileId: number | string,
+  params: {
+    field?: ProfileAudioTranscriptionField;
+    file: File;
+    language?: string;
+  }
+): Promise<ProfileAudioTranscription> {
+  const formData = new FormData();
+  formData.append('audio', params.file);
+
+  if (params.field) {
+    formData.append('field', params.field);
+  }
+
+  if (params.language) {
+    formData.append('language', params.language);
+  }
+
+  const response = await requestJson<ApiEnvelope<ProfileAudioTranscription> | ProfileAudioTranscription>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/transcriptions/audio`,
+    { formData, method: 'POST' }
+  );
+
+  return isApiEnvelope<ProfileAudioTranscription>(response) ? response.data : response;
 }
 
 function unwrapProfile(response: ApiEnvelope<Profile> | Profile): Profile {
