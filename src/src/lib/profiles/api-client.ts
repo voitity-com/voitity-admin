@@ -1,6 +1,6 @@
 import { config } from '@/config';
-import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import { getStoredApiToken } from '@/lib/auth/custom/api-token';
+import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import type { ProfileGenre } from '@/lib/profiles/profile-genre';
 
 export interface Profile {
@@ -15,6 +15,9 @@ export interface Profile {
   active?: boolean;
   voice?: boolean;
   voice_id?: null | number | string;
+  voice_description?: null | string;
+  voice_language_code?: null | string;
+  voice_name?: null | string;
   data?: null | Record<string, unknown>;
   networks?: null | ProfileNetworks;
   created_at?: null | string;
@@ -227,9 +230,10 @@ export async function updateProfileData(id: number | string, data: Record<string
 
 export async function listProfileSocialNetworks(): Promise<SocialNetworkDefinition[]> {
   const response = await requestJson<
-    ApiEnvelope<{ networks?: Record<string, { icon?: null | string; name?: null | string }> }> | {
-      networks?: Record<string, { icon?: null | string; name?: null | string }>;
-    }
+    | ApiEnvelope<{ networks?: Record<string, { icon?: null | string; name?: null | string }> }>
+    | {
+        networks?: Record<string, { icon?: null | string; name?: null | string }>;
+      }
   >('/api/profile/social-networks', { method: 'GET' });
   const payload = isApiEnvelope<{ networks?: Record<string, { icon?: null | string; name?: null | string }> }>(response)
     ? response.data
@@ -293,6 +297,21 @@ export async function createVoice(payload: {
   return isApiEnvelope<Voice>(response) ? response.data : response;
 }
 
+export async function updateVoice(
+  voiceId: number | string,
+  payload: {
+    description?: string;
+    language_code?: string;
+    name: string;
+  }
+): Promise<Voice> {
+  const response = await requestJson<ApiEnvelope<Voice> | Voice>(`/api/voice/${encodeURIComponent(String(voiceId))}`, {
+    body: payload,
+    method: 'PATCH',
+  });
+  return isApiEnvelope<Voice>(response) ? response.data : response;
+}
+
 export async function uploadVoiceSample(params: {
   file: File;
   language_code: string;
@@ -323,10 +342,7 @@ export async function processVoiceSample(params: {
   return isApiEnvelope<VoiceProviderRequest>(response) ? response.data : response;
 }
 
-export async function testVoiceAudio(payload: {
-  profile_id: number | string;
-  text: string;
-}): Promise<VoiceTestAudio> {
+export async function testVoiceAudio(payload: { profile_id: number | string; text: string }): Promise<VoiceTestAudio> {
   const response = await requestJson<ApiEnvelope<VoiceTestAudio> | VoiceTestAudio>('/api/voice/test', {
     body: payload,
     method: 'POST',
@@ -371,7 +387,17 @@ function isApiEnvelope<T>(response: unknown): response is ApiEnvelope<T> {
 
 function normalizeChatsResponse(response: unknown, fallbackPage: number): ProfileChatsPage {
   const result = normalizePaginatedCollection(response, fallbackPage, {
-    arrayFields: ['chats', 'profile_chats', 'profileChats', 'conversations', 'threads', 'items', 'results', 'records', 'data'],
+    arrayFields: [
+      'chats',
+      'profile_chats',
+      'profileChats',
+      'conversations',
+      'threads',
+      'items',
+      'results',
+      'records',
+      'data',
+    ],
     nestedFields: [
       'chats',
       'profile_chats',
@@ -393,7 +419,17 @@ function normalizeChatsResponse(response: unknown, fallbackPage: number): Profil
 function normalizeChatMessagesResponse(response: unknown, fallbackPage: number): ProfileChatMessagesPage {
   const result = normalizePaginatedCollection(response, fallbackPage, {
     arrayFields: ['messages', 'chat_messages', 'chatMessages', 'items', 'results', 'records', 'data'],
-    nestedFields: ['messages', 'chat_messages', 'chatMessages', 'chat', 'conversation', 'items', 'results', 'records', 'data'],
+    nestedFields: [
+      'messages',
+      'chat_messages',
+      'chatMessages',
+      'chat',
+      'conversation',
+      'items',
+      'results',
+      'records',
+      'data',
+    ],
   });
   const messages = (result.items as ProfileChatMessage[]).sort(compareMessagesChronologically);
 
@@ -407,13 +443,13 @@ function normalizePaginatedCollection(
 ): { items: unknown[]; lastPage?: null | number; page: number; perPage?: null | number; total?: null | number } {
   const candidate = getResponseData(response);
   const items = getCollectionSource(candidate, options) ?? getCollectionSource(response, options) ?? [];
-  const paginationSource = getPaginationSource(candidate, options.nestedFields) ?? getPaginationSource(response, options.nestedFields);
+  const paginationSource =
+    getPaginationSource(candidate, options.nestedFields) ?? getPaginationSource(response, options.nestedFields);
   const page = getNumberField(paginationSource, ['current_page', 'currentPage', 'page']) ?? fallbackPage;
   const perPage =
     getNumberField(paginationSource, ['per_page', 'perPage', 'limit']) ??
     getNumberField(candidate, ['per_page', 'perPage', 'limit']);
-  const total =
-    getNumberField(paginationSource, ['total', 'count']) ?? getNumberField(candidate, ['total', 'count']);
+  const total = getNumberField(paginationSource, ['total', 'count']) ?? getNumberField(candidate, ['total', 'count']);
   const lastPage =
     getNumberField(paginationSource, ['last_page', 'lastPage', 'pages']) ??
     getNumberField(candidate, ['last_page', 'lastPage', 'pages']);

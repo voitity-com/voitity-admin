@@ -473,8 +473,13 @@
         "voice": {
           "audio": "Audio",
           "cloneVoice": "Clone your voice",
+          "cloneIntroDescription": "When recording starts, a text will appear for you to read out loud. The full reading can take up to 3 minutes.",
+          "cloneIntroTitle": "Prepare your voice sample",
+          "continueReading": "Keep reading",
+          "countdownTitle": "Get ready, recording starts when the countdown ends.",
           "createSubheader": "Create voice and upload a voice sample",
           "duration": "Duration: {{duration}}s",
+          "estimatedDuration": "Approximate read: 3 minutes",
           "errors": {
             "audioNotReturned": "The API did not return audio.",
             "createBeforeUpload": "Create a voice before uploading a sample.",
@@ -482,26 +487,54 @@
             "enterText": "Enter text to generate audio.",
             "microphoneAccess": "Unable to access the microphone.",
             "recordBeforeSend": "Record a voice sample before sending it.",
+            "recordingStartFailed": "Recording could not be started. Please try again.",
             "recordingUnsupported": "Audio recording is not supported by this browser."
           },
           "fields": {
             "description": "Description",
+            "language": "Language",
             "languageCode": "Language code: {{code}}",
+            "languageHelper": "Used for voice cloning and sample uploads.",
             "text": "Text",
             "voiceName": "Voice name"
           },
+          "languages": {
+            "en": "English",
+            "es": "Spanish"
+          },
+          "naturalVoice": "Use your normal voice",
+          "pauseRecording": "Pause",
+          "playRecording": "Play",
           "preview": "Preview",
+          "quietPlace": "Find a quiet place",
           "readText": "Read this text",
+          "recordAgain": "Record again",
+          "recordingLive": "Recording",
+          "recordingReady": "Recording ready. Play it back before sending it.",
+          "sampleScript": {
+            "part1": "Hello, thank you for listening. I am going to read this text with a calm, natural, and steady voice. I want this sample to capture the way I normally speak, with clear pauses between ideas and clean pronunciation. If a word sounds difficult, I will read it slowly instead of rushing, so the system can recognize my tone correctly.",
+            "part2": "When I speak with someone, I try to keep a friendly rhythm that is easy to follow. Some sentences will be short, and others will be a little longer, because a real voice changes energy depending on what it is saying. I will pause briefly at the end of each sentence and continue reading in a steady way.",
+            "part3": "I can also describe an everyday scene. Imagine a bright morning, a table with freshly served coffee, and an open planner with tasks for the day. The person reviews priorities, answers pending messages, and organizes time. Talking about simple situations helps capture different sounds, intonations, and word combinations with more variety.",
+            "part4": "If I need to give an instruction, I would say it clearly. First review the main information, then confirm that the details are correct, and finally save the changes. This kind of reading has a more direct tone, but it should still feel close. I will keep my voice firm without shouting, and make every word easy to understand.",
+            "part5": "Now I will keep reading continuously so the sample has enough duration. It is normal to breathe, make brief pauses, and continue naturally. I do not need to act or exaggerate the tone. I only need to speak as I would in a real conversation, keeping a comfortable distance from the microphone and avoiding bumps or sudden noises.",
+            "part6": "To finish, I will close this sample with the same clarity I used at the start. This recording will help create a more accurate voice reference, so it is important to listen to the full audio before sending it. If I notice noise, cuts, or very low volume, I can record again and replace this sample."
+          },
+          "saveSample": "Save sample",
           "sampleText": "Hello, this is an example of my voice to configure my profile. I am reading this text clearly and naturally to create a voice sample.",
+          "scriptPart": "Part {{current}} of {{total}}",
+          "stopRecording": "Stop recording",
           "testTextDefault": "Hello, this is a voice test.",
           "testVoice": "Test voice",
           "title": "Voice",
           "toasts": {
             "audioGenerated": "Audio generated",
             "sampleUploaded": "Voice sample uploaded",
-            "voiceCreated": "Voice created"
+            "voiceCreated": "Voice created",
+            "voiceSaved": "Voice saved"
           },
+          "uploadingSample": "Sending...",
           "voiceId": "Voice ID: {{id}}",
+          "voiceNameFallback": "Profile voice",
           "voiceNameDefault": "{{name}} Voice"
         }
       },
