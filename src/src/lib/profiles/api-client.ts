@@ -12,6 +12,8 @@ export interface Profile {
   description: string;
   genre: string;
   personality: string;
+  profession_key?: null | string;
+  profession_template_version?: null | string;
   active?: boolean;
   voice?: boolean;
   voice_id?: null | number | string;
@@ -32,6 +34,8 @@ export interface ProfilePayload {
   description: string;
   genre: ProfileGenre;
   personality: string;
+  profession_key?: null | string;
+  profession_template_version?: null | string;
   active?: boolean;
 }
 
@@ -49,6 +53,28 @@ export interface SocialNetworkDefinition {
   icon: string;
   key: string;
   name: string;
+}
+
+export interface ProfileProfessionSection {
+  key: string;
+  label: string;
+  required?: boolean;
+}
+
+export interface ProfileProfession {
+  description?: null | string;
+  interview_questions?: string[];
+  key: string;
+  label: string;
+  quality_rules?: Record<string, unknown>[];
+  sections?: ProfileProfessionSection[];
+  source_types?: string[];
+}
+
+export interface ProfileProfessionsCatalog {
+  default: string;
+  professions: ProfileProfession[];
+  version?: null | string;
 }
 
 interface RequestOptions {
@@ -115,6 +141,100 @@ export interface ProfileChatMessagesPage {
   page: number;
   perPage?: null | number;
   total?: null | number;
+}
+
+export interface ProfileFact {
+  approved?: boolean;
+  category: string;
+  created_at?: null | string;
+  id: number | string;
+  indexed?: boolean;
+  metadata?: null | Record<string, unknown>;
+  profile_id?: number | string;
+  profile_source_id?: null | number | string;
+  profile_source_item_id?: null | number | string;
+  text: string;
+  updated_at?: null | string;
+  visibility?: null | string;
+}
+
+export interface ProfileFactsPage {
+  facts: ProfileFact[];
+  lastPage?: null | number;
+  page: number;
+  perPage?: null | number;
+  total?: null | number;
+}
+
+export interface ProfileSourceItem {
+  approved?: boolean;
+  confidence?: number;
+  content: string;
+  created_at?: null | string;
+  facts?: ProfileFact[];
+  id: number | string;
+  indexed?: boolean;
+  metadata?: null | Record<string, unknown>;
+  profile_id?: number | string;
+  profile_source_id?: number | string;
+  source_url?: null | string;
+  structured_data?: null | Record<string, unknown>;
+  title?: null | string;
+  type: string;
+  updated_at?: null | string;
+}
+
+export interface ProfileKnowledgeSource {
+  approved_at?: null | string;
+  created_at?: null | string;
+  extracted_text?: null | string;
+  id: number | string;
+  indexed_at?: null | string;
+  items?: ProfileSourceItem[];
+  last_synced_at?: null | string;
+  metadata?: null | Record<string, unknown>;
+  mime_type?: null | string;
+  name: string;
+  original_filename?: null | string;
+  parser_version?: null | string;
+  profile_id?: number | string;
+  status?: null | string;
+  storage_path?: null | string;
+  type: string;
+  updated_at?: null | string;
+  user_id?: number | string;
+}
+
+export interface ProfileSourcesPage {
+  lastPage?: null | number;
+  page: number;
+  perPage?: null | number;
+  sources: ProfileKnowledgeSource[];
+  total?: null | number;
+}
+
+export interface ProfileQualityCheck {
+  actual?: number;
+  key: string;
+  label: string;
+  passed: boolean;
+  required?: number;
+  type: string;
+  weight: number;
+}
+
+export interface ProfileQuality {
+  checks: ProfileQualityCheck[];
+  completed_weight: number;
+  counts: Record<string, number>;
+  profession: {
+    key: string;
+    label: string;
+    template_version?: null | string;
+  };
+  profile_id: number | string;
+  score: number;
+  total_weight: number;
 }
 
 export interface Voice {
@@ -246,6 +366,15 @@ export async function listProfileSocialNetworks(): Promise<SocialNetworkDefiniti
   }));
 }
 
+export async function listProfileProfessions(): Promise<ProfileProfessionsCatalog> {
+  const response = await requestJson<ApiEnvelope<ProfileProfessionsCatalog> | ProfileProfessionsCatalog>(
+    '/api/profile/professions',
+    { method: 'GET' }
+  );
+
+  return isApiEnvelope<ProfileProfessionsCatalog>(response) ? response.data : response;
+}
+
 export async function updateProfileNetworks(id: number | string, networks: ProfileNetworks): Promise<Profile> {
   const response = await requestJson<ApiEnvelope<Profile> | Profile>(
     `/api/profile/${encodeURIComponent(String(id))}/data/networks`,
@@ -285,6 +414,126 @@ export async function listProfileChatMessages(params: {
   });
 
   return normalizeChatMessagesResponse(response, params.page ?? 1);
+}
+
+export async function listProfileSources(params: {
+  page?: number;
+  profileId: number | string;
+  type?: string;
+}): Promise<ProfileSourcesPage> {
+  const searchParams = new URLSearchParams({
+    page: String(params.page ?? 1),
+  });
+
+  if (params.type) {
+    searchParams.set('type', params.type);
+  }
+
+  const response = await requestJson<ApiEnvelope<{ pagination?: Record<string, unknown>; sources?: ProfileKnowledgeSource[] }>>(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/sources?${searchParams.toString()}`,
+    { method: 'GET' }
+  );
+  const data = isApiEnvelope(response) ? response.data : response;
+  const pagination = data.pagination ?? {};
+
+  return {
+    lastPage: getNumberField(pagination, ['last_page', 'lastPage']),
+    page: getNumberField(pagination, ['current_page', 'currentPage', 'page']) ?? params.page ?? 1,
+    perPage: getNumberField(pagination, ['per_page', 'perPage']),
+    sources: data.sources ?? [],
+    total: getNumberField(pagination, ['total']),
+  };
+}
+
+export async function uploadProfileCvSource(params: {
+  file?: File;
+  name?: string;
+  profileId: number | string;
+  text?: string;
+}): Promise<ProfileKnowledgeSource> {
+  const formData = new FormData();
+
+  if (params.file) {
+    formData.append('file', params.file);
+  }
+
+  if (params.name) {
+    formData.append('name', params.name);
+  }
+
+  if (params.text) {
+    formData.append('text', params.text);
+  }
+
+  const response = await requestJson<ApiEnvelope<ProfileKnowledgeSource> | ProfileKnowledgeSource>(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/sources/cv`,
+    { formData, method: 'POST' }
+  );
+
+  return isApiEnvelope<ProfileKnowledgeSource>(response) ? response.data : response;
+}
+
+export async function approveProfileSource(
+  profileId: number | string,
+  sourceId: number | string
+): Promise<ProfileKnowledgeSource> {
+  const response = await requestJson<ApiEnvelope<ProfileKnowledgeSource> | ProfileKnowledgeSource>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/sources/${encodeURIComponent(String(sourceId))}/approve`,
+    { method: 'POST' }
+  );
+
+  return isApiEnvelope<ProfileKnowledgeSource>(response) ? response.data : response;
+}
+
+export async function listProfileFacts(params: {
+  category?: string;
+  page?: number;
+  profileId: number | string;
+}): Promise<ProfileFactsPage> {
+  const searchParams = new URLSearchParams({
+    page: String(params.page ?? 1),
+  });
+
+  if (params.category) {
+    searchParams.set('category', params.category);
+  }
+
+  const response = await requestJson<ApiEnvelope<{ facts?: ProfileFact[]; pagination?: Record<string, unknown> }>>(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/facts?${searchParams.toString()}`,
+    { method: 'GET' }
+  );
+  const data = isApiEnvelope(response) ? response.data : response;
+  const pagination = data.pagination ?? {};
+
+  return {
+    facts: data.facts ?? [],
+    lastPage: getNumberField(pagination, ['last_page', 'lastPage']),
+    page: getNumberField(pagination, ['current_page', 'currentPage', 'page']) ?? params.page ?? 1,
+    perPage: getNumberField(pagination, ['per_page', 'perPage']),
+    total: getNumberField(pagination, ['total']),
+  };
+}
+
+export async function updateProfileFact(
+  profileId: number | string,
+  factId: number | string,
+  payload: Partial<Pick<ProfileFact, 'approved' | 'category' | 'indexed' | 'metadata' | 'text' | 'visibility'>>
+): Promise<ProfileFact> {
+  const response = await requestJson<ApiEnvelope<ProfileFact> | ProfileFact>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/facts/${encodeURIComponent(String(factId))}`,
+    { body: payload, method: 'PATCH' }
+  );
+
+  return isApiEnvelope<ProfileFact>(response) ? response.data : response;
+}
+
+export async function getProfileQuality(profileId: number | string): Promise<ProfileQuality> {
+  const response = await requestJson<ApiEnvelope<ProfileQuality> | ProfileQuality>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/quality`,
+    { method: 'GET' }
+  );
+
+  return isApiEnvelope<ProfileQuality>(response) ? response.data : response;
 }
 
 export async function createVoice(payload: {

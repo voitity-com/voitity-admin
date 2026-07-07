@@ -7,6 +7,8 @@ import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
+import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
+import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr/ShareNetwork';
@@ -24,7 +26,9 @@ const icons = {
   chats: ChatsCircleIcon,
   data: DatabaseIcon,
   profile: UserCircleIcon,
+  quality: GaugeIcon,
   socialNetworks: ShareNetworkIcon,
+  sources: FileIcon,
   voice: MicrophoneIcon,
 } as Record<string, Icon>;
 
@@ -52,6 +56,18 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.socialNetworks'),
         href: paths.dashboard.profileDetails.socialNetworks(profileId),
         icon: 'socialNetworks',
+      },
+      {
+        key: 'sources',
+        title: t('dashboard.profiles.detail.nav.sources'),
+        href: paths.dashboard.profileDetails.sources(profileId),
+        icon: 'sources',
+      },
+      {
+        key: 'quality',
+        title: t('dashboard.profiles.detail.nav.quality'),
+        href: paths.dashboard.profileDetails.quality(profileId),
+        icon: 'quality',
       },
       {
         key: 'avatar',

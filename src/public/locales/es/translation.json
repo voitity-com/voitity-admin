@@ -405,14 +405,16 @@
         "errors": {
           "generic": "Algo salió mal"
         },
-        "nav": {
-          "avatar": "Avatar",
-          "chats": "Chats",
-          "data": "Datos",
-          "profile": "Perfil",
-          "socialNetworks": "Redes Sociales",
-          "voice": "Voz"
-        },
+      "nav": {
+        "avatar": "Avatar",
+        "chats": "Chats",
+        "data": "Datos",
+        "profile": "Perfil",
+        "quality": "Calidad",
+        "socialNetworks": "Redes Sociales",
+        "sources": "Fuentes",
+        "voice": "Voz"
+      },
         "profile": {
           "audio": {
             "append": "Agregar al final",
@@ -447,8 +449,8 @@
             "updated": "Perfil actualizado"
           }
         },
-        "socialNetworks": {
-          "addNetwork": "Agregar red social",
+      "socialNetworks": {
+        "addNetwork": "Agregar red social",
           "empty": "Aún no hay redes sociales agregadas.",
           "errors": {
             "catalog": "No se pudieron cargar las redes sociales disponibles.",
@@ -467,10 +469,82 @@
           "title": "Redes Sociales",
           "toasts": {
             "updated": "Redes sociales actualizadas"
-          },
-          "unavailable": "Todas las redes sociales disponibles ya están agregadas."
         },
-        "voice": {
+        "unavailable": "Todas las redes sociales disponibles ya están agregadas."
+      },
+      "sources": {
+        "actions": {
+          "approve": "Aprobar",
+          "importCv": "Importar CV",
+          "selectFile": "Seleccionar archivo",
+          "sync": "Sincronizar"
+        },
+        "approved": "Aprobada",
+        "empty": "Aún no hay fuentes importadas.",
+        "fields": {
+          "actions": "Acciones",
+          "facts": "Datos",
+          "name": "Nombre",
+          "status": "Estado",
+          "text": "Texto del CV",
+          "type": "Tipo",
+          "updated": "Actualizado"
+        },
+        "listSubheader": "Las fuentes revisadas quedan disponibles para las conversaciones del perfil.",
+        "listTitle": "Fuentes importadas",
+        "noFile": "Ningún archivo seleccionado",
+        "status": {
+          "approved": "Aprobada",
+          "failed": "Fallida",
+          "indexed": "Indexada",
+          "needs_review": "Requiere revisión",
+          "parsed": "Procesada",
+          "unknown": "Desconocida",
+          "uploaded": "Subida"
+        },
+        "textHelper": "Pega el texto del CV cuando un PDF no se pueda procesar automáticamente.",
+        "toasts": {
+          "approved": "Fuente aprobada",
+          "imported": "CV importado",
+          "synced": "Fuente sincronizada con datos"
+        },
+        "types": {
+          "cv": "CV",
+          "instagram": "Instagram",
+          "manual": "Manual",
+          "website": "Sitio web"
+        },
+        "uploadSubheader": "Sube un archivo de CV y opcionalmente pega el texto extraído.",
+        "uploadTitle": "Importar CV",
+        "validation": {
+          "fileOrText": "Selecciona un archivo o pega el texto del CV.",
+          "nameMax": "El nombre debe tener máximo 150 caracteres",
+          "textMax": "El texto debe tener máximo 50000 caracteres"
+        }
+      },
+      "quality": {
+        "fields": {
+          "actual": "Actual",
+          "check": "Revisión",
+          "required": "Requerido",
+          "status": "Estado",
+          "weight": "Peso"
+        },
+        "metrics": {
+          "approvedFacts": "Datos aprobados",
+          "indexedFacts": "Datos indexados",
+          "sources": "Fuentes"
+        },
+        "score": "Calidad {{score}}%",
+        "scoreLabel": "{{score}}%",
+        "status": {
+          "missing": "Pendiente",
+          "passed": "Completa"
+        },
+        "subheader": "Calidad del conocimiento del perfil",
+        "title": "Calidad"
+      },
+      "voice": {
           "audio": "Audio",
           "cloneVoice": "Clonar voz",
           "cloneIntroDescription": "Al iniciar la grabación aparecerá un texto para leer en voz alta. La lectura completa puede durar hasta 3 minutos.",
@@ -547,10 +621,11 @@
         "alias": "Alias",
         "avatar": "Avatar",
         "description": "Descripción",
-        "genre": "Género",
-        "name": "Nombre",
-        "personality": "Personalidad",
-        "status": "Estado",
+      "genre": "Género",
+      "name": "Nombre",
+      "personality": "Personalidad",
+      "profession": "Profesión",
+      "status": "Estado",
         "updated": "Actualizado"
       },
       "filters": {
@@ -585,7 +660,8 @@
           "genreInvalid": "Selecciona un género válido",
           "genreRequired": "El género es obligatorio",
           "nameRequired": "El nombre es obligatorio",
-          "personalityRequired": "La personalidad es obligatoria"
+          "personalityRequired": "La personalidad es obligatoria",
+          "professionRequired": "La profesión es obligatoria"
         }
       },
       "genreOptions": {
