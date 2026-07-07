@@ -405,14 +405,16 @@
         "errors": {
           "generic": "Something went wrong"
         },
-        "nav": {
-          "avatar": "Avatar",
-          "chats": "Chats",
-          "data": "Data",
-          "profile": "Profile",
-          "socialNetworks": "Social Networks",
-          "voice": "Voice"
-        },
+      "nav": {
+        "avatar": "Avatar",
+        "chats": "Chats",
+        "data": "Data",
+        "profile": "Profile",
+        "quality": "Quality",
+        "socialNetworks": "Social Networks",
+        "sources": "Sources",
+        "voice": "Voice"
+      },
         "profile": {
           "audio": {
             "append": "Append to the end",
@@ -447,8 +449,8 @@
             "updated": "Profile updated"
           }
         },
-        "socialNetworks": {
-          "addNetwork": "Add social network",
+      "socialNetworks": {
+        "addNetwork": "Add social network",
           "empty": "No social networks added yet.",
           "errors": {
             "catalog": "Could not load supported social networks.",
@@ -467,10 +469,82 @@
           "title": "Social Networks",
           "toasts": {
             "updated": "Social networks updated"
-          },
-          "unavailable": "All supported social networks are already added."
         },
-        "voice": {
+        "unavailable": "All supported social networks are already added."
+      },
+      "sources": {
+        "actions": {
+          "approve": "Approve",
+          "importCv": "Import CV",
+          "selectFile": "Select file",
+          "sync": "Sync"
+        },
+        "approved": "Approved",
+        "empty": "No sources imported yet.",
+        "fields": {
+          "actions": "Actions",
+          "facts": "Facts",
+          "name": "Name",
+          "status": "Status",
+          "text": "CV text",
+          "type": "Type",
+          "updated": "Updated"
+        },
+        "listSubheader": "Reviewed sources become available to profile conversations.",
+        "listTitle": "Imported sources",
+        "noFile": "No file selected",
+        "status": {
+          "approved": "Approved",
+          "failed": "Failed",
+          "indexed": "Indexed",
+          "needs_review": "Needs review",
+          "parsed": "Parsed",
+          "unknown": "Unknown",
+          "uploaded": "Uploaded"
+        },
+        "textHelper": "Paste the CV text when a PDF cannot be parsed automatically.",
+        "toasts": {
+          "approved": "Source approved",
+          "imported": "CV source imported",
+          "synced": "Source synced to data"
+        },
+        "types": {
+          "cv": "CV",
+          "instagram": "Instagram",
+          "manual": "Manual",
+          "website": "Website"
+        },
+        "uploadSubheader": "Upload a CV file and optionally paste extracted text.",
+        "uploadTitle": "Import CV",
+        "validation": {
+          "fileOrText": "Select a file or paste CV text.",
+          "nameMax": "Name must be at most 150 characters",
+          "textMax": "Text must be at most 50000 characters"
+        }
+      },
+      "quality": {
+        "fields": {
+          "actual": "Actual",
+          "check": "Check",
+          "required": "Required",
+          "status": "Status",
+          "weight": "Weight"
+        },
+        "metrics": {
+          "approvedFacts": "Approved facts",
+          "indexedFacts": "Indexed facts",
+          "sources": "Sources"
+        },
+        "score": "Quality score {{score}}%",
+        "scoreLabel": "{{score}}%",
+        "status": {
+          "missing": "Missing",
+          "passed": "Passed"
+        },
+        "subheader": "Profile knowledge quality",
+        "title": "Quality"
+      },
+      "voice": {
           "audio": "Audio",
           "cloneVoice": "Clone your voice",
           "cloneIntroDescription": "When recording starts, a text will appear for you to read out loud. The full reading can take up to 3 minutes.",
@@ -547,10 +621,11 @@
         "alias": "Alias",
         "avatar": "Avatar",
         "description": "Description",
-        "genre": "Genre",
-        "name": "Name",
-        "personality": "Personality",
-        "status": "Status",
+      "genre": "Genre",
+      "name": "Name",
+      "personality": "Personality",
+      "profession": "Profession",
+      "status": "Status",
         "updated": "Updated"
       },
       "filters": {
@@ -585,7 +660,8 @@
           "genreInvalid": "Select a valid genre",
           "genreRequired": "Genre is required",
           "nameRequired": "Name is required",
-          "personalityRequired": "Personality is required"
+          "personalityRequired": "Personality is required",
+          "professionRequired": "Profession is required"
         }
       },
       "genreOptions": {

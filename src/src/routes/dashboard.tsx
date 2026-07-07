@@ -406,6 +406,20 @@ export const route: RouteObject = {
               },
             },
             {
+              path: 'sources',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/sources');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'quality',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/quality');
+                return { Component: Page };
+              },
+            },
+            {
               path: 'avatar',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/avatar');

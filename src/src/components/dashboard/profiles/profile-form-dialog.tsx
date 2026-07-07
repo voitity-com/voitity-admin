@@ -21,7 +21,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z as zod } from 'zod';
 
-import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
+import type { Profile, ProfilePayload, ProfileProfession } from '@/lib/profiles/api-client';
+import { listProfileProfessions } from '@/lib/profiles/api-client';
+import { logger } from '@/lib/default-logger';
 import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 
 interface Values {
@@ -31,6 +33,7 @@ interface Values {
   genre: string;
   name: string;
   personality: string;
+  professionKey: string;
 }
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
@@ -44,8 +47,11 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
       .refine(isProfileGenre, t('dashboard.profiles.form.validation.genreInvalid')),
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
     personality: zod.string().min(1, t('dashboard.profiles.form.validation.personalityRequired')).max(200),
+    professionKey: zod.string().min(1, t('dashboard.profiles.form.validation.professionRequired')).max(80),
   });
 }
+
+const fallbackProfessions = [{ key: 'custom', label: 'Custom profile' }] satisfies ProfileProfession[];
 
 function getDefaultValues(profile?: null | Profile): Values {
   return {
@@ -55,6 +61,7 @@ function getDefaultValues(profile?: null | Profile): Values {
     genre: normalizeProfileGenre(profile?.genre),
     name: profile?.name ?? '',
     personality: profile?.personality ?? '',
+    professionKey: profile?.profession_key ?? 'custom',
   };
 }
 
@@ -73,6 +80,7 @@ export function ProfileFormDialog({
 }: ProfileFormDialogProps): React.JSX.Element {
   const { t } = useTranslation();
   const schema = React.useMemo(() => createSchema(t), [t]);
+  const [professions, setProfessions] = React.useState<ProfileProfession[]>(fallbackProfessions);
   const {
     control,
     handleSubmit,
@@ -83,6 +91,21 @@ export function ProfileFormDialog({
   React.useEffect(() => {
     reset(getDefaultValues(profile));
   }, [profile, reset, open]);
+
+  React.useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    listProfileProfessions()
+      .then((catalog) => {
+        setProfessions(catalog.professions.length > 0 ? catalog.professions : fallbackProfessions);
+      })
+      .catch((err) => {
+        logger.error(err);
+        setProfessions(fallbackProfessions);
+      });
+  }, [open]);
 
   const handleFormSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
@@ -158,6 +181,27 @@ export function ProfileFormDialog({
             />
             <Controller
               control={control}
+              name="professionKey"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.professionKey)}>
+                  <InputLabel id="profile-form-profession-label">{t('dashboard.profiles.fields.profession')}</InputLabel>
+                  <Select
+                    {...field}
+                    label={t('dashboard.profiles.fields.profession')}
+                    labelId="profile-form-profession-label"
+                  >
+                    {professions.map((profession) => (
+                      <MenuItem key={profession.key} value={profession.key}>
+                        {profession.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.professionKey ? <FormHelperText>{errors.professionKey.message}</FormHelperText> : null}
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
               name="personality"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.personality)}>
@@ -207,5 +251,6 @@ function toPayload(values: Values): ProfilePayload {
     genre: toProfileGenre(values.genre),
     name: values.name,
     personality: values.personality,
+    profession_key: values.professionKey,
   };
 }

@@ -30,8 +30,8 @@ import { z as zod } from 'zod';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { Profile, ProfileAudioTranscriptionField, ProfilePayload } from '@/lib/profiles/api-client';
-import { getProfile, updateProfile } from '@/lib/profiles/api-client';
+import type { Profile, ProfileAudioTranscriptionField, ProfilePayload, ProfileProfession } from '@/lib/profiles/api-client';
+import { getProfile, listProfileProfessions, updateProfile } from '@/lib/profiles/api-client';
 import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
@@ -50,6 +50,7 @@ interface Values {
   genre: string;
   name: string;
   personality: string;
+  professionKey: string;
 }
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
@@ -69,6 +70,7 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
       .string()
       .min(profileTextFieldLimits.personality.min, t('dashboard.profiles.form.validation.personalityRequired'))
       .max(profileTextFieldLimits.personality.max),
+    professionKey: zod.string().min(1, t('dashboard.profiles.form.validation.professionRequired')).max(80),
   });
 }
 
@@ -79,7 +81,10 @@ const defaultValues = {
   genre: 'na',
   name: '',
   personality: '',
+  professionKey: 'custom',
 } satisfies Values;
+
+const fallbackProfessions = [{ key: 'custom', label: 'Custom profile' }] satisfies ProfileProfession[];
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -89,6 +94,7 @@ export function Page(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
   const [audioField, setAudioField] = React.useState<ProfileAudioTranscriptionField | null>(null);
+  const [professions, setProfessions] = React.useState<ProfileProfession[]>(fallbackProfessions);
 
   const {
     control,
@@ -110,7 +116,15 @@ export function Page(): React.JSX.Element {
     setError('');
 
     try {
-      const nextProfile = await getProfile(profileId);
+      const [nextProfile, catalog] = await Promise.all([
+        getProfile(profileId),
+        listProfileProfessions().catch((err) => {
+          logger.error(err);
+          return { default: 'custom', professions: fallbackProfessions };
+        }),
+      ]);
+
+      setProfessions(catalog.professions.length > 0 ? catalog.professions : fallbackProfessions);
       setProfile(nextProfile);
       reset(toValues(nextProfile));
     } catch (err) {
@@ -236,6 +250,27 @@ export function Page(): React.JSX.Element {
                           ))}
                         </Select>
                         {errors.genre ? <FormHelperText>{errors.genre.message}</FormHelperText> : null}
+                      </FormControl>
+                    )}
+                  />
+                  <Controller
+                    control={control}
+                    name="professionKey"
+                    render={({ field }) => (
+                      <FormControl error={Boolean(errors.professionKey)}>
+                        <InputLabel id="profile-profession-label">{t('dashboard.profiles.fields.profession')}</InputLabel>
+                        <Select
+                          {...field}
+                          label={t('dashboard.profiles.fields.profession')}
+                          labelId="profile-profession-label"
+                        >
+                          {professions.map((profession) => (
+                            <MenuItem key={profession.key} value={profession.key}>
+                              {profession.label}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        {errors.professionKey ? <FormHelperText>{errors.professionKey.message}</FormHelperText> : null}
                       </FormControl>
                     )}
                   />
@@ -390,6 +425,7 @@ function toValues(profile: Profile): Values {
     genre: normalizeProfileGenre(profile.genre),
     name: profile.name ?? '',
     personality: profile.personality ?? '',
+    professionKey: profile.profession_key ?? 'custom',
   };
 }
 
@@ -401,6 +437,7 @@ function toPayload(values: Values): ProfilePayload {
     genre: toProfileGenre(values.genre),
     name: values.name,
     personality: values.personality,
+    profession_key: values.professionKey,
   };
 }
 
