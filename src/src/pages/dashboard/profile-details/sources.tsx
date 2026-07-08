@@ -19,6 +19,7 @@ import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
+import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
@@ -44,6 +45,7 @@ import { DataTable } from '@/components/core/data-table';
 import { toast } from '@/components/core/toaster';
 
 const metadata = { title: `Sources | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
+const acceptedSourceFormats = ['PDF', 'DOC', 'DOCX', 'TXT', 'MD'];
 
 interface Values {
   name: string;
@@ -198,6 +200,52 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <Box
+          sx={(theme) => ({
+            bgcolor: alpha(theme.palette.primary.main, 0.06),
+            border: '1px solid',
+            borderColor: alpha(theme.palette.primary.main, 0.22),
+            borderLeft: '4px solid',
+            borderLeftColor: 'primary.main',
+            borderRadius: 1,
+            p: { md: 3, xs: 2 },
+          })}
+        >
+          <Stack spacing={2}>
+            <Stack spacing={0.75}>
+              <Typography
+                color="primary.main"
+                sx={{ fontWeight: 700, letterSpacing: 0, textTransform: 'uppercase' }}
+                variant="overline"
+              >
+                {t('dashboard.profiles.detail.sources.intro.eyebrow')}
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontWeight: 800,
+                  letterSpacing: 0,
+                }}
+                variant="h5"
+              >
+                {t('dashboard.profiles.detail.sources.intro.title')}
+              </Typography>
+              <Typography color="text.secondary" sx={{ maxWidth: '860px' }} variant="body1">
+                {t('dashboard.profiles.detail.sources.intro.description')}
+              </Typography>
+            </Stack>
+            <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+              <Typography color="text.secondary" sx={{ fontWeight: 600 }} variant="body2">
+                {t('dashboard.profiles.detail.sources.intro.formats')}
+              </Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                {acceptedSourceFormats.map((format) => (
+                  <Chip color="primary" key={format} label={format} size="small" variant="outlined" />
+                ))}
+              </Stack>
+            </Stack>
+          </Stack>
+        </Box>
         <Card>
           <CardHeader
             action={

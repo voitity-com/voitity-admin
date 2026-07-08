@@ -496,6 +496,12 @@
         },
         "listSubheader": "Las fuentes revisadas quedan disponibles para las conversaciones del perfil.",
         "listTitle": "Fuentes importadas",
+        "intro": {
+          "description": "Puedes subir tu CV, una biografía, un texto sobre ti, proyectos, servicios, logros o cualquier documento que describa e informe algo importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
+          "eyebrow": "Conocimiento del perfil",
+          "formats": "Formatos aceptados",
+          "title": "Carga fuentes que expliquen quién eres"
+        },
         "noFile": "Ningún archivo seleccionado",
         "status": {
           "approved": "Aprobada",

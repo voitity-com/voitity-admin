@@ -496,6 +496,12 @@
         },
         "listSubheader": "Reviewed sources become available to profile conversations.",
         "listTitle": "Imported sources",
+        "intro": {
+          "description": "Upload a CV, biography, about-me text, projects, services, achievements, or any document that describes and informs something important about the profile you are creating. Approved information will be used to answer better in conversations.",
+          "eyebrow": "Profile knowledge",
+          "formats": "Accepted formats",
+          "title": "Add sources that explain who you are"
+        },
         "noFile": "No file selected",
         "status": {
           "approved": "Approved",
