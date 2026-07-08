@@ -8,6 +8,7 @@ export interface NavItemConfig {
   label?: string;
   icon?: string;
   href?: string;
+  roles?: string[];
   items?: NavItemConfig[];
   // Matcher cannot be a function in order
   // to be able to use it on the server.
