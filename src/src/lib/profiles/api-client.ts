@@ -184,10 +184,18 @@ export interface ProfileSourceItem {
   updated_at?: null | string;
 }
 
+export interface ProfileSourceFile {
+  available?: boolean;
+  mime_type?: null | string;
+  name?: null | string;
+  size?: null | number;
+}
+
 export interface ProfileKnowledgeSource {
   approved_at?: null | string;
   created_at?: null | string;
   extracted_text?: null | string;
+  file?: null | ProfileSourceFile;
   id: number | string;
   indexed_at?: null | string;
   items?: ProfileSourceItem[];
@@ -211,6 +219,11 @@ export interface ProfileSourcesPage {
   perPage?: null | number;
   sources: ProfileKnowledgeSource[];
   total?: null | number;
+}
+
+export interface ProfileSourceFileDownload {
+  blob: Blob;
+  filename?: string;
 }
 
 export interface ProfileQualityCheck {
@@ -483,6 +496,21 @@ export async function approveProfileSource(
   );
 
   return isApiEnvelope<ProfileKnowledgeSource>(response) ? response.data : response;
+}
+
+export async function downloadProfileSourceFile(params: {
+  profileId: number | string;
+  sourceId: number | string;
+}): Promise<ProfileSourceFileDownload> {
+  const response = await requestRaw(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/sources/${encodeURIComponent(String(params.sourceId))}/file`,
+    { method: 'GET' }
+  );
+
+  return {
+    blob: await response.blob(),
+    filename: getFilenameFromContentDisposition(response.headers.get('content-disposition')),
+  };
 }
 
 export async function listProfileFacts(params: {
@@ -846,6 +874,12 @@ function getMessageTimestamp(message: ProfileChatMessage): number {
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
+  const response = await requestRaw(path, options);
+
+  return (await response.json()) as T;
+}
+
+async function requestRaw(path: string, options: RequestOptions): Promise<Response> {
   const baseUrl = config.api?.baseUrl;
   const token = getStoredApiToken();
 
@@ -876,7 +910,25 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
     throw new ProfileApiError(await getErrorMessage(response), response.status);
   }
 
-  return (await response.json()) as T;
+  return response;
+}
+
+function getFilenameFromContentDisposition(value: null | string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const encodedFilename = /filename\*=UTF-8''(?<filename>[^;]+)/i.exec(value)?.groups?.filename;
+
+  if (encodedFilename) {
+    try {
+      return decodeURIComponent(encodedFilename);
+    } catch {
+      return encodedFilename;
+    }
+  }
+
+  return /filename="?(?<filename>[^";]+)"?/i.exec(value)?.groups?.filename;
 }
 
 async function getErrorMessage(response: Response): Promise<string> {

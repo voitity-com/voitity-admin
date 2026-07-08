@@ -281,6 +281,7 @@
         "clearFilters": "Limpiar filtros",
         "createProfile": "Crear perfil",
         "createVoice": "Crear voz",
+        "edit": "Editar",
         "getAudio": "Generar audio",
         "save": "Guardar",
         "saveChanges": "Guardar cambios",
@@ -410,6 +411,7 @@
         "chats": "Chats",
         "data": "Datos",
         "profile": "Perfil",
+        "profileData": "Datos del perfil",
         "quality": "Calidad",
         "socialNetworks": "Redes Sociales",
         "sources": "Fuentes",
@@ -443,6 +445,13 @@
             "exceedsMaximum": "Te pasaste por {{count}} caracteres. Máximo {{max}}.",
             "valid": "{{count}}/{{max}} caracteres. Mínimo {{min}}."
           },
+          "aliasMissing": "Sin alias público",
+          "emptyValue": "Sin información",
+          "fields": {
+            "profileId": "ID del perfil"
+          },
+          "readLess": "Ver menos",
+          "readMore": "Leer más",
           "subheader": "Actualizar información del perfil",
           "title": "Perfil",
           "toasts": {
@@ -474,8 +483,11 @@
       },
       "sources": {
         "actions": {
+          "addSource": "Agregar fuente",
           "approve": "Aprobar",
+          "cancel": "Cancelar",
           "importCv": "Importar CV",
+          "previewFile": "Ver archivo",
           "selectFile": "Seleccionar archivo",
           "sync": "Sincronizar"
         },
@@ -492,6 +504,12 @@
         },
         "listSubheader": "Las fuentes revisadas quedan disponibles para las conversaciones del perfil.",
         "listTitle": "Fuentes importadas",
+        "intro": {
+          "description": "Puedes subir tu CV, una biografía, un texto sobre ti, proyectos, servicios, logros o cualquier documento que describa e informe algo importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
+          "eyebrow": "Conocimiento del perfil",
+          "formats": "Formatos aceptados",
+          "title": "Carga fuentes que expliquen quién eres"
+        },
         "noFile": "Ningún archivo seleccionado",
         "status": {
           "approved": "Aprobada",
