@@ -37,7 +37,7 @@ export function ProfileSideNav(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
 
-  const items = React.useMemo(
+  const items = React.useMemo<NavEntry[]>(
     () => [
       {
         key: 'profile',
@@ -46,22 +46,29 @@ export function ProfileSideNav(): React.JSX.Element {
         icon: 'profile',
       },
       {
-        key: 'data',
+        key: 'dataGroup',
         title: t('dashboard.profiles.detail.nav.data'),
-        href: paths.dashboard.profileDetails.data(profileId),
         icon: 'data',
-      },
-      {
-        key: 'socialNetworks',
-        title: t('dashboard.profiles.detail.nav.socialNetworks'),
-        href: paths.dashboard.profileDetails.socialNetworks(profileId),
-        icon: 'socialNetworks',
-      },
-      {
-        key: 'sources',
-        title: t('dashboard.profiles.detail.nav.sources'),
-        href: paths.dashboard.profileDetails.sources(profileId),
-        icon: 'sources',
+        children: [
+          {
+            key: 'sources',
+            title: t('dashboard.profiles.detail.nav.sources'),
+            href: paths.dashboard.profileDetails.sources(profileId),
+            icon: 'sources',
+          },
+          {
+            key: 'data',
+            title: t('dashboard.profiles.detail.nav.profileData'),
+            href: paths.dashboard.profileDetails.data(profileId),
+            icon: 'data',
+          },
+          {
+            key: 'socialNetworks',
+            title: t('dashboard.profiles.detail.nav.socialNetworks'),
+            href: paths.dashboard.profileDetails.socialNetworks(profileId),
+            icon: 'socialNetworks',
+          },
+        ],
       },
       {
         key: 'quality',
@@ -102,12 +109,23 @@ export function ProfileSideNav(): React.JSX.Element {
       }}
     >
       <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
-        {items.map((item) => (
-          <NavItem {...item} key={item.key} pathname={pathname} />
-        ))}
+        {items.map((item) =>
+          isNavGroup(item) ? (
+            <NavGroup {...item} key={item.key} pathname={pathname} />
+          ) : (
+            <NavItem {...item} key={item.key} pathname={pathname} />
+          )
+        )}
       </Stack>
     </Stack>
   );
+}
+
+interface NavGroupProps {
+  children: NavItemConfig[];
+  icon: string;
+  pathname: string;
+  title: string;
 }
 
 interface NavItemProps {
@@ -115,9 +133,77 @@ interface NavItemProps {
   icon: string;
   pathname: string;
   title: string;
+  nested?: boolean;
 }
 
-function NavItem({ href, icon, pathname, title }: NavItemProps): React.JSX.Element {
+interface NavItemConfig {
+  href: string;
+  icon: string;
+  key: string;
+  title: string;
+}
+
+interface NavGroupConfig {
+  children: NavItemConfig[];
+  icon: string;
+  key: string;
+  title: string;
+}
+
+type NavEntry = NavGroupConfig | NavItemConfig;
+
+function isNavGroup(item: NavEntry): item is NavGroupConfig {
+  return 'children' in item;
+}
+
+function NavGroup({ children, icon, pathname, title }: NavGroupProps): React.JSX.Element {
+  const active = children.some((item) => isNavItemActive({ href: item.href, pathname }));
+  const Icon = icons[icon];
+
+  return (
+    <Box component="li" sx={{ userSelect: 'none' }}>
+      <Box
+        sx={{
+          alignItems: 'center',
+          borderRadius: 1,
+          color: active ? 'var(--mui-palette-text-primary)' : 'var(--mui-palette-text-secondary)',
+          display: 'flex',
+          gap: 1,
+          p: '6px 16px',
+          ...(active && { bgcolor: 'var(--mui-palette-action-hover)' }),
+        }}
+      >
+        <Box sx={{ alignItems: 'center', display: 'flex', flex: '0 0 auto', justifyContent: 'center' }}>
+          <Icon
+            fill={active ? 'var(--mui-palette-text-primary)' : 'var(--mui-palette-text-secondary)'}
+            fontSize="var(--icon-fontSize-md)"
+            weight={active ? 'fill' : undefined}
+          />
+        </Box>
+        <Typography component="span" sx={{ color: 'inherit', fontSize: '0.875rem', fontWeight: 600, lineHeight: '28px' }}>
+          {title}
+        </Typography>
+      </Box>
+      <Stack
+        component="ul"
+        spacing={0.5}
+        sx={{
+          borderLeft: '1px solid var(--mui-palette-divider)',
+          listStyle: 'none',
+          ml: '28px',
+          mt: 0.75,
+          pl: 1,
+        }}
+      >
+        {children.map((item) => (
+          <NavItem {...item} key={item.key} nested pathname={pathname} />
+        ))}
+      </Stack>
+    </Box>
+  );
+}
+
+function NavItem({ href, icon, nested = false, pathname, title }: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ href, pathname });
   const Icon = icons[icon];
 
@@ -133,7 +219,7 @@ function NavItem({ href, icon, pathname, title }: NavItemProps): React.JSX.Eleme
           cursor: 'pointer',
           display: 'flex',
           gap: 1,
-          p: '6px 16px',
+          p: nested ? '5px 12px' : '6px 16px',
           textDecoration: 'none',
           whiteSpace: 'nowrap',
           ...(active && { bgcolor: 'var(--mui-palette-action-selected)', color: 'var(--mui-palette-text-primary)' }),
@@ -145,7 +231,7 @@ function NavItem({ href, icon, pathname, title }: NavItemProps): React.JSX.Eleme
         <Box sx={{ alignItems: 'center', display: 'flex', flex: '0 0 auto', justifyContent: 'center' }}>
           <Icon
             fill={active ? 'var(--mui-palette-text-primary)' : 'var(--mui-palette-text-secondary)'}
-            fontSize="var(--icon-fontSize-md)"
+            fontSize={nested ? 'var(--icon-fontSize-sm)' : 'var(--icon-fontSize-md)'}
             weight={active ? 'fill' : undefined}
           />
         </Box>
