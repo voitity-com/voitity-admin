@@ -281,6 +281,7 @@
         "clearFilters": "Clear filters",
         "createProfile": "Create profile",
         "createVoice": "Create voice",
+        "edit": "Edit",
         "getAudio": "Get audio",
         "save": "Save",
         "saveChanges": "Save changes",
@@ -444,6 +445,13 @@
             "exceedsMaximum": "{{count}} characters over. Maximum {{max}}.",
             "valid": "{{count}}/{{max}} characters. Minimum {{min}}."
           },
+          "aliasMissing": "No public alias",
+          "emptyValue": "No information",
+          "fields": {
+            "profileId": "Profile ID"
+          },
+          "readLess": "Show less",
+          "readMore": "Read more",
           "subheader": "Update profile information",
           "title": "Profile",
           "toasts": {
