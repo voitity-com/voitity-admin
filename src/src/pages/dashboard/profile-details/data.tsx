@@ -51,7 +51,6 @@ const fallbackData = {
 const tabKeys = ['me', 'work', 'projects'] as const;
 
 type TabKey = (typeof tabKeys)[number];
-type ArraySectionKey = Exclude<TabKey, 'me'>;
 type SectionKey = string;
 
 export function Page(): React.JSX.Element {
@@ -83,7 +82,7 @@ export function Page(): React.JSX.Element {
       setIsLoading(false);
     }
   }, [profileId, t]);
-  const visibleTabs = React.useMemo(() => getVisibleTabs(data), [data]);
+  const visibleTabs = React.useMemo(() => getVisibleTabs(data, isEditing), [data, isEditing]);
 
   React.useEffect(() => {
     if (!visibleTabs.includes(activeTab)) {
@@ -157,7 +156,7 @@ export function Page(): React.JSX.Element {
     []
   );
 
-  const handleAddArrayItem = React.useCallback((section: ArraySectionKey): void => {
+  const handleAddArrayItem = React.useCallback((section: string): void => {
     setData((current) => {
       const sectionValue = getArrayValue(current[section]);
 
@@ -281,11 +280,17 @@ export function Page(): React.JSX.Element {
                       ) : null}
                       {!isKnownTab(activeTab) ? (
                         <GenericSection
+                          onAddArrayItem={() => {
+                            handleAddArrayItem(activeTab);
+                          }}
                           onArrayFieldChange={(index, field, value) => {
                             handleArrayItemFieldChange(activeTab, index, field, value);
                           }}
                           onFieldChange={(field, value) => {
                             handleObjectFieldChange(activeTab, field, value);
+                          }}
+                          onRemoveArrayItem={(index) => {
+                            handleRemoveArrayItem(activeTab, index);
                           }}
                           section={activeTab}
                           value={data[activeTab]}
@@ -771,13 +776,17 @@ function ArraySection({
 }
 
 function GenericSection({
+  onAddArrayItem,
   onArrayFieldChange,
   onFieldChange,
+  onRemoveArrayItem,
   section,
   value,
 }: {
+  onAddArrayItem: () => void;
   onArrayFieldChange: (index: number, field: string, value: string) => void;
   onFieldChange: (field: string, value: string) => void;
+  onRemoveArrayItem: (index: number) => void;
   section: string;
   value: JsonValue | undefined;
 }): React.JSX.Element {
@@ -785,15 +794,10 @@ function GenericSection({
     return (
       <ArraySection
         items={value}
-        onAddItem={() => {
-          return undefined;
-        }}
+        onAddItem={onAddArrayItem}
         onFieldChange={onArrayFieldChange}
-        onRemoveItem={() => {
-          return undefined;
-        }}
+        onRemoveItem={onRemoveArrayItem}
         section={section}
-        showControls={false}
       />
     );
   }
@@ -850,8 +854,8 @@ function normalizeData(value: unknown): JsonObject {
   return value;
 }
 
-function getVisibleTabs(data: JsonObject): SectionKey[] {
-  const knownTabs = tabKeys.filter((key) => Object.hasOwn(data, key));
+function getVisibleTabs(data: JsonObject, isEditing: boolean): SectionKey[] {
+  const knownTabs = isEditing ? [...tabKeys] : tabKeys.filter((key) => Object.hasOwn(data, key));
   const extraTabs = Object.keys(data).filter((key) => !isKnownTab(key) && key !== 'networks' && !isNonEditableDataField(key));
   const visibleTabs = [...knownTabs, ...extraTabs];
 
@@ -878,12 +882,16 @@ function getArrayValue(value: JsonValue | undefined): JsonValue[] {
   return Array.isArray(value) ? value : [];
 }
 
-function getDefaultArrayItem(section: ArraySectionKey): JsonObject {
+function getDefaultArrayItem(section: string): JsonObject {
   if (section === 'work') {
-    return { company: '', description: '', role: '' };
+    return { company: '', description: '', role: '', source: 'admin' };
   }
 
-  return { description: '', name: '', url: '' };
+  if (section === 'projects') {
+    return { description: '', name: '', source: 'admin', url: '' };
+  }
+
+  return { description: '', name: '', source: 'admin' };
 }
 
 function getFieldTextValue(value: JsonValue): string {
@@ -1012,7 +1020,7 @@ function getCompactTextValue(value: JsonValue): string {
 }
 
 function isReadOnlyHiddenDataField(field: string): boolean {
-  return isIdDataField(field);
+  return normalizeDataFieldKey(field) === 'source' || isIdDataField(field);
 }
 
 function isNonEditableDataField(field: string): boolean {
