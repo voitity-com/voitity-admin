@@ -6,17 +6,22 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
-import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
+import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
 import { Helmet } from 'react-helmet-async';
 import { Controller, useForm } from 'react-hook-form';
@@ -27,7 +32,12 @@ import { z as zod } from 'zod';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { ProfileKnowledgeSource, ProfileSourcesPage } from '@/lib/profiles/api-client';
-import { approveProfileSource, listProfileSources, uploadProfileCvSource } from '@/lib/profiles/api-client';
+import {
+  approveProfileSource,
+  downloadProfileSourceFile,
+  listProfileSources,
+  uploadProfileCvSource,
+} from '@/lib/profiles/api-client';
 import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -65,7 +75,9 @@ export function Page(): React.JSX.Element {
   const [file, setFile] = React.useState<File | null>(null);
   const [error, setError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState<boolean>(false);
   const [approvingId, setApprovingId] = React.useState<null | string>(null);
+  const [previewingId, setPreviewingId] = React.useState<null | string>(null);
   const schema = React.useMemo(() => createSchema(t, Boolean(file)), [file, t]);
   const {
     control,
@@ -105,6 +117,7 @@ export function Page(): React.JSX.Element {
         });
         toast.success(t('dashboard.profiles.detail.sources.toasts.imported'));
         setFile(null);
+        setIsUploadDialogOpen(false);
         reset(defaultValues);
         await loadSources();
       } catch (err) {
@@ -114,6 +127,16 @@ export function Page(): React.JSX.Element {
     },
     [file, loadSources, profileId, reset, t]
   );
+
+  const handleCloseUploadDialog = React.useCallback((): void => {
+    if (isSubmitting) {
+      return;
+    }
+
+    setFile(null);
+    reset(defaultValues);
+    setIsUploadDialogOpen(false);
+  }, [isSubmitting, reset]);
 
   const handleApprove = React.useCallback(
     async (source: ProfileKnowledgeSource): Promise<void> => {
@@ -136,9 +159,36 @@ export function Page(): React.JSX.Element {
     [loadSources, profileId, t]
   );
 
+  const handlePreviewFile = React.useCallback(
+    async (source: ProfileKnowledgeSource): Promise<void> => {
+      setPreviewingId(String(source.id));
+      const previewWindow = window.open('', '_blank');
+
+      try {
+        const fileDownload = await downloadProfileSourceFile({ profileId, sourceId: source.id });
+        openBlobInNewTab(fileDownload.blob, fileDownload.filename ?? getSourceFileName(source), previewWindow);
+      } catch (err) {
+        previewWindow?.close();
+        logger.error(err);
+        toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
+      } finally {
+        setPreviewingId(null);
+      }
+    },
+    [profileId, t]
+  );
+
   const columns = React.useMemo(
-    () => getColumns({ approvingId, language, onApprove: handleApprove, t }),
-    [approvingId, handleApprove, language, t]
+    () =>
+      getColumns({
+        approvingId,
+        language,
+        onApprove: handleApprove,
+        onPreviewFile: handlePreviewFile,
+        previewingId,
+        t,
+      }),
+    [approvingId, handleApprove, handlePreviewFile, language, previewingId, t]
   );
 
   return (
@@ -149,69 +199,18 @@ export function Page(): React.JSX.Element {
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
         <Card>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <CardHeader
-              subheader={t('dashboard.profiles.detail.sources.uploadSubheader')}
-              title={t('dashboard.profiles.detail.sources.uploadTitle')}
-            />
-            <CardContent>
-              <Stack spacing={2}>
-                <Controller
-                  control={control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormControl error={Boolean(errors.name)}>
-                      <InputLabel>{t('dashboard.profiles.detail.sources.fields.name')}</InputLabel>
-                      <OutlinedInput {...field} label={t('dashboard.profiles.detail.sources.fields.name')} />
-                      {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
-                    </FormControl>
-                  )}
-                />
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
-                  <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
-                    {t('dashboard.profiles.detail.sources.actions.selectFile')}
-                    <input
-                      accept=".pdf,.doc,.docx,.txt,.md,application/pdf,text/plain,text/markdown,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      hidden
-                      onChange={(event) => {
-                        setFile(event.target.files?.[0] ?? null);
-                      }}
-                      type="file"
-                    />
-                  </Button>
-                  <Typography color="text.secondary" variant="body2">
-                    {file?.name ?? t('dashboard.profiles.detail.sources.noFile')}
-                  </Typography>
-                </Stack>
-                <Controller
-                  control={control}
-                  name="text"
-                  render={({ field }) => (
-                    <FormControl error={Boolean(errors.text)}>
-                      <InputLabel>{t('dashboard.profiles.detail.sources.fields.text')}</InputLabel>
-                      <OutlinedInput
-                        {...field}
-                        label={t('dashboard.profiles.detail.sources.fields.text')}
-                        multiline
-                        rows={7}
-                      />
-                      <FormHelperText>
-                        {errors.text?.message ?? t('dashboard.profiles.detail.sources.textHelper')}
-                      </FormHelperText>
-                    </FormControl>
-                  )}
-                />
-              </Stack>
-            </CardContent>
-            <CardActions sx={{ justifyContent: 'flex-end', p: 3, pt: 0 }}>
-              <Button disabled={isSubmitting} type="submit" variant="contained">
-                {t('dashboard.profiles.detail.sources.actions.importCv')}
-              </Button>
-            </CardActions>
-          </form>
-        </Card>
-        <Card>
           <CardHeader
+            action={
+              <Button
+                onClick={() => {
+                  setIsUploadDialogOpen(true);
+                }}
+                startIcon={<PlusIcon />}
+                variant="contained"
+              >
+                {t('dashboard.profiles.detail.sources.actions.addSource')}
+              </Button>
+            }
             subheader={t('dashboard.profiles.detail.sources.listSubheader')}
             title={t('dashboard.profiles.detail.sources.listTitle')}
           />
@@ -234,6 +233,71 @@ export function Page(): React.JSX.Element {
           )}
         </Card>
       </Stack>
+      <Dialog fullWidth maxWidth="md" onClose={handleCloseUploadDialog} open={isUploadDialogOpen}>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogTitle>{t('dashboard.profiles.detail.sources.uploadTitle')}</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={2}>
+              <Typography color="text.secondary" variant="body2">
+                {t('dashboard.profiles.detail.sources.uploadSubheader')}
+              </Typography>
+              <Controller
+                control={control}
+                name="name"
+                render={({ field }) => (
+                  <FormControl error={Boolean(errors.name)}>
+                    <InputLabel>{t('dashboard.profiles.detail.sources.fields.name')}</InputLabel>
+                    <OutlinedInput {...field} label={t('dashboard.profiles.detail.sources.fields.name')} />
+                    {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
+                  </FormControl>
+                )}
+              />
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
+                <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
+                  {t('dashboard.profiles.detail.sources.actions.selectFile')}
+                  <input
+                    accept=".pdf,.doc,.docx,.txt,.md,application/pdf,text/plain,text/markdown,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    hidden
+                    onChange={(event) => {
+                      setFile(event.target.files?.[0] ?? null);
+                    }}
+                    type="file"
+                  />
+                </Button>
+                <Typography color="text.secondary" variant="body2">
+                  {file?.name ?? t('dashboard.profiles.detail.sources.noFile')}
+                </Typography>
+              </Stack>
+              <Controller
+                control={control}
+                name="text"
+                render={({ field }) => (
+                  <FormControl error={Boolean(errors.text)}>
+                    <InputLabel>{t('dashboard.profiles.detail.sources.fields.text')}</InputLabel>
+                    <OutlinedInput
+                      {...field}
+                      label={t('dashboard.profiles.detail.sources.fields.text')}
+                      multiline
+                      rows={7}
+                    />
+                    <FormHelperText>
+                      {errors.text?.message ?? t('dashboard.profiles.detail.sources.textHelper')}
+                    </FormHelperText>
+                  </FormControl>
+                )}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button disabled={isSubmitting} onClick={handleCloseUploadDialog}>
+              {t('dashboard.profiles.detail.sources.actions.cancel')}
+            </Button>
+            <Button disabled={isSubmitting} type="submit" variant="contained">
+              {t('dashboard.profiles.detail.sources.actions.importCv')}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </React.Fragment>
   );
 }
@@ -242,18 +306,31 @@ function getColumns({
   approvingId,
   language,
   onApprove,
+  onPreviewFile,
+  previewingId,
   t,
 }: {
   approvingId: null | string;
   language: string;
   onApprove: (source: ProfileKnowledgeSource) => Promise<void>;
+  onPreviewFile: (source: ProfileKnowledgeSource) => Promise<void>;
+  previewingId: null | string;
   t: (key: string, options?: Record<string, unknown>) => string;
 }): ColumnDef<ProfileKnowledgeSource>[] {
   return [
     {
-      formatter: (source): string => source.name,
+      formatter: (source): React.ReactNode => (
+        <Stack spacing={0.5}>
+          <Typography variant="subtitle2">{source.name}</Typography>
+          {getSourceFileName(source) ? (
+            <Typography color="text.secondary" variant="body2">
+              {getSourceFileName(source)}
+            </Typography>
+          ) : null}
+        </Stack>
+      ),
       name: t('dashboard.profiles.detail.sources.fields.name'),
-      width: '220px',
+      width: '260px',
     },
     {
       formatter: (source): string => t(`dashboard.profiles.detail.sources.types.${source.type}`, { defaultValue: source.type }),
@@ -286,20 +363,33 @@ function getColumns({
     },
     {
       formatter: (source): React.ReactNode =>
-        <Button
-          disabled={approvingId === String(source.id)}
-          onClick={() => {
-            void onApprove(source);
-          }}
-          size="small"
-          variant={source.status === 'indexed' ? 'text' : 'outlined'}
-        >
-          {source.status === 'indexed'
-            ? t('dashboard.profiles.detail.sources.actions.sync')
-            : t('dashboard.profiles.detail.sources.actions.approve')}
-        </Button>,
+        <Stack direction="row" spacing={1}>
+          <Button
+            disabled={!hasSourceFile(source) || previewingId === String(source.id)}
+            onClick={() => {
+              void onPreviewFile(source);
+            }}
+            size="small"
+            startIcon={<EyeIcon />}
+            variant="text"
+          >
+            {t('dashboard.profiles.detail.sources.actions.previewFile')}
+          </Button>
+          <Button
+            disabled={approvingId === String(source.id)}
+            onClick={() => {
+              void onApprove(source);
+            }}
+            size="small"
+            variant={source.status === 'indexed' ? 'text' : 'outlined'}
+          >
+            {source.status === 'indexed'
+              ? t('dashboard.profiles.detail.sources.actions.sync')
+              : t('dashboard.profiles.detail.sources.actions.approve')}
+          </Button>
+        </Stack>,
       name: t('dashboard.profiles.detail.sources.fields.actions'),
-      width: '160px',
+      width: '260px',
     },
   ];
 }
@@ -314,6 +404,34 @@ function formatDate(value: null | string | undefined, language: string): string 
   }
 
   return new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(new Date(value));
+}
+
+function hasSourceFile(source: ProfileKnowledgeSource): boolean {
+  return Boolean(source.file?.available || source.storage_path);
+}
+
+function getSourceFileName(source: ProfileKnowledgeSource): string {
+  return source.file?.name ?? source.original_filename ?? '';
+}
+
+function openBlobInNewTab(blob: Blob, filename: string, previewWindow: Window | null): void {
+  const objectUrl = URL.createObjectURL(blob);
+
+  if (previewWindow) {
+    previewWindow.opener = null;
+    previewWindow.location.href = objectUrl;
+  } else {
+    const link = document.createElement('a');
+    link.href = objectUrl;
+    link.download = filename || 'profile-source';
+    document.body.append(link);
+    link.click();
+    link.remove();
+  }
+
+  window.setTimeout(() => {
+    URL.revokeObjectURL(objectUrl);
+  }, 60_000);
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {

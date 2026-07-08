@@ -475,8 +475,11 @@
       },
       "sources": {
         "actions": {
+          "addSource": "Add source",
           "approve": "Approve",
+          "cancel": "Cancel",
           "importCv": "Import CV",
+          "previewFile": "View file",
           "selectFile": "Select file",
           "sync": "Sync"
         },
