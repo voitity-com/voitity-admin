@@ -39,6 +39,14 @@ export const layoutConfig = {
       titleKey: 'dashboard.nav.groups.general',
       items: [
         {
+          key: 'users',
+          title: 'Users',
+          titleKey: 'dashboard.nav.items.users',
+          href: paths.dashboard.users,
+          icon: 'address-book',
+          implemented: true,
+        },
+        {
           key: 'settings',
           title: 'Settings',
           titleKey: 'dashboard.nav.items.settings',

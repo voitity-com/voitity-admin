@@ -63,11 +63,24 @@
         "security": "Seguridad",
         "settings": "Configuración",
         "team": "Equipo",
-        "usage": "Uso"
+        "usage": "Uso",
+        "users": "Usuarios"
       },
       "settingsGroups": {
         "organization": "Organización",
         "personal": "Personal"
+      }
+    },
+    "impersonation": {
+      "actions": {
+        "return": "Volver como admin",
+        "returning": "Volviendo..."
+      },
+      "subtitle": "Sesión admin original: {{admin}}",
+      "title": "Estás viendo el admin como {{user}}",
+      "toasts": {
+        "returned": "Volviste como admin",
+        "stopFailed": "No se pudo cerrar el token de impersonación en el backend."
       }
     },
     "settings": {
@@ -271,6 +284,56 @@
           "generic": "No se pudieron cargar los límites de uso."
         },
         "pageTitle": "Uso"
+      }
+    },
+    "users": {
+      "actions": {
+        "clearSearch": "Limpiar búsqueda",
+        "currentUser": "Usuario actual",
+        "entering": "Entrando...",
+        "impersonate": "Ingresar como usuario",
+        "search": "Buscar"
+      },
+      "description": "Lista usuarios, revisa si tienen perfiles, fuentes, imágenes, voces y entra al admin como ellos para validar su experiencia.",
+      "empty": "No se encontraron usuarios.",
+      "errors": {
+        "generic": "No se pudieron cargar los usuarios.",
+        "impersonate": "No se pudo ingresar como ese usuario.",
+        "sessionMissing": "No se pudo leer la sesión admin actual."
+      },
+      "fields": {
+        "actions": "Acciones",
+        "created": "Creado",
+        "resources": "Recursos",
+        "role": "Rol",
+        "unknown": "Desconocido",
+        "user": "Usuario"
+      },
+      "filters": {
+        "searching": "Búsqueda: {{search}}"
+      },
+      "notAuthorized": "No tienes permiso para administrar usuarios.",
+      "pagination": {
+        "displayedRows": "{{from}}-{{to}} de {{total}}",
+        "firstPage": "Ir a la primera página",
+        "lastPage": "Ir a la última página",
+        "nextPage": "Ir a la página siguiente",
+        "previousPage": "Ir a la página anterior",
+        "rowsPerPage": "Filas por página:"
+      },
+      "resources": {
+        "avatars": "Avatares",
+        "chats": "Chats",
+        "images": "Imágenes",
+        "profiles": "Perfiles",
+        "sources": "Fuentes",
+        "videos": "Videos",
+        "voices": "Voces"
+      },
+      "searchPlaceholder": "Buscar por nombre o email",
+      "title": "Usuarios",
+      "toasts": {
+        "impersonating": "Viendo el admin como {{user}}"
       }
     },
     "profiles": {

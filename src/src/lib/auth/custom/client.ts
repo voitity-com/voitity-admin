@@ -1,8 +1,9 @@
 'use client';
 
-import type { GoogleProfile } from '@/lib/google/profile';
 import type { User } from '@/types/user';
+import type { GoogleProfile } from '@/lib/google/profile';
 
+import { clearAdminImpersonationSession } from './admin-impersonation-store';
 import {
   ApiRequestError,
   getCurrentUser,
@@ -123,6 +124,7 @@ class AuthClient {
       return { error: getErrorMessage(err) };
     } finally {
       clearAuthSession();
+      clearAdminImpersonationSession();
     }
   }
 

@@ -67,6 +67,7 @@ export const paths = {
     analytics: '/dashboard/analytics',
     blank: '/dashboard/blank',
     profiles: '/dashboard/profiles',
+    users: '/dashboard/users',
     profileDetails: {
       avatar: (profileId: string) => `/dashboard/profiles/${profileId}/avatar`,
       chat: (profileId: string, chatId: string) => `/dashboard/profiles/${profileId}/chats/${chatId}`,

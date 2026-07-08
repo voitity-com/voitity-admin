@@ -560,5 +560,12 @@ export const route: RouteObject = {
         return { Component: Page };
       },
     },
+    {
+      path: 'users',
+      lazy: async () => {
+        const { Page } = await import('@/pages/dashboard/users');
+        return { Component: Page };
+      },
+    },
   ],
 };
