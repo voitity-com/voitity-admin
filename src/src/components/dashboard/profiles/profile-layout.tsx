@@ -2,6 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
+import { ProfileQualityDock } from './profile-quality-dock';
 import { ProfileSideNav } from './profile-side-nav';
 
 interface ProfileLayoutProps {
@@ -15,6 +16,7 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
         maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
+        pb: { xs: '156px', sm: '132px', md: '120px' },
         width: 'var(--Content-width)',
       }}
     >
@@ -22,6 +24,7 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
         <ProfileSideNav />
         <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>{children}</Box>
       </Stack>
+      <ProfileQualityDock />
     </Box>
   );
 }

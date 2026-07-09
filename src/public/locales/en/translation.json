@@ -643,6 +643,14 @@
           "sources": "Sources"
         },
         "completeMessage": "All quality checks are complete.",
+        "dock": {
+          "compactMetrics": "{{sources}} sources · {{approved}} approved · {{indexed}} indexed",
+          "error": "Could not load quality",
+          "loading": "Checking profile quality",
+          "pending": "{{count}} pending checks",
+          "title": "Profile quality",
+          "viewDetails": "View quality"
+        },
         "missingTitle": "Pending quality checks",
         "score": "Quality score {{score}}%",
         "scoreLabel": "{{score}}%",

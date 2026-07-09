@@ -643,6 +643,14 @@
           "sources": "Fuentes"
         },
         "completeMessage": "Todas las revisiones de calidad están completas.",
+        "dock": {
+          "compactMetrics": "{{sources}} fuentes · {{approved}} aprobados · {{indexed}} indexados",
+          "error": "No se pudo cargar la calidad",
+          "loading": "Revisando calidad del perfil",
+          "pending": "{{count}} revisiones pendientes",
+          "title": "Calidad del perfil",
+          "viewDetails": "Ver calidad"
+        },
         "missingTitle": "Revisiones de calidad pendientes",
         "score": "Calidad {{score}}%",
         "scoreLabel": "{{score}}%",
