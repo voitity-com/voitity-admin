@@ -15,6 +15,7 @@ export interface Profile {
   profession_key?: null | string;
   profession_template_version?: null | string;
   active?: boolean;
+  status?: null | string;
   voice?: boolean;
   voice_id?: null | number | string;
   voice_description?: null | string;
@@ -37,6 +38,7 @@ export interface ProfilePayload {
   profession_key?: null | string;
   profession_template_version?: null | string;
   active?: boolean;
+  status?: null | string;
 }
 
 interface ApiEnvelope<T> {

@@ -1139,6 +1139,13 @@ function getPrimaryMetric(metrics: UsageMetric[]): UsageMetric | undefined {
 
 function getUsageValue(metric: UsageMetric, language: string, t: TFunction): string {
   if (metric.unlimited) {
+    if (typeof metric.used === 'number') {
+      return t('dashboard.settings.billing.values.usedOfLimit', {
+        limit: t('dashboard.settings.billing.values.unlimited'),
+        used: formatNumber(metric.used, language),
+      });
+    }
+
     return t('dashboard.settings.billing.values.unlimited');
   }
 

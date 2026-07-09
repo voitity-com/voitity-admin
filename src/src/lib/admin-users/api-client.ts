@@ -43,7 +43,10 @@ export interface AdminUser extends ApiUser {
 
 export interface AdminUserSubscription {
   active?: boolean;
+  billing_mode?: null | string;
+  cancel_at_period_end?: boolean;
   id: number | string;
+  next_billing_at?: null | string;
   plan: string;
   plan_name?: null | string;
   renews_at?: null | string;
@@ -221,7 +224,10 @@ function normalizeAdminUserSubscription(value: Record<string, unknown>): AdminUs
 
   return {
     active: typeof value.active === 'boolean' ? value.active : undefined,
+    billing_mode: getStringField(value, 'billing_mode'),
+    cancel_at_period_end: typeof value.cancel_at_period_end === 'boolean' ? value.cancel_at_period_end : undefined,
     id,
+    next_billing_at: getStringField(value, 'next_billing_at'),
     plan,
     plan_name: getStringField(value, 'plan_name'),
     renews_at: getStringField(value, 'renews_at'),

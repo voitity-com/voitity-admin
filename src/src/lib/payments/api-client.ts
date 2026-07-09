@@ -24,15 +24,18 @@ export interface PaymentAmounts {
 
 export interface PaymentOrder {
   amounts?: PaymentAmounts;
+  billing_reason?: string;
   checkout_url?: string | null;
   created_at?: string | null;
   expires_at?: string | null;
   id: number | string;
   paid_at?: string | null;
+  payment_source_id?: number | string | null;
   plan?: string;
   provider?: string;
   provider_transaction_id?: string | null;
   reference?: string;
+  recurring?: boolean;
   status?: string;
   subscription_id?: number | string | null;
   updated_at?: string | null;

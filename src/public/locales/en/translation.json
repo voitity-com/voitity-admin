@@ -254,7 +254,7 @@
         "title": "Subscription limits",
         "terms": {
           "acceptance": "I accept the subscription terms and authorize recurring payments.",
-          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that plan limits apply to the selected billing period.",
+          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
           "title": "Subscription terms"
         },
         "usage": {
@@ -391,7 +391,7 @@
           "historyEmpty": "No generated avatars yet.",
           "noAvatar": "No avatar loaded.",
           "previousAvatar": "Previous avatar",
-          "processingMessage": "A new avatar is processing. You can edit again when it finishes.",
+          "processingMessage": "A new avatar is processing. The page will refresh the status automatically.",
           "saving": "Saving...",
           "selectHint": "Select this avatar",
           "status": {
@@ -530,7 +530,13 @@
           "aliasMissing": "No public alias",
           "emptyValue": "No information",
           "fields": {
-            "profileId": "Profile ID"
+            "profileId": "Profile ID",
+            "publicVisibility": "Public visibility"
+          },
+          "publicStatusHelper": "The public page opens only when the profile is active and published.",
+          "publicVisibility": {
+            "private": "Not public",
+            "public": "Public"
           },
           "readLess": "Show less",
           "readMore": "Read more",
@@ -603,6 +609,7 @@
           "uploaded": "Uploaded"
         },
         "textHelper": "Paste the CV text when a PDF cannot be parsed automatically.",
+        "textOnlySource": "Text-only source, no uploaded file.",
         "toasts": {
           "approved": "Source approved",
           "imported": "CV source imported",
@@ -635,6 +642,8 @@
           "indexedFacts": "Indexed facts",
           "sources": "Sources"
         },
+        "completeMessage": "All quality checks are complete.",
+        "missingTitle": "Pending quality checks",
         "score": "Quality score {{score}}%",
         "scoreLabel": "{{score}}%",
         "status": {
@@ -761,7 +770,8 @@
           "genreRequired": "Genre is required",
           "nameRequired": "Name is required",
           "personalityRequired": "Personality is required",
-          "professionRequired": "Profession is required"
+          "professionRequired": "Profession is required",
+          "statusInvalid": "Select a valid status"
         }
       },
       "genreOptions": {
@@ -778,6 +788,10 @@
       },
       "status": {
         "active": "Active",
+        "draft": "Draft",
+        "hidden": "Hidden",
+        "published": "Published",
+        "ready": "Ready",
         "inactive": "Inactive"
       }
     }

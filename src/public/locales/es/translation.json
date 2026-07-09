@@ -254,7 +254,7 @@
         "title": "Límites de suscripción",
         "terms": {
           "acceptance": "Acepto los términos de suscripción y autorizo pagos recurrentes.",
-          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that plan limits apply to the selected billing period.",
+          "body": "Al continuar, aceptas iniciar una suscripción recurrente de Voitity. La suscripción se renueva automáticamente de forma mensual o anual según el plan seleccionado, hasta que se cancele antes de la siguiente fecha de renovación. Wompi procesa el pago y el acceso se activa solo después de la confirmación del pago. Autorizas los cobros recurrentes para futuras renovaciones y entiendes que los límites de uso se reinician mensualmente, incluso cuando el ciclo de cobro seleccionado sea anual.",
           "title": "Términos de suscripción"
         },
         "usage": {
@@ -391,7 +391,7 @@
           "historyEmpty": "Aún no hay avatares generados.",
           "noAvatar": "No hay avatar cargado.",
           "previousAvatar": "Avatar anterior",
-          "processingMessage": "Hay un nuevo avatar en procesamiento. Podrás editar cuando termine.",
+          "processingMessage": "Hay un nuevo avatar en procesamiento. La página actualizará el estado automáticamente.",
           "saving": "Guardando...",
           "selectHint": "Seleccionar este avatar",
           "status": {
@@ -530,7 +530,13 @@
           "aliasMissing": "Sin alias público",
           "emptyValue": "Sin información",
           "fields": {
-            "profileId": "ID del perfil"
+            "profileId": "ID del perfil",
+            "publicVisibility": "Visibilidad pública"
+          },
+          "publicStatusHelper": "La página pública abre solo cuando el perfil está activo y publicado.",
+          "publicVisibility": {
+            "private": "No público",
+            "public": "Público"
           },
           "readLess": "Ver menos",
           "readMore": "Leer más",
@@ -603,6 +609,7 @@
           "uploaded": "Subida"
         },
         "textHelper": "Pega el texto del CV cuando un PDF no se pueda procesar automáticamente.",
+        "textOnlySource": "Fuente creada desde texto, sin archivo cargado.",
         "toasts": {
           "approved": "Fuente aprobada",
           "imported": "CV importado",
@@ -635,6 +642,8 @@
           "indexedFacts": "Datos indexados",
           "sources": "Fuentes"
         },
+        "completeMessage": "Todas las revisiones de calidad están completas.",
+        "missingTitle": "Revisiones de calidad pendientes",
         "score": "Calidad {{score}}%",
         "scoreLabel": "{{score}}%",
         "status": {
@@ -761,7 +770,8 @@
           "genreRequired": "El género es obligatorio",
           "nameRequired": "El nombre es obligatorio",
           "personalityRequired": "La personalidad es obligatoria",
-          "professionRequired": "La profesión es obligatoria"
+          "professionRequired": "La profesión es obligatoria",
+          "statusInvalid": "Selecciona un estado válido"
         }
       },
       "genreOptions": {
@@ -778,6 +788,10 @@
       },
       "status": {
         "active": "Activo",
+        "draft": "Borrador",
+        "hidden": "Oculto",
+        "published": "Publicado",
+        "ready": "Listo",
         "inactive": "Inactivo"
       }
     }

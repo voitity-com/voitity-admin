@@ -17,6 +17,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
+import LinearProgress from '@mui/material/LinearProgress';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
@@ -372,7 +373,10 @@ export function Page(): React.JSX.Element {
               <Stack spacing={3} sx={{ alignItems: 'center' }}>
                 {isAvatarProcessing ? (
                   <Alert color="warning" sx={{ width: '100%' }}>
-                    {t('dashboard.profiles.detail.avatar.processingMessage')}
+                    <Stack spacing={1}>
+                      <Typography variant="body2">{t('dashboard.profiles.detail.avatar.processingMessage')}</Typography>
+                      <LinearProgress color="warning" />
+                    </Stack>
                   </Alert>
                 ) : null}
                 <Box
