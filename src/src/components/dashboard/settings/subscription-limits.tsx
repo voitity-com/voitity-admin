@@ -1104,9 +1104,7 @@ function getUsageMetric(key: string, value: JsonObject, t: TFunction): UsageMetr
   const explicitLimit = getNumberField(value, limitFields);
   const remaining = getNumberField(value, remainingFields);
   const unlimited = value.unlimited === true || hasNullField(value, limitFields) || explicitLimit === -1;
-  const limit =
-    explicitLimit ??
-    (typeof explicitUsed === 'number' && typeof remaining === 'number' ? explicitUsed + remaining : undefined);
+  const limit = explicitLimit;
   const used =
     explicitUsed ??
     (typeof limit === 'number' && typeof remaining === 'number' ? Math.max(limit - remaining, 0) : undefined);

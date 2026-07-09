@@ -59,6 +59,7 @@
         "integrations": "Integraciones",
         "notifications": "Notificaciones",
         "overview": "Resumen",
+        "profile": "Perfil",
         "profiles": "Perfiles",
         "security": "Seguridad",
         "settings": "Configuración",
@@ -815,9 +816,21 @@
       },
       "list": {
         "description": "Administra los perfiles asociados al usuario autenticado.",
+        "limitDialog": {
+          "close": "Entendido",
+          "currentUsage": "Perfiles creados",
+          "description": "Tu plan actual permite crear hasta {{limit}} perfil(es). Ya tienes {{count}} creado(s), por eso no puedes crear un nuevo perfil. Para crear más perfiles, cambia a un plan con mayor capacidad.",
+          "planLimit": "Límite del plan",
+          "title": "Límite de perfiles alcanzado",
+          "viewPlans": "Ver planes"
+        },
         "title": "Perfiles",
         "toasts": {
-          "created": "Perfil creado"
+          "checkingPlan": "Estamos verificando tu plan antes de crear el perfil.",
+          "created": "Perfil creado",
+          "planCheckFailed": "No se pudo validar tu plan. Intenta nuevamente antes de crear un perfil.",
+          "planRequired": "Debes adquirir un plan para crear un perfil.",
+          "profileLimitReached": "Tu plan permite {{limit}} perfil(es) y ya tienes {{count}} creado(s). No puedes crear un nuevo perfil."
         }
       },
       "status": {

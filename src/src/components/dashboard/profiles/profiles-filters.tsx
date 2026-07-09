@@ -31,6 +31,8 @@ export type SortDir = 'asc' | 'desc';
 
 export interface ProfilesFiltersProps {
   filters?: Filters;
+  hideSearchFilters?: boolean;
+  hideSort?: boolean;
   sortDir?: SortDir;
   totals?: {
     active: number;
@@ -41,6 +43,8 @@ export interface ProfilesFiltersProps {
 
 export function ProfilesFilters({
   filters = {},
+  hideSearchFilters = false,
+  hideSort = false,
   sortDir = 'desc',
   totals = { active: 0, all: 0, inactive: 0 },
 }: ProfilesFiltersProps): React.JSX.Element {
@@ -117,6 +121,7 @@ export function ProfilesFilters({
   );
 
   const hasFilters = status || name || genre;
+  const showControlsRow = !hideSearchFilters || !hideSort || selection.selectedAny;
 
   return (
     <div>
@@ -133,45 +138,65 @@ export function ProfilesFilters({
           />
         ))}
       </Tabs>
-      <Divider />
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', px: 3, py: 2 }}>
-        <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: '1 1 auto', flexWrap: 'wrap' }}>
-          <FilterButton
-            displayValue={name}
-            label={t('dashboard.profiles.fields.name')}
-            onFilterApply={(value) => {
-              handleNameChange(value as string);
-            }}
-            onFilterDelete={() => {
-              handleNameChange();
-            }}
-            popover={<TextFilterPopover applyLabel={t('dashboard.profiles.actions.apply')} title={t('dashboard.profiles.filters.filterByName')} />}
-            value={name}
-          />
-          <FilterButton
-            displayValue={genre}
-            label={t('dashboard.profiles.fields.genre')}
-            onFilterApply={(value) => {
-              handleGenreChange(value as string);
-            }}
-            onFilterDelete={() => {
-              handleGenreChange();
-            }}
-            popover={<TextFilterPopover applyLabel={t('dashboard.profiles.actions.apply')} title={t('dashboard.profiles.filters.filterByGenre')} />}
-            value={genre}
-          />
-          {hasFilters ? <Button onClick={handleClearFilters}>{t('dashboard.profiles.actions.clearFilters')}</Button> : null}
-        </Stack>
-        {selection.selectedAny ? (
-          <Typography color="text.secondary" variant="body2">
-            {t('dashboard.profiles.filters.selected', { count: selection.selected.size })}
-          </Typography>
-        ) : null}
-        <Select name="sort" onChange={handleSortChange} sx={{ maxWidth: '100%', width: '120px' }} value={sortDir}>
-          <Option value="desc">{t('dashboard.profiles.filters.sort.newest')}</Option>
-          <Option value="asc">{t('dashboard.profiles.filters.sort.oldest')}</Option>
-        </Select>
-      </Stack>
+      {showControlsRow ? (
+        <React.Fragment>
+          <Divider />
+          <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', px: 3, py: 2 }}>
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: '1 1 auto', flexWrap: 'wrap' }}>
+              {!hideSearchFilters ? (
+                <React.Fragment>
+                  <FilterButton
+                    displayValue={name}
+                    label={t('dashboard.profiles.fields.name')}
+                    onFilterApply={(value) => {
+                      handleNameChange(value as string);
+                    }}
+                    onFilterDelete={() => {
+                      handleNameChange();
+                    }}
+                    popover={
+                      <TextFilterPopover
+                        applyLabel={t('dashboard.profiles.actions.apply')}
+                        title={t('dashboard.profiles.filters.filterByName')}
+                      />
+                    }
+                    value={name}
+                  />
+                  <FilterButton
+                    displayValue={genre}
+                    label={t('dashboard.profiles.fields.genre')}
+                    onFilterApply={(value) => {
+                      handleGenreChange(value as string);
+                    }}
+                    onFilterDelete={() => {
+                      handleGenreChange();
+                    }}
+                    popover={
+                      <TextFilterPopover
+                        applyLabel={t('dashboard.profiles.actions.apply')}
+                        title={t('dashboard.profiles.filters.filterByGenre')}
+                      />
+                    }
+                    value={genre}
+                  />
+                  {hasFilters ? <Button onClick={handleClearFilters}>{t('dashboard.profiles.actions.clearFilters')}</Button> : null}
+                </React.Fragment>
+              ) : null}
+            </Stack>
+            {selection.selectedAny ? (
+              <Typography color="text.secondary" variant="body2">
+                {t('dashboard.profiles.filters.selected', { count: selection.selected.size })}
+              </Typography>
+            ) : null}
+            {!hideSort ? (
+              <Select name="sort" onChange={handleSortChange} sx={{ maxWidth: '100%', width: '120px' }} value={sortDir}>
+                <Option value="desc">{t('dashboard.profiles.filters.sort.newest')}</Option>
+                <Option value="asc">{t('dashboard.profiles.filters.sort.oldest')}</Option>
+              </Select>
+            ) : null}
+          </Stack>
+        </React.Fragment>
+      ) : null}
     </div>
   );
 }

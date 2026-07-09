@@ -13,31 +13,24 @@ export interface LayoutConfig {
 export const layoutConfig = {
   navItems: [
     {
-      key: 'dashboards',
-      title: 'Dashboards',
-      titleKey: 'dashboard.nav.groups.dashboards',
+      key: 'main',
       items: [
         {
-          key: 'overview',
-          title: 'Overview',
-          titleKey: 'dashboard.nav.items.overview',
-          href: paths.dashboard.overview,
-          icon: 'house',
+          key: 'profiles',
+          title: 'Profiles',
+          titleKey: 'dashboard.nav.items.profiles',
+          href: paths.dashboard.profiles,
+          icon: 'users',
+          implemented: true,
         },
         {
-          key: 'analytics',
-          title: 'Analytics',
-          titleKey: 'dashboard.nav.items.analytics',
+          key: 'usage',
+          title: 'Usage',
+          titleKey: 'dashboard.nav.items.usage',
           href: paths.dashboard.analytics,
-          icon: 'chart-pie',
+          icon: 'gauge',
+          implemented: true,
         },
-      ],
-    },
-    {
-      key: 'general',
-      title: 'General',
-      titleKey: 'dashboard.nav.groups.general',
-      items: [
         {
           key: 'users',
           title: 'Users',
@@ -48,20 +41,29 @@ export const layoutConfig = {
           roles: ['admin'],
         },
         {
+          key: 'billing',
+          title: 'Billing & plans',
+          titleKey: 'dashboard.nav.items.billing',
+          href: paths.dashboard.settings.billing,
+          icon: 'credit-card',
+          implemented: true,
+          matcher: { type: 'startsWith', href: paths.dashboard.settings.billing },
+        },
+        {
           key: 'settings',
           title: 'Settings',
           titleKey: 'dashboard.nav.items.settings',
           href: paths.dashboard.settings.account,
           icon: 'gear',
-          matcher: { type: 'startsWith', href: '/dashboard/settings' },
-        },
-        {
-          key: 'profiles',
-          title: 'Profiles',
-          titleKey: 'dashboard.nav.items.profiles',
-          href: paths.dashboard.profiles,
-          icon: 'users',
-          implemented: true,
+          matcher: {
+            type: 'startsWithExcept',
+            href: '/dashboard/settings',
+            excludeHrefs: [
+              paths.dashboard.settings.billing,
+              paths.dashboard.settings.billingPaymentResult,
+              paths.dashboard.settings.usage,
+            ],
+          },
         },
       ],
     },

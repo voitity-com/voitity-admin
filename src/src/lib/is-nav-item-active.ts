@@ -20,6 +20,10 @@ export function isNavItemActive({
       return pathname === matcher.href;
     }
 
+    if (matcher.type === 'startsWithExcept') {
+      return pathname.startsWith(matcher.href) && !matcher.excludeHrefs.some((excludeHref) => pathname.startsWith(excludeHref));
+    }
+
     return false;
   }
 

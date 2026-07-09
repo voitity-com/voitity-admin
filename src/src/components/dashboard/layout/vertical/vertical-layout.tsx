@@ -4,12 +4,10 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
-import { filterNavItemsByRole } from '@/lib/filter-nav-items-by-role';
 import { useSettings } from '@/hooks/use-settings';
-import { useUser } from '@/hooks/use-user';
 
 import { AdminImpersonationBar } from '../admin-impersonation-bar';
-import { layoutConfig } from '../config';
+import { useLayoutNavItems } from '../use-layout-nav-items';
 import { MainNav } from './main-nav';
 import { SideNav } from './side-nav';
 
@@ -19,8 +17,7 @@ export interface VerticalLayoutProps {
 
 export function VerticalLayout({ children }: VerticalLayoutProps): React.JSX.Element {
   const { settings } = useSettings();
-  const { user } = useUser();
-  const navItems = React.useMemo(() => filterNavItemsByRole(layoutConfig.navItems, user?.role), [user?.role]);
+  const navItems = useLayoutNavItems();
 
   return (
     <React.Fragment>

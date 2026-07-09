@@ -31,7 +31,7 @@ export interface Profile {
 export type ProfileNetworks = Record<string, string>;
 
 export interface ProfilePublicationRequirement {
-  key: 'alias' | 'avatar' | 'description' | 'name' | 'source' | 'voice' | string;
+  key: string;
   passed: boolean;
 }
 

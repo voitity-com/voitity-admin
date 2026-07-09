@@ -59,6 +59,7 @@
         "integrations": "Integrations",
         "notifications": "Notifications",
         "overview": "Overview",
+        "profile": "Profile",
         "profiles": "Profiles",
         "security": "Security",
         "settings": "Settings",
@@ -815,9 +816,21 @@
       },
       "list": {
         "description": "Manage the profiles attached to the logged-in user.",
+        "limitDialog": {
+          "close": "Got it",
+          "currentUsage": "Profiles created",
+          "description": "Your current plan allows up to {{limit}} profile(s). You already have {{count}} created, so you cannot create a new profile. To create more profiles, switch to a plan with more capacity.",
+          "planLimit": "Plan limit",
+          "title": "Profile limit reached",
+          "viewPlans": "View plans"
+        },
         "title": "Profiles",
         "toasts": {
-          "created": "Profile created"
+          "checkingPlan": "We are checking your plan before creating the profile.",
+          "created": "Profile created",
+          "planCheckFailed": "We could not validate your plan. Try again before creating a profile.",
+          "planRequired": "You need to purchase a plan before creating a profile.",
+          "profileLimitReached": "Your plan allows {{limit}} profile(s), and you already have {{count}} created. You cannot create a new profile."
         }
       },
       "status": {

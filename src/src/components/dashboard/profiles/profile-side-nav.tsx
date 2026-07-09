@@ -46,6 +46,18 @@ export function ProfileSideNav(): React.JSX.Element {
         icon: 'profile',
       },
       {
+        key: 'avatar',
+        title: t('dashboard.profiles.detail.nav.avatar'),
+        href: paths.dashboard.profileDetails.avatar(profileId),
+        icon: 'avatar',
+      },
+      {
+        key: 'voice',
+        title: t('dashboard.profiles.detail.nav.voice'),
+        href: paths.dashboard.profileDetails.voice(profileId),
+        icon: 'voice',
+      },
+      {
         key: 'dataGroup',
         title: t('dashboard.profiles.detail.nav.data'),
         icon: 'data',
@@ -71,28 +83,16 @@ export function ProfileSideNav(): React.JSX.Element {
         ],
       },
       {
-        key: 'quality',
-        title: t('dashboard.profiles.detail.nav.quality'),
-        href: paths.dashboard.profileDetails.quality(profileId),
-        icon: 'quality',
-      },
-      {
-        key: 'avatar',
-        title: t('dashboard.profiles.detail.nav.avatar'),
-        href: paths.dashboard.profileDetails.avatar(profileId),
-        icon: 'avatar',
-      },
-      {
         key: 'chats',
         title: t('dashboard.profiles.detail.nav.chats'),
         href: paths.dashboard.profileDetails.chats(profileId),
         icon: 'chats',
       },
       {
-        key: 'voice',
-        title: t('dashboard.profiles.detail.nav.voice'),
-        href: paths.dashboard.profileDetails.voice(profileId),
-        icon: 'voice',
+        key: 'quality',
+        title: t('dashboard.profiles.detail.nav.quality'),
+        href: paths.dashboard.profileDetails.quality(profileId),
+        icon: 'quality',
       },
     ],
     [profileId, t]

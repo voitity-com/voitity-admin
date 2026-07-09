@@ -237,7 +237,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
             <Alert color="warning">{t('dashboard.profiles.detail.publicationDock.dialogDescription')}</Alert>
             <List disablePadding>
               {missingRequirements.map((requirement) => (
-                <ListItem key={requirement.key} disableGutters>
+                <ListItem disableGutters key={requirement.key}>
                   <ListItemIcon sx={{ minWidth: 34 }}>
                     <XCircleIcon color="var(--mui-palette-error-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />
                   </ListItemIcon>
