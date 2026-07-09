@@ -47,7 +47,6 @@ export function Page(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string>('');
   const [impersonatingUserId, setImpersonatingUserId] = React.useState<string | null>(null);
-  const isAdmin = user?.role === 'admin';
   const language = i18n.resolvedLanguage ?? i18n.language;
 
   React.useEffect(() => {
@@ -73,10 +72,6 @@ export function Page(): React.JSX.Element {
   );
 
   const loadUsers = React.useCallback(async (): Promise<void> => {
-    if (!isAdmin) {
-      return;
-    }
-
     setIsLoading(true);
     setError('');
 
@@ -90,17 +85,17 @@ export function Page(): React.JSX.Element {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, page, perPage, search, t]);
+  }, [page, perPage, search, t]);
 
   React.useEffect(() => {
-    if (isAuthLoading || !isAdmin) {
+    if (isAuthLoading || !user) {
       return;
     }
 
     loadUsers().catch((err) => {
       logger.error(err);
     });
-  }, [isAdmin, isAuthLoading, loadUsers]);
+  }, [isAuthLoading, loadUsers, user]);
 
   const handleSearchSubmit = React.useCallback(
     (event: React.FormEvent<HTMLFormElement>): void => {
@@ -205,10 +200,9 @@ export function Page(): React.JSX.Element {
             </Stack>
           ) : null}
 
-          {!isAuthLoading && !isAdmin ? <Alert color="warning">{t('dashboard.users.notAuthorized')}</Alert> : null}
           {error ? <Alert color="error">{error}</Alert> : null}
 
-          {!isAuthLoading && isAdmin ? (
+          {!isAuthLoading ? (
             <Card>
               {search ? (
                 <Box sx={{ p: 2 }}>
