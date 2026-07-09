@@ -7,7 +7,7 @@ import { SignUpForm } from '@/components/auth/custom/sign-up-form';
 import { GuestGuard } from '@/components/auth/guest-guard';
 import { SplitLayout } from '@/components/auth/split-layout';
 
-const metadata: Metadata = { title: `Sign up | Custom | Auth | ${config.site.name}` };
+const metadata: Metadata = { title: `Sign up | ${config.site.name}` };
 
 export function Page(): React.JSX.Element {
   return (

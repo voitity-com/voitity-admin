@@ -1,11 +1,23 @@
 'use client';
 
 import * as React from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import FormControl from '@mui/material/FormControl';
+import FormHelperText from '@mui/material/FormHelperText';
+import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
+import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
+import { EyeSlash as EyeSlashIcon } from '@phosphor-icons/react/dist/ssr/EyeSlash';
+import { Controller, useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
@@ -24,15 +36,69 @@ interface OAuthProvider {
 
 const oAuthProviders = [{ id: 'google', name: 'Google', logo: '/assets/logo-google.svg' }] satisfies OAuthProvider[];
 
+interface Values {
+  email: string;
+  name: string;
+  password: string;
+  passwordConfirmation: string;
+}
+
+const defaultValues = { email: '', name: '', password: '', passwordConfirmation: '' } satisfies Values;
+
 export function SignUpForm(): React.JSX.Element {
+  const { i18n, t } = useTranslation();
   const { checkSession } = useUser();
+  const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
+  const previousLanguageRef = React.useRef(currentLanguage);
 
   const [isPending, setIsPending] = React.useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = React.useState<null | string>(null);
+  const [showPassword, setShowPassword] = React.useState<boolean>(false);
+
+  const schema = React.useMemo(
+    () =>
+      zod
+        .object({
+          email: zod
+            .string()
+            .min(1, { message: t('auth.signUp.validation.emailRequired') })
+            .email({ message: t('auth.signUp.validation.emailInvalid') }),
+          name: zod.string().trim().min(1, { message: t('auth.signUp.validation.nameRequired') }),
+          password: zod.string().min(8, { message: t('auth.signUp.validation.passwordMin') }),
+          passwordConfirmation: zod.string().min(1, {
+            message: t('auth.signUp.validation.passwordConfirmationRequired'),
+          }),
+        })
+        .refine((value) => value.password === value.passwordConfirmation, {
+          message: t('auth.signUp.validation.passwordMismatch'),
+          path: ['passwordConfirmation'],
+        }),
+    [t]
+  );
+
+  const {
+    control,
+    handleSubmit,
+    setError,
+    trigger,
+    formState: { errors },
+  } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
+
+  React.useEffect(() => {
+    if (previousLanguageRef.current === currentLanguage) {
+      return;
+    }
+
+    previousLanguageRef.current = currentLanguage;
+
+    if (errors.email || errors.name || errors.password || errors.passwordConfirmation) {
+      trigger(['email', 'name', 'password', 'passwordConfirmation']).catch(() => {
+        // ignore
+      });
+    }
+  }, [currentLanguage, errors.email, errors.name, errors.password, errors.passwordConfirmation, trigger]);
 
   const handleGoogleAuth = React.useCallback(async (): Promise<void> => {
     setIsPending(true);
-    setErrorMessage(null);
 
     try {
       const accessToken = await requestGoogleAccessToken();
@@ -45,13 +111,35 @@ export function SignUpForm(): React.JSX.Element {
 
       await checkSession?.();
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Unable to authenticate with Google';
-      setErrorMessage(message);
+      const message = err instanceof Error ? err.message : t('auth.signUp.errors.googleAuth');
+      setError('root', { type: 'server', message });
       toast.error(message);
     } finally {
       setIsPending(false);
     }
-  }, [checkSession]);
+  }, [checkSession, setError, t]);
+
+  const onSubmit = React.useCallback(
+    async (values: Values): Promise<void> => {
+      setIsPending(true);
+
+      const { error } = await authClient.signUp({
+        email: values.email,
+        name: values.name.trim(),
+        password: values.password,
+        passwordConfirmation: values.passwordConfirmation,
+      });
+
+      if (error) {
+        setError('root', { type: 'server', message: error });
+        setIsPending(false);
+        return;
+      }
+
+      await checkSession?.();
+    },
+    [checkSession, setError]
+  );
 
   return (
     <Stack spacing={4}>
@@ -61,20 +149,15 @@ export function SignUpForm(): React.JSX.Element {
         </Box>
       </div>
       <Stack spacing={1}>
-        <Typography variant="h5">Sign up</Typography>
+        <Typography variant="h5">{t('auth.signUp.title')}</Typography>
         <Typography color="text.secondary" variant="body2">
-          Already have an account?{' '}
+          {t('auth.signUp.hasAccount')}{' '}
           <Link component={RouterLink} href={paths.auth.custom.signIn} variant="subtitle2">
-            Sign in
+            {t('auth.signUp.signIn')}
           </Link>
         </Typography>
       </Stack>
       <Stack spacing={3}>
-        {errorMessage ? (
-          <Typography color="error.main" variant="body2">
-            {errorMessage}
-          </Typography>
-        ) : null}
         <Stack spacing={2}>
           {oAuthProviders.map(
             (provider): React.JSX.Element => (
@@ -86,11 +169,93 @@ export function SignUpForm(): React.JSX.Element {
                 onClick={handleGoogleAuth}
                 variant="outlined"
               >
-                Continue with {provider.name}
+                {t('auth.signUp.continueWith', { provider: provider.name })}
               </Button>
             )
           )}
         </Stack>
+        <Divider>{t('auth.signUp.divider')}</Divider>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Stack spacing={2}>
+            <Controller
+              control={control}
+              name="name"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.name)}>
+                  <InputLabel>{t('auth.signUp.fields.name')}</InputLabel>
+                  <OutlinedInput {...field} label={t('auth.signUp.fields.name')} />
+                  {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
+              name="email"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.email)}>
+                  <InputLabel>{t('auth.signUp.fields.email')}</InputLabel>
+                  <OutlinedInput {...field} label={t('auth.signUp.fields.email')} type="email" />
+                  {errors.email ? <FormHelperText>{errors.email.message}</FormHelperText> : null}
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
+              name="password"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.password)}>
+                  <InputLabel>{t('auth.signUp.fields.password')}</InputLabel>
+                  <OutlinedInput
+                    {...field}
+                    endAdornment={
+                      showPassword ? (
+                        <EyeIcon
+                          cursor="pointer"
+                          fontSize="var(--icon-fontSize-md)"
+                          onClick={(): void => {
+                            setShowPassword(false);
+                          }}
+                        />
+                      ) : (
+                        <EyeSlashIcon
+                          cursor="pointer"
+                          fontSize="var(--icon-fontSize-md)"
+                          onClick={(): void => {
+                            setShowPassword(true);
+                          }}
+                        />
+                      )
+                    }
+                    label={t('auth.signUp.fields.password')}
+                    type={showPassword ? 'text' : 'password'}
+                  />
+                  {errors.password ? <FormHelperText>{errors.password.message}</FormHelperText> : null}
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
+              name="passwordConfirmation"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.passwordConfirmation)}>
+                  <InputLabel>{t('auth.signUp.fields.passwordConfirmation')}</InputLabel>
+                  <OutlinedInput
+                    {...field}
+                    label={t('auth.signUp.fields.passwordConfirmation')}
+                    type={showPassword ? 'text' : 'password'}
+                  />
+                  {errors.passwordConfirmation ? (
+                    <FormHelperText>{errors.passwordConfirmation.message}</FormHelperText>
+                  ) : null}
+                </FormControl>
+              )}
+            />
+            {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
+            <Button disabled={isPending} type="submit" variant="contained">
+              {t('auth.signUp.actions.submit')}
+            </Button>
+          </Stack>
+        </form>
       </Stack>
     </Stack>
   );

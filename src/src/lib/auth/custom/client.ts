@@ -12,16 +12,17 @@ import {
   postGoogleSignIn,
   postGoogleSignUp,
   postLogout,
+  postSignUp,
   type AuthApiResponse,
   type GoogleAuthPayload,
 } from './api-client';
 import { clearAuthSession, getAuthSession, persistAuthSession, persistAuthUser } from './session-store';
 
 export interface SignUpParams {
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   password: string;
+  passwordConfirmation: string;
 }
 
 export interface GoogleAuthParams {
@@ -45,8 +46,21 @@ export interface ResetPasswordParams {
 }
 
 class AuthClient {
-  async signUp(_: SignUpParams): Promise<{ error?: string }> {
-    return { error: 'Email sign up is not available for this API.' };
+  async signUp(params: SignUpParams): Promise<{ error?: string }> {
+    try {
+      const response = await postSignUp({
+        name: params.name,
+        email: params.email,
+        password: params.password,
+        password_confirmation: params.passwordConfirmation,
+      });
+
+      persistAuthSession(response.access_token, mapApiUser(response.user, buildUserFromName(params.name, params.email)));
+
+      return {};
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
   }
 
   async signInWithOAuth(params: SignInWithOAuthParams): Promise<{ error?: string }> {
@@ -181,6 +195,20 @@ function buildUserFromGoogleProfile(profile: GoogleProfile): User {
     lastName,
     name,
     provider: 'google',
+  };
+}
+
+function buildUserFromName(name: string, email: string): User {
+  const [firstName = name, ...lastNameParts] = name.trim().split(/\s+/);
+  const lastName = lastNameParts.join(' ');
+
+  return {
+    id: email,
+    email,
+    firstName,
+    lastName,
+    name,
+    provider: 'email',
   };
 }
 

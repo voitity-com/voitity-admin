@@ -29,6 +29,33 @@
         "passwordRequired": "La contraseña es obligatoria"
       }
     },
+    "signUp": {
+      "actions": {
+        "submit": "Crear cuenta"
+      },
+      "continueWith": "Continuar con {{provider}}",
+      "divider": "o",
+      "errors": {
+        "googleAuth": "No se pudo autenticar con Google"
+      },
+      "fields": {
+        "email": "Correo electrónico",
+        "name": "Nombre completo",
+        "password": "Contraseña",
+        "passwordConfirmation": "Confirmar contraseña"
+      },
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Iniciar sesión",
+      "title": "Registrarse",
+      "validation": {
+        "emailInvalid": "Ingresa un correo electrónico válido",
+        "emailRequired": "El correo electrónico es obligatorio",
+        "nameRequired": "El nombre completo es obligatorio",
+        "passwordConfirmationRequired": "Confirma tu contraseña",
+        "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+        "passwordMismatch": "Las contraseñas no coinciden"
+      }
+    },
     "split": {
       "description": "Crea y mantiene perfiles públicos donde un avatar conversa, responde con audio y usa información verificada del perfil.",
       "eyebrow": "Administración de perfiles interactivos",
@@ -821,6 +848,8 @@
           "currentUsage": "Perfiles creados",
           "description": "Tu plan actual permite crear hasta {{limit}} perfil(es). Ya tienes {{count}} creado(s), por eso no puedes crear un nuevo perfil. Para crear más perfiles, cambia a un plan con mayor capacidad.",
           "planLimit": "Límite del plan",
+          "planRequiredDescription": "Necesitas un plan activo antes de crear un perfil. Elige un plan para habilitar la creación de perfiles y las herramientas de avatar, voz y datos.",
+          "planRequiredTitle": "Plan requerido",
           "title": "Límite de perfiles alcanzado",
           "viewPlans": "Ver planes"
         },

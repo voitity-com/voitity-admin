@@ -29,6 +29,33 @@
         "passwordRequired": "Password is required"
       }
     },
+    "signUp": {
+      "actions": {
+        "submit": "Create account"
+      },
+      "continueWith": "Continue with {{provider}}",
+      "divider": "or",
+      "errors": {
+        "googleAuth": "Unable to authenticate with Google"
+      },
+      "fields": {
+        "email": "Email address",
+        "name": "Full name",
+        "password": "Password",
+        "passwordConfirmation": "Confirm password"
+      },
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "title": "Sign up",
+      "validation": {
+        "emailInvalid": "Enter a valid email address",
+        "emailRequired": "Email is required",
+        "nameRequired": "Full name is required",
+        "passwordConfirmationRequired": "Confirm your password",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordMismatch": "Passwords do not match"
+      }
+    },
     "split": {
       "description": "Create and maintain public profiles where an avatar can chat, answer with audio, and use verified information from the profile.",
       "eyebrow": "Interactive profile admin",
@@ -821,6 +848,8 @@
           "currentUsage": "Profiles created",
           "description": "Your current plan allows up to {{limit}} profile(s). You already have {{count}} created, so you cannot create a new profile. To create more profiles, switch to a plan with more capacity.",
           "planLimit": "Plan limit",
+          "planRequiredDescription": "You need an active plan before creating a profile. Choose a plan to unlock profile creation and the related avatar, voice, and data tools.",
+          "planRequiredTitle": "Plan required",
           "title": "Profile limit reached",
           "viewPlans": "View plans"
         },

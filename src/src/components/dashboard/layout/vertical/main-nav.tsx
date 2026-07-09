@@ -12,7 +12,6 @@ import Tooltip from '@mui/material/Tooltip';
 import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
 import { List as ListIcon } from '@phosphor-icons/react/dist/ssr/List';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
-import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
 import { useTranslation } from 'react-i18next';
 
 import type { NavItemConfig } from '@/types/nav';
@@ -22,7 +21,6 @@ import { useDialog } from '@/hooks/use-dialog';
 import { usePopover } from '@/hooks/use-popover';
 import { useUser } from '@/hooks/use-user';
 
-import { ContactsPopover } from '../contacts-popover';
 import { languageFlags, LanguagePopover } from '../language-popover';
 import type { Language } from '../language-popover';
 import { MobileNav } from '../mobile-nav';
@@ -80,7 +78,6 @@ export function MainNav({ items }: MainNavProps): React.JSX.Element {
             sx={{ alignItems: 'center', flex: '1 1 auto', justifyContent: 'flex-end' }}
           >
             <NotificationsButton />
-            <ContactsButton />
             <Divider
               flexItem
               orientation="vertical"
@@ -113,21 +110,6 @@ function SearchButton(): React.JSX.Element {
         </IconButton>
       </Tooltip>
       <SearchDialog onClose={dialog.handleClose} open={dialog.open} />
-    </React.Fragment>
-  );
-}
-
-function ContactsButton(): React.JSX.Element {
-  const popover = usePopover<HTMLButtonElement>();
-
-  return (
-    <React.Fragment>
-      <Tooltip title="Contacts">
-        <IconButton onClick={popover.handleOpen} ref={popover.anchorRef}>
-          <UsersIcon />
-        </IconButton>
-      </Tooltip>
-      <ContactsPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
   );
 }

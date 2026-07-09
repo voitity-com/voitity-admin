@@ -43,6 +43,7 @@ import { ProfilesTable } from '@/components/dashboard/profiles/profiles-table';
 const metadata = { title: `Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 type SubscriptionStatus = 'active' | 'loading' | 'missing' | 'unknown';
+type ProfileCreateBlockReason = 'limit-reached' | 'missing-plan';
 
 export function Page(): React.JSX.Element {
   const { genre, name, sortDir, status } = useExtractSearchParams();
@@ -54,6 +55,8 @@ export function Page(): React.JSX.Element {
   const [formOpen, setFormOpen] = React.useState<boolean>(false);
   const [isProfileLimitLoaded, setIsProfileLimitLoaded] = React.useState<boolean>(false);
   const [profileLimitDialogOpen, setProfileLimitDialogOpen] = React.useState<boolean>(false);
+  const [profileCreateBlockReason, setProfileCreateBlockReason] =
+    React.useState<ProfileCreateBlockReason>('limit-reached');
   const [profileLimit, setProfileLimit] = React.useState<number | undefined>();
   const [singleProfilePlan, setSingleProfilePlan] = React.useState<boolean>(false);
   const [subscriptionStatus, setSubscriptionStatus] = React.useState<SubscriptionStatus>('loading');
@@ -134,7 +137,8 @@ export function Page(): React.JSX.Element {
     }
 
     if (subscriptionStatus === 'missing') {
-      toast.error(t('dashboard.profiles.list.toasts.planRequired'));
+      setProfileCreateBlockReason('missing-plan');
+      setProfileLimitDialogOpen(true);
       return;
     }
 
@@ -144,6 +148,7 @@ export function Page(): React.JSX.Element {
     }
 
     if (!canCreateProfileWithLimit(profiles.length, profileLimit)) {
+      setProfileCreateBlockReason('limit-reached');
       setProfileLimitDialogOpen(true);
       return;
     }
@@ -263,10 +268,11 @@ export function Page(): React.JSX.Element {
       <ProfileFormDialog onClose={handleFormClose} onSubmit={handleFormSubmit} open={formOpen} profile={null} />
       <ProfileLimitDialog
         count={profiles.length}
-        limit={profileLimit ?? profiles.length}
+        limit={profileLimit}
         onClose={handleProfileLimitDialogClose}
         onViewPlans={handleViewPlans}
         open={profileLimitDialogOpen}
+        reason={profileCreateBlockReason}
       />
     </React.Fragment>
   );
@@ -325,10 +331,11 @@ function applyFilters(rows: Profile[], { genre, name, status }: Filters): Profil
 
 interface ProfileLimitDialogProps {
   count: number;
-  limit: number;
+  limit: number | undefined;
   onClose: () => void;
   onViewPlans: () => void;
   open: boolean;
+  reason: ProfileCreateBlockReason;
 }
 
 function ProfileLimitDialog({
@@ -337,8 +344,11 @@ function ProfileLimitDialog({
   onClose,
   onViewPlans,
   open,
+  reason,
 }: ProfileLimitDialogProps): React.JSX.Element {
   const { t } = useTranslation();
+  const limitValue = typeof limit === 'number' ? limit : count;
+  const isMissingPlan = reason === 'missing-plan';
 
   return (
     <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
@@ -368,32 +378,39 @@ function ProfileLimitDialog({
             <WarningCircleIcon fontSize="var(--icon-fontSize-xl)" weight="fill" />
           </Box>
           <Stack spacing={1}>
-            <Typography variant="h5">{t('dashboard.profiles.list.limitDialog.title')}</Typography>
+            <Typography variant="h5">
+              {t(
+                isMissingPlan
+                  ? 'dashboard.profiles.list.limitDialog.planRequiredTitle'
+                  : 'dashboard.profiles.list.limitDialog.title'
+              )}
+            </Typography>
             <Typography color="text.secondary" sx={{ fontSize: '1rem' }}>
-              {t('dashboard.profiles.list.limitDialog.description', { count, limit })}
+              {t(
+                isMissingPlan
+                  ? 'dashboard.profiles.list.limitDialog.planRequiredDescription'
+                  : 'dashboard.profiles.list.limitDialog.description',
+                { count, limit: limitValue }
+              )}
             </Typography>
           </Stack>
         </Stack>
-        <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2} sx={{ p: 3 }}>
-          <Paper
-            sx={{ flex: '1 1 0', p: 2, textAlign: 'center' }}
-            variant="outlined"
-          >
-            <Typography color="text.secondary" variant="caption">
-              {t('dashboard.profiles.list.limitDialog.currentUsage')}
-            </Typography>
-            <Typography variant="h4">{count}</Typography>
-          </Paper>
-          <Paper
-            sx={{ flex: '1 1 0', p: 2, textAlign: 'center' }}
-            variant="outlined"
-          >
-            <Typography color="text.secondary" variant="caption">
-              {t('dashboard.profiles.list.limitDialog.planLimit')}
-            </Typography>
-            <Typography variant="h4">{limit}</Typography>
-          </Paper>
-        </Stack>
+        {!isMissingPlan ? (
+          <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2} sx={{ p: 3 }}>
+            <Paper sx={{ flex: '1 1 0', p: 2, textAlign: 'center' }} variant="outlined">
+              <Typography color="text.secondary" variant="caption">
+                {t('dashboard.profiles.list.limitDialog.currentUsage')}
+              </Typography>
+              <Typography variant="h4">{count}</Typography>
+            </Paper>
+            <Paper sx={{ flex: '1 1 0', p: 2, textAlign: 'center' }} variant="outlined">
+              <Typography color="text.secondary" variant="caption">
+                {t('dashboard.profiles.list.limitDialog.planLimit')}
+              </Typography>
+              <Typography variant="h4">{limitValue}</Typography>
+            </Paper>
+          </Stack>
+        ) : null}
       </DialogContent>
       <DialogActions sx={{ flexWrap: 'wrap', gap: 1, justifyContent: 'space-between', px: 3, py: 2 }}>
         <Button color="secondary" onClick={onClose}>
