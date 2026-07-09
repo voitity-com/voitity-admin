@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
 
@@ -86,7 +87,7 @@ function getColumns({ language, t }: { language: string; t: (key: string) => str
     {
       formatter: (row): React.JSX.Element => renderStatusCell(row, t),
       name: t('dashboard.profiles.fields.status'),
-      width: '120px',
+      width: '180px',
     },
     {
       formatter: (row): string => formatDate(row.updated_at, language),
@@ -154,14 +155,23 @@ function renderAvatarCell(row: Profile, t: (key: string) => string): React.JSX.E
 }
 
 function renderStatusCell(row: Profile, t: (key: string) => string): React.JSX.Element {
+  const status = normalizeProfileStatus(row.status);
+
   return (
-    <Chip
-      color={row.active ? 'success' : 'default'}
-      label={row.active ? t('dashboard.profiles.status.active') : t('dashboard.profiles.status.inactive')}
-      size="small"
-      variant="outlined"
-    />
+    <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+      <Chip color={status === 'published' ? 'success' : 'default'} label={t(`dashboard.profiles.status.${status}`)} size="small" />
+      <Chip
+        color={row.active ? 'success' : 'default'}
+        label={row.active ? t('dashboard.profiles.status.active') : t('dashboard.profiles.status.inactive')}
+        size="small"
+        variant="outlined"
+      />
+    </Stack>
   );
+}
+
+function normalizeProfileStatus(status: null | string | undefined): string {
+  return ['draft', 'ready', 'published', 'hidden'].includes(status ?? '') ? String(status) : 'draft';
 }
 
 function getInitials(name: string): string {

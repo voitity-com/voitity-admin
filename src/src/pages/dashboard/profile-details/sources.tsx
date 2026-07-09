@@ -374,7 +374,11 @@ function getColumns({
             <Typography color="text.secondary" variant="body2">
               {getSourceFileName(source)}
             </Typography>
-          ) : null}
+          ) : (
+            <Typography color="text.secondary" variant="body2">
+              {t('dashboard.profiles.detail.sources.textOnlySource')}
+            </Typography>
+          )}
         </Stack>
       ),
       name: t('dashboard.profiles.detail.sources.fields.name'),
@@ -459,6 +463,10 @@ function hasSourceFile(source: ProfileKnowledgeSource): boolean {
 }
 
 function getSourceFileName(source: ProfileKnowledgeSource): string {
+  if (!hasSourceFile(source)) {
+    return '';
+  }
+
   return source.file?.name ?? source.original_filename ?? '';
 }
 

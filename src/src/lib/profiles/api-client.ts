@@ -15,11 +15,13 @@ export interface Profile {
   profession_key?: null | string;
   profession_template_version?: null | string;
   active?: boolean;
+  status?: null | string;
   voice?: boolean;
   voice_id?: null | number | string;
   voice_description?: null | string;
   voice_language_code?: null | string;
   voice_name?: null | string;
+  publication?: null | ProfilePublication;
   data?: null | Record<string, unknown>;
   networks?: null | ProfileNetworks;
   created_at?: null | string;
@@ -27,6 +29,18 @@ export interface Profile {
 }
 
 export type ProfileNetworks = Record<string, string>;
+
+export interface ProfilePublicationRequirement {
+  key: string;
+  passed: boolean;
+}
+
+export interface ProfilePublication {
+  can_activate: boolean;
+  is_published: boolean;
+  missing: string[];
+  requirements: ProfilePublicationRequirement[];
+}
 
 export interface ProfilePayload {
   name: string;
@@ -36,7 +50,6 @@ export interface ProfilePayload {
   personality: string;
   profession_key?: null | string;
   profession_template_version?: null | string;
-  active?: boolean;
 }
 
 interface ApiEnvelope<T> {
@@ -347,6 +360,22 @@ export async function updateProfile(id: number | string, payload: ProfilePayload
     body: payload,
     method: 'PATCH',
   });
+  return unwrapProfile(response);
+}
+
+export async function activateProfile(id: number | string): Promise<Profile> {
+  const response = await requestJson<ApiEnvelope<Profile> | Profile>(
+    `/api/profile/${encodeURIComponent(String(id))}/activate`,
+    { method: 'POST' }
+  );
+  return unwrapProfile(response);
+}
+
+export async function deactivateProfile(id: number | string): Promise<Profile> {
+  const response = await requestJson<ApiEnvelope<Profile> | Profile>(
+    `/api/profile/${encodeURIComponent(String(id))}/deactivate`,
+    { method: 'POST' }
+  );
   return unwrapProfile(response);
 }
 

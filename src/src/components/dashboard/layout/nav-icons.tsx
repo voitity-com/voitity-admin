@@ -13,6 +13,7 @@ import { FileDashed as FileDashedIcon } from '@phosphor-icons/react/dist/ssr/Fil
 import { FileX as FileXIcon } from '@phosphor-icons/react/dist/ssr/FileX';
 import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { GraduationCap as GraduationCapIcon } from '@phosphor-icons/react/dist/ssr/GraduationCap';
+import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { House as HouseIcon } from '@phosphor-icons/react/dist/ssr/House';
 import { Kanban as KanbanIcon } from '@phosphor-icons/react/dist/ssr/Kanban';
 import { Link as LinkIcon } from '@phosphor-icons/react/dist/ssr/Link';
@@ -50,6 +51,7 @@ export const icons = {
   'warning-diamond': WarningDiamondIcon,
   cube: CubeIcon,
   file: FileIcon,
+  gauge: GaugeIcon,
   house: HouseIcon,
   kanban: KanbanIcon,
   link: LinkIcon,

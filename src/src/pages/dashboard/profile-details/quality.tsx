@@ -71,6 +71,23 @@ export function Page(): React.JSX.Element {
           ) : quality ? (
             <CardContent>
               <Stack spacing={3}>
+                {quality.checks.some((check) => !check.passed) ? (
+                  <Alert color="warning">
+                    <Stack spacing={0.5}>
+                      <Typography sx={{ fontWeight: 700 }} variant="subtitle2">
+                        {t('dashboard.profiles.detail.quality.missingTitle')}
+                      </Typography>
+                      <Typography variant="body2">
+                        {quality.checks
+                          .filter((check) => !check.passed)
+                          .map((check) => check.label)
+                          .join(', ')}
+                      </Typography>
+                    </Stack>
+                  </Alert>
+                ) : (
+                  <Alert color="success">{t('dashboard.profiles.detail.quality.completeMessage')}</Alert>
+                )}
                 <Stack spacing={1}>
                   <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
                     <Typography variant="h5">{t('dashboard.profiles.detail.quality.score', { score: quality.score })}</Typography>

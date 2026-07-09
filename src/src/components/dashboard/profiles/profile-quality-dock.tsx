@@ -1,0 +1,268 @@
+'use client';
+
+import * as React from 'react';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
+import CircularProgress from '@mui/material/CircularProgress';
+import IconButton from '@mui/material/IconButton';
+import LinearProgress from '@mui/material/LinearProgress';
+import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
+import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
+import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
+import { WarningCircle as WarningCircleIcon } from '@phosphor-icons/react/dist/ssr/WarningCircle';
+import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
+
+import { paths } from '@/paths';
+import type { ProfileQuality } from '@/lib/profiles/api-client';
+import { getProfileQuality } from '@/lib/profiles/api-client';
+import { logger } from '@/lib/default-logger';
+import { usePathname } from '@/hooks/use-pathname';
+import { RouterLink } from '@/components/core/link';
+
+export function ProfileQualityDock(): React.JSX.Element | null {
+  const pathname = usePathname();
+  const { profileId = '' } = useParams();
+  const { t } = useTranslation();
+  const [quality, setQuality] = React.useState<null | ProfileQuality>(null);
+  const [error, setError] = React.useState<string>('');
+  const [isLoading, setIsLoading] = React.useState<boolean>(true);
+
+  const loadQuality = React.useCallback(async (): Promise<void> => {
+    if (!profileId) {
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+
+    try {
+      setQuality(await getProfileQuality(profileId));
+    } catch (err) {
+      logger.error(err);
+      setError(t('dashboard.profiles.detail.quality.dock.error'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profileId, t]);
+
+  React.useEffect(() => {
+    loadQuality().catch((err) => {
+      logger.error(err);
+    });
+  }, [loadQuality, pathname]);
+
+  React.useEffect(() => {
+    const handleRefresh = (): void => {
+      loadQuality().catch((err) => {
+        logger.error(err);
+      });
+    };
+
+    window.addEventListener('profile-quality:refresh', handleRefresh);
+
+    return () => {
+      window.removeEventListener('profile-quality:refresh', handleRefresh);
+    };
+  }, [loadQuality]);
+
+  if (!profileId) {
+    return null;
+  }
+
+  const pendingChecks = quality?.checks.filter((check) => !check.passed) ?? [];
+  const score = quality?.score ?? 0;
+  const statusColor = getScoreColor(score);
+
+  return (
+    <Paper
+      elevation={16}
+      sx={{
+        border: '1px solid var(--mui-palette-divider)',
+        borderRadius: 2,
+        bottom: 'calc(16px + env(safe-area-inset-bottom))',
+        left: { xs: 12, lg: 'calc(var(--SideNav-width, 0px) + 24px)' },
+        overflow: 'hidden',
+        position: 'fixed',
+        right: { xs: 12, sm: 24 },
+        zIndex: (theme) => theme.zIndex.drawer + 2,
+      }}
+    >
+      <Box
+        sx={{
+          alignItems: { xs: 'stretch', md: 'center' },
+          display: 'grid',
+          gap: { xs: 1.25, md: 2 },
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr) 40px',
+            sm: '1fr',
+            md: 'minmax(220px, 0.9fr) minmax(280px, 1.4fr) auto',
+          },
+          p: { xs: 1.25, sm: 2 },
+        }}
+      >
+        <Stack spacing={1} sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', minWidth: 0 }}>
+            <Box
+              sx={{
+                alignItems: 'center',
+                bgcolor: 'background.level1',
+                borderRadius: 1,
+                display: 'flex',
+                flex: '0 0 auto',
+                height: 36,
+                justifyContent: 'center',
+                width: 36,
+              }}
+            >
+              {isLoading ? (
+                <CircularProgress size={18} />
+              ) : error ? (
+                <WarningCircleIcon color="var(--mui-palette-error-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />
+              ) : (
+                <GaugeIcon color={`var(--mui-palette-${statusColor}-main)`} fontSize="var(--icon-fontSize-md)" weight="fill" />
+              )}
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography noWrap variant="subtitle2">
+                {t('dashboard.profiles.detail.quality.dock.title')}
+              </Typography>
+              <Typography color={error ? 'error.main' : 'text.secondary'} component="div" noWrap variant="caption">
+                {getStatusLabel({ error, isLoading, pendingChecks, t })}
+              </Typography>
+              {!isLoading && !error ? (
+                <Typography
+                  color="text.secondary"
+                  component="div"
+                  noWrap
+                  sx={{ display: { sm: 'none' }, mt: 0.25 }}
+                  variant="caption"
+                >
+                  {t('dashboard.profiles.detail.quality.dock.compactMetrics', {
+                    approved: quality?.counts.approved_facts ?? 0,
+                    indexed: quality?.counts.indexed_facts ?? 0,
+                    sources: quality?.counts.sources ?? 0,
+                  })}
+                </Typography>
+              ) : null}
+            </Box>
+            {!isLoading && !error ? (
+              <Chip
+                color={statusColor}
+                label={t('dashboard.profiles.detail.quality.scoreLabel', { score })}
+                size="small"
+                sx={{ display: { xs: 'none', sm: 'inline-flex' }, ml: 'auto' }}
+                variant="outlined"
+              />
+            ) : null}
+          </Stack>
+          <LinearProgress
+            color={error ? 'error' : statusColor}
+            sx={{ borderRadius: 999, height: 6 }}
+            value={error ? 100 : score}
+            variant={isLoading ? 'indeterminate' : 'determinate'}
+          />
+        </Stack>
+
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'grid' },
+            gap: 1,
+            gridTemplateColumns: 'repeat(3, minmax(120px, 1fr))',
+          }}
+        >
+          <DockMetric label={t('dashboard.profiles.detail.quality.metrics.sources')} value={quality?.counts.sources ?? 0} />
+          <DockMetric
+            label={t('dashboard.profiles.detail.quality.metrics.approvedFacts')}
+            value={quality?.counts.approved_facts ?? 0}
+          />
+          <DockMetric
+            label={t('dashboard.profiles.detail.quality.metrics.indexedFacts')}
+            value={quality?.counts.indexed_facts ?? 0}
+          />
+        </Box>
+
+        <IconButton
+          aria-label={t('dashboard.profiles.detail.quality.dock.viewDetails')}
+          component={RouterLink}
+          href={paths.dashboard.profileDetails.quality(profileId)}
+          sx={{ alignSelf: 'center', display: { xs: 'inline-flex', sm: 'none' }, height: 40, justifySelf: 'end', width: 40 }}
+        >
+          <ArrowRightIcon />
+        </IconButton>
+        <Button
+          component={RouterLink}
+          endIcon={<ArrowRightIcon />}
+          href={paths.dashboard.profileDetails.quality(profileId)}
+          size="small"
+          sx={{ display: { xs: 'none', sm: 'inline-flex' }, justifySelf: { sm: 'stretch', md: 'end' }, whiteSpace: 'nowrap' }}
+          variant="outlined"
+        >
+          {t('dashboard.profiles.detail.quality.dock.viewDetails')}
+        </Button>
+      </Box>
+    </Paper>
+  );
+}
+
+function DockMetric({ label, value }: { label: string; value: number }): React.JSX.Element {
+  return (
+    <Box
+      sx={{
+        bgcolor: 'background.level1',
+        borderRadius: 1,
+        minWidth: 0,
+        px: { xs: 1, sm: 1.5 },
+        py: 1,
+      }}
+    >
+      <Typography noWrap sx={{ fontWeight: 700 }} variant="body2">
+        {value}
+      </Typography>
+      <Typography color="text.secondary" noWrap variant="caption">
+        {label}
+      </Typography>
+    </Box>
+  );
+}
+
+function getScoreColor(score: number): 'error' | 'success' | 'warning' {
+  if (score >= 80) {
+    return 'success';
+  }
+
+  if (score >= 50) {
+    return 'warning';
+  }
+
+  return 'error';
+}
+
+function getStatusLabel({
+  error,
+  isLoading,
+  pendingChecks,
+  t,
+}: {
+  error: string;
+  isLoading: boolean;
+  pendingChecks: ProfileQuality['checks'];
+  t: (key: string, options?: Record<string, unknown>) => string;
+}): string {
+  if (isLoading) {
+    return t('dashboard.profiles.detail.quality.dock.loading');
+  }
+
+  if (error) {
+    return error;
+  }
+
+  if (pendingChecks.length === 0) {
+    return t('dashboard.profiles.detail.quality.completeMessage');
+  }
+
+  return t('dashboard.profiles.detail.quality.dock.pending', { count: pendingChecks.length });
+}

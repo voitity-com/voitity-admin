@@ -8,12 +8,8 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
-import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
-import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
-import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
-import { UsersThree as UsersThreeIcon } from '@phosphor-icons/react/dist/ssr/UsersThree';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
@@ -56,50 +52,11 @@ const navItems = [
       },
     ],
   },
-  {
-    key: 'organization',
-    title: 'Organization',
-    titleKey: 'dashboard.nav.settingsGroups.organization',
-    items: [
-      {
-        key: 'billing',
-        title: 'Billing & plans',
-        titleKey: 'dashboard.nav.items.billing',
-        href: paths.dashboard.settings.billing,
-        icon: 'credit-card',
-      },
-      {
-        key: 'usage',
-        title: 'Usage',
-        titleKey: 'dashboard.nav.items.usage',
-        href: paths.dashboard.settings.usage,
-        icon: 'gauge',
-      },
-      {
-        key: 'team',
-        title: 'Team',
-        titleKey: 'dashboard.nav.items.team',
-        href: paths.dashboard.settings.team,
-        icon: 'users-three',
-      },
-      {
-        key: 'integrations',
-        title: 'Integrations',
-        titleKey: 'dashboard.nav.items.integrations',
-        href: paths.dashboard.settings.integrations,
-        icon: 'plugs-connected',
-      },
-    ],
-  },
 ] satisfies NavItemConfig[];
 
 const icons = {
-  'credit-card': CreditCardIcon,
-  gauge: GaugeIcon,
   'lock-key': LockKeyIcon,
-  'plugs-connected': PlugsConnectedIcon,
   'user-circle': UserCircleIcon,
-  'users-three': UsersThreeIcon,
   bell: BellIcon,
 } as Record<string, Icon>;
 
@@ -141,7 +98,7 @@ export function SideNav(): React.JSX.Element {
                     {...item}
                     key={item.key}
                     pathname={pathname}
-                    showNotImplemented={!['account', 'billing', 'usage'].includes(item.key)}
+                    showNotImplemented={item.key !== 'account'}
                     title={getNavTitle(item, t)}
                   />
                 ))}

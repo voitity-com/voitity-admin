@@ -10,12 +10,10 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
-import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -46,13 +44,12 @@ import { toast } from '@/components/core/toaster';
 import { ProfileAudioTranscriptionDialog } from '@/components/dashboard/profiles/profile-audio-transcription-dialog';
 
 const metadata = { title: `Profile | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
-const profileTextFieldLimits = {
+const defaultProfileTextFieldLimits = {
   description: { max: 500, min: 1 },
   personality: { max: 200, min: 1 },
 } satisfies Record<ProfileAudioTranscriptionField, { max: number; min: number }>;
 
 interface Values {
-  active: boolean;
   alias: string;
   description: string;
   genre: string;
@@ -63,12 +60,11 @@ interface Values {
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
   return zod.object({
-    active: zod.boolean(),
     alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
     description: zod
       .string()
-      .min(profileTextFieldLimits.description.min, t('dashboard.profiles.form.validation.descriptionRequired'))
-      .max(profileTextFieldLimits.description.max),
+      .min(defaultProfileTextFieldLimits.description.min, t('dashboard.profiles.form.validation.descriptionRequired'))
+      .max(defaultProfileTextFieldLimits.description.max),
     genre: zod
       .string()
       .min(1, t('dashboard.profiles.form.validation.genreRequired'))
@@ -76,14 +72,13 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
     personality: zod
       .string()
-      .min(profileTextFieldLimits.personality.min, t('dashboard.profiles.form.validation.personalityRequired'))
-      .max(profileTextFieldLimits.personality.max),
+      .min(defaultProfileTextFieldLimits.personality.min, t('dashboard.profiles.form.validation.personalityRequired'))
+      .max(defaultProfileTextFieldLimits.personality.max),
     professionKey: zod.string().min(1, t('dashboard.profiles.form.validation.professionRequired')).max(80),
   });
 }
 
 const defaultValues = {
-  active: true,
   alias: '',
   description: '',
   genre: 'na',
@@ -93,6 +88,7 @@ const defaultValues = {
 } satisfies Values;
 
 const fallbackProfessions = [{ key: 'custom', label: 'Custom profile' }] satisfies ProfileProfession[];
+const profileStatusValues = ['draft', 'ready', 'published', 'hidden'] as const;
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -116,10 +112,15 @@ export function Page(): React.JSX.Element {
   } = useForm<Values>({ defaultValues, mode: 'onChange', resolver: zodResolver(schema) });
   const descriptionValue = watch('description');
   const personalityValue = watch('personality');
+  const selectedProfessionKey = watch('professionKey');
+  const textFieldLimits = React.useMemo(
+    () => getProfileTextFieldLimits(selectedProfessionKey, professions),
+    [professions, selectedProfessionKey]
+  );
   const activeAudioField = audioField ?? 'description';
   const activeAudioFieldLabel = t(`dashboard.profiles.fields.${activeAudioField}`);
   const activeAudioFieldValue = activeAudioField === 'description' ? descriptionValue : personalityValue;
-  const activeAudioFieldLimits = profileTextFieldLimits[activeAudioField];
+  const activeAudioFieldLimits = textFieldLimits[activeAudioField];
 
   const loadProfile = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -152,6 +153,20 @@ export function Page(): React.JSX.Element {
     });
   }, [loadProfile]);
 
+  React.useEffect(() => {
+    const handlePublicationChange = (): void => {
+      loadProfile().catch((err) => {
+        logger.error(err);
+      });
+    };
+
+    window.addEventListener('profile-publication:changed', handlePublicationChange);
+
+    return () => {
+      window.removeEventListener('profile-publication:changed', handlePublicationChange);
+    };
+  }, [loadProfile]);
+
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
       const payload: ProfilePayload = toPayload(values);
@@ -161,6 +176,7 @@ export function Page(): React.JSX.Element {
         setProfile(updatedProfile);
         reset(toValues(updatedProfile));
         setIsEditing(false);
+        window.dispatchEvent(new Event('profile-publication:refresh'));
         toast.success(t('dashboard.profiles.detail.profile.toasts.updated'));
       } catch (err) {
         toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
@@ -241,7 +257,7 @@ export function Page(): React.JSX.Element {
                     control={control}
                     name="description"
                     render={({ field }) => {
-                      const limitState = getProfileFieldLimitState(field.value, profileTextFieldLimits.description, t);
+                      const limitState = getProfileFieldLimitState(field.value, textFieldLimits.description, t);
 
                       return (
                         <FormControl error={Boolean(errors.description) || limitState.hasError}>
@@ -315,7 +331,7 @@ export function Page(): React.JSX.Element {
                     control={control}
                     name="personality"
                     render={({ field }) => {
-                      const limitState = getProfileFieldLimitState(field.value, profileTextFieldLimits.personality, t);
+                      const limitState = getProfileFieldLimitState(field.value, textFieldLimits.personality, t);
 
                       return (
                         <FormControl error={Boolean(errors.personality) || limitState.hasError}>
@@ -338,23 +354,6 @@ export function Page(): React.JSX.Element {
                         </FormControl>
                       );
                     }}
-                  />
-                  <Controller
-                    control={control}
-                    name="active"
-                    render={({ field }) => (
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={field.value}
-                            onChange={(event) => {
-                              field.onChange(event.target.checked);
-                            }}
-                          />
-                        }
-                        label={t('dashboard.profiles.fields.active')}
-                      />
-                    )}
                   />
                 </Stack>
               </CardContent>
@@ -406,9 +405,11 @@ function ProfileOverview({
   professions: ProfileProfession[];
   t: (key: string, options?: Record<string, unknown>) => string;
 }): React.JSX.Element {
-  const active = profile.active ?? true;
+  const active = profile.active ?? false;
+  const status = normalizeProfileStatus(profile.status);
   const professionLabel = getProfessionLabel(profile.profession_key, professions);
   const notProvided = t('dashboard.profiles.detail.profile.emptyValue');
+  const isPublic = active && status === 'published';
 
   return (
     <Card>
@@ -448,6 +449,11 @@ function ProfileOverview({
                   label={active ? t('dashboard.profiles.status.active') : t('dashboard.profiles.status.inactive')}
                   size="small"
                   sx={{ bgcolor: 'common.white', color: active ? 'success.main' : 'text.secondary' }}
+                />
+                <Chip
+                  label={t(`dashboard.profiles.status.${status}`)}
+                  size="small"
+                  sx={{ bgcolor: isPublic ? 'success.light' : 'rgba(255,255,255,0.16)', color: isPublic ? 'success.contrastText' : 'common.white' }}
                 />
                 <Chip label={professionLabel} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.16)', color: 'common.white' }} />
                 <Chip
@@ -503,7 +509,15 @@ function ProfileOverview({
             />
             <ProfileAttribute
               label={t('dashboard.profiles.fields.status')}
-              value={active ? t('dashboard.profiles.status.active') : t('dashboard.profiles.status.inactive')}
+              value={t(`dashboard.profiles.status.${status}`)}
+            />
+            <ProfileAttribute
+              label={t('dashboard.profiles.detail.profile.fields.publicVisibility')}
+              value={
+                isPublic
+                  ? t('dashboard.profiles.detail.profile.publicVisibility.public')
+                  : t('dashboard.profiles.detail.profile.publicVisibility.private')
+              }
             />
             <ProfileAttribute
               label={t('dashboard.profiles.fields.updated')}
@@ -713,9 +727,34 @@ function getProfileFieldLimitState(
   };
 }
 
+function getProfileTextFieldLimits(
+  professionKey: null | string | undefined,
+  professions: ProfileProfession[]
+): Record<ProfileAudioTranscriptionField, { max: number; min: number }> {
+  const limits = {
+    description: { ...defaultProfileTextFieldLimits.description },
+    personality: { ...defaultProfileTextFieldLimits.personality },
+  };
+  const profession = professions.find((item) => item.key === (professionKey || 'custom'));
+
+  for (const rule of profession?.quality_rules ?? []) {
+    if (String(rule.type ?? '') !== 'profile_field') {
+      continue;
+    }
+
+    const field = String(rule.field ?? '');
+    const minLength = Number(rule.min_length ?? 0);
+
+    if ((field === 'description' || field === 'personality') && minLength > 0) {
+      limits[field].min = Math.max(limits[field].min, minLength);
+    }
+  }
+
+  return limits;
+}
+
 function toValues(profile: Profile): Values {
   return {
-    active: profile.active ?? true,
     alias: profile.alias ?? '',
     description: profile.description ?? '',
     genre: normalizeProfileGenre(profile.genre),
@@ -727,7 +766,6 @@ function toValues(profile: Profile): Values {
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    active: values.active,
     alias: values.alias.trim() || null,
     description: values.description,
     genre: toProfileGenre(values.genre),
@@ -735,6 +773,14 @@ function toPayload(values: Values): ProfilePayload {
     personality: values.personality,
     profession_key: values.professionKey,
   };
+}
+
+function isProfileStatus(value: string): boolean {
+  return (profileStatusValues as readonly string[]).includes(value);
+}
+
+function normalizeProfileStatus(status: null | string | undefined): string {
+  return isProfileStatus(status ?? '') ? String(status) : 'draft';
 }
 
 function getProfessionLabel(professionKey: null | string | undefined, professions: ProfileProfession[]): string {

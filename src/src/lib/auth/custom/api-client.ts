@@ -17,6 +17,13 @@ export interface AuthApiResponse {
   user?: ApiUser;
 }
 
+export interface EmailSignUpPayload {
+  name: string;
+  email: string;
+  password: string;
+  password_confirmation: string;
+}
+
 export interface GoogleAuthPayload {
   google_id: string;
   email: string;
@@ -45,6 +52,10 @@ export class ApiRequestError extends Error {
 
 export async function postGetToken(params: { email: string; password: string }): Promise<AuthApiResponse> {
   return requestJson<AuthApiResponse>('/api/auth/get-token', { body: params });
+}
+
+export async function postSignUp(payload: EmailSignUpPayload): Promise<AuthApiResponse> {
+  return requestJson<AuthApiResponse>('/api/auth/sign-up', { body: payload });
 }
 
 export async function postGoogleSignIn(payload: GoogleAuthPayload): Promise<AuthApiResponse> {

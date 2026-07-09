@@ -17,7 +17,6 @@ import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/Caret
 import { CaretRight as CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight';
 import { List as ListIcon } from '@phosphor-icons/react/dist/ssr/List';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
-import { Users as UsersIcon } from '@phosphor-icons/react/dist/ssr/Users';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
@@ -40,7 +39,6 @@ import { Logo } from '@/components/core/logo';
 import { SearchDialog } from '@/components/dashboard/layout/search-dialog';
 import type { ColorScheme } from '@/styles/theme/types';
 
-import { ContactsPopover } from '../contacts-popover';
 import { languageFlags, LanguagePopover } from '../language-popover';
 import type { Language } from '../language-popover';
 import { MobileNav } from '../mobile-nav';
@@ -122,7 +120,6 @@ export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.
           >
             <SearchButton />
             <NotificationsButton />
-            <ContactsButton />
             <Divider
               flexItem
               orientation="vertical"
@@ -187,21 +184,6 @@ function NotificationsButton(): React.JSX.Element {
         </Badge>
       </Tooltip>
       <NotificationsPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
-    </React.Fragment>
-  );
-}
-
-function ContactsButton(): React.JSX.Element {
-  const popover = usePopover<HTMLButtonElement>();
-
-  return (
-    <React.Fragment>
-      <Tooltip title="Contacts">
-        <IconButton onClick={popover.handleOpen} ref={popover.anchorRef}>
-          <UsersIcon color="var(--NavItem-icon-color)" />
-        </IconButton>
-      </Tooltip>
-      <ContactsPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
   );
 }

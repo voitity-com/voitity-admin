@@ -29,6 +29,33 @@
         "passwordRequired": "Password is required"
       }
     },
+    "signUp": {
+      "actions": {
+        "submit": "Create account"
+      },
+      "continueWith": "Continue with {{provider}}",
+      "divider": "or",
+      "errors": {
+        "googleAuth": "Unable to authenticate with Google"
+      },
+      "fields": {
+        "email": "Email address",
+        "name": "Full name",
+        "password": "Password",
+        "passwordConfirmation": "Confirm password"
+      },
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in",
+      "title": "Sign up",
+      "validation": {
+        "emailInvalid": "Enter a valid email address",
+        "emailRequired": "Email is required",
+        "nameRequired": "Full name is required",
+        "passwordConfirmationRequired": "Confirm your password",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordMismatch": "Passwords do not match"
+      }
+    },
     "split": {
       "description": "Create and maintain public profiles where an avatar can chat, answer with audio, and use verified information from the profile.",
       "eyebrow": "Interactive profile admin",
@@ -59,6 +86,7 @@
         "integrations": "Integrations",
         "notifications": "Notifications",
         "overview": "Overview",
+        "profile": "Profile",
         "profiles": "Profiles",
         "security": "Security",
         "settings": "Settings",
@@ -254,7 +282,7 @@
         "title": "Subscription limits",
         "terms": {
           "acceptance": "I accept the subscription terms and authorize recurring payments.",
-          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that plan limits apply to the selected billing period.",
+          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
           "title": "Subscription terms"
         },
         "usage": {
@@ -288,24 +316,30 @@
     },
     "users": {
       "actions": {
+        "cancel": "Cancel",
+        "close": "Close",
         "clearSearch": "Clear search",
+        "confirmSubscription": "Confirm change",
         "currentUser": "Current user",
         "entering": "Entering...",
         "impersonate": "Enter as user",
-        "search": "Search"
+        "search": "Search",
+        "viewResources": "View resources"
       },
       "description": "List users, review whether they have profiles, sources, images, voices, and enter the admin as them to validate their experience.",
       "empty": "No users found.",
       "errors": {
         "generic": "Could not load users.",
         "impersonate": "Could not enter as that user.",
-        "sessionMissing": "Could not read the current admin session."
+        "sessionMissing": "Could not read the current admin session.",
+        "subscriptionUpdate": "Could not update subscription."
       },
       "fields": {
         "actions": "Actions",
         "created": "Created",
         "resources": "Resources",
         "role": "Role",
+        "subscription": "Subscription",
         "unknown": "Unknown",
         "user": "User"
       },
@@ -330,10 +364,23 @@
         "videos": "Videos",
         "voices": "Voices"
       },
+      "resourcesDialog": {
+        "title": "{{user}} resources"
+      },
       "searchPlaceholder": "Search by name or email",
+      "subscription": {
+        "confirmMessage": "You are about to change {{user}}'s subscription to {{plan}}. Confirm only if this change is correct.",
+        "confirmTitle": "Confirm subscription change",
+        "currentPlan": "Current plan",
+        "newPlan": "New plan",
+        "none": "No subscription",
+        "plan": "{{plan}} · {{interval}}",
+        "unlimitedPlan": "{{plan}} · unlimited"
+      },
       "title": "Users",
       "toasts": {
-        "impersonating": "Viewing the admin as {{user}}"
+        "impersonating": "Viewing the admin as {{user}}",
+        "subscriptionUpdated": "Subscription updated for {{user}}"
       }
     },
     "profiles": {
@@ -372,7 +419,7 @@
           "historyEmpty": "No generated avatars yet.",
           "noAvatar": "No avatar loaded.",
           "previousAvatar": "Previous avatar",
-          "processingMessage": "A new avatar is processing. You can edit again when it finishes.",
+          "processingMessage": "A new avatar is processing. The page will refresh the status automatically.",
           "saving": "Saving...",
           "selectHint": "Select this avatar",
           "status": {
@@ -511,7 +558,13 @@
           "aliasMissing": "No public alias",
           "emptyValue": "No information",
           "fields": {
-            "profileId": "Profile ID"
+            "profileId": "Profile ID",
+            "publicVisibility": "Public visibility"
+          },
+          "publicStatusHelper": "The public page opens only when the profile is active and published.",
+          "publicVisibility": {
+            "private": "Not public",
+            "public": "Public"
           },
           "readLess": "Show less",
           "readMore": "Read more",
@@ -519,6 +572,32 @@
           "title": "Profile",
           "toasts": {
             "updated": "Profile updated"
+          }
+        },
+        "publicationDock": {
+          "activate": "Activate and publish",
+          "blocked": "{{count}} missing requirements",
+          "deactivate": "Deactivate profile",
+          "dialogDescription": "Complete these requirements before activating and publishing this profile.",
+          "dialogTitle": "Profile cannot be activated",
+          "error": "Could not load publication status",
+          "loading": "Checking publication requirements",
+          "published": "Published and active",
+          "ready": "Ready to publish",
+          "readyCount": "{{passed}}/{{total}} ready",
+          "requirements": {
+            "alias": "Alias",
+            "avatar": "Avatar",
+            "description": "Description",
+            "name": "Name",
+            "source": "Approved synced source",
+            "voice": "Cloned voice"
+          },
+          "title": "Publication",
+          "toasts": {
+            "activated": "Profile activated and published",
+            "deactivated": "Profile deactivated",
+            "error": "Could not update publication status"
           }
         },
       "socialNetworks": {
@@ -584,6 +663,7 @@
           "uploaded": "Uploaded"
         },
         "textHelper": "Paste the CV text when a PDF cannot be parsed automatically.",
+        "textOnlySource": "Text-only source, no uploaded file.",
         "toasts": {
           "approved": "Source approved",
           "imported": "CV source imported",
@@ -616,6 +696,16 @@
           "indexedFacts": "Indexed facts",
           "sources": "Sources"
         },
+        "completeMessage": "All quality checks are complete.",
+        "dock": {
+          "compactMetrics": "{{sources}} sources · {{approved}} approved · {{indexed}} indexed",
+          "error": "Could not load quality",
+          "loading": "Checking profile quality",
+          "pending": "{{count}} pending checks",
+          "title": "Profile quality",
+          "viewDetails": "View quality"
+        },
+        "missingTitle": "Pending quality checks",
         "score": "Quality score {{score}}%",
         "scoreLabel": "{{score}}%",
         "status": {
@@ -742,7 +832,8 @@
           "genreRequired": "Genre is required",
           "nameRequired": "Name is required",
           "personalityRequired": "Personality is required",
-          "professionRequired": "Profession is required"
+          "professionRequired": "Profession is required",
+          "statusInvalid": "Select a valid status"
         }
       },
       "genreOptions": {
@@ -752,13 +843,31 @@
       },
       "list": {
         "description": "Manage the profiles attached to the logged-in user.",
+        "limitDialog": {
+          "close": "Got it",
+          "currentUsage": "Profiles created",
+          "description": "Your current plan allows up to {{limit}} profile(s). You already have {{count}} created, so you cannot create a new profile. To create more profiles, switch to a plan with more capacity.",
+          "planLimit": "Plan limit",
+          "planRequiredDescription": "You need an active plan before creating a profile. Choose a plan to unlock profile creation and the related avatar, voice, and data tools.",
+          "planRequiredTitle": "Plan required",
+          "title": "Profile limit reached",
+          "viewPlans": "View plans"
+        },
         "title": "Profiles",
         "toasts": {
-          "created": "Profile created"
+          "checkingPlan": "We are checking your plan before creating the profile.",
+          "created": "Profile created",
+          "planCheckFailed": "We could not validate your plan. Try again before creating a profile.",
+          "planRequired": "You need to purchase a plan before creating a profile.",
+          "profileLimitReached": "Your plan allows {{limit}} profile(s), and you already have {{count}} created. You cannot create a new profile."
         }
       },
       "status": {
         "active": "Active",
+        "draft": "Draft",
+        "hidden": "Hidden",
+        "published": "Published",
+        "ready": "Ready",
         "inactive": "Inactive"
       }
     }
