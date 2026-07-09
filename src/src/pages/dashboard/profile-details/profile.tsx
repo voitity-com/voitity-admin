@@ -10,12 +10,10 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
-import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -52,19 +50,16 @@ const defaultProfileTextFieldLimits = {
 } satisfies Record<ProfileAudioTranscriptionField, { max: number; min: number }>;
 
 interface Values {
-  active: boolean;
   alias: string;
   description: string;
   genre: string;
   name: string;
   personality: string;
   professionKey: string;
-  status: string;
 }
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
   return zod.object({
-    active: zod.boolean(),
     alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
     description: zod
       .string()
@@ -80,19 +75,16 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
       .min(defaultProfileTextFieldLimits.personality.min, t('dashboard.profiles.form.validation.personalityRequired'))
       .max(defaultProfileTextFieldLimits.personality.max),
     professionKey: zod.string().min(1, t('dashboard.profiles.form.validation.professionRequired')).max(80),
-    status: zod.string().refine(isProfileStatus, t('dashboard.profiles.form.validation.statusInvalid')),
   });
 }
 
 const defaultValues = {
-  active: true,
   alias: '',
   description: '',
   genre: 'na',
   name: '',
   personality: '',
   professionKey: 'custom',
-  status: 'draft',
 } satisfies Values;
 
 const fallbackProfessions = [{ key: 'custom', label: 'Custom profile' }] satisfies ProfileProfession[];
@@ -161,6 +153,20 @@ export function Page(): React.JSX.Element {
     });
   }, [loadProfile]);
 
+  React.useEffect(() => {
+    const handlePublicationChange = (): void => {
+      loadProfile().catch((err) => {
+        logger.error(err);
+      });
+    };
+
+    window.addEventListener('profile-publication:changed', handlePublicationChange);
+
+    return () => {
+      window.removeEventListener('profile-publication:changed', handlePublicationChange);
+    };
+  }, [loadProfile]);
+
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
       const payload: ProfilePayload = toPayload(values);
@@ -170,6 +176,7 @@ export function Page(): React.JSX.Element {
         setProfile(updatedProfile);
         reset(toValues(updatedProfile));
         setIsEditing(false);
+        window.dispatchEvent(new Event('profile-publication:refresh'));
         toast.success(t('dashboard.profiles.detail.profile.toasts.updated'));
       } catch (err) {
         toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
@@ -348,46 +355,6 @@ export function Page(): React.JSX.Element {
                       );
                     }}
                   />
-                  <Controller
-                    control={control}
-                    name="active"
-                    render={({ field }) => (
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={field.value}
-                            onChange={(event) => {
-                              field.onChange(event.target.checked);
-                            }}
-                          />
-                        }
-                        label={t('dashboard.profiles.fields.active')}
-                      />
-                    )}
-                  />
-                  <Controller
-                    control={control}
-                    name="status"
-                    render={({ field }) => (
-                      <FormControl error={Boolean(errors.status)}>
-                        <InputLabel id="profile-status-label">{t('dashboard.profiles.fields.status')}</InputLabel>
-                        <Select
-                          {...field}
-                          label={t('dashboard.profiles.fields.status')}
-                          labelId="profile-status-label"
-                        >
-                          {profileStatusValues.map((value) => (
-                            <MenuItem key={value} value={value}>
-                              {t(`dashboard.profiles.status.${value}`)}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        <FormHelperText>
-                          {errors.status?.message ?? t('dashboard.profiles.detail.profile.publicStatusHelper')}
-                        </FormHelperText>
-                      </FormControl>
-                    )}
-                  />
                 </Stack>
               </CardContent>
               <CardActions sx={{ justifyContent: 'flex-end', p: 3, pt: 0 }}>
@@ -438,7 +405,7 @@ function ProfileOverview({
   professions: ProfileProfession[];
   t: (key: string, options?: Record<string, unknown>) => string;
 }): React.JSX.Element {
-  const active = profile.active ?? true;
+  const active = profile.active ?? false;
   const status = normalizeProfileStatus(profile.status);
   const professionLabel = getProfessionLabel(profile.profession_key, professions);
   const notProvided = t('dashboard.profiles.detail.profile.emptyValue');
@@ -788,27 +755,23 @@ function getProfileTextFieldLimits(
 
 function toValues(profile: Profile): Values {
   return {
-    active: profile.active ?? true,
     alias: profile.alias ?? '',
     description: profile.description ?? '',
     genre: normalizeProfileGenre(profile.genre),
     name: profile.name ?? '',
     personality: profile.personality ?? '',
     professionKey: profile.profession_key ?? 'custom',
-    status: normalizeProfileStatus(profile.status),
   };
 }
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    active: values.active,
     alias: values.alias.trim() || null,
     description: values.description,
     genre: toProfileGenre(values.genre),
     name: values.name,
     personality: values.personality,
     profession_key: values.professionKey,
-    status: normalizeProfileStatus(values.status),
   };
 }
 

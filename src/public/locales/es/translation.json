@@ -546,6 +546,32 @@
             "updated": "Perfil actualizado"
           }
         },
+        "publicationDock": {
+          "activate": "Activar y publicar",
+          "blocked": "{{count}} requisitos pendientes",
+          "deactivate": "Desactivar perfil",
+          "dialogDescription": "Completa estos requisitos antes de activar y publicar este perfil.",
+          "dialogTitle": "No se puede activar el perfil",
+          "error": "No se pudo cargar el estado de publicación",
+          "loading": "Revisando requisitos de publicación",
+          "published": "Publicado y activo",
+          "ready": "Listo para publicar",
+          "readyCount": "{{passed}}/{{total}} listos",
+          "requirements": {
+            "alias": "Alias",
+            "avatar": "Avatar",
+            "description": "Descripción",
+            "name": "Nombre",
+            "source": "Fuente aprobada y sincronizada",
+            "voice": "Voz clonada"
+          },
+          "title": "Publicación",
+          "toasts": {
+            "activated": "Perfil activado y publicado",
+            "deactivated": "Perfil desactivado",
+            "error": "No se pudo actualizar la publicación"
+          }
+        },
       "socialNetworks": {
         "addNetwork": "Agregar red social",
           "empty": "Aún no hay redes sociales agregadas.",

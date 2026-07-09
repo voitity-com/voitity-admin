@@ -4,12 +4,10 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Checkbox from '@mui/material/Checkbox';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import FormControl from '@mui/material/FormControl';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
@@ -27,7 +25,6 @@ import { logger } from '@/lib/default-logger';
 import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 
 interface Values {
-  active: boolean;
   alias: string;
   description: string;
   genre: string;
@@ -38,7 +35,6 @@ interface Values {
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
   return zod.object({
-    active: zod.boolean(),
     alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
     description: zod.string().min(1, t('dashboard.profiles.form.validation.descriptionRequired')).max(500),
     genre: zod
@@ -55,7 +51,6 @@ const fallbackProfessions = [{ key: 'custom', label: 'Custom profile' }] satisfi
 
 function getDefaultValues(profile?: null | Profile): Values {
   return {
-    active: profile?.active ?? true,
     alias: profile?.alias ?? '',
     description: profile?.description ?? '',
     genre: normalizeProfileGenre(profile?.genre),
@@ -211,23 +206,6 @@ export function ProfileFormDialog({
                 </FormControl>
               )}
             />
-            <Controller
-              control={control}
-              name="active"
-              render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={field.value}
-                      onChange={(event) => {
-                        field.onChange(event.target.checked);
-                      }}
-                    />
-                  }
-                  label={t('dashboard.profiles.fields.active')}
-                />
-              )}
-            />
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
@@ -245,7 +223,6 @@ export function ProfileFormDialog({
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    active: values.active,
     alias: values.alias.trim() || null,
     description: values.description,
     genre: toProfileGenre(values.genre),

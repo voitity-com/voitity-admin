@@ -546,6 +546,32 @@
             "updated": "Profile updated"
           }
         },
+        "publicationDock": {
+          "activate": "Activate and publish",
+          "blocked": "{{count}} missing requirements",
+          "deactivate": "Deactivate profile",
+          "dialogDescription": "Complete these requirements before activating and publishing this profile.",
+          "dialogTitle": "Profile cannot be activated",
+          "error": "Could not load publication status",
+          "loading": "Checking publication requirements",
+          "published": "Published and active",
+          "ready": "Ready to publish",
+          "readyCount": "{{passed}}/{{total}} ready",
+          "requirements": {
+            "alias": "Alias",
+            "avatar": "Avatar",
+            "description": "Description",
+            "name": "Name",
+            "source": "Approved synced source",
+            "voice": "Cloned voice"
+          },
+          "title": "Publication",
+          "toasts": {
+            "activated": "Profile activated and published",
+            "deactivated": "Profile deactivated",
+            "error": "Could not update publication status"
+          }
+        },
       "socialNetworks": {
         "addNetwork": "Add social network",
           "empty": "No social networks added yet.",
