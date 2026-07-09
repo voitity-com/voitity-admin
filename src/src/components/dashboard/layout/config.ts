@@ -45,6 +45,7 @@ export const layoutConfig = {
           href: paths.dashboard.users,
           icon: 'address-book',
           implemented: true,
+          roles: ['admin'],
         },
         {
           key: 'settings',
