@@ -8,7 +8,8 @@ interface ApiEnvelope<T> {
 }
 
 interface RequestOptions {
-  method?: 'GET' | 'POST';
+  body?: unknown;
+  method?: 'GET' | 'PATCH' | 'POST';
 }
 
 export interface AdminUserCounts {
@@ -36,7 +37,28 @@ export interface AdminUser extends ApiUser {
   counts: AdminUserCounts;
   created_at?: null | string;
   profiles?: AdminUserProfile[];
+  subscription?: AdminUserSubscription | null;
   updated_at?: null | string;
+}
+
+export interface AdminUserSubscription {
+  active?: boolean;
+  id: number | string;
+  plan: string;
+  plan_name?: null | string;
+  renews_at?: null | string;
+  started_at?: null | string;
+  status?: null | string;
+  unlimited?: boolean;
+}
+
+export interface AdminSubscriptionPlan {
+  currency: string;
+  id: string;
+  interval: string;
+  name: string;
+  price_usd?: null | number;
+  unlimited?: boolean;
 }
 
 export interface AdminUsersPagination {
@@ -48,6 +70,7 @@ export interface AdminUsersPagination {
 
 export interface AdminUsersPage {
   pagination: AdminUsersPagination;
+  subscription_plans: AdminSubscriptionPlan[];
   users: AdminUser[];
 }
 
@@ -124,6 +147,20 @@ export async function impersonateAdminUser(userId: number | string): Promise<Adm
   };
 }
 
+export async function updateAdminUserSubscription(userId: number | string, plan: string): Promise<AdminUser> {
+  const response = await requestJson(`/api/admin/users/${encodeURIComponent(String(userId))}/subscription`, {
+    body: { plan },
+    method: 'PATCH',
+  });
+  const data = getResponseData(response);
+
+  if (!isRecord(data)) {
+    throw new Error('Invalid admin user response');
+  }
+
+  return normalizeAdminUser(data);
+}
+
 export async function stopAdminImpersonation(): Promise<void> {
   await requestJson('/api/admin/impersonation/stop', { method: 'POST' });
 }
@@ -132,10 +169,11 @@ function normalizeAdminUsersPage(response: unknown): AdminUsersPage {
   const data = getResponseData(response);
 
   if (!isRecord(data)) {
-    return { pagination: emptyPagination(), users: [] };
+    return { pagination: emptyPagination(), subscription_plans: [], users: [] };
   }
 
   const rawUsers = Array.isArray(data.users) ? data.users : [];
+  const rawPlans = Array.isArray(data.subscription_plans) ? data.subscription_plans : [];
   const pagination = isRecord(data.pagination) ? data.pagination : {};
 
   return {
@@ -145,6 +183,7 @@ function normalizeAdminUsersPage(response: unknown): AdminUsersPage {
       per_page: getNumberField(pagination, 'per_page') ?? rawUsers.length,
       total: getNumberField(pagination, 'total') ?? rawUsers.length,
     },
+    subscription_plans: rawPlans.filter(isRecord).map(normalizeAdminSubscriptionPlan).filter(isAdminSubscriptionPlan),
     users: rawUsers.filter(isRecord).map(normalizeAdminUser),
   };
 }
@@ -167,8 +206,51 @@ function normalizeAdminUser(value: Record<string, unknown>): AdminUser {
     profiles,
     provider: getStringField(value, 'provider'),
     role: getStringField(value, 'role'),
+    subscription: isRecord(value.subscription) ? normalizeAdminUserSubscription(value.subscription) : null,
     updated_at: getStringField(value, 'updated_at'),
   };
+}
+
+function normalizeAdminUserSubscription(value: Record<string, unknown>): AdminUserSubscription | null {
+  const plan = getStringField(value, 'plan');
+  const id = value.id;
+
+  if (!plan || (typeof id !== 'number' && typeof id !== 'string')) {
+    return null;
+  }
+
+  return {
+    active: typeof value.active === 'boolean' ? value.active : undefined,
+    id,
+    plan,
+    plan_name: getStringField(value, 'plan_name'),
+    renews_at: getStringField(value, 'renews_at'),
+    started_at: getStringField(value, 'started_at'),
+    status: getStringField(value, 'status'),
+    unlimited: typeof value.unlimited === 'boolean' ? value.unlimited : undefined,
+  };
+}
+
+function normalizeAdminSubscriptionPlan(value: Record<string, unknown>): AdminSubscriptionPlan | null {
+  const id = getStringField(value, 'id');
+  const name = getStringField(value, 'name');
+
+  if (!id || !name) {
+    return null;
+  }
+
+  return {
+    currency: getStringField(value, 'currency') ?? 'USD',
+    id,
+    interval: getStringField(value, 'interval') ?? 'monthly',
+    name,
+    price_usd: getNumberField(value, 'price_usd') ?? null,
+    unlimited: typeof value.unlimited === 'boolean' ? value.unlimited : undefined,
+  };
+}
+
+function isAdminSubscriptionPlan(value: AdminSubscriptionPlan | null): value is AdminSubscriptionPlan {
+  return value !== null;
 }
 
 function normalizeAdminUserProfile(value: Record<string, unknown>): AdminUserProfile {
@@ -214,11 +296,18 @@ async function requestJson<T = unknown>(path: string, options: RequestOptions = 
     throw new Error('Missing API access token');
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    headers: {
+  const headers: Record<string, string> = {
       Accept: 'application/json',
       Authorization: `Bearer ${token}`,
-    },
+  };
+
+  if (options.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const response = await fetch(`${baseUrl}${path}`, {
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    headers,
     method: options.method ?? 'GET',
   });
 

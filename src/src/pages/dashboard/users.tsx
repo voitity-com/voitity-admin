@@ -8,14 +8,22 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
+import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import TablePagination from '@mui/material/TablePagination';
 import TextField from '@mui/material/TextField';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import { Info as InfoIcon } from '@phosphor-icons/react/dist/ssr/Info';
 import { MagnifyingGlass as MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass';
-import { SignIn as SignInIcon } from '@phosphor-icons/react/dist/ssr/SignIn';
+import { UserSwitch as UserSwitchIcon } from '@phosphor-icons/react/dist/ssr/UserSwitch';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -23,8 +31,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { paths } from '@/paths';
-import type { AdminUser, AdminUsersPage } from '@/lib/admin-users/api-client';
-import { impersonateAdminUser, listAdminUsers } from '@/lib/admin-users/api-client';
+import type { AdminSubscriptionPlan, AdminUser, AdminUsersPage } from '@/lib/admin-users/api-client';
+import { impersonateAdminUser, listAdminUsers, updateAdminUserSubscription } from '@/lib/admin-users/api-client';
 import { startAdminImpersonation } from '@/lib/auth/custom/admin-impersonation-store';
 import { mapApiUser } from '@/lib/auth/custom/api-client';
 import { logger } from '@/lib/default-logger';
@@ -35,6 +43,11 @@ import { toast } from '@/components/core/toaster';
 
 const metadata = { title: `Users | Dashboard | ${config.site.name}` } satisfies Metadata;
 const DEFAULT_PER_PAGE = 20;
+
+interface PendingSubscriptionChange {
+  plan: AdminSubscriptionPlan;
+  user: AdminUser;
+}
 
 export function Page(): React.JSX.Element {
   const { checkSession, isLoading: isAuthLoading, user } = useUser();
@@ -47,6 +60,10 @@ export function Page(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string>('');
   const [impersonatingUserId, setImpersonatingUserId] = React.useState<string | null>(null);
+  const [pendingSubscriptionChange, setPendingSubscriptionChange] =
+    React.useState<PendingSubscriptionChange | null>(null);
+  const [resourcesUser, setResourcesUser] = React.useState<AdminUser | null>(null);
+  const [updatingSubscriptionUserId, setUpdatingSubscriptionUserId] = React.useState<string | null>(null);
   const language = i18n.resolvedLanguage ?? i18n.language;
 
   React.useEffect(() => {
@@ -141,6 +158,63 @@ export function Page(): React.JSX.Element {
     [checkSession, navigate, t]
   );
 
+  const handleRequestSubscriptionChange = React.useCallback((targetUser: AdminUser, plan: AdminSubscriptionPlan): void => {
+    if (!plan.id || targetUser.subscription?.plan === plan.id) {
+      return;
+    }
+
+    setPendingSubscriptionChange({ plan, user: targetUser });
+  }, []);
+
+  const handleConfirmSubscriptionChange = React.useCallback(async (): Promise<void> => {
+    if (!pendingSubscriptionChange) {
+      return;
+    }
+
+    const targetUser = pendingSubscriptionChange.user;
+    const plan = pendingSubscriptionChange.plan;
+
+    if (!plan.id || targetUser.subscription?.plan === plan.id) {
+      setPendingSubscriptionChange(null);
+      return;
+    }
+
+    setUpdatingSubscriptionUserId(String(targetUser.id));
+
+    try {
+      const updatedUser = await updateAdminUserSubscription(targetUser.id, plan.id);
+
+      setUsersPage((current) => {
+        if (!current) {
+          return current;
+        }
+
+        return {
+          ...current,
+          users: current.users.map((row) => (String(row.id) === String(updatedUser.id) ? updatedUser : row)),
+        };
+      });
+      setPendingSubscriptionChange(null);
+      toast.success(t('dashboard.users.toasts.subscriptionUpdated', { user: getUserName(targetUser) }));
+    } catch (err) {
+      logger.error(err);
+      toast.error(getErrorMessage(err, t('dashboard.users.errors.subscriptionUpdate')));
+    } finally {
+      setUpdatingSubscriptionUserId(null);
+    }
+  }, [pendingSubscriptionChange, t]);
+
+  const handleCloseSubscriptionConfirmation = React.useCallback((): void => {
+    if (
+      pendingSubscriptionChange &&
+      updatingSubscriptionUserId === String(pendingSubscriptionChange.user.id)
+    ) {
+      return;
+    }
+
+    setPendingSubscriptionChange(null);
+  }, [pendingSubscriptionChange, updatingSubscriptionUserId]);
+
   const pagination = usersPage?.pagination ?? {
     current_page: page,
     last_page: 1,
@@ -226,7 +300,11 @@ export function Page(): React.JSX.Element {
                     impersonatingUserId={impersonatingUserId}
                     language={language}
                     onImpersonate={handleImpersonate}
+                    onRequestSubscriptionChange={handleRequestSubscriptionChange}
+                    onShowResources={setResourcesUser}
                     rows={usersPage?.users ?? []}
+                    subscriptionPlans={usersPage?.subscription_plans ?? []}
+                    updatingSubscriptionUserId={updatingSubscriptionUserId}
                   />
                 </Box>
               )}
@@ -260,6 +338,22 @@ export function Page(): React.JSX.Element {
               />
             </Card>
           ) : null}
+          <ResourcesDialog
+            language={language}
+            onClose={() => {
+              setResourcesUser(null);
+            }}
+            user={resourcesUser}
+          />
+          <SubscriptionConfirmationDialog
+            change={pendingSubscriptionChange}
+            isSubmitting={Boolean(
+              pendingSubscriptionChange &&
+                updatingSubscriptionUserId === String(pendingSubscriptionChange.user.id)
+            )}
+            onClose={handleCloseSubscriptionConfirmation}
+            onConfirm={handleConfirmSubscriptionChange}
+          />
         </Stack>
       </Box>
     </React.Fragment>
@@ -271,7 +365,11 @@ interface AdminUsersTableProps {
   impersonatingUserId: null | string;
   language: string;
   onImpersonate: (user: AdminUser) => Promise<void>;
+  onRequestSubscriptionChange: (user: AdminUser, plan: AdminSubscriptionPlan) => void;
+  onShowResources: (user: AdminUser) => void;
   rows: AdminUser[];
+  subscriptionPlans: AdminSubscriptionPlan[];
+  updatingSubscriptionUserId: null | string;
 }
 
 function AdminUsersTable({
@@ -279,12 +377,37 @@ function AdminUsersTable({
   impersonatingUserId,
   language,
   onImpersonate,
+  onRequestSubscriptionChange,
+  onShowResources,
   rows,
+  subscriptionPlans,
+  updatingSubscriptionUserId,
 }: AdminUsersTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const columns = React.useMemo(
-    () => getColumns({ currentUserId, impersonatingUserId, language, onImpersonate, t }),
-    [currentUserId, impersonatingUserId, language, onImpersonate, t]
+    () =>
+      getColumns({
+        currentUserId,
+        impersonatingUserId,
+        language,
+        onImpersonate,
+        onRequestSubscriptionChange,
+        onShowResources,
+        subscriptionPlans,
+        t,
+        updatingSubscriptionUserId,
+      }),
+    [
+      currentUserId,
+      impersonatingUserId,
+      language,
+      onImpersonate,
+      onRequestSubscriptionChange,
+      onShowResources,
+      subscriptionPlans,
+      t,
+      updatingSubscriptionUserId,
+    ]
   );
 
   return (
@@ -306,13 +429,21 @@ function getColumns({
   impersonatingUserId,
   language,
   onImpersonate,
+  onRequestSubscriptionChange,
+  onShowResources,
+  subscriptionPlans,
   t,
+  updatingSubscriptionUserId,
 }: {
   currentUserId: string;
   impersonatingUserId: null | string;
   language: string;
   onImpersonate: (user: AdminUser) => Promise<void>;
+  onRequestSubscriptionChange: (user: AdminUser, plan: AdminSubscriptionPlan) => void;
+  onShowResources: (user: AdminUser) => void;
+  subscriptionPlans: AdminSubscriptionPlan[];
   t: (key: string, options?: Record<string, unknown>) => string;
+  updatingSubscriptionUserId: null | string;
 }): ColumnDef<AdminUser>[] {
   return [
     {
@@ -333,9 +464,16 @@ function getColumns({
       width: '120px',
     },
     {
-      formatter: (row) => renderResourcesCell(row, t),
-      name: t('dashboard.users.fields.resources'),
-      width: '560px',
+      formatter: (row) =>
+        renderSubscriptionCell({
+          isUpdating: updatingSubscriptionUserId === String(row.id),
+          onRequestSubscriptionChange,
+          plans: subscriptionPlans,
+          row,
+          t,
+        }),
+      name: t('dashboard.users.fields.subscription'),
+      width: '230px',
     },
     {
       formatter: (row) => formatDate(row.created_at, language),
@@ -348,27 +486,51 @@ function getColumns({
         const isLoading = impersonatingUserId === String(row.id);
 
         return (
-          <Button
-            disabled={Boolean(impersonatingUserId) || isCurrentUser}
-            onClick={() => {
-              onImpersonate(row).catch((err) => {
-                logger.error(err);
-              });
-            }}
-            size="small"
-            startIcon={<SignInIcon />}
-            variant="outlined"
-          >
-            {isCurrentUser
-              ? t('dashboard.users.actions.currentUser')
-              : isLoading
-                ? t('dashboard.users.actions.entering')
-                : t('dashboard.users.actions.impersonate')}
-          </Button>
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center', justifyContent: 'flex-end' }}>
+            <Tooltip title={t('dashboard.users.actions.viewResources')}>
+              <IconButton
+                aria-label={t('dashboard.users.actions.viewResources')}
+                onClick={() => {
+                  onShowResources(row);
+                }}
+                size="small"
+              >
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip
+              title={
+                isCurrentUser
+                  ? t('dashboard.users.actions.currentUser')
+                  : isLoading
+                    ? t('dashboard.users.actions.entering')
+                    : t('dashboard.users.actions.impersonate')
+              }
+            >
+              <span>
+                <IconButton
+                  aria-label={
+                    isCurrentUser
+                      ? t('dashboard.users.actions.currentUser')
+                      : t('dashboard.users.actions.impersonate')
+                  }
+                  disabled={Boolean(impersonatingUserId) || isCurrentUser}
+                  onClick={() => {
+                    onImpersonate(row).catch((err) => {
+                      logger.error(err);
+                    });
+                  }}
+                  size="small"
+                >
+                  {isLoading ? <CircularProgress size={18} /> : <UserSwitchIcon />}
+                </IconButton>
+              </span>
+            </Tooltip>
+          </Stack>
         );
       },
       name: t('dashboard.users.fields.actions'),
-      width: '210px',
+      width: '120px',
     },
   ];
 }
@@ -393,12 +555,167 @@ function renderUserCell(row: AdminUser): React.JSX.Element {
   );
 }
 
-function renderResourcesCell(
+function renderSubscriptionCell({
+  isUpdating,
+  onRequestSubscriptionChange,
+  plans,
+  row,
+  t,
+}: {
+  isUpdating: boolean;
+  onRequestSubscriptionChange: (user: AdminUser, plan: AdminSubscriptionPlan) => void;
+  plans: AdminSubscriptionPlan[];
+  row: AdminUser;
+  t: (key: string, options?: Record<string, unknown>) => string;
+}): React.JSX.Element {
+  const value = row.subscription?.plan ?? '';
+
+  return (
+    <TextField
+      disabled={isUpdating || !plans.length}
+      onChange={(event) => {
+        const selectedPlan = plans.find((plan) => plan.id === event.target.value);
+
+        if (selectedPlan) {
+          onRequestSubscriptionChange(row, selectedPlan);
+        }
+      }}
+      select
+      size="small"
+      sx={{ minWidth: 190 }}
+      value={value}
+    >
+      {!value ? (
+        <MenuItem disabled value="">
+          {t('dashboard.users.subscription.none')}
+        </MenuItem>
+      ) : null}
+      {plans.map((plan) => (
+        <MenuItem key={plan.id} value={plan.id}>
+          {formatPlanLabel(plan, t)}
+        </MenuItem>
+      ))}
+    </TextField>
+  );
+}
+
+function SubscriptionConfirmationDialog({
+  change,
+  isSubmitting,
+  onClose,
+  onConfirm,
+}: {
+  change: PendingSubscriptionChange | null;
+  isSubmitting: boolean;
+  onClose: () => void;
+  onConfirm: () => Promise<void>;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const currentPlan = change?.user.subscription?.plan_name || change?.user.subscription?.plan;
+  const nextPlan = change ? formatPlanLabel(change.plan, t) : '';
+
+  return (
+    <Dialog fullWidth maxWidth="xs" onClose={isSubmitting ? undefined : onClose} open={Boolean(change)}>
+      <DialogTitle>{t('dashboard.users.subscription.confirmTitle')}</DialogTitle>
+      <DialogContent>
+        {change ? (
+          <Stack spacing={2}>
+            <Typography color="text.secondary" variant="body2">
+              {t('dashboard.users.subscription.confirmMessage', {
+                plan: nextPlan,
+                user: getUserName(change.user),
+              })}
+            </Typography>
+            <Stack divider={<Divider />} spacing={0}>
+              <SummaryRow
+                label={t('dashboard.users.subscription.currentPlan')}
+                value={currentPlan || t('dashboard.users.subscription.none')}
+              />
+              <SummaryRow label={t('dashboard.users.subscription.newPlan')} value={nextPlan} />
+            </Stack>
+          </Stack>
+        ) : null}
+      </DialogContent>
+      <DialogActions>
+        <Button disabled={isSubmitting} onClick={onClose}>
+          {t('dashboard.users.actions.cancel')}
+        </Button>
+        <Button
+          disabled={isSubmitting}
+          onClick={() => {
+            onConfirm().catch((err) => {
+              logger.error(err);
+            });
+          }}
+          startIcon={isSubmitting ? <CircularProgress size={16} /> : null}
+          variant="contained"
+        >
+          {t('dashboard.users.actions.confirmSubscription')}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }): React.JSX.Element {
+  return (
+    <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between', py: 1.25 }}>
+      <Typography color="text.secondary" variant="body2">
+        {label}
+      </Typography>
+      <Typography sx={{ textAlign: 'right' }} variant="subtitle2">
+        {value}
+      </Typography>
+    </Stack>
+  );
+}
+
+function ResourcesDialog({
+  language,
+  onClose,
+  user,
+}: {
+  language: string;
+  onClose: () => void;
+  user: AdminUser | null;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <Dialog fullWidth maxWidth="xs" onClose={onClose} open={Boolean(user)}>
+      <DialogTitle>{t('dashboard.users.resourcesDialog.title', { user: user ? getUserName(user) : '' })}</DialogTitle>
+      <DialogContent>
+        {user ? (
+          <Stack divider={<Divider />} spacing={0}>
+            {getResources(user, t).map((resource) => (
+              <Stack
+                direction="row"
+                key={resource.key}
+                spacing={2}
+                sx={{ alignItems: 'center', justifyContent: 'space-between', py: 1.25 }}
+              >
+                <Typography color="text.secondary" variant="body2">
+                  {resource.label}
+                </Typography>
+                <Typography variant="subtitle2">{formatNumber(resource.value, language)}</Typography>
+              </Stack>
+            ))}
+          </Stack>
+        ) : null}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>{t('dashboard.users.actions.close')}</Button>
+      </DialogActions>
+    </Dialog>
+  );
+}
+
+function getResources(
   row: AdminUser,
   t: (key: string, options?: Record<string, unknown>) => string
-): React.JSX.Element {
+): { key: string; label: string; value: number }[] {
   const counts = row.counts;
-  const resources = [
+  return [
     { key: 'profiles', label: t('dashboard.users.resources.profiles'), value: counts.profiles },
     { key: 'sources', label: t('dashboard.users.resources.sources'), value: counts.sources },
     { key: 'avatars', label: t('dashboard.users.resources.avatars'), value: counts.avatars },
@@ -407,14 +724,15 @@ function renderResourcesCell(
     { key: 'videos', label: t('dashboard.users.resources.videos'), value: counts.ai_videos },
     { key: 'chats', label: t('dashboard.users.resources.chats'), value: counts.chats },
   ];
+}
 
-  return (
-    <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-      {resources.map((resource) => (
-        <Chip key={resource.key} label={`${resource.label}: ${resource.value}`} size="small" variant="outlined" />
-      ))}
-    </Stack>
-  );
+function formatPlanLabel(
+  plan: AdminSubscriptionPlan,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string {
+  return plan.unlimited
+    ? t('dashboard.users.subscription.unlimitedPlan', { plan: plan.name })
+    : t('dashboard.users.subscription.plan', { interval: plan.interval, plan: plan.name });
 }
 
 function useExtractSearchParams(searchParams: URLSearchParams): { page: number; perPage: number; search: string } {
@@ -439,6 +757,10 @@ function getInitials(name: string): string {
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join('');
+}
+
+function formatNumber(value: number, language: string): string {
+  return new Intl.NumberFormat(language).format(value);
 }
 
 function formatDate(value: null | string | undefined, language: string): string {

@@ -288,24 +288,30 @@
     },
     "users": {
       "actions": {
+        "cancel": "Cancelar",
+        "close": "Cerrar",
         "clearSearch": "Limpiar búsqueda",
+        "confirmSubscription": "Confirmar cambio",
         "currentUser": "Usuario actual",
         "entering": "Entrando...",
         "impersonate": "Ingresar como usuario",
-        "search": "Buscar"
+        "search": "Buscar",
+        "viewResources": "Ver recursos"
       },
       "description": "Lista usuarios, revisa si tienen perfiles, fuentes, imágenes, voces y entra al admin como ellos para validar su experiencia.",
       "empty": "No se encontraron usuarios.",
       "errors": {
         "generic": "No se pudieron cargar los usuarios.",
         "impersonate": "No se pudo ingresar como ese usuario.",
-        "sessionMissing": "No se pudo leer la sesión admin actual."
+        "sessionMissing": "No se pudo leer la sesión admin actual.",
+        "subscriptionUpdate": "No se pudo actualizar la suscripción."
       },
       "fields": {
         "actions": "Acciones",
         "created": "Creado",
         "resources": "Recursos",
         "role": "Rol",
+        "subscription": "Suscripción",
         "unknown": "Desconocido",
         "user": "Usuario"
       },
@@ -330,10 +336,23 @@
         "videos": "Videos",
         "voices": "Voces"
       },
+      "resourcesDialog": {
+        "title": "Recursos de {{user}}"
+      },
       "searchPlaceholder": "Buscar por nombre o email",
+      "subscription": {
+        "confirmMessage": "Vas a cambiar la suscripción de {{user}} a {{plan}}. Confirma solo si este cambio es correcto.",
+        "confirmTitle": "Confirmar cambio de suscripción",
+        "currentPlan": "Plan actual",
+        "newPlan": "Nuevo plan",
+        "none": "Sin suscripción",
+        "plan": "{{plan}} · {{interval}}",
+        "unlimitedPlan": "{{plan}} · ilimitado"
+      },
       "title": "Usuarios",
       "toasts": {
-        "impersonating": "Viendo el admin como {{user}}"
+        "impersonating": "Viendo el admin como {{user}}",
+        "subscriptionUpdated": "Suscripción actualizada para {{user}}"
       }
     },
     "profiles": {
