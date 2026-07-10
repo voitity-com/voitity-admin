@@ -183,6 +183,49 @@
         },
         "title": "Account"
       },
+      "security": {
+        "changePassword": {
+          "actions": {
+            "update": "Update password",
+            "updating": "Updating..."
+          },
+          "fields": {
+            "currentPassword": "Current password",
+            "password": "New password",
+            "passwordConfirmation": "Confirm new password"
+          },
+          "subheader": "Use a strong password that you do not use anywhere else.",
+          "title": "Change password",
+          "toasts": {
+            "updated": "Password updated successfully."
+          },
+          "validation": {
+            "currentIncorrect": "Current password is incorrect",
+            "currentRequired": "Current password is required",
+            "passwordConfirmationRequired": "Confirm your new password",
+            "passwordMin": "Password must be at least 8 characters",
+            "passwordMismatch": "Passwords do not match"
+          }
+        },
+        "loginHistory": {
+          "columns": {
+            "ipAddress": "IP address",
+            "loginType": "Login type",
+            "userAgent": "User agent"
+          },
+          "empty": "No login events have been recorded yet.",
+          "subheader": "Recent sign-ins are shown from newest to oldest.",
+          "timestamp": "on {{date}}",
+          "title": "Login history",
+          "types": {
+            "credential": "Password login",
+            "google": "Google login",
+            "unknown": "Login"
+          },
+          "unknown": "Unknown"
+        },
+        "pageTitle": "Security"
+      },
       "billing": {
         "empty": "No subscription information was returned.",
         "emptySection": "No items were returned.",

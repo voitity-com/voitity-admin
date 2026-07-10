@@ -183,6 +183,49 @@
         },
         "title": "Cuenta"
       },
+      "security": {
+        "changePassword": {
+          "actions": {
+            "update": "Actualizar contraseña",
+            "updating": "Actualizando..."
+          },
+          "fields": {
+            "currentPassword": "Contraseña actual",
+            "password": "Nueva contraseña",
+            "passwordConfirmation": "Confirmar nueva contraseña"
+          },
+          "subheader": "Usa una contraseña segura que no uses en otros sitios.",
+          "title": "Cambiar contraseña",
+          "toasts": {
+            "updated": "Contraseña actualizada correctamente."
+          },
+          "validation": {
+            "currentIncorrect": "La contraseña actual es incorrecta",
+            "currentRequired": "La contraseña actual es obligatoria",
+            "passwordConfirmationRequired": "Confirma tu nueva contraseña",
+            "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+            "passwordMismatch": "Las contraseñas no coinciden"
+          }
+        },
+        "loginHistory": {
+          "columns": {
+            "ipAddress": "Dirección IP",
+            "loginType": "Tipo de ingreso",
+            "userAgent": "Navegador"
+          },
+          "empty": "Aún no se han registrado ingresos.",
+          "subheader": "Los ingresos recientes se muestran del más nuevo al más antiguo.",
+          "timestamp": "el {{date}}",
+          "title": "Historial de ingresos",
+          "types": {
+            "credential": "Ingreso con contraseña",
+            "google": "Ingreso con Google",
+            "unknown": "Ingreso"
+          },
+          "unknown": "Desconocido"
+        },
+        "pageTitle": "Seguridad"
+      },
       "billing": {
         "empty": "No se recibió información de la suscripción.",
         "emptySection": "No se recibieron elementos.",

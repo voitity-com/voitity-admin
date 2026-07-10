@@ -7,17 +7,20 @@ import { clearAdminImpersonationSession } from './admin-impersonation-store';
 import {
   ApiRequestError,
   getCurrentUser,
+  getLoginHistory,
   mapApiUser,
   postGetToken,
   postGoogleSignIn,
   postGoogleSignUp,
   postLogout,
+  postPasswordChange,
   postPasswordForgot,
   postPasswordReset,
   postPasswordResetValidate,
   postSignUp,
   type AuthApiResponse,
   type GoogleAuthPayload,
+  type LoginHistoryPage,
 } from './api-client';
 import { clearAuthSession, getAuthSession, persistAuthSession, persistAuthUser } from './session-store';
 
@@ -62,6 +65,17 @@ export interface ValidatePasswordResetLinkParams {
   email: string;
   locale?: string;
   token: string;
+}
+
+export interface ChangePasswordParams {
+  currentPassword: string;
+  password: string;
+  passwordConfirmation: string;
+}
+
+export interface GetLoginHistoryParams {
+  page?: number;
+  perPage?: number;
 }
 
 class AuthClient {
@@ -144,6 +158,45 @@ class AuthClient {
       const response = await postPasswordResetValidate(params);
 
       return { message: response.message, status: response.status };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
+  }
+
+  async changePassword(params: ChangePasswordParams): Promise<{ error?: string; message?: string }> {
+    const session = getAuthSession();
+
+    if (!session) {
+      return { error: 'Missing API access token' };
+    }
+
+    try {
+      const response = await postPasswordChange(
+        {
+          current_password: params.currentPassword,
+          password: params.password,
+          password_confirmation: params.passwordConfirmation,
+        },
+        session.accessToken
+      );
+
+      return { message: response.message };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
+  }
+
+  async getLoginHistory(params: GetLoginHistoryParams = {}): Promise<{ data?: LoginHistoryPage; error?: string }> {
+    const session = getAuthSession();
+
+    if (!session) {
+      return { error: 'Missing API access token' };
+    }
+
+    try {
+      const data = await getLoginHistory(session.accessToken, params);
+
+      return { data };
     } catch (err) {
       return { error: getErrorMessage(err) };
     }

@@ -1,5 +1,5 @@
-import { config } from '@/config';
 import type { User } from '@/types/user';
+import { config } from '@/config';
 
 export interface ApiUser {
   id: number | string;
@@ -62,9 +62,35 @@ export interface PasswordResetValidatePayload {
   token: string;
 }
 
+export interface PasswordChangePayload {
+  current_password: string;
+  password: string;
+  password_confirmation: string;
+}
+
 export interface MessageApiResponse {
   message?: string;
   status?: string;
+}
+
+export interface LoginHistoryEvent {
+  created_at?: null | string;
+  id: number | string;
+  ip_address?: null | string;
+  type?: null | string;
+  user_agent?: null | string;
+}
+
+export interface LoginHistoryPagination {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+}
+
+export interface LoginHistoryPage {
+  events: LoginHistoryEvent[];
+  pagination: LoginHistoryPagination;
 }
 
 interface RequestOptions {
@@ -111,12 +137,42 @@ export async function postPasswordResetValidate(payload: PasswordResetValidatePa
   return requestJson<MessageApiResponse>('/api/auth/password/reset/validate', { body: payload });
 }
 
+export async function postPasswordChange(payload: PasswordChangePayload, token: string): Promise<MessageApiResponse> {
+  return requestJson<MessageApiResponse>('/api/auth/password/change', { body: payload, token });
+}
+
+export async function getLoginHistory(
+  token: string,
+  params: { page?: number; perPage?: number } = {}
+): Promise<LoginHistoryPage> {
+  const query = new URLSearchParams({
+    page: String(params.page ?? 1),
+    per_page: String(params.perPage ?? 10),
+  });
+  const response = await requestJson<LoginHistoryPage | { data?: LoginHistoryPage }>(
+    `/api/auth/login-history?${query.toString()}`,
+    {
+      method: 'GET',
+      token,
+    }
+  );
+
+  if (hasLoginHistoryData(response) && response.data) {
+    return response.data;
+  }
+
+  return response as LoginHistoryPage;
+}
+
 export async function postLogout(token: string): Promise<void> {
   await requestJson('/api/auth/logout', { token });
 }
 
 export async function getCurrentUser(token: string): Promise<ApiUser> {
-  const response = await requestJson<ApiUser | { data?: ApiUser; user?: ApiUser }>('/api/user', { method: 'GET', token });
+  const response = await requestJson<ApiUser | { data?: ApiUser; user?: ApiUser }>('/api/user', {
+    method: 'GET',
+    token,
+  });
 
   if (hasUserKey(response) && response.user) {
     return response.user;
@@ -188,6 +244,12 @@ function hasUserKey(value: ApiUser | { data?: ApiUser; user?: ApiUser }): value 
 }
 
 function hasDataKey(value: ApiUser | { data?: ApiUser; user?: ApiUser }): value is { data?: ApiUser } {
+  return 'data' in value;
+}
+
+function hasLoginHistoryData(
+  value: LoginHistoryPage | { data?: LoginHistoryPage }
+): value is { data?: LoginHistoryPage } {
   return 'data' in value;
 }
 
