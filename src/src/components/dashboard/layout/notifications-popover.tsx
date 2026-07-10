@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
+import CircularProgress from '@mui/material/CircularProgress';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import List from '@mui/material/List';
@@ -11,100 +12,153 @@ import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
-import { EnvelopeSimple as EnvelopeSimpleIcon } from '@phosphor-icons/react/dist/ssr/EnvelopeSimple';
+import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
+import { CheckCircle as CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle';
+import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
+import { ShieldWarning as ShieldWarningIcon } from '@phosphor-icons/react/dist/ssr/ShieldWarning';
 import { User as UserIcon } from '@phosphor-icons/react/dist/ssr/User';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
+import { useTranslation } from 'react-i18next';
 
-import { dayjs } from '@/lib/dayjs';
-
-export type Notification = { id: string; createdAt: Date; read: boolean } & (
-  | { type: 'new_feature'; description: string }
-  | { type: 'new_company'; author: { name: string; avatar?: string }; company: { name: string } }
-  | { type: 'new_job'; author: { name: string; avatar?: string }; job: { title: string } }
-);
-
-const notifications = [
-  {
-    id: 'EV-004',
-    createdAt: dayjs().subtract(7, 'minute').subtract(5, 'hour').subtract(1, 'day').toDate(),
-    read: false,
-    type: 'new_job',
-    author: { name: 'Jie Yan', avatar: '/assets/avatar-8.png' },
-    job: { title: 'Remote React / React Native Developer' },
-  },
-  {
-    id: 'EV-003',
-    createdAt: dayjs().subtract(18, 'minute').subtract(3, 'hour').subtract(5, 'day').toDate(),
-    read: true,
-    type: 'new_job',
-    author: { name: 'Fran Perez', avatar: '/assets/avatar-5.png' },
-    job: { title: 'Senior Golang Backend Engineer' },
-  },
-  {
-    id: 'EV-002',
-    createdAt: dayjs().subtract(4, 'minute').subtract(5, 'hour').subtract(7, 'day').toDate(),
-    read: true,
-    type: 'new_feature',
-    description: 'Logistics management is now available',
-  },
-  {
-    id: 'EV-001',
-    createdAt: dayjs().subtract(7, 'minute').subtract(8, 'hour').subtract(7, 'day').toDate(),
-    read: true,
-    type: 'new_company',
-    author: { name: 'Jie Yan', avatar: '/assets/avatar-8.png' },
-    company: { name: 'Stripe' },
-  },
-] satisfies Notification[];
+import { toast } from '@/components/core/toaster';
+import { RouterLink } from '@/components/core/link';
+import {
+  type AppNotification,
+  dismissAppNotification,
+  getAppNotifications,
+  markAllAppNotificationsAsRead,
+} from '@/lib/notifications/api-client';
 
 export interface NotificationsPopoverProps {
   anchorEl: null | Element;
+  onChanged?: (unreadCount: number) => void;
   onClose?: () => void;
-  onMarkAllAsRead?: () => void;
-  onRemoveOne?: (id: string) => void;
   open?: boolean;
 }
 
 export function NotificationsPopover({
   anchorEl,
+  onChanged,
   onClose,
-  onMarkAllAsRead,
-  onRemoveOne,
   open = false,
 }: NotificationsPopoverProps): React.JSX.Element {
+  const { i18n, t } = useTranslation();
+  const language = i18n.resolvedLanguage ?? i18n.language;
+  const [notifications, setNotifications] = React.useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<null | string>(null);
+
+  const loadNotifications = React.useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const page = await getAppNotifications({ locale: language, perPage: 20 });
+
+      setNotifications(page.notifications);
+      setUnreadCount(page.unread_count);
+      onChanged?.(page.unread_count);
+    } catch (err) {
+      setError(getErrorMessage(err, t('dashboard.notifications.errors.load')));
+    } finally {
+      setLoading(false);
+    }
+  }, [language, onChanged, t]);
+
+  React.useEffect(() => {
+    if (open) {
+      void loadNotifications();
+    }
+  }, [loadNotifications, open]);
+
+  const handleMarkAllAsRead = React.useCallback(async () => {
+    try {
+      await markAllAppNotificationsAsRead(language);
+      setNotifications((current) => current.map((notification) => ({ ...notification, read_at: new Date().toISOString() })));
+      setUnreadCount(0);
+      onChanged?.(0);
+      toast.success(t('dashboard.notifications.toasts.markedRead'));
+    } catch (err) {
+      toast.error(getErrorMessage(err, t('dashboard.notifications.errors.markRead')));
+    }
+  }, [language, onChanged, t]);
+
+  const handleDismiss = React.useCallback(
+    async (notification: AppNotification) => {
+      try {
+        await dismissAppNotification(notification.id, language);
+        setNotifications((current) => current.filter((item) => item.id !== notification.id));
+
+        if (!notification.read_at) {
+          const nextUnreadCount = Math.max(0, unreadCount - 1);
+
+          setUnreadCount(nextUnreadCount);
+          onChanged?.(nextUnreadCount);
+        }
+      } catch (err) {
+        toast.error(getErrorMessage(err, t('dashboard.notifications.errors.dismiss')));
+      }
+    },
+    [language, onChanged, t, unreadCount]
+  );
+
   return (
     <Popover
       anchorEl={anchorEl}
       anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
       onClose={onClose}
       open={open}
-      slotProps={{ paper: { sx: { width: '380px' } } }}
+      slotProps={{ paper: { sx: { width: { sm: '420px', xs: 'calc(100vw - 32px)' } } } }}
       transformOrigin={{ horizontal: 'right', vertical: 'top' }}
     >
       <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between', px: 3, py: 2 }}>
-        <Typography variant="h6">Notifications</Typography>
-        <Tooltip title="Mark all as read">
-          <IconButton edge="end" onClick={onMarkAllAsRead}>
-            <EnvelopeSimpleIcon />
-          </IconButton>
+        <Stack spacing={0.5}>
+          <Typography variant="h6">{t('dashboard.notifications.title')}</Typography>
+          <Typography color="text.secondary" variant="caption">
+            {t('dashboard.notifications.unreadCount', { count: unreadCount })}
+          </Typography>
+        </Stack>
+        <Tooltip title={t('dashboard.notifications.actions.markAllRead')}>
+          <span>
+            <IconButton
+              aria-label={t('dashboard.notifications.actions.markAllRead')}
+              disabled={unreadCount === 0 || loading}
+              edge="end"
+              onClick={handleMarkAllAsRead}
+            >
+              <CheckCircleIcon />
+            </IconButton>
+          </span>
         </Tooltip>
       </Stack>
-      {notifications.length === 0 ? (
+      {loading ? (
+        <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress size={28} />
+        </Box>
+      ) : error ? (
         <Box sx={{ p: 2 }}>
-          <Typography variant="subtitle2">There are no notifications</Typography>
+          <Typography color="error" variant="body2">
+            {error}
+          </Typography>
+        </Box>
+      ) : notifications.length === 0 ? (
+        <Box sx={{ p: 2 }}>
+          <Typography variant="subtitle2">{t('dashboard.notifications.empty')}</Typography>
         </Box>
       ) : (
-        <Box sx={{ maxHeight: '270px', overflowY: 'auto' }}>
+        <Box sx={{ maxHeight: '360px', overflowY: 'auto' }}>
           <List disablePadding>
             {notifications.map((notification, index) => (
               <NotificationItem
                 divider={index < notifications.length - 1}
                 key={notification.id}
+                language={language}
                 notification={notification}
-                onRemove={() => {
-                  onRemoveOne?.(notification.id);
+                onDismiss={() => {
+                  void handleDismiss(notification);
                 }}
+                t={t}
               />
             ))}
           </List>
@@ -116,16 +170,44 @@ export function NotificationsPopover({
 
 interface NotificationItemProps {
   divider?: boolean;
-  notification: Notification;
-  onRemove?: () => void;
+  language: string;
+  notification: AppNotification;
+  onDismiss?: () => void;
+  t: ReturnType<typeof useTranslation>['t'];
 }
 
-function NotificationItem({ divider, notification, onRemove }: NotificationItemProps): React.JSX.Element {
+function NotificationItem({ divider, language, notification, onDismiss, t }: NotificationItemProps): React.JSX.Element {
+  const unread = !notification.read_at;
+  const Icon = iconForCategory(notification.category);
+
   return (
-    <ListItem divider={divider} sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
-      <NotificationContent notification={notification} />
-      <Tooltip title="Remove">
-        <IconButton edge="end" onClick={onRemove} size="small">
+    <ListItem divider={divider} sx={{ alignItems: 'flex-start', gap: 2, justifyContent: 'space-between', py: 2 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start', minWidth: 0 }}>
+        <Avatar
+          sx={{
+            bgcolor: unread ? 'primary.main' : 'action.selected',
+            color: unread ? 'primary.contrastText' : 'text.secondary',
+          }}
+        >
+          <Icon fontSize="var(--Icon-fontSize)" />
+        </Avatar>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="subtitle2">{notification.title}</Typography>
+          <Typography color="text.secondary" variant="body2">
+            {notification.body}
+          </Typography>
+          {notification.action_url && notification.action_label ? (
+            <Link component={RouterLink} href={notification.action_url} underline="hover" variant="body2">
+              {notification.action_label}
+            </Link>
+          ) : null}
+          <Typography color="text.secondary" display="block" variant="caption">
+            {formatDate(notification.created_at, language)}
+          </Typography>
+        </Box>
+      </Stack>
+      <Tooltip title={t('dashboard.notifications.actions.dismiss')}>
+        <IconButton edge="end" onClick={onDismiss} size="small">
           <XIcon />
         </IconButton>
       </Tooltip>
@@ -133,76 +215,41 @@ function NotificationItem({ divider, notification, onRemove }: NotificationItemP
   );
 }
 
-interface NotificationContentProps {
-  notification: Notification;
+function iconForCategory(category: null | string | undefined): typeof BellIcon {
+  if (category === 'billing') {
+    return CreditCardIcon;
+  }
+
+  if (category === 'security' || category === 'admin' || category === 'system') {
+    return ShieldWarningIcon;
+  }
+
+  if (category === 'profile' || category === 'account') {
+    return UserIcon;
+  }
+
+  return BellIcon;
 }
 
-function NotificationContent({ notification }: NotificationContentProps): React.JSX.Element {
-  if (notification.type === 'new_feature') {
-    return (
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
-        <Avatar>
-          <ChatTextIcon fontSize="var(--Icon-fontSize)" />
-        </Avatar>
-        <div>
-          <Typography variant="subtitle2">New feature!</Typography>
-          <Typography variant="body2">{notification.description}</Typography>
-          <Typography color="text.secondary" variant="caption">
-            {dayjs(notification.createdAt).format('MMM D, hh:mm A')}
-          </Typography>
-        </div>
-      </Stack>
-    );
+function formatDate(value: null | string | undefined, language: string): string {
+  if (!value) {
+    return '';
   }
 
-  if (notification.type === 'new_company') {
-    return (
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
-        <Avatar src={notification.author.avatar}>
-          <UserIcon />
-        </Avatar>
-        <div>
-          <Typography variant="body2">
-            <Typography component="span" variant="subtitle2">
-              {notification.author.name}
-            </Typography>{' '}
-            created{' '}
-            <Link underline="always" variant="body2">
-              {notification.company.name}
-            </Link>{' '}
-            company
-          </Typography>
-          <Typography color="text.secondary" variant="caption">
-            {dayjs(notification.createdAt).format('MMM D, hh:mm A')}
-          </Typography>
-        </div>
-      </Stack>
-    );
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '';
   }
 
-  if (notification.type === 'new_job') {
-    return (
-      <Stack direction="row" spacing={2} sx={{ alignItems: 'flex-start' }}>
-        <Avatar src={notification.author.avatar}>
-          <UserIcon />
-        </Avatar>
-        <div>
-          <Typography variant="body2">
-            <Typography component="span" variant="subtitle2">
-              {notification.author.name}
-            </Typography>{' '}
-            added a new job{' '}
-            <Link underline="always" variant="body2">
-              {notification.job.title}
-            </Link>
-          </Typography>
-          <Typography color="text.secondary" variant="caption">
-            {dayjs(notification.createdAt).format('MMM D, hh:mm A')}
-          </Typography>
-        </div>
-      </Stack>
-    );
-  }
+  return new Intl.DateTimeFormat(language, {
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    month: 'short',
+  }).format(date);
+}
 
-  return <div />;
+function getErrorMessage(err: unknown, fallback: string): string {
+  return err instanceof Error && err.message ? err.message : fallback;
 }

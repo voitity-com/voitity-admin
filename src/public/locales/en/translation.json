@@ -182,6 +182,23 @@
         "security": "Security"
       }
     },
+    "notifications": {
+      "actions": {
+        "dismiss": "Dismiss",
+        "markAllRead": "Mark all as read"
+      },
+      "empty": "There are no notifications",
+      "errors": {
+        "dismiss": "Could not dismiss the notification.",
+        "load": "Could not load notifications.",
+        "markRead": "Could not mark notifications as read."
+      },
+      "title": "Notifications",
+      "toasts": {
+        "markedRead": "Notifications marked as read."
+      },
+      "unreadCount": "{{count}} unread"
+    },
     "settings": {
       "account": {
         "actions": {

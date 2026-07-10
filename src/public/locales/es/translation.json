@@ -182,6 +182,23 @@
         "security": "Seguridad"
       }
     },
+    "notifications": {
+      "actions": {
+        "dismiss": "Descartar",
+        "markAllRead": "Marcar todas como leídas"
+      },
+      "empty": "No hay notificaciones",
+      "errors": {
+        "dismiss": "No se pudo descartar la notificación.",
+        "load": "No se pudieron cargar las notificaciones.",
+        "markRead": "No se pudieron marcar las notificaciones como leídas."
+      },
+      "title": "Notificaciones",
+      "toasts": {
+        "markedRead": "Notificaciones marcadas como leídas."
+      },
+      "unreadCount": "{{count}} sin leer"
+    },
     "settings": {
       "account": {
         "actions": {
