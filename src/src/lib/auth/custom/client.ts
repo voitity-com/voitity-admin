@@ -12,6 +12,9 @@ import {
   postGoogleSignIn,
   postGoogleSignUp,
   postLogout,
+  postPasswordForgot,
+  postPasswordReset,
+  postPasswordResetValidate,
   postSignUp,
   type AuthApiResponse,
   type GoogleAuthPayload,
@@ -45,6 +48,20 @@ export interface SignInWithPasswordParams {
 
 export interface ResetPasswordParams {
   email: string;
+  locale?: string;
+}
+
+export interface UpdatePasswordParams {
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+  token: string;
+}
+
+export interface ValidatePasswordResetLinkParams {
+  email: string;
+  locale?: string;
+  token: string;
 }
 
 class AuthClient {
@@ -92,12 +109,44 @@ class AuthClient {
     }
   }
 
-  async resetPassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Password reset not implemented' };
+  async resetPassword(params: ResetPasswordParams): Promise<{ error?: string; message?: string }> {
+    try {
+      const response = await postPasswordForgot({
+        email: params.email,
+        locale: params.locale,
+      });
+
+      return { message: response.message };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
   }
 
-  async updatePassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Update reset not implemented' };
+  async updatePassword(params: UpdatePasswordParams): Promise<{ error?: string; message?: string }> {
+    try {
+      const response = await postPasswordReset({
+        email: params.email,
+        password: params.password,
+        password_confirmation: params.passwordConfirmation,
+        token: params.token,
+      });
+
+      return { message: response.message };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
+  }
+
+  async validatePasswordResetLink(
+    params: ValidatePasswordResetLinkParams
+  ): Promise<{ error?: string; message?: string; status?: string }> {
+    try {
+      const response = await postPasswordResetValidate(params);
+
+      return { message: response.message, status: response.status };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {

@@ -246,6 +246,11 @@ export function SignInForm(): React.JSX.Element {
               />
               {verificationAlert ? <Alert color={verificationAlert.color}>{verificationAlert.message}</Alert> : null}
               {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <Link component={RouterLink} href={paths.auth.custom.resetPassword} variant="subtitle2">
+                  {t('auth.signIn.forgotPassword')}
+                </Link>
+              </Box>
               <Button disabled={isPending} type="submit" variant="contained">
                 {t('auth.signIn.actions.submit')}
               </Button>

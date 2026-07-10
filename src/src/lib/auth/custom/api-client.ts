@@ -44,6 +44,29 @@ export interface GoogleAuthPayload {
   access_token: string;
 }
 
+export interface PasswordForgotPayload {
+  email: string;
+  locale?: string;
+}
+
+export interface PasswordResetPayload {
+  email: string;
+  password: string;
+  password_confirmation: string;
+  token: string;
+}
+
+export interface PasswordResetValidatePayload {
+  email: string;
+  locale?: string;
+  token: string;
+}
+
+export interface MessageApiResponse {
+  message?: string;
+  status?: string;
+}
+
 interface RequestOptions {
   body?: unknown;
   method?: 'GET' | 'POST';
@@ -74,6 +97,18 @@ export async function postGoogleSignIn(payload: GoogleAuthPayload): Promise<Auth
 
 export async function postGoogleSignUp(payload: GoogleAuthPayload): Promise<AuthApiResponse> {
   return requestJson<AuthApiResponse>('/api/auth/google/sign-up', { body: payload });
+}
+
+export async function postPasswordForgot(payload: PasswordForgotPayload): Promise<MessageApiResponse> {
+  return requestJson<MessageApiResponse>('/api/auth/password/forgot', { body: payload });
+}
+
+export async function postPasswordReset(payload: PasswordResetPayload): Promise<MessageApiResponse> {
+  return requestJson<MessageApiResponse>('/api/auth/password/reset', { body: payload });
+}
+
+export async function postPasswordResetValidate(payload: PasswordResetValidatePayload): Promise<MessageApiResponse> {
+  return requestJson<MessageApiResponse>('/api/auth/password/reset/validate', { body: payload });
 }
 
 export async function postLogout(token: string): Promise<void> {

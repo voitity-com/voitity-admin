@@ -21,6 +21,7 @@
       },
       "metaTitle": "Iniciar sesión",
       "noAccount": "¿No tienes una cuenta?",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
       "signUp": "Registrarse",
       "title": "Iniciar sesión",
       "verification": {
@@ -62,6 +63,43 @@
         "passwordConfirmationRequired": "Confirma tu contraseña",
         "passwordMin": "La contraseña debe tener al menos 8 caracteres",
         "passwordMismatch": "Las contraseñas no coinciden"
+      }
+    },
+    "resetPassword": {
+      "actions": {
+        "backToSignIn": "Volver a iniciar sesión",
+        "requestNewLink": "Solicitar un nuevo enlace",
+        "request": "Enviar enlace",
+        "signIn": "Iniciar sesión",
+        "update": "Cambiar contraseña"
+      },
+      "checkingDescription": "Esto tomará solo un momento.",
+      "checkingTitle": "Verificando enlace",
+      "fields": {
+        "email": "Correo electrónico",
+        "password": "Nueva contraseña",
+        "passwordConfirmation": "Confirmar nueva contraseña"
+      },
+      "invalidDescription": "Solicita un nuevo enlace de recuperación para cambiar tu contraseña.",
+      "invalidTitle": "Este enlace no se puede usar",
+      "requestDescription": "Ingresa el correo registrado en tu cuenta.",
+      "requestTitle": "Restablecer contraseña",
+      "success": {
+        "requested": "Si este correo pertenece a una cuenta con contraseña, enviamos un enlace para cambiarla.",
+        "updated": "Tu contraseña fue actualizada correctamente."
+      },
+      "successDescription": "Ya puedes iniciar sesión con tu nueva contraseña.",
+      "successTitle": "Contraseña actualizada",
+      "updateDescription": "Elige una nueva contraseña para tu cuenta.",
+      "updateTitle": "Cambiar contraseña",
+      "validation": {
+        "emailInvalid": "Ingresa un correo electrónico válido",
+        "emailRequired": "El correo electrónico es obligatorio",
+        "checking": "Verificando tu enlace de recuperación...",
+        "passwordConfirmationRequired": "Confirma tu nueva contraseña",
+        "passwordMin": "La contraseña debe tener al menos 8 caracteres",
+        "passwordMismatch": "Las contraseñas no coinciden",
+        "unavailable": "Este enlace de recuperación no es válido o ya fue usado."
       }
     },
     "split": {

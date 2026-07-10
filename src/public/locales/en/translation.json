@@ -21,6 +21,7 @@
       },
       "metaTitle": "Sign in",
       "noAccount": "Don't have an account?",
+      "forgotPassword": "Forgot password?",
       "signUp": "Sign up",
       "title": "Sign in",
       "verification": {
@@ -62,6 +63,43 @@
         "passwordConfirmationRequired": "Confirm your password",
         "passwordMin": "Password must be at least 8 characters",
         "passwordMismatch": "Passwords do not match"
+      }
+    },
+    "resetPassword": {
+      "actions": {
+        "backToSignIn": "Back to sign in",
+        "requestNewLink": "Request a new link",
+        "request": "Send recovery link",
+        "signIn": "Sign in",
+        "update": "Change password"
+      },
+      "checkingDescription": "This only takes a moment.",
+      "checkingTitle": "Checking reset link",
+      "fields": {
+        "email": "Email address",
+        "password": "New password",
+        "passwordConfirmation": "Confirm new password"
+      },
+      "invalidDescription": "Request a new recovery link to change your password.",
+      "invalidTitle": "This link cannot be used",
+      "requestDescription": "Enter the email registered to your account.",
+      "requestTitle": "Reset password",
+      "success": {
+        "requested": "If this email belongs to a password account, we sent a recovery link.",
+        "updated": "Your password was updated successfully."
+      },
+      "successDescription": "You can now sign in with your new password.",
+      "successTitle": "Password updated",
+      "updateDescription": "Choose a new password for your account.",
+      "updateTitle": "Change password",
+      "validation": {
+        "emailInvalid": "Enter a valid email address",
+        "emailRequired": "Email is required",
+        "checking": "Checking your recovery link...",
+        "passwordConfirmationRequired": "Confirm your new password",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordMismatch": "Passwords do not match",
+        "unavailable": "This recovery link is invalid or has already been used."
       }
     },
     "split": {
