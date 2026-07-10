@@ -26,6 +26,7 @@ import type { User } from '@/types/user';
 import { paths } from '@/paths';
 import { getSupportedLanguage } from '@/lib/i18n';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
+import { getAppNotifications } from '@/lib/notifications/api-client';
 import { useDialog } from '@/hooks/use-dialog';
 import { usePathname } from '@/hooks/use-pathname';
 import { usePopover } from '@/hooks/use-popover';
@@ -52,8 +53,6 @@ const logoColors = {
   dark: { blend_in: 'light', discrete: 'light', evident: 'light' },
   light: { blend_in: 'dark', discrete: 'dark', evident: 'light' },
 } as Record<ColorScheme, Record<NavColor, 'dark' | 'light'>>;
-
-const notImplementedLabel = 'ni';
 
 export interface MainNavProps {
   color?: NavColor;
@@ -169,21 +168,49 @@ function SearchButton(): React.JSX.Element {
 
 function NotificationsButton(): React.JSX.Element {
   const popover = usePopover<HTMLButtonElement>();
+  const { i18n, t } = useTranslation();
+  const language = getSupportedLanguage(i18n.language);
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  const loadUnreadCount = React.useCallback(async () => {
+    try {
+      const page = await getAppNotifications({ locale: language, perPage: 1 });
+
+      setUnreadCount(page.unread_count);
+    } catch {
+      setUnreadCount(0);
+    }
+  }, [language]);
+
+  React.useEffect(() => {
+    void loadUnreadCount();
+  }, [loadUnreadCount]);
 
   return (
     <React.Fragment>
-      <Tooltip title="Notifications">
+      <Tooltip title={t('dashboard.notifications.title')}>
         <Badge
+          badgeContent={unreadCount > 0 ? unreadCount : undefined}
           color="error"
+          invisible={unreadCount === 0}
+          max={99}
           sx={{ '& .MuiBadge-dot': { borderRadius: '50%', height: '10px', right: '6px', top: '6px', width: '10px' } }}
-          variant="dot"
         >
-          <IconButton onClick={popover.handleOpen} ref={popover.anchorRef}>
+          <IconButton
+            aria-label={t('dashboard.notifications.title')}
+            onClick={popover.handleOpen}
+            ref={popover.anchorRef}
+          >
             <BellIcon color="var(--NavItem-icon-color)" />
           </IconButton>
         </Badge>
       </Tooltip>
-      <NotificationsPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
+      <NotificationsPopover
+        anchorEl={popover.anchorRef.current}
+        onChanged={setUnreadCount}
+        onClose={popover.handleClose}
+        open={popover.open}
+      />
     </React.Fragment>
   );
 }
@@ -328,7 +355,6 @@ function NavItem({
   items,
   href,
   icon,
-  implemented,
   label,
   matcher,
   pathname,
@@ -396,7 +422,6 @@ function NavItem({
           </Typography>
         </Box>
         {label ? <Chip color="primary" label={label} size="small" /> : null}
-        {implemented ? null : <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />}
         {external ? (
           <Box sx={{ alignItems: 'center', display: 'flex', flex: '0 0 auto' }}>
             <ArrowSquareOutIcon color="var(--NavItem-icon-color)" fontSize="var(--icon-fontSize-sm)" />
@@ -464,7 +489,6 @@ interface DropdownItemProps extends NavItemConfig {
 function DropdownItem({
   disabled,
   external,
-  implemented,
   items,
   href,
   matcher,
@@ -521,7 +545,6 @@ function DropdownItem({
             {title}
           </Typography>
         </Box>
-        {implemented ? null : <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20, ml: 1 }} />}
         {isBranch ? (
           <Box sx={{ flex: '0 0 auto' }}>
             <CaretRightIcon fontSize="var(--icon-fontSize-sm)" />

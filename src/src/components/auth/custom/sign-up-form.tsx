@@ -21,6 +21,7 @@ import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
 import { useUser } from '@/hooks/use-user';
@@ -53,6 +54,7 @@ export function SignUpForm(): React.JSX.Element {
 
   const [isPending, setIsPending] = React.useState<boolean>(false);
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
+  const [successMessage, setSuccessMessage] = React.useState<null | string>(null);
 
   const schema = React.useMemo(
     () =>
@@ -77,7 +79,9 @@ export function SignUpForm(): React.JSX.Element {
 
   const {
     control,
+    clearErrors,
     handleSubmit,
+    reset,
     setError,
     trigger,
     formState: { errors },
@@ -103,7 +107,11 @@ export function SignUpForm(): React.JSX.Element {
     try {
       const accessToken = await requestGoogleAccessToken();
       const profile = await fetchGoogleProfile(accessToken);
-      const { error } = await authClient.signUpWithGoogle({ accessToken, profile });
+      const { error } = await authClient.signUpWithGoogle({
+        accessToken,
+        locale: getSupportedLanguage(currentLanguage),
+        profile,
+      });
 
       if (error) {
         throw new Error(error);
@@ -117,14 +125,17 @@ export function SignUpForm(): React.JSX.Element {
     } finally {
       setIsPending(false);
     }
-  }, [checkSession, setError, t]);
+  }, [checkSession, currentLanguage, setError, t]);
 
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
       setIsPending(true);
+      setSuccessMessage(null);
+      clearErrors('root');
 
       const { error } = await authClient.signUp({
         email: values.email,
+        locale: getSupportedLanguage(currentLanguage),
         name: values.name.trim(),
         password: values.password,
         passwordConfirmation: values.passwordConfirmation,
@@ -136,9 +147,13 @@ export function SignUpForm(): React.JSX.Element {
         return;
       }
 
-      await checkSession?.();
+      const feedback = t('auth.signUp.verificationSent');
+      setSuccessMessage(feedback);
+      reset(defaultValues);
+      toast.success(t('auth.signUp.verificationSentToast'));
+      setIsPending(false);
     },
-    [checkSession, setError]
+    [clearErrors, currentLanguage, reset, setError, t]
   );
 
   return (
@@ -250,6 +265,7 @@ export function SignUpForm(): React.JSX.Element {
                 </FormControl>
               )}
             />
+            {successMessage ? <Alert color="success">{successMessage}</Alert> : null}
             {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
             <Button disabled={isPending} type="submit" variant="contained">
               {t('auth.signUp.actions.submit')}

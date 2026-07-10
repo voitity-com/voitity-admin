@@ -2,27 +2,26 @@ import * as React from 'react';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet-async';
+import { useTranslation } from 'react-i18next';
 
-import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { EmailNotifications } from '@/components/dashboard/settings/email-notifications';
-import { PhoneNotifications } from '@/components/dashboard/settings/phone-notifications';
-
-const metadata = { title: `Notifications | Settings | Dashboard | ${config.site.name}` } satisfies Metadata;
 
 export function Page(): React.JSX.Element {
+  const { t } = useTranslation();
+  const title = t('dashboard.settings.notifications.pageTitle');
+
   return (
     <React.Fragment>
       <Helmet>
-        <title>{metadata.title}</title>
+        <title>{`${title} | ${config.site.name}`}</title>
       </Helmet>
       <Stack spacing={4}>
         <div>
-          <Typography variant="h4">Notifications</Typography>
+          <Typography variant="h4">{title}</Typography>
         </div>
         <Stack spacing={4}>
           <EmailNotifications />
-          <PhoneNotifications />
         </Stack>
       </Stack>
     </React.Fragment>

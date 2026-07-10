@@ -7,26 +7,34 @@ import { clearAdminImpersonationSession } from './admin-impersonation-store';
 import {
   ApiRequestError,
   getCurrentUser,
+  getLoginHistory,
   mapApiUser,
   postGetToken,
   postGoogleSignIn,
   postGoogleSignUp,
   postLogout,
+  postPasswordChange,
+  postPasswordForgot,
+  postPasswordReset,
+  postPasswordResetValidate,
   postSignUp,
   type AuthApiResponse,
   type GoogleAuthPayload,
+  type LoginHistoryPage,
 } from './api-client';
 import { clearAuthSession, getAuthSession, persistAuthSession, persistAuthUser } from './session-store';
 
 export interface SignUpParams {
   name: string;
   email: string;
+  locale?: string;
   password: string;
   passwordConfirmation: string;
 }
 
 export interface GoogleAuthParams {
   accessToken: string;
+  locale?: string;
   profile: GoogleProfile;
 }
 
@@ -43,21 +51,45 @@ export interface SignInWithPasswordParams {
 
 export interface ResetPasswordParams {
   email: string;
+  locale?: string;
+}
+
+export interface UpdatePasswordParams {
+  email: string;
+  password: string;
+  passwordConfirmation: string;
+  token: string;
+}
+
+export interface ValidatePasswordResetLinkParams {
+  email: string;
+  locale?: string;
+  token: string;
+}
+
+export interface ChangePasswordParams {
+  currentPassword: string;
+  password: string;
+  passwordConfirmation: string;
+}
+
+export interface GetLoginHistoryParams {
+  page?: number;
+  perPage?: number;
 }
 
 class AuthClient {
-  async signUp(params: SignUpParams): Promise<{ error?: string }> {
+  async signUp(params: SignUpParams): Promise<{ error?: string; message?: string }> {
     try {
       const response = await postSignUp({
         name: params.name,
         email: params.email,
+        locale: params.locale,
         password: params.password,
         password_confirmation: params.passwordConfirmation,
       });
 
-      persistAuthSession(response.access_token, mapApiUser(response.user, buildUserFromName(params.name, params.email)));
-
-      return {};
+      return { message: response.message };
     } catch (err) {
       return { error: getErrorMessage(err) };
     }
@@ -91,12 +123,83 @@ class AuthClient {
     }
   }
 
-  async resetPassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Password reset not implemented' };
+  async resetPassword(params: ResetPasswordParams): Promise<{ error?: string; message?: string }> {
+    try {
+      const response = await postPasswordForgot({
+        email: params.email,
+        locale: params.locale,
+      });
+
+      return { message: response.message };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
   }
 
-  async updatePassword(_: ResetPasswordParams): Promise<{ error?: string }> {
-    return { error: 'Update reset not implemented' };
+  async updatePassword(params: UpdatePasswordParams): Promise<{ error?: string; message?: string }> {
+    try {
+      const response = await postPasswordReset({
+        email: params.email,
+        password: params.password,
+        password_confirmation: params.passwordConfirmation,
+        token: params.token,
+      });
+
+      return { message: response.message };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
+  }
+
+  async validatePasswordResetLink(
+    params: ValidatePasswordResetLinkParams
+  ): Promise<{ error?: string; message?: string; status?: string }> {
+    try {
+      const response = await postPasswordResetValidate(params);
+
+      return { message: response.message, status: response.status };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
+  }
+
+  async changePassword(params: ChangePasswordParams): Promise<{ error?: string; message?: string }> {
+    const session = getAuthSession();
+
+    if (!session) {
+      return { error: 'Missing API access token' };
+    }
+
+    try {
+      const response = await postPasswordChange(
+        {
+          current_password: params.currentPassword,
+          password: params.password,
+          password_confirmation: params.passwordConfirmation,
+        },
+        session.accessToken
+      );
+
+      return { message: response.message };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
+  }
+
+  async getLoginHistory(params: GetLoginHistoryParams = {}): Promise<{ data?: LoginHistoryPage; error?: string }> {
+    const session = getAuthSession();
+
+    if (!session) {
+      return { error: 'Missing API access token' };
+    }
+
+    try {
+      const data = await getLoginHistory(session.accessToken, params);
+
+      return { data };
+    } catch (err) {
+      return { error: getErrorMessage(err) };
+    }
   }
 
   async getUser(): Promise<{ data?: User | null; error?: string }> {
@@ -162,7 +265,7 @@ class AuthClient {
 
 export const authClient = new AuthClient();
 
-function createGoogleAuthPayload({ accessToken, profile }: GoogleAuthParams): GoogleAuthPayload {
+function createGoogleAuthPayload({ accessToken, locale, profile }: GoogleAuthParams): GoogleAuthPayload {
   const { firstName, lastName, name } = getGoogleDisplayName(profile);
 
   return {
@@ -172,6 +275,7 @@ function createGoogleAuthPayload({ accessToken, profile }: GoogleAuthParams): Go
     last_name: lastName,
     name,
     avatar: profile.picture,
+    locale,
     access_token: accessToken,
   };
 }
@@ -195,20 +299,6 @@ function buildUserFromGoogleProfile(profile: GoogleProfile): User {
     lastName,
     name,
     provider: 'google',
-  };
-}
-
-function buildUserFromName(name: string, email: string): User {
-  const [firstName = name, ...lastNameParts] = name.trim().split(/\s+/);
-  const lastName = lastNameParts.join(' ');
-
-  return {
-    id: email,
-    email,
-    firstName,
-    lastName,
-    name,
-    provider: 'email',
   };
 }
 

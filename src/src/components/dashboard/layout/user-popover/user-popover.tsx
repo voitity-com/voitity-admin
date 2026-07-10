@@ -2,7 +2,6 @@
 
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -12,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { User as UserIcon } from '@phosphor-icons/react/dist/ssr/User';
+import { useTranslation } from 'react-i18next';
 
 import { config } from '@/config';
 import { paths } from '@/paths';
@@ -25,8 +25,6 @@ import { CustomSignOut } from './custom-sign-out';
 import { FirebaseSignOut } from './firebase-sign-out';
 import { SupabaseSignOut } from './supabase-sign-out';
 
-const notImplementedLabel = 'ni';
-
 export interface UserPopoverProps {
   anchorEl: null | Element;
   onClose?: () => void;
@@ -34,6 +32,7 @@ export interface UserPopoverProps {
 }
 
 export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): React.JSX.Element {
+  const { t } = useTranslation();
   const { user } = useUser();
   const name = getUserName(user);
   const email = typeof user?.email === 'string' ? user.email : '';
@@ -60,8 +59,7 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
             <UserIcon />
           </ListItemIcon>
           <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
-            <span>Account</span>
-            <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+            <span>{t('dashboard.userPopover.items.account')}</span>
           </Box>
         </MenuItem>
         <MenuItem component={RouterLink} href={paths.dashboard.settings.security} onClick={onClose}>
@@ -69,8 +67,7 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
             <LockKeyIcon />
           </ListItemIcon>
           <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
-            <span>Security</span>
-            <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+            <span>{t('dashboard.userPopover.items.security')}</span>
           </Box>
         </MenuItem>
         <MenuItem component={RouterLink} href={paths.dashboard.settings.billing} onClick={onClose}>
@@ -78,8 +75,7 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
             <CreditCardIcon />
           </ListItemIcon>
           <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
-            <span>Billing</span>
-            <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} />
+            <span>{t('dashboard.userPopover.items.billing')}</span>
           </Box>
         </MenuItem>
       </List>

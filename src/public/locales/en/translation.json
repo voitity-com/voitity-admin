@@ -21,8 +21,15 @@
       },
       "metaTitle": "Sign in",
       "noAccount": "Don't have an account?",
+      "forgotPassword": "Forgot password?",
       "signUp": "Sign up",
       "title": "Sign in",
+      "verification": {
+        "already_verified": "Your email was already confirmed. You can sign in now.",
+        "expired": "This confirmation link has expired. Please create the account again or contact support.",
+        "invalid": "This confirmation link is invalid. Please check the latest email we sent you.",
+        "verified": "Your email has been confirmed. You can sign in now."
+      },
       "validation": {
         "emailInvalid": "Enter a valid email address",
         "emailRequired": "Email is required",
@@ -47,6 +54,8 @@
       "hasAccount": "Already have an account?",
       "signIn": "Sign in",
       "title": "Sign up",
+      "verificationSent": "We sent a confirmation link to your email. Confirm your account before signing in.",
+      "verificationSentToast": "Check your email to confirm your account",
       "validation": {
         "emailInvalid": "Enter a valid email address",
         "emailRequired": "Email is required",
@@ -54,6 +63,43 @@
         "passwordConfirmationRequired": "Confirm your password",
         "passwordMin": "Password must be at least 8 characters",
         "passwordMismatch": "Passwords do not match"
+      }
+    },
+    "resetPassword": {
+      "actions": {
+        "backToSignIn": "Back to sign in",
+        "requestNewLink": "Request a new link",
+        "request": "Send recovery link",
+        "signIn": "Sign in",
+        "update": "Change password"
+      },
+      "checkingDescription": "This only takes a moment.",
+      "checkingTitle": "Checking reset link",
+      "fields": {
+        "email": "Email address",
+        "password": "New password",
+        "passwordConfirmation": "Confirm new password"
+      },
+      "invalidDescription": "Request a new recovery link to change your password.",
+      "invalidTitle": "This link cannot be used",
+      "requestDescription": "Enter the email registered to your account.",
+      "requestTitle": "Reset password",
+      "success": {
+        "requested": "If this email belongs to a password account, we sent a recovery link.",
+        "updated": "Your password was updated successfully."
+      },
+      "successDescription": "You can now sign in with your new password.",
+      "successTitle": "Password updated",
+      "updateDescription": "Choose a new password for your account.",
+      "updateTitle": "Change password",
+      "validation": {
+        "emailInvalid": "Enter a valid email address",
+        "emailRequired": "Email is required",
+        "checking": "Checking your recovery link...",
+        "passwordConfirmationRequired": "Confirm your new password",
+        "passwordMin": "Password must be at least 8 characters",
+        "passwordMismatch": "Passwords do not match",
+        "unavailable": "This recovery link is invalid or has already been used."
       }
     },
     "split": {
@@ -74,6 +120,18 @@
     }
   },
   "dashboard": {
+    "redirect": {
+      "actions": {
+        "billing": "Go to billing and plans",
+        "profiles": "Go to profiles"
+      },
+      "checking": "Checking your subscription...",
+      "errorDescription": "You can still open billing and plans or go to profiles while the check is retried later.",
+      "errors": {
+        "generic": "Could not check your active subscription."
+      },
+      "title": "Opening dashboard"
+    },
     "nav": {
       "groups": {
         "dashboards": "Dashboards",
@@ -111,6 +169,36 @@
         "stopFailed": "Could not close the impersonation token in the backend."
       }
     },
+    "userPopover": {
+      "actions": {
+        "signOut": "Sign out"
+      },
+      "errors": {
+        "signOut": "Something went wrong, unable to sign out"
+      },
+      "items": {
+        "account": "Account",
+        "billing": "Billing",
+        "security": "Security"
+      }
+    },
+    "notifications": {
+      "actions": {
+        "dismiss": "Dismiss",
+        "markAllRead": "Mark all as read"
+      },
+      "empty": "There are no notifications",
+      "errors": {
+        "dismiss": "Could not dismiss the notification.",
+        "load": "Could not load notifications.",
+        "markRead": "Could not mark notifications as read."
+      },
+      "title": "Notifications",
+      "toasts": {
+        "markedRead": "Notifications marked as read."
+      },
+      "unreadCount": "{{count}} unread"
+    },
     "settings": {
       "account": {
         "actions": {
@@ -124,6 +212,74 @@
           "lastName": "Last name"
         },
         "title": "Account"
+      },
+      "security": {
+        "changePassword": {
+          "actions": {
+            "update": "Update password",
+            "updating": "Updating..."
+          },
+          "fields": {
+            "currentPassword": "Current password",
+            "password": "New password",
+            "passwordConfirmation": "Confirm new password"
+          },
+          "subheader": "Use a strong password that you do not use anywhere else.",
+          "title": "Change password",
+          "toasts": {
+            "updated": "Password updated successfully."
+          },
+          "validation": {
+            "currentIncorrect": "Current password is incorrect",
+            "currentRequired": "Current password is required",
+            "passwordConfirmationRequired": "Confirm your new password",
+            "passwordMin": "Password must be at least 8 characters",
+            "passwordMismatch": "Passwords do not match"
+          }
+        },
+        "loginHistory": {
+          "columns": {
+            "ipAddress": "IP address",
+            "loginType": "Login type",
+            "userAgent": "User agent"
+          },
+          "empty": "No login events have been recorded yet.",
+          "subheader": "Recent sign-ins are shown from newest to oldest.",
+          "timestamp": "on {{date}}",
+          "title": "Login history",
+          "types": {
+            "credential": "Password login",
+            "google": "Google login",
+            "unknown": "Login"
+          },
+          "unknown": "Unknown"
+        },
+        "pageTitle": "Security"
+      },
+      "notifications": {
+        "email": {
+          "empty": "No configurable notification preferences are available.",
+          "errors": {
+            "load": "Could not load notification preferences.",
+            "save": "Could not update notification preferences."
+          },
+          "preferences": {
+            "product_updates": {
+              "description": "News, announcements, and product updates.",
+              "title": "Product updates"
+            },
+            "security_updates": {
+              "description": "Important notifications about your account security.",
+              "title": "Security updates"
+            }
+          },
+          "subheader": "Choose which optional emails you want to receive.",
+          "title": "Email",
+          "toasts": {
+            "saved": "Notification preferences updated."
+          }
+        },
+        "pageTitle": "Notifications"
       },
       "billing": {
         "empty": "No subscription information was returned.",

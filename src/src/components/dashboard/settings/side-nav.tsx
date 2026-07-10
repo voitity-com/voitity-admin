@@ -3,7 +3,6 @@
 import * as React from 'react';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
@@ -60,8 +59,6 @@ const icons = {
   bell: BellIcon,
 } as Record<string, Icon>;
 
-const notImplementedLabel = 'ni';
-
 export function SideNav(): React.JSX.Element {
   const pathname = usePathname();
   const { t } = useTranslation();
@@ -98,7 +95,6 @@ export function SideNav(): React.JSX.Element {
                     {...item}
                     key={item.key}
                     pathname={pathname}
-                    showNotImplemented={item.key !== 'account'}
                     title={getNavTitle(item, t)}
                   />
                 ))}
@@ -122,7 +118,6 @@ export function SideNav(): React.JSX.Element {
 
 interface NavItemProps extends NavItemConfig {
   pathname: string;
-  showNotImplemented?: boolean;
 }
 
 function NavItem({
@@ -131,7 +126,6 @@ function NavItem({
   href,
   icon,
   pathname,
-  showNotImplemented = true,
   title,
 }: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ disabled, external, href, pathname });
@@ -185,7 +179,6 @@ function NavItem({
             {title}
           </Typography>
         </Box>
-        {showNotImplemented ? <Chip color="error" label={notImplementedLabel} size="small" sx={{ height: 20 }} /> : null}
       </Box>
     </Box>
   );
