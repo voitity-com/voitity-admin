@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import MenuItem from '@mui/material/MenuItem';
+import { useTranslation } from 'react-i18next';
 
 import { authClient } from '@/lib/auth/custom/client';
 import { logger } from '@/lib/default-logger';
@@ -10,6 +11,7 @@ import { toast } from '@/components/core/toaster';
 
 export function CustomSignOut(): React.JSX.Element {
   const { checkSession } = useUser();
+  const { t } = useTranslation();
 
   const handleSignOut = React.useCallback(async (): Promise<void> => {
     try {
@@ -17,7 +19,7 @@ export function CustomSignOut(): React.JSX.Element {
 
       if (error) {
         logger.error('Sign out error', error);
-        toast.error('Something went wrong, unable to sign out');
+        toast.error(t('dashboard.userPopover.errors.signOut'));
         return;
       }
 
@@ -26,13 +28,13 @@ export function CustomSignOut(): React.JSX.Element {
       // After refresh, GuestGuard will handle the redirect
     } catch (err) {
       logger.error('Sign out error', err);
-      toast.error('Something went wrong, unable to sign out');
+      toast.error(t('dashboard.userPopover.errors.signOut'));
     }
-  }, [checkSession]);
+  }, [checkSession, t]);
 
   return (
     <MenuItem component="div" onClick={handleSignOut} sx={{ justifyContent: 'center' }}>
-      Sign out
+      {t('dashboard.userPopover.actions.signOut')}
     </MenuItem>
   );
 }

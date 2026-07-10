@@ -169,6 +169,19 @@
         "stopFailed": "Could not close the impersonation token in the backend."
       }
     },
+    "userPopover": {
+      "actions": {
+        "signOut": "Sign out"
+      },
+      "errors": {
+        "signOut": "Something went wrong, unable to sign out"
+      },
+      "items": {
+        "account": "Account",
+        "billing": "Billing",
+        "security": "Security"
+      }
+    },
     "settings": {
       "account": {
         "actions": {
@@ -225,6 +238,31 @@
           "unknown": "Unknown"
         },
         "pageTitle": "Security"
+      },
+      "notifications": {
+        "email": {
+          "empty": "No configurable notification preferences are available.",
+          "errors": {
+            "load": "Could not load notification preferences.",
+            "save": "Could not update notification preferences."
+          },
+          "preferences": {
+            "product_updates": {
+              "description": "News, announcements, and product updates.",
+              "title": "Product updates"
+            },
+            "security_updates": {
+              "description": "Important notifications about your account security.",
+              "title": "Security updates"
+            }
+          },
+          "subheader": "Choose which optional emails you want to receive.",
+          "title": "Email",
+          "toasts": {
+            "saved": "Notification preferences updated."
+          }
+        },
+        "pageTitle": "Notifications"
       },
       "billing": {
         "empty": "No subscription information was returned.",

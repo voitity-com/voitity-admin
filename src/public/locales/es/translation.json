@@ -169,6 +169,19 @@
         "stopFailed": "No se pudo cerrar el token de impersonación en el backend."
       }
     },
+    "userPopover": {
+      "actions": {
+        "signOut": "Cerrar sesión"
+      },
+      "errors": {
+        "signOut": "Algo salió mal, no se pudo cerrar la sesión"
+      },
+      "items": {
+        "account": "Cuenta",
+        "billing": "Facturación",
+        "security": "Seguridad"
+      }
+    },
     "settings": {
       "account": {
         "actions": {
@@ -225,6 +238,31 @@
           "unknown": "Desconocido"
         },
         "pageTitle": "Seguridad"
+      },
+      "notifications": {
+        "email": {
+          "empty": "No hay preferencias de notificación configurables.",
+          "errors": {
+            "load": "No se pudieron cargar las preferencias de notificación.",
+            "save": "No se pudieron actualizar las preferencias de notificación."
+          },
+          "preferences": {
+            "product_updates": {
+              "description": "Novedades, anuncios y actualizaciones del producto.",
+              "title": "Actualizaciones del producto"
+            },
+            "security_updates": {
+              "description": "Notificaciones importantes sobre la seguridad de tu cuenta.",
+              "title": "Actualizaciones de seguridad"
+            }
+          },
+          "subheader": "Elige qué correos opcionales quieres recibir.",
+          "title": "Correo electrónico",
+          "toasts": {
+            "saved": "Preferencias de notificación actualizadas."
+          }
+        },
+        "pageTitle": "Notificaciones"
       },
       "billing": {
         "empty": "No se recibió información de la suscripción.",
