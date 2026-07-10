@@ -17,10 +17,12 @@ import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
 import { EyeSlash as EyeSlashIcon } from '@phosphor-icons/react/dist/ssr/EyeSlash';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
 import { useUser } from '@/hooks/use-user';
@@ -46,12 +48,46 @@ const defaultValues = { email: '', password: '' } satisfies Values;
 export function SignInForm(): React.JSX.Element {
   const { i18n, t } = useTranslation();
   const { checkSession } = useUser();
+  const [searchParams] = useSearchParams();
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
   const previousLanguageRef = React.useRef(currentLanguage);
 
   const [showPassword, setShowPassword] = React.useState<boolean>();
 
   const [isPending, setIsPending] = React.useState<boolean>(false);
+  const verificationStatus = searchParams.get('verification');
+  const localeParam = searchParams.get('locale');
+
+  React.useEffect(() => {
+    if (!localeParam) {
+      return;
+    }
+
+    const nextLanguage = getSupportedLanguage(localeParam);
+    const activeLanguage = getSupportedLanguage(currentLanguage);
+
+    if (activeLanguage !== nextLanguage) {
+      i18n.changeLanguage(nextLanguage).catch(() => {
+        // Ignore language change failures and keep rendering the current language.
+      });
+    }
+  }, [currentLanguage, i18n, localeParam]);
+
+  const verificationAlert = React.useMemo((): null | { color: 'error' | 'success' | 'warning'; message: string } => {
+    if (!verificationStatus) {
+      return null;
+    }
+
+    if (verificationStatus === 'verified' || verificationStatus === 'already_verified') {
+      return { color: 'success', message: t(`auth.signIn.verification.${verificationStatus}`) };
+    }
+
+    if (verificationStatus === 'expired') {
+      return { color: 'warning', message: t('auth.signIn.verification.expired') };
+    }
+
+    return { color: 'error', message: t('auth.signIn.verification.invalid') };
+  }, [t, verificationStatus]);
 
   const schema = React.useMemo(
     () =>
@@ -208,6 +244,7 @@ export function SignInForm(): React.JSX.Element {
                   </FormControl>
                 )}
               />
+              {verificationAlert ? <Alert color={verificationAlert.color}>{verificationAlert.message}</Alert> : null}
               {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
               <Button disabled={isPending} type="submit" variant="contained">
                 {t('auth.signIn.actions.submit')}

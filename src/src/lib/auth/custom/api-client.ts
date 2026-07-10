@@ -8,6 +8,8 @@ export interface ApiUser {
   first_name?: null | string;
   last_name?: null | string;
   avatar?: null | string;
+  email_verified_at?: null | string;
+  locale?: null | string;
   provider?: null | string;
   role?: null | string;
 }
@@ -17,9 +19,16 @@ export interface AuthApiResponse {
   user?: ApiUser;
 }
 
+export interface EmailSignUpResponse {
+  email_verification_required?: boolean;
+  message?: string;
+  user?: ApiUser;
+}
+
 export interface EmailSignUpPayload {
   name: string;
   email: string;
+  locale?: string;
   password: string;
   password_confirmation: string;
 }
@@ -31,6 +40,7 @@ export interface GoogleAuthPayload {
   last_name: string;
   name: string;
   avatar?: string;
+  locale?: string;
   access_token: string;
 }
 
@@ -54,8 +64,8 @@ export async function postGetToken(params: { email: string; password: string }):
   return requestJson<AuthApiResponse>('/api/auth/get-token', { body: params });
 }
 
-export async function postSignUp(payload: EmailSignUpPayload): Promise<AuthApiResponse> {
-  return requestJson<AuthApiResponse>('/api/auth/sign-up', { body: payload });
+export async function postSignUp(payload: EmailSignUpPayload): Promise<EmailSignUpResponse> {
+  return requestJson<EmailSignUpResponse>('/api/auth/sign-up', { body: payload });
 }
 
 export async function postGoogleSignIn(payload: GoogleAuthPayload): Promise<AuthApiResponse> {
@@ -98,6 +108,7 @@ export function mapApiUser(user: ApiUser | undefined, fallback: Partial<User> = 
     email: user?.email ?? fallback.email,
     firstName,
     lastName,
+    locale: user?.locale ?? fallback.locale,
     provider: user?.provider ?? fallback.provider,
     role: user?.role ?? fallback.role,
   };

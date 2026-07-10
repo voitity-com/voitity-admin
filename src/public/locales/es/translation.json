@@ -23,6 +23,12 @@
       "noAccount": "¿No tienes una cuenta?",
       "signUp": "Registrarse",
       "title": "Iniciar sesión",
+      "verification": {
+        "already_verified": "Tu correo ya estaba confirmado. Ya puedes iniciar sesión.",
+        "expired": "Este enlace de confirmación expiró. Crea la cuenta nuevamente o contacta a soporte.",
+        "invalid": "Este enlace de confirmación no es válido. Revisa el último correo que te enviamos.",
+        "verified": "Tu correo fue confirmado. Ya puedes iniciar sesión."
+      },
       "validation": {
         "emailInvalid": "Ingresa un correo electrónico válido",
         "emailRequired": "El correo electrónico es obligatorio",
@@ -47,6 +53,8 @@
       "hasAccount": "¿Ya tienes una cuenta?",
       "signIn": "Iniciar sesión",
       "title": "Registrarse",
+      "verificationSent": "Te enviamos un enlace de confirmación al correo. Confirma tu cuenta antes de iniciar sesión.",
+      "verificationSentToast": "Revisa tu correo para confirmar la cuenta",
       "validation": {
         "emailInvalid": "Ingresa un correo electrónico válido",
         "emailRequired": "El correo electrónico es obligatorio",

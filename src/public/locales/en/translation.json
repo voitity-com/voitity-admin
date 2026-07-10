@@ -23,6 +23,12 @@
       "noAccount": "Don't have an account?",
       "signUp": "Sign up",
       "title": "Sign in",
+      "verification": {
+        "already_verified": "Your email was already confirmed. You can sign in now.",
+        "expired": "This confirmation link has expired. Please create the account again or contact support.",
+        "invalid": "This confirmation link is invalid. Please check the latest email we sent you.",
+        "verified": "Your email has been confirmed. You can sign in now."
+      },
       "validation": {
         "emailInvalid": "Enter a valid email address",
         "emailRequired": "Email is required",
@@ -47,6 +53,8 @@
       "hasAccount": "Already have an account?",
       "signIn": "Sign in",
       "title": "Sign up",
+      "verificationSent": "We sent a confirmation link to your email. Confirm your account before signing in.",
+      "verificationSentToast": "Check your email to confirm your account",
       "validation": {
         "emailInvalid": "Enter a valid email address",
         "emailRequired": "Email is required",

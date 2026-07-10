@@ -21,12 +21,14 @@ import { clearAuthSession, getAuthSession, persistAuthSession, persistAuthUser }
 export interface SignUpParams {
   name: string;
   email: string;
+  locale?: string;
   password: string;
   passwordConfirmation: string;
 }
 
 export interface GoogleAuthParams {
   accessToken: string;
+  locale?: string;
   profile: GoogleProfile;
 }
 
@@ -46,18 +48,17 @@ export interface ResetPasswordParams {
 }
 
 class AuthClient {
-  async signUp(params: SignUpParams): Promise<{ error?: string }> {
+  async signUp(params: SignUpParams): Promise<{ error?: string; message?: string }> {
     try {
       const response = await postSignUp({
         name: params.name,
         email: params.email,
+        locale: params.locale,
         password: params.password,
         password_confirmation: params.passwordConfirmation,
       });
 
-      persistAuthSession(response.access_token, mapApiUser(response.user, buildUserFromName(params.name, params.email)));
-
-      return {};
+      return { message: response.message };
     } catch (err) {
       return { error: getErrorMessage(err) };
     }
@@ -162,7 +163,7 @@ class AuthClient {
 
 export const authClient = new AuthClient();
 
-function createGoogleAuthPayload({ accessToken, profile }: GoogleAuthParams): GoogleAuthPayload {
+function createGoogleAuthPayload({ accessToken, locale, profile }: GoogleAuthParams): GoogleAuthPayload {
   const { firstName, lastName, name } = getGoogleDisplayName(profile);
 
   return {
@@ -172,6 +173,7 @@ function createGoogleAuthPayload({ accessToken, profile }: GoogleAuthParams): Go
     last_name: lastName,
     name,
     avatar: profile.picture,
+    locale,
     access_token: accessToken,
   };
 }
@@ -195,20 +197,6 @@ function buildUserFromGoogleProfile(profile: GoogleProfile): User {
     lastName,
     name,
     provider: 'google',
-  };
-}
-
-function buildUserFromName(name: string, email: string): User {
-  const [firstName = name, ...lastNameParts] = name.trim().split(/\s+/);
-  const lastName = lastNameParts.join(' ');
-
-  return {
-    id: email,
-    email,
-    firstName,
-    lastName,
-    name,
-    provider: 'email',
   };
 }
 
