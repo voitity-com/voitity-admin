@@ -21,7 +21,7 @@ export const route: RouteObject = {
     {
       index: true,
       lazy: async () => {
-        const { Page } = await import('@/pages/dashboard/overview');
+        const { Page } = await import('@/pages/dashboard/default-redirect');
         return { Component: Page };
       },
     },

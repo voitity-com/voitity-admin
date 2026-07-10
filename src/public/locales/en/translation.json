@@ -120,6 +120,18 @@
     }
   },
   "dashboard": {
+    "redirect": {
+      "actions": {
+        "billing": "Go to billing and plans",
+        "profiles": "Go to profiles"
+      },
+      "checking": "Checking your subscription...",
+      "errorDescription": "You can still open billing and plans or go to profiles while the check is retried later.",
+      "errors": {
+        "generic": "Could not check your active subscription."
+      },
+      "title": "Opening dashboard"
+    },
     "nav": {
       "groups": {
         "dashboards": "Dashboards",

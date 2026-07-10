@@ -120,6 +120,18 @@
     }
   },
   "dashboard": {
+    "redirect": {
+      "actions": {
+        "billing": "Ir a facturación y planes",
+        "profiles": "Ir a perfiles"
+      },
+      "checking": "Verificando tu suscripción...",
+      "errorDescription": "Puedes abrir facturación y planes o ir a perfiles mientras la verificación se reintenta más tarde.",
+      "errors": {
+        "generic": "No se pudo verificar tu suscripción activa."
+      },
+      "title": "Abriendo administrador"
+    },
     "nav": {
       "groups": {
         "dashboards": "Tableros",
