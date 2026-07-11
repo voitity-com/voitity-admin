@@ -14,6 +14,8 @@ export function CustomSignOut(): React.JSX.Element {
   const { t } = useTranslation();
 
   const handleSignOut = React.useCallback(async (): Promise<void> => {
+    toast.dismiss();
+
     try {
       const { error } = await authClient.signOut();
 

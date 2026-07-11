@@ -171,6 +171,7 @@
     },
     "userPopover": {
       "actions": {
+        "openMenu": "Open account menu",
         "signOut": "Sign out"
       },
       "errors": {
@@ -438,7 +439,7 @@
         "title": "Subscription limits",
         "terms": {
           "acceptance": "I accept the subscription terms and authorize recurring payments.",
-          "body": "By continuing, you agree to start a recurring Voitity subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
+          "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
           "title": "Subscription terms"
         },
         "usage": {
@@ -556,7 +557,8 @@
         "startRecording": "Start recording",
         "stop": "Stop",
         "uploadImage": "Upload image",
-        "viewProfile": "View profile"
+        "viewProfile": "View profile",
+        "openProfile": "Open profile {{name}}"
       },
       "detail": {
         "avatar": {

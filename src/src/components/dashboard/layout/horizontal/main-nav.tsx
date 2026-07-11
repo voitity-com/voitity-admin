@@ -247,13 +247,16 @@ function LanguageSwitch(): React.JSX.Element {
 
 function UserButton(): React.JSX.Element {
   const popover = usePopover<HTMLButtonElement>();
+  const { t } = useTranslation();
   const { user } = useUser();
   const avatar = typeof user?.avatar === 'string' ? user.avatar : undefined;
   const name = getUserName(user);
+  const accountMenuLabel = String(t('dashboard.userPopover.actions.openMenu'));
 
   return (
     <React.Fragment>
       <Box
+        aria-label={accountMenuLabel}
         component="button"
         onClick={popover.handleOpen}
         ref={popover.anchorRef}

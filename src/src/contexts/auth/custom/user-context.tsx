@@ -6,6 +6,7 @@ import type { User } from '@/types/user';
 import { authClient } from '@/lib/auth/custom/client';
 import { clearApiAccessToken, hasExceededInactivityLimit, updateApiLastActivity } from '@/lib/auth/custom/api-token';
 import { logger } from '@/lib/default-logger';
+import { toast } from '@/components/core/toaster';
 
 import type { UserContextValue } from '../types';
 
@@ -65,6 +66,8 @@ export function UserProvider({ children }: UserProviderProps): React.JSX.Element
     });
 
     const handleInactivitySignOut = async (): Promise<void> => {
+      toast.dismiss();
+
       try {
         const { error } = await authClient.signOut();
 
