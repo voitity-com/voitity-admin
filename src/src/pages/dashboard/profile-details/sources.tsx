@@ -39,6 +39,7 @@ import {
   listProfileSources,
   uploadProfileCvSource,
 } from '@/lib/profiles/api-client';
+import { notifyProfileQualityChanged } from '@/lib/profiles/profile-quality-events';
 import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -122,6 +123,7 @@ export function Page(): React.JSX.Element {
         setIsUploadDialogOpen(false);
         reset(defaultValues);
         await loadSources();
+        notifyProfileQualityChanged(profileId);
       } catch (err) {
         toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
         throw err;
@@ -152,6 +154,7 @@ export function Page(): React.JSX.Element {
             : t('dashboard.profiles.detail.sources.toasts.approved')
         );
         await loadSources();
+        notifyProfileQualityChanged(profileId);
       } catch (err) {
         toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
       } finally {

@@ -18,15 +18,21 @@ export interface ProfileAvatar {
   ai_video_id?: null | number | string;
   aiimage_id?: null | number | string;
   ai_image?: null | {
+    failure_code?: null | string;
+    failure_reason?: null | string;
     file?: null | string;
     id: number | string;
     status?: null | string;
   };
   ai_video?: null | {
+    failure_code?: null | string;
+    failure_reason?: null | string;
     file?: null | string;
     id: number | string;
     status?: null | string;
   };
+  failure_code?: null | string;
+  failure_reason?: null | string;
   file?: null | string;
   has_processing_avatar?: boolean;
   id: number | string;
@@ -40,6 +46,8 @@ export interface ProfileAvatar {
 export interface GeneratedAvatar {
   avatar?: null | ProfileAvatar;
   file?: null | string;
+  failure_code?: null | string;
+  failure_reason?: null | string;
   id: number | string;
   profile_id?: null | number | string;
   source?: null | string;

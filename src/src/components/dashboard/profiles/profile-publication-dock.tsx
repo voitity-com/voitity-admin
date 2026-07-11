@@ -10,6 +10,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
+import Link from '@mui/material/Link';
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -27,6 +28,7 @@ import { useParams } from 'react-router-dom';
 
 import type { Profile, ProfilePublication, ProfilePublicationRequirement } from '@/lib/profiles/api-client';
 import { activateProfile, deactivateProfile, getProfile } from '@/lib/profiles/api-client';
+import { getPublicProfileUrl } from '@/lib/profiles/public-profile-url';
 import { logger } from '@/lib/default-logger';
 import { usePathname } from '@/hooks/use-pathname';
 import { toast } from '@/components/core/toaster';
@@ -91,6 +93,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
   const completedRequirements = requirements.filter((requirement) => requirement.passed).length;
   const missingRequirements = requirements.filter((requirement) => !requirement.passed);
   const isPublished = Boolean(publication.is_published);
+  const publicProfileUrl = isPublished && profile ? getPublicProfileUrl(profile) : null;
 
   const handlePrimaryAction = React.useCallback(async (): Promise<void> => {
     if (!profileId || !profile) {
@@ -140,6 +143,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
     <React.Fragment>
       <Paper
         elevation={16}
+        id="profile-publication-dock"
         sx={{
           border: '1px solid var(--mui-palette-divider)',
           borderRadius: 2,
@@ -187,6 +191,18 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
               <Typography color={error ? 'error.main' : 'text.secondary'} component="div" noWrap variant="caption">
                 {statusLabel}
               </Typography>
+              {publicProfileUrl ? (
+                <Link
+                  href={publicProfileUrl}
+                  rel="noreferrer"
+                  sx={{ display: 'inline-flex', fontWeight: 600, mt: 0.25 }}
+                  target="_blank"
+                  underline="hover"
+                  variant="caption"
+                >
+                  {t('dashboard.profiles.actions.viewProfile')}
+                </Link>
+              ) : null}
               {!isLoading && !error && requirements.length > 0 ? (
                 <Typography color="text.secondary" component="div" noWrap sx={{ display: { sm: 'none' }, mt: 0.25 }} variant="caption">
                   {t('dashboard.profiles.detail.publicationDock.readyCount', {

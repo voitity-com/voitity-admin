@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
+import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { config } from '@/config';
 import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import type { Profile } from '@/lib/profiles/api-client';
+import { getPublicProfileUrl, isPublishedProfile } from '@/lib/profiles/public-profile-url';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
 
@@ -18,9 +20,10 @@ import { useProfilesSelection } from './profiles-selection-context';
 export interface ProfilesTableProps {
   onOpen?: (profile: Profile) => void;
   rows?: Profile[];
+  spotlightProfileId?: null | string;
 }
 
-export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.JSX.Element {
+export function ProfilesTable({ onOpen, rows = [], spotlightProfileId }: ProfilesTableProps): React.JSX.Element {
   const { i18n, t } = useTranslation();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const columns = React.useMemo(() => getColumns({ language, t }), [language, t]);
@@ -30,6 +33,41 @@ export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.
     <React.Fragment>
       <DataTable<Profile>
         columns={columns}
+        getRowDataAttributes={(row) =>
+          isSpotlightProfile(row, spotlightProfileId) ? { 'data-profile-onboarding-anchor': String(row.id) } : {}
+        }
+        getRowSx={(row) =>
+          isSpotlightProfile(row, spotlightProfileId)
+            ? (theme) => ({
+                outline: '8px solid rgba(255, 255, 255, 0.22)',
+                outlineOffset: -4,
+                position: 'relative',
+                transform: 'translateZ(0)',
+                transition: theme.transitions.create(['box-shadow', 'outline-color', 'transform'], {
+                  duration: theme.transitions.duration.shorter,
+                }),
+                zIndex: theme.zIndex.modal + 2,
+                '& > td': {
+                  bgcolor: 'background.paper',
+                  borderBottomColor: 'rgba(255, 255, 255, 0.5)',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.5)',
+                },
+                '& > td:first-of-type': {
+                  borderBottomLeftRadius: 8,
+                  borderLeft: '1px solid rgba(255, 255, 255, 0.5)',
+                  borderTopLeftRadius: 8,
+                },
+                '& > td:last-of-type': {
+                  borderBottomRightRadius: 8,
+                  borderRight: '1px solid rgba(255, 255, 255, 0.5)',
+                  borderTopRightRadius: 8,
+                },
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                },
+              })
+            : undefined
+        }
         hover
         onClick={(_, row) => {
           onOpen?.(row);
@@ -58,7 +96,13 @@ export function ProfilesTable({ onOpen, rows = [] }: ProfilesTableProps): React.
   );
 }
 
-function getColumns({ language, t }: { language: string; t: (key: string) => string }): ColumnDef<Profile>[] {
+function getColumns({
+  language,
+  t,
+}: {
+  language: string;
+  t: (key: string) => string;
+}): ColumnDef<Profile>[] {
   return [
     {
       formatter: (row): React.JSX.Element => renderAvatarCell(row, t),
@@ -66,11 +110,7 @@ function getColumns({ language, t }: { language: string; t: (key: string) => str
       width: '88px',
     },
     {
-      formatter: (row): React.JSX.Element => (
-        <Typography sx={{ whiteSpace: 'nowrap' }} variant="subtitle2">
-          {row.name}
-        </Typography>
-      ),
+      formatter: (row): React.JSX.Element => renderNameCell(row, t),
       name: t('dashboard.profiles.fields.name'),
       width: '260px',
     },
@@ -95,6 +135,36 @@ function getColumns({ language, t }: { language: string; t: (key: string) => str
       width: '160px',
     },
   ];
+}
+
+function renderNameCell(row: Profile, t: (key: string) => string): React.JSX.Element {
+  const publicProfileUrl = isPublishedProfile(row) ? getPublicProfileUrl(row) : null;
+
+  return (
+    <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+      <Typography sx={{ whiteSpace: 'nowrap' }} variant="subtitle2">
+        {row.name}
+      </Typography>
+      {publicProfileUrl ? (
+        <Link
+          href={publicProfileUrl}
+          onClick={(event: React.MouseEvent<HTMLAnchorElement>) => {
+            event.stopPropagation();
+          }}
+          onMouseDown={(event: React.MouseEvent<HTMLAnchorElement>) => {
+            event.stopPropagation();
+          }}
+          rel="noreferrer"
+          sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
+          target="_blank"
+          underline="hover"
+          variant="caption"
+        >
+          {t('dashboard.profiles.actions.viewProfile')}
+        </Link>
+      ) : null}
+    </Stack>
+  );
 }
 
 function renderAvatarCell(row: Profile, t: (key: string) => string): React.JSX.Element {
@@ -237,4 +307,8 @@ function resolveAssetUrl(file: string): string {
 
 function isVideoFile(file: string): boolean {
   return /\.(?:m4v|mov|mp4|ogg|webm)(?:\?.*)?$/i.test(file);
+}
+
+function isSpotlightProfile(row: Profile, spotlightProfileId: null | string | undefined): boolean {
+  return Boolean(spotlightProfileId) && String(row.id) === spotlightProfileId;
 }

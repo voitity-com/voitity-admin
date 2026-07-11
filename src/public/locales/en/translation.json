@@ -555,7 +555,8 @@
         "sendSample": "Send sample",
         "startRecording": "Start recording",
         "stop": "Stop",
-        "uploadImage": "Upload image"
+        "uploadImage": "Upload image",
+        "viewProfile": "View profile"
       },
       "detail": {
         "avatar": {
@@ -572,6 +573,9 @@
             "selectImage": "Select an image first.",
             "unsupportedFile": "Use a JPG, PNG, or WEBP image."
           },
+          "failedMessage": "Avatar generation failed",
+          "failureFallback": "The provider could not generate this avatar. Try a different image or crop.",
+          "failureWithCode": "{{message}} ({{code}})",
           "historyEmpty": "No generated avatars yet.",
           "noAvatar": "No avatar loaded.",
           "previousAvatar": "Previous avatar",
@@ -608,21 +612,68 @@
           },
           "field": "Data JSON",
           "fields": {
+            "about": "About",
+            "achievements": "Achievements",
+            "bio": "Bio",
+            "category": "Category",
+            "city": "City",
             "company": "Company",
+            "country": "Country",
+            "current": "Current",
+            "date": "Date",
+            "dateRange": "Date range",
+            "dates": "Dates",
+            "degree": "Degree",
             "description": "Description",
+            "duration": "Duration",
+            "education": "Education",
+            "employer": "Employer",
+            "employmentType": "Employment type",
+            "end": "End",
+            "endDate": "End date",
+            "from": "From",
+            "headline": "Headline",
+            "highlights": "Highlights",
+            "institution": "Institution",
+            "jobTitle": "Job title",
+            "jobType": "Job type",
+            "location": "Location",
             "name": "Name",
+            "organization": "Organization",
+            "period": "Period",
             "placeLiving": "Place living",
+            "position": "Position",
+            "profession": "Profession",
+            "profileUrl": "Profile URL",
+            "projects": "Projects",
+            "responsibilities": "Responsibilities",
             "role": "Role",
+            "school": "School",
+            "skills": "Skills",
+            "sourceWork": "Source work",
+            "start": "Start",
+            "startDate": "Start date",
+            "summary": "Summary",
+            "technologies": "Technologies",
+            "title": "Title",
+            "to": "To",
+            "tools": "Tools",
+            "type": "Type",
             "url": "URL",
-            "username": "Username"
+            "username": "Username",
+            "website": "Website",
+            "work": "Work"
           },
           "itemTitle": "Item {{index}}",
           "removeItem": "Remove",
           "subheader": "Update profile data",
           "tabs": {
+            "achievements": "Achievements",
+            "education": "Education",
             "me": "Me",
             "networks": "Networks",
             "projects": "Projects",
+            "skills": "Skills",
             "work": "Work"
           },
           "title": "Data",
@@ -754,6 +805,41 @@
             "activated": "Profile activated and published",
             "deactivated": "Profile deactivated",
             "error": "Could not update publication status"
+          }
+        },
+        "onboarding": {
+          "actions": {
+            "finish": "Finish",
+            "next": "Next"
+          },
+          "missingItems": "Missing: {{items}}",
+          "progress": "{{current}} of {{total}}",
+          "steps": {
+            "avatar": {
+              "description": "The avatar is the image or video that represents the profile in the public experience. Create or upload at least one avatar before publishing.",
+              "eyebrow": "Avatar",
+              "title": "Create an avatar"
+            },
+            "publication": {
+              "description": "This bar shows whether the profile is ready to be activated and published. Complete the missing requirements before publishing.",
+              "eyebrow": "Publishing",
+              "title": "Complete what is needed to publish"
+            },
+            "quality": {
+              "description": "The quality bar summarizes whether the profile knowledge has sources, approved facts, and indexed facts to answer better in conversations.",
+              "eyebrow": "Quality",
+              "title": "Review profile quality"
+            },
+            "source": {
+              "description": "A source is a file or text with profile information, such as a CV, biography, projects, or services. Upload and sync at least one source before publishing.",
+              "eyebrow": "Sources",
+              "title": "Upload and sync a source"
+            },
+            "voice": {
+              "description": "The cloned voice lets the profile answer with audio. Clone at least one voice before activating and publishing.",
+              "eyebrow": "Voice",
+              "title": "Clone the voice"
+            }
           }
         },
       "socialNetworks": {
@@ -983,6 +1069,7 @@
         "editTitle": "Edit profile",
         "validation": {
           "aliasMax": "Alias must be at most 100 characters",
+          "aliasRequired": "Alias is required",
           "descriptionRequired": "Description is required",
           "genreInvalid": "Select a valid genre",
           "genreRequired": "Genre is required",
@@ -1008,6 +1095,19 @@
           "planRequiredTitle": "Plan required",
           "title": "Profile limit reached",
           "viewPlans": "View plans"
+        },
+        "onboarding": {
+          "descriptionWithPlan": "Use the highlighted Add button to open the form and create the first profile with name, alias, description, profession, and conversational style.",
+          "descriptionWithoutPlan": "Use the highlighted Add button to continue with plan selection. Profile creation will be enabled when you have an active subscription.",
+          "eyebrow": "First profile",
+          "title": "Create your first profile"
+        },
+        "completionOnboarding": {
+          "description": "This profile is not ready to publish yet. Open it and complete the missing requirements before activating it.",
+          "eyebrow": "Profile pending",
+          "missingItems": "Missing: {{items}}",
+          "openProfile": "Open profile",
+          "title": "Complete this profile"
         },
         "title": "Profiles",
         "toasts": {

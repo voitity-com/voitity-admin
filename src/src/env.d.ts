@@ -45,6 +45,9 @@ interface ImportMetaEnv {
 
   // Backend API
   VITE_API_BASE_URL?: string;
+
+  // Public profile site
+  VITE_PUBLIC_PROFILE_BASE_URL?: string;
 }
 
 interface ImportMeta {

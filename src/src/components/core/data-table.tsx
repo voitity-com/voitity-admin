@@ -8,6 +8,7 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import type { SxProps, Theme } from '@mui/material/styles';
 
 export interface ColumnDef<TRowModel> {
   align?: 'left' | 'right' | 'center';
@@ -19,9 +20,12 @@ export interface ColumnDef<TRowModel> {
 }
 
 type RowId = number | string;
+type RowDataAttributes = Record<`data-${string}`, string | undefined>;
 
 export interface DataTableProps<TRowModel> extends Omit<TableProps, 'onClick'> {
   columns: ColumnDef<TRowModel>[];
+  getRowDataAttributes?: (row: TRowModel, index: number) => RowDataAttributes;
+  getRowSx?: (row: TRowModel, index: number) => SxProps<Theme> | undefined;
   hideHead?: boolean;
   hover?: boolean;
   onClick?: (event: React.MouseEvent, row: TRowModel) => void;
@@ -37,6 +41,8 @@ export interface DataTableProps<TRowModel> extends Omit<TableProps, 'onClick'> {
 
 export function DataTable<TRowModel extends object & { id?: RowId | null }>({
   columns,
+  getRowDataAttributes,
+  getRowSx,
   hideHead,
   hover,
   onClick,
@@ -93,9 +99,12 @@ export function DataTable<TRowModel extends object & { id?: RowId | null }>({
         {rows.map((row, index): React.JSX.Element => {
           const rowId = row.id ? row.id : uniqueRowId?.(row);
           const rowSelected = rowId ? selected?.has(rowId) : false;
+          const rowSx = getRowSx?.(row, index);
+          const clickSx = onClick ? ({ cursor: 'pointer' } satisfies SxProps<Theme>) : undefined;
 
           return (
             <TableRow
+              {...getRowDataAttributes?.(row, index)}
               hover={hover}
               key={rowId ?? index}
               selected={rowSelected}
@@ -104,7 +113,7 @@ export function DataTable<TRowModel extends object & { id?: RowId | null }>({
                   onClick(event, row);
                 },
               })}
-              sx={{ ...(onClick && { cursor: 'pointer' }) }}
+              sx={mergeSx(rowSx, clickSx)}
             >
               {selectable ? (
                 <TableCell padding="checkbox">
@@ -144,4 +153,12 @@ export function DataTable<TRowModel extends object & { id?: RowId | null }>({
       </TableBody>
     </Table>
   );
+}
+
+function mergeSx(rowSx: SxProps<Theme> | undefined, clickSx: SxProps<Theme> | undefined): SxProps<Theme> | undefined {
+  if (rowSx && clickSx) {
+    return [rowSx, clickSx] as SxProps<Theme>;
+  }
+
+  return rowSx ?? clickSx;
 }

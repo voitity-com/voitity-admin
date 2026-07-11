@@ -30,6 +30,7 @@ export interface Config {
   gtm?: { id?: string };
   google?: { clientId?: string };
   api?: { baseUrl?: string };
+  publicProfile?: { baseUrl?: string };
 }
 
 export const config = {
@@ -63,4 +64,5 @@ export const config = {
   gtm: { id: import.meta.env.VITE_GOOGLE_TAG_MANAGER_ID },
   google: { clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID },
   api: { baseUrl: import.meta.env.VITE_API_BASE_URL },
+  publicProfile: { baseUrl: import.meta.env.VITE_PUBLIC_PROFILE_BASE_URL || 'http://localhost:3001' },
 } satisfies Config;

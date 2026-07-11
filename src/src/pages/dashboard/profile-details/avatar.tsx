@@ -83,6 +83,10 @@ export function Page(): React.JSX.Element {
   const isAvatarProcessing = Boolean(processingAvatar) || isPollingAvatar;
   const displayStatus = isAvatarProcessing ? 'processing' : status;
   const activeAvatarId = avatar?.status === 'active' ? String(avatar.id) : '';
+  const latestFailedAvatar = React.useMemo(() => getLatestFailedAvatar(avatars), [avatars]);
+  const shouldDisplayAvatarFailure = !isAvatarProcessing && shouldShowAvatarFailure(latestFailedAvatar, avatar);
+  const avatarFailureMessage =
+    shouldDisplayAvatarFailure && latestFailedAvatar ? getAvatarFailureMessage(latestFailedAvatar, t) : '';
 
   const loadAvatar = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -92,11 +96,12 @@ export function Page(): React.JSX.Element {
       const history = await listProfileAvatarHistory(profileId);
       const nextActiveAvatar = history.active_avatar ?? null;
       const nextProcessingAvatar = history.processing_avatar ?? null;
+      const nextFailedAvatar = getLatestFailedAvatar(history.avatars);
 
       setAvatars(history.avatars);
       setProcessingAvatar(nextProcessingAvatar);
-      setAvatar(nextActiveAvatar ?? nextProcessingAvatar);
-      setStatus(nextProcessingAvatar ? 'processing' : nextActiveAvatar?.status ?? '');
+      setAvatar(nextActiveAvatar ?? nextProcessingAvatar ?? nextFailedAvatar);
+      setStatus(nextProcessingAvatar ? 'processing' : nextActiveAvatar?.status ?? nextFailedAvatar?.status ?? '');
       setIsPollingAvatar(Boolean(nextProcessingAvatar));
     } catch (err) {
       logger.error(err);
@@ -133,13 +138,14 @@ export function Page(): React.JSX.Element {
 
         const nextActiveAvatar = history.active_avatar ?? null;
         const nextProcessingAvatar = history.processing_avatar ?? null;
+        const nextFailedAvatar = getLatestFailedAvatar(history.avatars);
 
         setAvatars(history.avatars);
         setProcessingAvatar(nextProcessingAvatar);
-        setAvatar(nextActiveAvatar ?? nextProcessingAvatar);
+        setAvatar(nextActiveAvatar ?? nextProcessingAvatar ?? nextFailedAvatar);
 
         if (!nextProcessingAvatar) {
-          setStatus(nextActiveAvatar?.status ?? '');
+          setStatus(nextActiveAvatar?.status ?? nextFailedAvatar?.status ?? '');
           setIsPollingAvatar(false);
           return;
         }
@@ -376,6 +382,16 @@ export function Page(): React.JSX.Element {
                     <Stack spacing={1}>
                       <Typography variant="body2">{t('dashboard.profiles.detail.avatar.processingMessage')}</Typography>
                       <LinearProgress color="warning" />
+                    </Stack>
+                  </Alert>
+                ) : null}
+                {avatarFailureMessage ? (
+                  <Alert color="error" sx={{ width: '100%' }}>
+                    <Stack spacing={0.5}>
+                      <Typography variant="subtitle2">
+                        {t('dashboard.profiles.detail.avatar.failedMessage')}
+                      </Typography>
+                      <Typography variant="body2">{avatarFailureMessage}</Typography>
                     </Stack>
                   </Alert>
                 ) : null}
@@ -630,6 +646,7 @@ function AvatarHistoryGrid({
         const isVideo = file ? isVideoFile(file) : false;
         const isActive = String(item.id) === activeAvatarId || item.status === 'active';
         const canSelect = !disabled && !isActive && isAvatarSelectable(item);
+        const failureMessage = item.status === 'failed' ? getAvatarFailureMessage(item, t) : '';
 
         return (
           <ButtonBase
@@ -653,6 +670,7 @@ function AvatarHistoryGrid({
                 : '0 0 0 1px var(--mui-palette-divider)',
               display: 'block',
               overflow: 'hidden',
+              position: 'relative',
               width: '100%',
               '&.Mui-disabled': {
                 opacity: isActive ? 1 : 0.42,
@@ -661,6 +679,7 @@ function AvatarHistoryGrid({
                 borderColor: canSelect ? 'success.light' : undefined,
               },
             }}
+            title={failureMessage || undefined}
           >
             {file ? (
               isVideo ? (
@@ -689,6 +708,20 @@ function AvatarHistoryGrid({
                 sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
               />
             )}
+            {failureMessage ? (
+              <Chip
+                color="error"
+                label={t('dashboard.profiles.detail.avatar.status.failed')}
+                size="small"
+                sx={{
+                  left: '50%',
+                  maxWidth: 'calc(100% - 12px)',
+                  position: 'absolute',
+                  top: 8,
+                  transform: 'translateX(-50%)',
+                }}
+              />
+            ) : null}
           </ButtonBase>
         );
       })}
@@ -698,6 +731,50 @@ function AvatarHistoryGrid({
 
 function getAvatarFile(avatar: null | ProfileAvatar): string {
   return avatar?.ai_video?.file || avatar?.file || avatar?.ai_image?.file || '';
+}
+
+function getLatestFailedAvatar(avatars: ProfileAvatar[]): null | ProfileAvatar {
+  return avatars.find((item) => item.status === 'failed') ?? null;
+}
+
+function shouldShowAvatarFailure(failedAvatar: null | ProfileAvatar, currentAvatar: null | ProfileAvatar): boolean {
+  if (!failedAvatar) {
+    return false;
+  }
+
+  if (!currentAvatar || currentAvatar.status !== 'active') {
+    return true;
+  }
+
+  return isAvatarNewer(failedAvatar, currentAvatar);
+}
+
+function isAvatarNewer(candidate: ProfileAvatar, reference: ProfileAvatar): boolean {
+  const candidateTime = Date.parse(candidate.updated_at ?? candidate.created_at ?? '');
+  const referenceTime = Date.parse(reference.updated_at ?? reference.created_at ?? '');
+
+  if (Number.isNaN(candidateTime)) {
+    return false;
+  }
+
+  if (Number.isNaN(referenceTime)) {
+    return true;
+  }
+
+  return candidateTime > referenceTime;
+}
+
+function getAvatarFailureMessage(avatar: ProfileAvatar, t: ReturnType<typeof useTranslation>['t']): string {
+  const reason = avatar.failure_reason || avatar.ai_video?.failure_reason || avatar.ai_image?.failure_reason || '';
+  const code = avatar.failure_code || avatar.ai_video?.failure_code || avatar.ai_image?.failure_code || '';
+  const fallback = String(t('dashboard.profiles.detail.avatar.failureFallback'));
+  const message = reason || fallback;
+
+  if (!code) {
+    return message;
+  }
+
+  return t('dashboard.profiles.detail.avatar.failureWithCode', { code, message });
 }
 
 function isAvatarSelectable(avatar: ProfileAvatar): boolean {

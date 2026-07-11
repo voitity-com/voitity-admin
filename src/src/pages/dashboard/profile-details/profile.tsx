@@ -38,6 +38,7 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { Profile, ProfileAudioTranscriptionField, ProfilePayload, ProfileProfession } from '@/lib/profiles/api-client';
 import { getProfile, listProfileProfessions, updateProfile } from '@/lib/profiles/api-client';
+import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
 import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
@@ -60,9 +61,14 @@ interface Values {
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
   return zod.object({
-    alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
+    alias: zod
+      .string()
+      .trim()
+      .min(1, t('dashboard.profiles.form.validation.aliasRequired'))
+      .max(100, t('dashboard.profiles.form.validation.aliasMax')),
     description: zod
       .string()
+      .trim()
       .min(defaultProfileTextFieldLimits.description.min, t('dashboard.profiles.form.validation.descriptionRequired'))
       .max(defaultProfileTextFieldLimits.description.max),
     genre: zod
@@ -106,6 +112,7 @@ export function Page(): React.JSX.Element {
     control,
     handleSubmit,
     reset,
+    setError: setFormError,
     setValue,
     watch,
     formState: { errors, isSubmitting },
@@ -179,11 +186,15 @@ export function Page(): React.JSX.Element {
         window.dispatchEvent(new Event('profile-publication:refresh'));
         toast.success(t('dashboard.profiles.detail.profile.toasts.updated'));
       } catch (err) {
+        if (applyProfileFormApiErrors<Values>(err, setFormError)) {
+          return;
+        }
+
         toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
         throw err;
       }
     },
-    [profileId, reset, t]
+    [profileId, reset, setFormError, t]
   );
 
   const handleCancelEdit = React.useCallback((): void => {
@@ -745,7 +756,7 @@ function getProfileTextFieldLimits(
     const field = String(rule.field ?? '');
     const minLength = Number(rule.min_length ?? 0);
 
-    if ((field === 'description' || field === 'personality') && minLength > 0) {
+    if (field === 'personality' && minLength > 0) {
       limits[field].min = Math.max(limits[field].min, minLength);
     }
   }
@@ -766,7 +777,7 @@ function toValues(profile: Profile): Values {
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    alias: values.alias.trim() || null,
+    alias: values.alias.trim(),
     description: values.description,
     genre: toProfileGenre(values.genre),
     name: values.name,

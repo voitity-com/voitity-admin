@@ -44,7 +44,7 @@ export interface ProfilePublication {
 
 export interface ProfilePayload {
   name: string;
-  alias?: null | string;
+  alias: string;
   description: string;
   genre: ProfileGenre;
   personality: string;
@@ -318,11 +318,13 @@ export interface ProfileAudioTranscription {
 }
 
 export class ProfileApiError extends Error {
+  public errors: Record<string, string[]>;
   public status: number;
 
-  public constructor(message: string, status: number) {
+  public constructor(message: string, status: number, errors: Record<string, string[]> = {}) {
     super(message);
     this.name = 'ProfileApiError';
+    this.errors = errors;
     this.status = status;
   }
 }
@@ -931,12 +933,14 @@ async function requestRaw(path: string, options: RequestOptions): Promise<Respon
 
   const response = await fetch(`${baseUrl}${path}`, {
     body: options.formData ?? (options.body ? JSON.stringify(options.body) : undefined),
+    cache: options.method === 'GET' || !options.method ? 'no-store' : undefined,
     headers,
     method: options.method ?? 'GET',
   });
 
   if (!response.ok) {
-    throw new ProfileApiError(await getErrorMessage(response), response.status);
+    const { errors, message } = await getErrorDetails(response);
+    throw new ProfileApiError(message, response.status, errors);
   }
 
   return response;
@@ -960,22 +964,23 @@ function getFilenameFromContentDisposition(value: null | string): string | undef
   return /filename="?(?<filename>[^";]+)"?/i.exec(value)?.groups?.filename;
 }
 
-async function getErrorMessage(response: Response): Promise<string> {
+async function getErrorDetails(response: Response): Promise<{ errors: Record<string, string[]>; message: string }> {
   try {
     const json = (await response.json()) as { errors?: Record<string, string[]>; message?: string };
+    const errors = json.errors ?? {};
 
     if (json.message) {
-      return json.message;
+      return { errors, message: json.message };
     }
 
-    const firstError = Object.values(json.errors ?? {})[0]?.[0];
+    const firstError = Object.values(errors)[0]?.[0];
 
     if (firstError) {
-      return firstError;
+      return { errors, message: firstError };
     }
   } catch {
     // Fall through to generic message.
   }
 
-  return 'Profile request failed';
+  return { errors: {}, message: 'Profile request failed' };
 }

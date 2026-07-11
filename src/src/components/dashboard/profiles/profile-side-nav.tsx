@@ -100,6 +100,7 @@ export function ProfileSideNav(): React.JSX.Element {
 
   return (
     <Stack
+      id="profile-detail-side-nav"
       spacing={3}
       sx={{
         flex: '0 0 auto',
@@ -113,7 +114,7 @@ export function ProfileSideNav(): React.JSX.Element {
           isNavGroup(item) ? (
             <NavGroup {...item} key={item.key} pathname={pathname} />
           ) : (
-            <NavItem {...item} key={item.key} pathname={pathname} />
+            <NavItem {...item} itemKey={item.key} key={item.key} pathname={pathname} />
           )
         )}
       </Stack>
@@ -131,6 +132,7 @@ interface NavGroupProps {
 interface NavItemProps {
   href: string;
   icon: string;
+  itemKey?: string;
   pathname: string;
   title: string;
   nested?: boolean;
@@ -196,19 +198,20 @@ function NavGroup({ children, icon, pathname, title }: NavGroupProps): React.JSX
         }}
       >
         {children.map((item) => (
-          <NavItem {...item} key={item.key} nested pathname={pathname} />
+          <NavItem {...item} itemKey={item.key} key={item.key} nested pathname={pathname} />
         ))}
       </Stack>
     </Box>
   );
 }
 
-function NavItem({ href, icon, nested = false, pathname, title }: NavItemProps): React.JSX.Element {
+function NavItem({ href, icon, itemKey, nested = false, pathname, title }: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ href, pathname });
   const Icon = icons[icon];
+  const navItemId = itemKey ? `profile-detail-nav-${itemKey}` : undefined;
 
   return (
-    <Box component="li" sx={{ userSelect: 'none' }}>
+    <Box component="li" id={navItemId} sx={{ borderRadius: 1, userSelect: 'none' }}>
       <Box
         component={RouterLink}
         href={href}
