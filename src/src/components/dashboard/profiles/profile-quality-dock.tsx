@@ -19,6 +19,7 @@ import { useParams } from 'react-router-dom';
 import { paths } from '@/paths';
 import type { ProfileQuality } from '@/lib/profiles/api-client';
 import { getProfileQuality } from '@/lib/profiles/api-client';
+import { profileQualityRefreshEvent } from '@/lib/profiles/profile-quality-events';
 import { logger } from '@/lib/default-logger';
 import { usePathname } from '@/hooks/use-pathname';
 import { RouterLink } from '@/components/core/link';
@@ -56,18 +57,50 @@ export function ProfileQualityDock(): React.JSX.Element | null {
   }, [loadQuality, pathname]);
 
   React.useEffect(() => {
-    const handleRefresh = (): void => {
+    if (!profileId) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      loadQuality().catch((err) => {
+        logger.error(err);
+      });
+    }, 15_000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [loadQuality, profileId]);
+
+  React.useEffect(() => {
+    const handleRefresh = (event?: Event): void => {
+      const eventProfileId = getRefreshEventProfileId(event);
+
+      if (eventProfileId && eventProfileId !== String(profileId)) {
+        return;
+      }
+
       loadQuality().catch((err) => {
         logger.error(err);
       });
     };
 
-    window.addEventListener('profile-quality:refresh', handleRefresh);
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === 'visible') {
+        handleRefresh();
+      }
+    };
+
+    window.addEventListener(profileQualityRefreshEvent, handleRefresh);
+    window.addEventListener('focus', handleRefresh);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('profile-quality:refresh', handleRefresh);
+      window.removeEventListener(profileQualityRefreshEvent, handleRefresh);
+      window.removeEventListener('focus', handleRefresh);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [loadQuality]);
+  }, [loadQuality, profileId]);
 
   if (!profileId) {
     return null;
@@ -80,6 +113,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
   return (
     <Paper
       elevation={16}
+      id="profile-quality-dock"
       sx={{
         border: '1px solid var(--mui-palette-divider)',
         borderRadius: 2,
@@ -206,6 +240,16 @@ export function ProfileQualityDock(): React.JSX.Element | null {
       </Box>
     </Paper>
   );
+}
+
+function getRefreshEventProfileId(event?: Event): null | string {
+  if (!(event instanceof CustomEvent)) {
+    return null;
+  }
+
+  const detail = event.detail as { profileId?: null | string } | null;
+
+  return detail?.profileId ?? null;
 }
 
 function DockMetric({ label, value }: { label: string; value: number }): React.JSX.Element {

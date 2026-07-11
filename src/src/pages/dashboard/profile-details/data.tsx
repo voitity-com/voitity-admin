@@ -27,6 +27,7 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { Profile } from '@/lib/profiles/api-client';
 import { getProfile, updateProfileData } from '@/lib/profiles/api-client';
+import { notifyProfileQualityChanged } from '@/lib/profiles/profile-quality-events';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
 
@@ -105,6 +106,7 @@ export function Page(): React.JSX.Element {
       setProfile(updatedProfile);
       setData(normalizeData(updatedProfile.data));
       setIsEditing(false);
+      notifyProfileQualityChanged(profileId);
       toast.success(t('dashboard.profiles.detail.data.toasts.updated'));
     } catch (err) {
       const message = getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
@@ -862,12 +864,16 @@ function getVisibleTabs(data: JsonObject, isEditing: boolean): SectionKey[] {
   return visibleTabs.length ? visibleTabs : ['me'];
 }
 
-function getTabLabel(key: string, t: (key: string) => string): string {
+function getTabLabel(key: string, t: (key: string, options?: Record<string, unknown>) => string): string {
   if (isKnownTab(key)) {
     return t(`dashboard.profiles.detail.data.tabs.${key}`);
   }
 
-  return key ? `${key.charAt(0).toUpperCase()}${key.slice(1)}` : key;
+  const translationKey = getDataTranslationKey(key);
+
+  return t(`dashboard.profiles.detail.data.tabs.${translationKey}`, {
+    defaultValue: humanizeDataKey(key),
+  });
 }
 
 function isKnownTab(key: string): key is TabKey {
@@ -934,7 +940,7 @@ function getProfileListTitle(
 }
 
 function getProfileListPeriod(item: JsonObject): string {
-  const period = getFirstSimpleValue(item, ['period', 'date_range', 'dateRange', 'dates']);
+  const period = getFirstSimpleValue(item, ['period', 'date_range', 'dateRange', 'dates', 'date']);
 
   if (period) {
     return period;
@@ -1020,13 +1026,17 @@ function getCompactTextValue(value: JsonValue): string {
 }
 
 function isReadOnlyHiddenDataField(field: string): boolean {
-  return normalizeDataFieldKey(field) === 'source' || isIdDataField(field);
+  return isSourceMetadataField(field) || isIdDataField(field);
 }
 
 function isNonEditableDataField(field: string): boolean {
+  return isSourceMetadataField(field) || isIdDataField(field);
+}
+
+function isSourceMetadataField(field: string): boolean {
   const normalized = normalizeDataFieldKey(field);
 
-  return normalized === 'source' || isIdDataField(field);
+  return normalized === 'source' || normalized === 'sourcework';
 }
 
 function isIdDataField(field: string): boolean {
@@ -1050,6 +1060,7 @@ function isProfileListPrimaryField(field: string): boolean {
     'company',
     'companylogo',
     'country',
+    'date',
     'daterange',
     'dates',
     'degree',
@@ -1127,21 +1138,85 @@ function isMePrimaryField(field: string): boolean {
   return primaryFields.has(normalized);
 }
 
-function getFieldLabel(field: string, t: (key: string) => string): string {
+function getFieldLabel(field: string, t: (key: string, options?: Record<string, unknown>) => string): string {
+  const translationKey = getDataTranslationKey(field);
+
+  return t(`dashboard.profiles.detail.data.fields.${translationKey}`, {
+    defaultValue: humanizeDataKey(field),
+  });
+}
+
+function getDataTranslationKey(value: string): string {
+  const normalized = normalizeDataFieldKey(value);
   const keyMap: Record<string, string> = {
+    achievements: 'achievements',
+    about: 'about',
+    aptitudes: 'skills',
+    bio: 'bio',
+    category: 'category',
+    city: 'city',
     company: 'company',
+    country: 'country',
+    current: 'current',
+    date: 'date',
+    daterange: 'dateRange',
+    dates: 'dates',
+    degree: 'degree',
     description: 'description',
+    duration: 'duration',
+    education: 'education',
+    employer: 'employer',
+    employmenttype: 'employmentType',
+    end: 'end',
+    enddate: 'endDate',
+    endedat: 'endDate',
+    from: 'from',
+    headline: 'headline',
+    highlights: 'highlights',
+    institution: 'institution',
+    jobtitle: 'jobTitle',
+    jobtype: 'jobType',
+    link: 'url',
+    location: 'location',
     name: 'name',
-    'place-living': 'placeLiving',
+    organization: 'organization',
+    period: 'period',
+    place: 'location',
+    placeliving: 'placeLiving',
+    position: 'position',
+    profession: 'profession',
+    profileurl: 'profileUrl',
+    projects: 'projects',
+    responsibilities: 'responsibilities',
     role: 'role',
+    school: 'school',
+    skills: 'skills',
+    sourcework: 'sourceWork',
+    stack: 'technologies',
+    start: 'start',
+    startdate: 'startDate',
+    startedat: 'startDate',
+    summary: 'summary',
+    technologies: 'technologies',
+    technology: 'technologies',
+    title: 'title',
+    to: 'to',
+    tools: 'tools',
+    type: 'type',
     url: 'url',
     username: 'username',
+    website: 'website',
+    work: 'work',
   };
-  const translationKey = keyMap[field];
 
-  if (translationKey) {
-    return t(`dashboard.profiles.detail.data.fields.${translationKey}`);
-  }
+  return keyMap[normalized] ?? normalized;
+}
 
-  return field;
+function humanizeDataKey(value: string): string {
+  const words = value
+    .replace(/(?<lower>[a-z0-9])(?<upper>[A-Z])/g, '$<lower> $<upper>')
+    .replace(/[-_]+/g, ' ')
+    .trim();
+
+  return words ? words.charAt(0).toUpperCase() + words.slice(1).toLowerCase() : value;
 }

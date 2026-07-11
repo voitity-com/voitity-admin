@@ -21,6 +21,7 @@ import { z as zod } from 'zod';
 
 import type { Profile, ProfilePayload, ProfileProfession } from '@/lib/profiles/api-client';
 import { listProfileProfessions } from '@/lib/profiles/api-client';
+import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
 import { logger } from '@/lib/default-logger';
 import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 
@@ -35,8 +36,12 @@ interface Values {
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
   return zod.object({
-    alias: zod.string().max(100, t('dashboard.profiles.form.validation.aliasMax')),
-    description: zod.string().min(1, t('dashboard.profiles.form.validation.descriptionRequired')).max(500),
+    alias: zod
+      .string()
+      .trim()
+      .min(1, t('dashboard.profiles.form.validation.aliasRequired'))
+      .max(100, t('dashboard.profiles.form.validation.aliasMax')),
+    description: zod.string().trim().min(1, t('dashboard.profiles.form.validation.descriptionRequired')).max(500),
     genre: zod
       .string()
       .min(1, t('dashboard.profiles.form.validation.genreRequired'))
@@ -80,6 +85,7 @@ export function ProfileFormDialog({
     control,
     handleSubmit,
     reset,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<Values>({ defaultValues: getDefaultValues(profile), resolver: zodResolver(schema) });
 
@@ -104,9 +110,15 @@ export function ProfileFormDialog({
 
   const handleFormSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
-      await onSubmit(toPayload(values));
+      try {
+        await onSubmit(toPayload(values));
+      } catch (err) {
+        if (!applyProfileFormApiErrors<Values>(err, setError)) {
+          throw err;
+        }
+      }
     },
-    [onSubmit]
+    [onSubmit, setError]
   );
 
   return (
@@ -223,7 +235,7 @@ export function ProfileFormDialog({
 
 function toPayload(values: Values): ProfilePayload {
   return {
-    alias: values.alias.trim() || null,
+    alias: values.alias.trim(),
     description: values.description,
     genre: toProfileGenre(values.genre),
     name: values.name,

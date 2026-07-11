@@ -9,10 +9,13 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
+import Fade from '@mui/material/Fade';
+import Paper from '@mui/material/Paper';
+import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { WarningCircle as WarningCircleIcon } from '@phosphor-icons/react/dist/ssr/WarningCircle';
 import { Helmet } from 'react-helmet-async';
@@ -24,7 +27,7 @@ import { config } from '@/config';
 import { paths } from '@/paths';
 import { getProfileAvatar } from '@/lib/avatar/api-client';
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
-import { createProfile, listProfiles } from '@/lib/profiles/api-client';
+import { createProfile, listProfiles, ProfileApiError } from '@/lib/profiles/api-client';
 import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
 import {
   canCreateProfileWithLimit,
@@ -32,6 +35,7 @@ import {
   isSingleProfilePlan,
 } from '@/lib/subscription/profile-limits';
 import { logger } from '@/lib/default-logger';
+import { useDelayedOpen } from '@/hooks/use-delayed-open';
 import { toast } from '@/components/core/toaster';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 import { ProfilesFilters } from '@/components/dashboard/profiles/profiles-filters';
@@ -41,6 +45,8 @@ import { ProfilesSelectionProvider } from '@/components/dashboard/profiles/profi
 import { ProfilesTable } from '@/components/dashboard/profiles/profiles-table';
 
 const metadata = { title: `Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
+const onboardingDelayMs = 500;
+const onboardingTransitionMs = 260;
 
 type SubscriptionStatus = 'active' | 'loading' | 'missing' | 'unknown';
 type ProfileCreateBlockReason = 'limit-reached' | 'missing-plan';
@@ -54,12 +60,16 @@ export function Page(): React.JSX.Element {
   const [error, setError] = React.useState<string>('');
   const [formOpen, setFormOpen] = React.useState<boolean>(false);
   const [isProfileLimitLoaded, setIsProfileLimitLoaded] = React.useState<boolean>(false);
+  const [profileCompletionAnchorEl, setProfileCompletionAnchorEl] = React.useState<HTMLElement | null>(null);
+  const [profileCompletionOnboardingDismissed, setProfileCompletionOnboardingDismissed] = React.useState<boolean>(false);
+  const [profileOnboardingDismissed, setProfileOnboardingDismissed] = React.useState<boolean>(false);
   const [profileLimitDialogOpen, setProfileLimitDialogOpen] = React.useState<boolean>(false);
   const [profileCreateBlockReason, setProfileCreateBlockReason] =
     React.useState<ProfileCreateBlockReason>('limit-reached');
   const [profileLimit, setProfileLimit] = React.useState<number | undefined>();
   const [singleProfilePlan, setSingleProfilePlan] = React.useState<boolean>(false);
   const [subscriptionStatus, setSubscriptionStatus] = React.useState<SubscriptionStatus>('loading');
+  const addButtonRef = React.useRef<HTMLButtonElement | null>(null);
 
   const loadProfiles = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -156,8 +166,17 @@ export function Page(): React.JSX.Element {
     setFormOpen(true);
   }, [isLoading, isProfileLimitLoaded, profileLimit, profiles.length, subscriptionStatus, t]);
 
+  const handleCreateOpenFromOnboarding = React.useCallback((): void => {
+    setProfileOnboardingDismissed(true);
+    handleCreateOpen();
+  }, [handleCreateOpen]);
+
   const handleFormClose = React.useCallback((): void => {
     setFormOpen(false);
+  }, []);
+
+  const handleProfileOnboardingClose = React.useCallback((): void => {
+    setProfileOnboardingDismissed(true);
   }, []);
 
   const handleProfileLimitDialogClose = React.useCallback((): void => {
@@ -178,6 +197,10 @@ export function Page(): React.JSX.Element {
         handleFormClose();
         await loadProfiles();
       } catch (err) {
+        if (err instanceof ProfileApiError && Object.keys(err.errors).length > 0) {
+          throw err;
+        }
+
         toast.error(getErrorMessage(err, t('dashboard.profiles.errors.generic')));
         throw err;
       }
@@ -202,6 +225,69 @@ export function Page(): React.JSX.Element {
     }),
     [profiles]
   );
+  const singleIncompleteProfile = React.useMemo(() => {
+    if (profiles.length !== 1) {
+      return null;
+    }
+
+    const [profile] = profiles;
+
+    return isProfileIncompleteForPublication(profile) ? profile : null;
+  }, [profiles]);
+  const profileOnboardingReady =
+    !profileOnboardingDismissed &&
+    !isLoading &&
+    isProfileLimitLoaded &&
+    !error &&
+    profiles.length === 0 &&
+    !formOpen &&
+    !profileLimitDialogOpen;
+  const profileCompletionOnboardingReady =
+    !profileCompletionOnboardingDismissed &&
+    !profileOnboardingReady &&
+    !isLoading &&
+    !error &&
+    Boolean(singleIncompleteProfile) &&
+    !formOpen &&
+    !profileLimitDialogOpen;
+  const profileOnboardingOpen = useDelayedOpen(profileOnboardingReady, onboardingDelayMs);
+  const profileCompletionOnboardingOpen = useDelayedOpen(profileCompletionOnboardingReady, onboardingDelayMs);
+  const profileCompletionPopoverOpen = profileCompletionOnboardingOpen && Boolean(profileCompletionAnchorEl);
+
+  React.useEffect(() => {
+    if (!profileCompletionOnboardingOpen || !singleIncompleteProfile) {
+      setProfileCompletionAnchorEl(null);
+      return;
+    }
+
+    const selector = `[data-profile-onboarding-anchor="${String(singleIncompleteProfile.id)}"]`;
+    const anchor = document.querySelector<HTMLElement>(selector);
+    setProfileCompletionAnchorEl(anchor);
+  }, [filteredProfiles, profileCompletionOnboardingOpen, singleIncompleteProfile]);
+
+  const handleProfileOpen = React.useCallback(
+    (profile: Profile): void => {
+      if (singleIncompleteProfile && String(profile.id) === String(singleIncompleteProfile.id)) {
+        setProfileCompletionOnboardingDismissed(true);
+      }
+
+      navigate(paths.dashboard.profileDetails.profile(String(profile.id)));
+    },
+    [navigate, singleIncompleteProfile]
+  );
+
+  const handleProfileCompletionOnboardingClose = React.useCallback((): void => {
+    setProfileCompletionOnboardingDismissed(true);
+  }, []);
+
+  const handleOpenSingleIncompleteProfile = React.useCallback((): void => {
+    if (!singleIncompleteProfile) {
+      return;
+    }
+
+    setProfileCompletionOnboardingDismissed(true);
+    navigate(paths.dashboard.profileDetails.profile(String(singleIncompleteProfile.id)));
+  }, [navigate, singleIncompleteProfile]);
 
   return (
     <React.Fragment>
@@ -225,7 +311,28 @@ export function Page(): React.JSX.Element {
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button onClick={handleCreateOpen} startIcon={<PlusIcon />} variant="contained">
+              <Button
+                aria-describedby={profileOnboardingOpen ? 'profile-creation-onboarding' : undefined}
+                onClick={handleCreateOpenFromOnboarding}
+                ref={addButtonRef}
+                startIcon={<PlusIcon />}
+                sx={
+                  profileOnboardingOpen
+                    ? (theme) => ({
+                        boxShadow: '0 0 0 8px rgba(255, 255, 255, 0.22), var(--mui-shadows-16)',
+                        position: 'relative',
+                        transition: theme.transitions.create(['box-shadow', 'transform'], {
+                          duration: theme.transitions.duration.shorter,
+                        }),
+                        zIndex: theme.zIndex.modal + 2,
+                        '&:hover': {
+                          transform: 'translateY(-1px)',
+                        },
+                      })
+                    : undefined
+                }
+                variant="contained"
+              >
                 {t('dashboard.profiles.actions.add')}
               </Button>
             </Box>
@@ -252,10 +359,9 @@ export function Page(): React.JSX.Element {
               ) : (
                 <Box sx={{ overflowX: 'auto' }}>
                   <ProfilesTable
-                    onOpen={(profile) => {
-                      navigate(paths.dashboard.profileDetails.profile(String(profile.id)));
-                    }}
+                    onOpen={handleProfileOpen}
                     rows={filteredProfiles}
+                    spotlightProfileId={profileCompletionOnboardingOpen ? String(singleIncompleteProfile?.id) : null}
                   />
                 </Box>
               )}
@@ -265,6 +371,21 @@ export function Page(): React.JSX.Element {
           </ProfilesSelectionProvider>
         </Stack>
       </Box>
+      <ProfileOnboardingBackdrop onClose={handleProfileOnboardingClose} open={profileOnboardingOpen} />
+      <ProfileOnboardingBackdrop onClose={handleProfileCompletionOnboardingClose} open={profileCompletionPopoverOpen} />
+      <ProfileCreationOnboarding
+        anchorEl={addButtonRef.current}
+        onClose={handleProfileOnboardingClose}
+        open={profileOnboardingOpen}
+        subscriptionStatus={subscriptionStatus}
+      />
+      <ProfileCompletionOnboarding
+        anchorEl={profileCompletionAnchorEl}
+        onClose={handleProfileCompletionOnboardingClose}
+        onOpenProfile={handleOpenSingleIncompleteProfile}
+        open={profileCompletionPopoverOpen}
+        profile={singleIncompleteProfile}
+      />
       <ProfileFormDialog onClose={handleFormClose} onSubmit={handleFormSubmit} open={formOpen} profile={null} />
       <ProfileLimitDialog
         count={profiles.length}
@@ -275,6 +396,214 @@ export function Page(): React.JSX.Element {
         reason={profileCreateBlockReason}
       />
     </React.Fragment>
+  );
+}
+
+interface ProfileOnboardingBackdropProps {
+  onClose: () => void;
+  open: boolean;
+}
+
+function ProfileOnboardingBackdrop({ onClose, open }: ProfileOnboardingBackdropProps): React.JSX.Element {
+  return (
+    <Fade in={open} mountOnEnter timeout={onboardingTransitionMs} unmountOnExit>
+      <Box
+        onClick={onClose}
+        sx={(theme) => ({
+          backdropFilter: 'blur(2px)',
+          bgcolor: 'rgba(15, 23, 42, 0.72)',
+          inset: 0,
+          position: 'fixed',
+          transition: theme.transitions.create(['background-color', 'backdrop-filter'], {
+            duration: theme.transitions.duration.shorter,
+          }),
+          zIndex: theme.zIndex.modal,
+        })}
+      />
+    </Fade>
+  );
+}
+
+interface ProfileCreationOnboardingProps {
+  anchorEl: HTMLButtonElement | null;
+  onClose: () => void;
+  open: boolean;
+  subscriptionStatus: SubscriptionStatus;
+}
+
+function ProfileCreationOnboarding({
+  anchorEl,
+  onClose,
+  open,
+  subscriptionStatus,
+}: ProfileCreationOnboardingProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const isMissingPlan = subscriptionStatus === 'missing';
+  const popoverOpen = open ? Boolean(anchorEl) : false;
+
+  return (
+    <Popover
+      anchorEl={anchorEl}
+      anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      disableScrollLock
+      hideBackdrop
+      id="profile-creation-onboarding"
+      onClose={onClose}
+      open={popoverOpen}
+      slotProps={{
+        paper: {
+          sx: {
+            border: '1px solid rgba(255, 255, 255, 0.32)',
+            boxShadow: '0 24px 80px rgba(15, 23, 42, 0.38)',
+            maxWidth: 'calc(100vw - 32px)',
+            mt: 1.5,
+            overflow: 'visible',
+            width: { sm: 420, xs: 'calc(100vw - 32px)' },
+          },
+        },
+        root: {
+          sx: (theme) => ({
+            pointerEvents: 'none',
+            zIndex: theme.zIndex.modal + 1,
+          }),
+        },
+      }}
+      transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+      transitionDuration={onboardingTransitionMs}
+    >
+      <Stack spacing={2.5} sx={{ pointerEvents: 'auto', p: { sm: 3, xs: 2.5 } }}>
+        <Stack direction="row" spacing={1.5}>
+          <Box
+            sx={{
+              alignItems: 'center',
+              bgcolor: 'primary.main',
+              borderRadius: 1.5,
+              color: 'primary.contrastText',
+              display: 'flex',
+              flex: '0 0 auto',
+              height: 44,
+              justifyContent: 'center',
+              width: 44,
+            }}
+          >
+            <PlusIcon fontSize="var(--icon-fontSize-md)" weight="bold" />
+          </Box>
+          <Stack spacing={0.5}>
+            <Typography color="primary.main" sx={{ fontWeight: 700, textTransform: 'uppercase' }} variant="caption">
+              {t('dashboard.profiles.list.onboarding.eyebrow')}
+            </Typography>
+            <Typography variant="h6">{t('dashboard.profiles.list.onboarding.title')}</Typography>
+          </Stack>
+        </Stack>
+        <Typography color="text.secondary" variant="body2">
+          {t(
+            isMissingPlan
+              ? 'dashboard.profiles.list.onboarding.descriptionWithoutPlan'
+              : 'dashboard.profiles.list.onboarding.descriptionWithPlan'
+          )}
+        </Typography>
+      </Stack>
+    </Popover>
+  );
+}
+
+interface ProfileCompletionOnboardingProps {
+  anchorEl: HTMLElement | null;
+  onClose: () => void;
+  onOpenProfile: () => void;
+  open: boolean;
+  profile: null | Profile;
+}
+
+function ProfileCompletionOnboarding({
+  anchorEl,
+  onClose,
+  onOpenProfile,
+  open,
+  profile,
+}: ProfileCompletionOnboardingProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const popoverOpen = open ? Boolean(anchorEl) : false;
+  const missing = profile?.publication?.missing ?? [];
+  const missingText = missing.length
+    ? t('dashboard.profiles.list.completionOnboarding.missingItems', {
+        items: missing
+          .map((item) => t(`dashboard.profiles.detail.publicationDock.requirements.${item}`, { defaultValue: item }))
+          .join(', '),
+      })
+    : '';
+
+  return (
+    <Popover
+      anchorEl={anchorEl}
+      anchorOrigin={{ horizontal: 'left', vertical: 'bottom' }}
+      disableScrollLock
+      hideBackdrop
+      id="profile-completion-onboarding"
+      onClose={onClose}
+      open={popoverOpen}
+      slotProps={{
+        paper: {
+          sx: {
+            border: '1px solid rgba(255, 255, 255, 0.32)',
+            boxShadow: '0 24px 80px rgba(15, 23, 42, 0.38)',
+            maxWidth: 'calc(100vw - 32px)',
+            mt: 1.5,
+            overflow: 'visible',
+            width: { sm: 440, xs: 'calc(100vw - 32px)' },
+          },
+        },
+        root: {
+          sx: (theme) => ({
+            pointerEvents: 'none',
+            zIndex: theme.zIndex.modal + 1,
+          }),
+        },
+      }}
+      transformOrigin={{ horizontal: 'left', vertical: 'top' }}
+      transitionDuration={onboardingTransitionMs}
+    >
+      <Stack spacing={2.5} sx={{ pointerEvents: 'auto', p: { sm: 3, xs: 2.5 } }}>
+        <Stack direction="row" spacing={1.5}>
+          <Box
+            sx={{
+              alignItems: 'center',
+              bgcolor: 'warning.main',
+              borderRadius: 1.5,
+              color: 'warning.contrastText',
+              display: 'flex',
+              flex: '0 0 auto',
+              height: 44,
+              justifyContent: 'center',
+              width: 44,
+            }}
+          >
+            <WarningCircleIcon fontSize="var(--icon-fontSize-md)" weight="fill" />
+          </Box>
+          <Stack spacing={0.5}>
+            <Typography color="warning.main" sx={{ fontWeight: 700, textTransform: 'uppercase' }} variant="caption">
+              {t('dashboard.profiles.list.completionOnboarding.eyebrow')}
+            </Typography>
+            <Typography variant="h6">{t('dashboard.profiles.list.completionOnboarding.title')}</Typography>
+          </Stack>
+        </Stack>
+        <Stack spacing={1}>
+          <Typography color="text.secondary" variant="body2">
+            {t('dashboard.profiles.list.completionOnboarding.description')}
+          </Typography>
+          {missingText ? (
+            <Typography color="text.primary" sx={{ fontWeight: 600 }} variant="body2">
+              {missingText}
+            </Typography>
+          ) : null}
+        </Stack>
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button endIcon={<ArrowRightIcon />} onClick={onOpenProfile} variant="contained">
+            {t('dashboard.profiles.list.completionOnboarding.openProfile')}
+          </Button>
+        </Box>
+      </Stack>
+    </Popover>
   );
 }
 
@@ -426,4 +755,12 @@ function ProfileLimitDialog({
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function isProfileIncompleteForPublication(profile: Profile): boolean {
+  if (profile.publication) {
+    return !profile.publication.can_activate;
+  }
+
+  return profile.status !== 'published' || !profile.active;
 }

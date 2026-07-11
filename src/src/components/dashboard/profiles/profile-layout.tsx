@@ -2,6 +2,7 @@ import * as React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 
+import { ProfilePublicationOnboarding } from './profile-publication-onboarding';
 import { ProfilePublicationDock } from './profile-publication-dock';
 import { ProfileQualityDock } from './profile-quality-dock';
 import { ProfileSideNav } from './profile-side-nav';
@@ -28,6 +29,7 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
         <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>{children}</Box>
       </Stack>
       <ProfileQualityDock />
+      <ProfilePublicationOnboarding />
     </Box>
   );
 }
