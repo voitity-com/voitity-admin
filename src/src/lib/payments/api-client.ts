@@ -11,7 +11,8 @@ interface RequestOptions {
   method?: 'GET' | 'POST';
 }
 
-const PENDING_PAYMENT_ORDER_STORAGE_KEY = 'voitity.pendingPaymentOrderId';
+const PENDING_PAYMENT_ORDER_STORAGE_KEY = 'bigmelo.pendingPaymentOrderId';
+const LEGACY_PENDING_PAYMENT_ORDER_STORAGE_KEY = 'voitity.pendingPaymentOrderId';
 
 export interface PaymentAmounts {
   amount_cop?: number;
@@ -97,6 +98,7 @@ export function savePendingPaymentOrderId(paymentOrderId: number | string): void
   }
 
   window.sessionStorage.setItem(PENDING_PAYMENT_ORDER_STORAGE_KEY, String(paymentOrderId));
+  window.sessionStorage.removeItem(LEGACY_PENDING_PAYMENT_ORDER_STORAGE_KEY);
 }
 
 export function getPendingPaymentOrderId(): string | null {
@@ -104,7 +106,10 @@ export function getPendingPaymentOrderId(): string | null {
     return null;
   }
 
-  return window.sessionStorage.getItem(PENDING_PAYMENT_ORDER_STORAGE_KEY);
+  return (
+    window.sessionStorage.getItem(PENDING_PAYMENT_ORDER_STORAGE_KEY) ??
+    window.sessionStorage.getItem(LEGACY_PENDING_PAYMENT_ORDER_STORAGE_KEY)
+  );
 }
 
 export function clearPendingPaymentOrderId(): void {
@@ -113,6 +118,7 @@ export function clearPendingPaymentOrderId(): void {
   }
 
   window.sessionStorage.removeItem(PENDING_PAYMENT_ORDER_STORAGE_KEY);
+  window.sessionStorage.removeItem(LEGACY_PENDING_PAYMENT_ORDER_STORAGE_KEY);
 }
 
 function normalizeWompiCheckoutResponse(response: unknown): WompiCheckoutResponse {

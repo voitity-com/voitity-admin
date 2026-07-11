@@ -24,7 +24,7 @@ export function Logo({ color = 'dark', emblem, height = HEIGHT, width = WIDTH }:
 
   return (
     <Box
-      alt="Voitity"
+      alt="Bigmelo"
       component="img"
       height={height}
       src={url}

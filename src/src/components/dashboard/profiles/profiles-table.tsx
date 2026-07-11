@@ -33,6 +33,7 @@ export function ProfilesTable({ onOpen, rows = [], spotlightProfileId }: Profile
     <React.Fragment>
       <DataTable<Profile>
         columns={columns}
+        getRowAriaLabel={(row) => t('dashboard.profiles.actions.openProfile', { name: row.name })}
         getRowDataAttributes={(row) =>
           isSpotlightProfile(row, spotlightProfileId) ? { 'data-profile-onboarding-anchor': String(row.id) } : {}
         }

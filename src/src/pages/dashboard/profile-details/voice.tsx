@@ -1133,6 +1133,10 @@ async function loadLameJs(errorMessage: string): Promise<LameJs> {
 }
 
 function getVoiceStorageKey(profileId: string): string {
+  return `bigmelo.profile.${profileId}.voiceId`;
+}
+
+function getLegacyVoiceStorageKey(profileId: string): string {
   return `voitity.profile.${profileId}.voiceId`;
 }
 
@@ -1141,7 +1145,11 @@ function getStoredVoiceId(profileId: string): string {
     return '';
   }
 
-  return window.localStorage.getItem(getVoiceStorageKey(profileId)) ?? '';
+  return (
+    window.localStorage.getItem(getVoiceStorageKey(profileId)) ??
+    window.localStorage.getItem(getLegacyVoiceStorageKey(profileId)) ??
+    ''
+  );
 }
 
 function storeVoiceId(profileId: string, voiceId: string): void {
@@ -1150,6 +1158,7 @@ function storeVoiceId(profileId: string, voiceId: string): void {
   }
 
   window.localStorage.setItem(getVoiceStorageKey(profileId), voiceId);
+  window.localStorage.removeItem(getLegacyVoiceStorageKey(profileId));
 }
 
 function clearStoredVoiceId(profileId: string): void {
@@ -1158,6 +1167,7 @@ function clearStoredVoiceId(profileId: string): void {
   }
 
   window.localStorage.removeItem(getVoiceStorageKey(profileId));
+  window.localStorage.removeItem(getLegacyVoiceStorageKey(profileId));
 }
 
 function stopTracks(stream: MediaStream | null): void {

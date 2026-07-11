@@ -171,6 +171,7 @@
     },
     "userPopover": {
       "actions": {
+        "openMenu": "Abrir menú de cuenta",
         "signOut": "Cerrar sesión"
       },
       "errors": {
@@ -438,7 +439,7 @@
         "title": "Límites de suscripción",
         "terms": {
           "acceptance": "Acepto los términos de suscripción y autorizo pagos recurrentes.",
-          "body": "Al continuar, aceptas iniciar una suscripción recurrente de Voitity. La suscripción se renueva automáticamente de forma mensual o anual según el plan seleccionado, hasta que se cancele antes de la siguiente fecha de renovación. Wompi procesa el pago y el acceso se activa solo después de la confirmación del pago. Autorizas los cobros recurrentes para futuras renovaciones y entiendes que los límites de uso se reinician mensualmente, incluso cuando el ciclo de cobro seleccionado sea anual.",
+          "body": "Al continuar, aceptas iniciar una suscripción recurrente de Bigmelo. La suscripción se renueva automáticamente de forma mensual o anual según el plan seleccionado, hasta que se cancele antes de la siguiente fecha de renovación. Wompi procesa el pago y el acceso se activa solo después de la confirmación del pago. Autorizas los cobros recurrentes para futuras renovaciones y entiendes que los límites de uso se reinician mensualmente, incluso cuando el ciclo de cobro seleccionado sea anual.",
           "title": "Términos de suscripción"
         },
         "usage": {
@@ -556,7 +557,8 @@
         "startRecording": "Iniciar grabación",
         "stop": "Detener",
         "uploadImage": "Subir imagen",
-        "viewProfile": "Ver perfil"
+        "viewProfile": "Ver perfil",
+        "openProfile": "Abrir perfil {{name}}"
       },
       "detail": {
         "avatar": {

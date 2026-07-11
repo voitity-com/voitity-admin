@@ -24,11 +24,12 @@ type RowDataAttributes = Record<`data-${string}`, string | undefined>;
 
 export interface DataTableProps<TRowModel> extends Omit<TableProps, 'onClick'> {
   columns: ColumnDef<TRowModel>[];
+  getRowAriaLabel?: (row: TRowModel, index: number) => string | undefined;
   getRowDataAttributes?: (row: TRowModel, index: number) => RowDataAttributes;
   getRowSx?: (row: TRowModel, index: number) => SxProps<Theme> | undefined;
   hideHead?: boolean;
   hover?: boolean;
-  onClick?: (event: React.MouseEvent, row: TRowModel) => void;
+  onClick?: (event: React.KeyboardEvent | React.MouseEvent, row: TRowModel) => void;
   onDeselectAll?: (event: React.ChangeEvent) => void;
   onDeselectOne?: (event: React.ChangeEvent, row: TRowModel) => void;
   onSelectAll?: (event: React.ChangeEvent) => void;
@@ -41,6 +42,7 @@ export interface DataTableProps<TRowModel> extends Omit<TableProps, 'onClick'> {
 
 export function DataTable<TRowModel extends object & { id?: RowId | null }>({
   columns,
+  getRowAriaLabel,
   getRowDataAttributes,
   getRowSx,
   hideHead,
@@ -99,6 +101,7 @@ export function DataTable<TRowModel extends object & { id?: RowId | null }>({
         {rows.map((row, index): React.JSX.Element => {
           const rowId = row.id ? row.id : uniqueRowId?.(row);
           const rowSelected = rowId ? selected?.has(rowId) : false;
+          const rowAriaLabel = getRowAriaLabel?.(row, index);
           const rowSx = getRowSx?.(row, index);
           const clickSx = onClick ? ({ cursor: 'pointer' } satisfies SxProps<Theme>) : undefined;
 
@@ -109,9 +112,22 @@ export function DataTable<TRowModel extends object & { id?: RowId | null }>({
               key={rowId ?? index}
               selected={rowSelected}
               {...(onClick && {
+                'aria-label': rowAriaLabel,
                 onClick: (event: React.MouseEvent) => {
                   onClick(event, row);
                 },
+                onKeyDown: (event: React.KeyboardEvent<HTMLTableRowElement>) => {
+                  if (shouldIgnoreRowKeyboardEvent(event)) {
+                    return;
+                  }
+
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onClick(event, row);
+                  }
+                },
+                role: 'button',
+                tabIndex: 0,
               })}
               sx={mergeSx(rowSx, clickSx)}
             >
@@ -153,6 +169,20 @@ export function DataTable<TRowModel extends object & { id?: RowId | null }>({
       </TableBody>
     </Table>
   );
+}
+
+function shouldIgnoreRowKeyboardEvent(event: React.KeyboardEvent<HTMLTableRowElement>): boolean {
+  const target = event.target;
+
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  const interactiveElement = target.closest(
+    'a,button,input,select,textarea,[role="button"],[role="link"],[contenteditable="true"]'
+  );
+
+  return Boolean(interactiveElement && interactiveElement !== event.currentTarget);
 }
 
 function mergeSx(rowSx: SxProps<Theme> | undefined, clickSx: SxProps<Theme> | undefined): SxProps<Theme> | undefined {
