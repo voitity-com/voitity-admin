@@ -41,6 +41,7 @@ import { RadialBar, RadialBarChart } from 'recharts';
 import { paths } from '@/paths';
 import { NoSsr } from '@/components/core/no-ssr';
 import { RouterLink } from '@/components/core/link';
+import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
 import type {
   JsonObject,
   JsonValue,
@@ -57,9 +58,11 @@ export interface SubscriptionLimitsProps {
 }
 
 export interface SubscriptionBillingProps extends SubscriptionLimitsProps {
+  checkoutIntent?: CheckoutIntent | null;
   isCheckoutPending?: boolean;
   onCancelRenewal?: () => Promise<void>;
   onCancelTrial?: () => Promise<void>;
+  onCheckoutIntentHandled?: () => void;
   onReactivateRenewal?: () => Promise<void>;
   onStartCheckout?: (plan: SubscriptionPlan) => Promise<void>;
   pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null;
@@ -133,11 +136,13 @@ export function SubscriptionLimits({ data, language, plansData }: SubscriptionLi
 }
 
 export function SubscriptionBilling({
+  checkoutIntent,
   data,
   isCheckoutPending = false,
   language,
   onCancelRenewal,
   onCancelTrial,
+  onCheckoutIntentHandled,
   onReactivateRenewal,
   onStartCheckout,
   pendingAction = null,
@@ -147,6 +152,7 @@ export function SubscriptionBilling({
   const hasActiveSubscription = hasActiveSubscriptionData(data);
   const [acceptedTerms, setAcceptedTerms] = React.useState<boolean>(false);
   const [checkoutPlanId, setCheckoutPlanId] = React.useState<string | undefined>();
+  const handledCheckoutIntentRef = React.useRef<string | null>(null);
   const subscription = getCurrentSubscription(data, plansData, t);
 
   React.useEffect(() => {
@@ -160,6 +166,33 @@ export function SubscriptionBilling({
   const checkoutCycle = cycles.find((cycle) => cycle.planId === checkoutPlanId && !cycle.disabled);
   const selectedPlan = checkoutCycle?.plan;
   const canStartCheckout = Boolean(!hasActiveSubscription && acceptedTerms && selectedPlan && onStartCheckout && !isCheckoutPending);
+
+  React.useEffect(() => {
+    if (hasActiveSubscription || !checkoutIntent) {
+      return;
+    }
+
+    const intentKey = getCheckoutIntentKey(checkoutIntent);
+
+    if (handledCheckoutIntentRef.current === intentKey) {
+      return;
+    }
+
+    const intendedPlanId = getCheckoutIntentPlanId(cycles, checkoutIntent);
+
+    if (!intendedPlanId) {
+      return;
+    }
+
+    handledCheckoutIntentRef.current = intentKey;
+
+    if (checkoutPlanId !== intendedPlanId) {
+      setAcceptedTerms(false);
+      setCheckoutPlanId(intendedPlanId);
+    }
+
+    onCheckoutIntentHandled?.();
+  }, [checkoutIntent, checkoutPlanId, cycles, hasActiveSubscription, onCheckoutIntentHandled]);
 
   const handleOpenCheckout = React.useCallback((planId: string): void => {
     setAcceptedTerms(false);
@@ -1210,6 +1243,60 @@ function getBillingCycles({
 
 function isPurchasablePlan(plan: SubscriptionPlan | undefined): plan is SubscriptionPlan {
   return Boolean(plan && plan.purchasable !== false && typeof plan.price_usd === 'number' && plan.price_usd > 0);
+}
+
+function getCheckoutIntentPlanId(cycles: BillingCycleOption[], intent: CheckoutIntent): string | undefined {
+  const targetInterval = getCheckoutIntentInterval(intent);
+  const targetPlan = normalizePlanKey(intent.plan);
+  const matchingCycle = cycles.find((cycle) => {
+    if (cycle.disabled || !cycle.planId) {
+      return false;
+    }
+
+    if (targetInterval && cycle.interval !== targetInterval) {
+      return false;
+    }
+
+    return !targetPlan || planMatchesIntent(cycle.plan, cycle.planId, targetPlan);
+  });
+
+  return matchingCycle?.planId;
+}
+
+function getCheckoutIntentKey(intent: CheckoutIntent): string {
+  return [intent.intent, intent.plan ?? '', intent.cycle ?? ''].join(':');
+}
+
+function getCheckoutIntentInterval(intent: CheckoutIntent): BillingInterval | undefined {
+  if (intent.cycle === 'year') {
+    return 'annual';
+  }
+
+  if (intent.cycle === 'month') {
+    return 'monthly';
+  }
+
+  return undefined;
+}
+
+function planMatchesIntent(plan: SubscriptionPlan | undefined, planId: string, targetPlan: string): boolean {
+  const normalizedPlanId = normalizePlanKey(planId);
+  const normalizedName = normalizePlanKey(plan?.name);
+
+  return (
+    normalizedPlanId === targetPlan ||
+    getBasePlanKey(normalizedPlanId) === targetPlan ||
+    normalizedName === targetPlan ||
+    getBasePlanKey(normalizedName) === targetPlan
+  );
+}
+
+function getBasePlanKey(value: string): string {
+  return value.replace(/_(?:annual|annually|year|yearly|monthly|month)$/u, '');
+}
+
+function normalizePlanKey(value?: string): string {
+  return value?.trim().toLowerCase().replace(/[^a-z0-9_-]/gu, '') ?? '';
 }
 
 function getProcessingAmount(priceUsd: number | undefined, exchangeRate: number | undefined): number | undefined {

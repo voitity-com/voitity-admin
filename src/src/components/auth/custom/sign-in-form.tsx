@@ -22,6 +22,7 @@ import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
+import { buildAuthPathWithCheckoutIntent, persistCheckoutIntentFromSearch } from '@/lib/billing/checkout-intent';
 import { getSupportedLanguage } from '@/lib/i18n';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
@@ -57,6 +58,10 @@ export function SignInForm(): React.JSX.Element {
   const [isPending, setIsPending] = React.useState<boolean>(false);
   const verificationStatus = searchParams.get('verification');
   const localeParam = searchParams.get('locale');
+  const signUpHref = React.useMemo(
+    () => buildAuthPathWithCheckoutIntent(paths.auth.custom.signUp, searchParams),
+    [searchParams]
+  );
 
   React.useEffect(() => {
     if (!localeParam) {
@@ -72,6 +77,10 @@ export function SignInForm(): React.JSX.Element {
       });
     }
   }, [currentLanguage, i18n, localeParam]);
+
+  React.useEffect(() => {
+    persistCheckoutIntentFromSearch(searchParams);
+  }, [searchParams]);
 
   const verificationAlert = React.useMemo((): null | { color: 'error' | 'success' | 'warning'; message: string } => {
     if (!verificationStatus) {
@@ -173,7 +182,7 @@ export function SignInForm(): React.JSX.Element {
         <Typography variant="h5">{t('auth.signIn.title')}</Typography>
         <Typography color="text.secondary" variant="body2">
           {t('auth.signIn.noAccount')}{' '}
-          <Link component={RouterLink} href={paths.auth.custom.signUp} variant="subtitle2">
+          <Link component={RouterLink} href={signUpHref} variant="subtitle2">
             {t('auth.signIn.signUp')}
           </Link>
         </Typography>

@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { config } from '@/config';
 import { paths } from '@/paths';
 import { AuthStrategy } from '@/lib/auth/strategy';
+import { buildAuthPathWithCheckoutIntent, persistCheckoutIntentFromSearch } from '@/lib/billing/checkout-intent';
 import { logger } from '@/lib/default-logger';
 import { useUser } from '@/hooks/use-user';
 
@@ -15,6 +16,7 @@ export interface AuthGuardProps {
 }
 
 export function AuthGuard({ children }: AuthGuardProps): React.JSX.Element | null {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, error, isLoading } = useUser();
   const [isChecking, setIsChecking] = React.useState<boolean>(true);
@@ -31,10 +33,11 @@ export function AuthGuard({ children }: AuthGuardProps): React.JSX.Element | nul
 
     if (!user) {
       logger.debug('[AuthGuard]: User is not logged in, redirecting to sign in');
+      persistCheckoutIntentFromSearch(location.search);
 
       switch (config.auth.strategy) {
         case AuthStrategy.CUSTOM: {
-          navigate(paths.auth.custom.signIn, { replace: true });
+          navigate(buildAuthPathWithCheckoutIntent(paths.auth.custom.signIn, location.search), { replace: true });
           return;
         }
         case AuthStrategy.AUTH0: {
@@ -68,7 +71,7 @@ export function AuthGuard({ children }: AuthGuardProps): React.JSX.Element | nul
       // noop
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Expected
-  }, [user, error, isLoading]);
+  }, [user, error, isLoading, location.search]);
 
   if (isChecking) {
     return null;

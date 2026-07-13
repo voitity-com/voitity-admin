@@ -6,11 +6,13 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { SubscriptionLimits, SubscriptionPlan, SubscriptionPlans } from '@/lib/subscription/api-client';
+import { clearCheckoutIntent, getCheckoutIntentFromSearch, getStoredCheckoutIntent } from '@/lib/billing/checkout-intent';
 import {
   cancelSubscriptionRenewal,
   cancelSubscriptionTrial,
@@ -32,12 +34,17 @@ interface BillingState {
 
 export function Page(): React.JSX.Element {
   const { i18n, t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [billing, setBilling] = React.useState<BillingState | null>(null);
   const [error, setError] = React.useState<string>('');
   const [pendingAction, setPendingAction] = React.useState<'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null>(null);
   const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const checkoutIntent = React.useMemo(
+    () => getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent(),
+    [searchParams]
+  );
 
   const loadBilling = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -151,6 +158,10 @@ export function Page(): React.JSX.Element {
     );
   }, [runSubscriptionAction, t]);
 
+  const handleCheckoutIntentHandled = React.useCallback((): void => {
+    clearCheckoutIntent();
+  }, []);
+
   return (
     <React.Fragment>
       <Helmet>
@@ -169,11 +180,13 @@ export function Page(): React.JSX.Element {
           </Card>
         ) : billing ? (
           <SubscriptionBilling
+            checkoutIntent={checkoutIntent}
             data={billing.limits}
             isCheckoutPending={isCheckoutPending}
             language={language}
             onCancelRenewal={handleCancelRenewal}
             onCancelTrial={handleCancelTrial}
+            onCheckoutIntentHandled={handleCheckoutIntentHandled}
             onReactivateRenewal={handleReactivateRenewal}
             onStartCheckout={handleStartCheckout}
             pendingAction={pendingAction}
