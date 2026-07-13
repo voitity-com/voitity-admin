@@ -811,7 +811,14 @@
         },
         "onboarding": {
           "actions": {
+            "close": "Cerrar guía",
             "finish": "Finalizar",
+            "goTo": {
+              "avatar": "Ir a Avatar",
+              "quality": "Ver calidad",
+              "source": "Ir a Fuentes",
+              "voice": "Ir a Voz"
+            },
             "next": "Siguiente"
           },
           "missingItems": "Pendiente: {{items}}",
@@ -820,26 +827,31 @@
             "avatar": {
               "description": "El avatar es la imagen o video que representa al perfil en la experiencia pública. Crea o sube al menos un avatar antes de publicar.",
               "eyebrow": "Avatar",
+              "mobileDescription": "Crea o sube la imagen o video que verá el público. Es uno de los requisitos para publicar.",
               "title": "Crea un avatar"
             },
             "publication": {
               "description": "Esta barra muestra si el perfil está listo para activarse y publicarse. Completa los requisitos pendientes antes de publicar.",
               "eyebrow": "Publicación",
+              "mobileDescription": "Este resumen muestra qué falta para publicar. Avanza paso a paso y completa los requisitos pendientes.",
               "title": "Completa lo necesario para publicar"
             },
             "quality": {
               "description": "La barra de calidad resume si el conocimiento del perfil tiene fuentes, datos aprobados y datos indexados para responder mejor en las conversaciones.",
               "eyebrow": "Calidad",
+              "mobileDescription": "Aquí ves si la información del perfil ya tiene fuentes, datos aprobados e indexados para responder mejor.",
               "title": "Revisa la calidad del perfil"
             },
             "source": {
               "description": "Una fuente es un archivo o texto con información del perfil, como CV, biografía, proyectos o servicios. Debes cargar y sincronizar al menos una fuente para publicar.",
               "eyebrow": "Fuentes",
+              "mobileDescription": "Sube una biografía, CV o texto y sincronízalo para que la IA tenga información confiable.",
               "title": "Carga y sincroniza una fuente"
             },
             "voice": {
               "description": "La voz clonada permite que el perfil responda con audio. Clona al menos una voz antes de activar y publicar.",
               "eyebrow": "Voz",
+              "mobileDescription": "Configura la voz para que el perfil pueda responder con audio antes de publicarlo.",
               "title": "Clona la voz"
             }
           }
@@ -1099,15 +1111,20 @@
           "viewPlans": "Ver planes"
         },
         "onboarding": {
+          "action": "Crear perfil",
+          "close": "Cerrar guía",
           "descriptionWithPlan": "Usa el botón Agregar resaltado para abrir el formulario y crear el primer perfil con nombre, alias, descripción, profesión y estilo conversacional.",
           "descriptionWithoutPlan": "Usa el botón Agregar resaltado para continuar con la selección de un plan. La creación del perfil se habilitará cuando tengas una suscripción activa.",
           "eyebrow": "Primer perfil",
+          "mobileDescriptionWithPlan": "Empieza creando el perfil con nombre, alias, descripción y estilo. Luego podrás completar avatar, voz y fuentes.",
+          "mobileDescriptionWithoutPlan": "Primero elige un plan. Después podrás crear el perfil y completar avatar, voz y fuentes.",
           "title": "Crea tu primer perfil"
         },
         "completionOnboarding": {
           "description": "Este perfil aún no está listo para publicarse. Ingresa y completa los requisitos pendientes antes de activarlo.",
           "eyebrow": "Perfil pendiente",
           "missingItems": "Pendiente: {{items}}",
+          "mobileDescription": "Abre el perfil y completa avatar, voz y fuente. Con eso podrás activarlo y publicar su enlace.",
           "openProfile": "Abrir perfil",
           "title": "Completa este perfil"
         },

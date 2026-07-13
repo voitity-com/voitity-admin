@@ -5,6 +5,8 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import GlobalStyles from '@mui/material/GlobalStyles';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import type { PopoverOrigin } from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
@@ -16,13 +18,16 @@ import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { RocketLaunch as RocketLaunchIcon } from '@phosphor-icons/react/dist/ssr/RocketLaunch';
+import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
+import { paths } from '@/paths';
+import { logger } from '@/lib/default-logger';
 import type { Profile, ProfilePublicationRequirement } from '@/lib/profiles/api-client';
 import { getProfile } from '@/lib/profiles/api-client';
-import { logger } from '@/lib/default-logger';
 import { useDelayedOpen } from '@/hooks/use-delayed-open';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { usePathname } from '@/hooks/use-pathname';
 
 type StepKey = 'avatar' | 'publication' | 'quality' | 'source' | 'voice';
@@ -47,6 +52,7 @@ const stepTargets = {
 
 export function ProfilePublicationOnboarding(): React.JSX.Element | null {
   const pathname = usePathname();
+  const navigate = useNavigate();
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = React.useState<number>(0);
@@ -165,6 +171,22 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
     setActiveIndex((current) => current + 1);
   };
 
+  const handleClose = (): void => {
+    setDismissed(true);
+  };
+
+  const handleStepAction = (step: OnboardingStep): void => {
+    const href = getStepHref(step.key, profileId);
+
+    if (!href) {
+      handleNext();
+      return;
+    }
+
+    setDismissed(true);
+    navigate(href);
+  };
+
   return (
     <React.Fragment>
       <GlobalStyles styles={(theme) => getSpotlightStyles(activeStep.targetId, theme.zIndex.modal + 2)} />
@@ -184,7 +206,9 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
         currentStep={activeIndex + 1}
         isLastStep={isLastStep}
         missingItems={missingItems}
+        onClose={handleClose}
         onNext={handleNext}
+        onStepAction={handleStepAction}
         open={open}
         step={activeStep}
         totalSteps={steps.length}
@@ -198,7 +222,9 @@ function OnboardingPopover({
   currentStep,
   isLastStep,
   missingItems,
+  onClose,
   onNext,
+  onStepAction,
   open,
   step,
   totalSteps,
@@ -207,14 +233,33 @@ function OnboardingPopover({
   currentStep: number;
   isLastStep: boolean;
   missingItems: string;
+  onClose: () => void;
   onNext: () => void;
+  onStepAction: (step: OnboardingStep) => void;
   open: boolean;
   step: OnboardingStep;
   totalSteps: number;
 }): React.JSX.Element {
   const { t } = useTranslation();
+  const isMobile = useMediaQuery('down', 'sm');
   const popoverOpen = open ? Boolean(anchorEl) : false;
   const origins = getPopoverOrigins(step.key);
+
+  if (isMobile) {
+    return (
+      <MobileOnboardingPanel
+        currentStep={currentStep}
+        isLastStep={isLastStep}
+        missingItems={missingItems}
+        onClose={onClose}
+        onNext={onNext}
+        onStepAction={onStepAction}
+        open={open}
+        step={step}
+        totalSteps={totalSteps}
+      />
+    );
+  }
 
   return (
     <Popover
@@ -281,11 +326,141 @@ function OnboardingPopover({
             {t('dashboard.profiles.detail.onboarding.progress', { current: currentStep, total: totalSteps })}
           </Typography>
           <Button endIcon={isLastStep ? <CheckCircleIcon /> : <ArrowRightIcon />} onClick={onNext} variant="contained">
-            {isLastStep ? t('dashboard.profiles.detail.onboarding.actions.finish') : t('dashboard.profiles.detail.onboarding.actions.next')}
+            {isLastStep
+              ? t('dashboard.profiles.detail.onboarding.actions.finish')
+              : t('dashboard.profiles.detail.onboarding.actions.next')}
           </Button>
         </Stack>
       </Stack>
     </Popover>
+  );
+}
+
+function MobileOnboardingPanel({
+  currentStep,
+  isLastStep,
+  missingItems,
+  onClose,
+  onNext,
+  onStepAction,
+  open,
+  step,
+  totalSteps,
+}: {
+  currentStep: number;
+  isLastStep: boolean;
+  missingItems: string;
+  onClose: () => void;
+  onNext: () => void;
+  onStepAction: (step: OnboardingStep) => void;
+  open: boolean;
+  step: OnboardingStep;
+  totalSteps: number;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const hasStepAction = step.key !== 'publication';
+  const bottomOffset =
+    step.key === 'quality' ? 'calc(116px + env(safe-area-inset-bottom))' : 'calc(16px + env(safe-area-inset-bottom))';
+
+  return (
+    <Fade in={open} mountOnEnter timeout={onboardingTransitionMs} unmountOnExit>
+      <Paper
+        elevation={24}
+        role="dialog"
+        sx={(theme) => ({
+          border: '1px solid rgba(255, 255, 255, 0.32)',
+          borderRadius: 2,
+          bottom: bottomOffset,
+          boxShadow: '0 24px 80px rgba(15, 23, 42, 0.42)',
+          left: 16,
+          maxHeight: 'calc(100dvh - 112px)',
+          overflowY: 'auto',
+          p: 2.5,
+          position: 'fixed',
+          right: 16,
+          zIndex: theme.zIndex.modal + 3,
+        })}
+      >
+        <Stack spacing={2.25}>
+          <Stack direction="row" spacing={1.5} sx={{ alignItems: 'flex-start' }}>
+            <Box
+              sx={{
+                alignItems: 'center',
+                bgcolor: 'primary.main',
+                borderRadius: 1.5,
+                color: 'primary.contrastText',
+                display: 'flex',
+                flex: '0 0 auto',
+                height: 44,
+                justifyContent: 'center',
+                width: 44,
+              }}
+            >
+              {renderStepIcon(step.key)}
+            </Box>
+            <Stack spacing={0.5} sx={{ flex: '1 1 auto', minWidth: 0 }}>
+              <Typography color="primary.main" sx={{ fontWeight: 700, textTransform: 'uppercase' }} variant="caption">
+                {t(`dashboard.profiles.detail.onboarding.steps.${step.key}.eyebrow`)}
+              </Typography>
+              <Typography variant="h6">{t(`dashboard.profiles.detail.onboarding.steps.${step.key}.title`)}</Typography>
+            </Stack>
+            <IconButton
+              aria-label={t('dashboard.profiles.detail.onboarding.actions.close')}
+              edge="end"
+              onClick={onClose}
+              size="small"
+            >
+              <XIcon />
+            </IconButton>
+          </Stack>
+          <Stack spacing={1}>
+            <Typography color="text.secondary" variant="body2">
+              {t(`dashboard.profiles.detail.onboarding.steps.${step.key}.mobileDescription`, { items: missingItems })}
+            </Typography>
+            {step.key === 'publication' ? (
+              <Typography color="text.primary" sx={{ fontWeight: 600 }} variant="body2">
+                {t('dashboard.profiles.detail.onboarding.missingItems', { items: missingItems })}
+              </Typography>
+            ) : null}
+          </Stack>
+          <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+            <Typography color="text.secondary" variant="caption">
+              {t('dashboard.profiles.detail.onboarding.progress', { current: currentStep, total: totalSteps })}
+            </Typography>
+            <Stack direction="row" spacing={1} sx={{ minWidth: 0 }}>
+              {hasStepAction && !isLastStep ? (
+                <Button color="secondary" onClick={onNext} size="small" variant="outlined">
+                  {t('dashboard.profiles.detail.onboarding.actions.next')}
+                </Button>
+              ) : null}
+              {hasStepAction ? (
+                <Button
+                  endIcon={<ArrowRightIcon />}
+                  onClick={() => {
+                    onStepAction(step);
+                  }}
+                  size="small"
+                  variant="contained"
+                >
+                  {t(`dashboard.profiles.detail.onboarding.actions.goTo.${step.key}`)}
+                </Button>
+              ) : (
+                <Button
+                  endIcon={isLastStep ? <CheckCircleIcon /> : <ArrowRightIcon />}
+                  onClick={onNext}
+                  size="small"
+                  variant="contained"
+                >
+                  {isLastStep
+                    ? t('dashboard.profiles.detail.onboarding.actions.finish')
+                    : t('dashboard.profiles.detail.onboarding.actions.next')}
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+        </Stack>
+      </Paper>
+    </Fade>
   );
 }
 
@@ -333,6 +508,30 @@ function formatMissingRequirements(
     .join(', ');
 }
 
+function getStepHref(key: StepKey, profileId: string): null | string {
+  if (!profileId) {
+    return null;
+  }
+
+  if (key === 'avatar') {
+    return paths.dashboard.profileDetails.avatar(profileId);
+  }
+
+  if (key === 'voice') {
+    return paths.dashboard.profileDetails.voice(profileId);
+  }
+
+  if (key === 'source') {
+    return paths.dashboard.profileDetails.sources(profileId);
+  }
+
+  if (key === 'quality') {
+    return paths.dashboard.profileDetails.quality(profileId);
+  }
+
+  return null;
+}
+
 function getPopoverOrigins(key: StepKey): { anchorOrigin: PopoverOrigin; transformOrigin: PopoverOrigin } {
   if (key === 'quality') {
     return {
@@ -357,7 +556,8 @@ function getPopoverOrigins(key: StepKey): { anchorOrigin: PopoverOrigin; transfo
 function getSpotlightStyles(targetId: string, zIndex: number): Record<string, unknown> {
   const selector = `#${targetId}`;
   const isQualityDock = targetId === qualityTargetId;
-  const isNavItem = targetId === stepTargets.avatar || targetId === stepTargets.source || targetId === stepTargets.voice;
+  const isNavItem =
+    targetId === stepTargets.avatar || targetId === stepTargets.source || targetId === stepTargets.voice;
 
   return {
     ...(isNavItem

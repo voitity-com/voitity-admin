@@ -811,7 +811,14 @@
         },
         "onboarding": {
           "actions": {
+            "close": "Close guide",
             "finish": "Finish",
+            "goTo": {
+              "avatar": "Go to Avatar",
+              "quality": "View quality",
+              "source": "Go to Sources",
+              "voice": "Go to Voice"
+            },
             "next": "Next"
           },
           "missingItems": "Missing: {{items}}",
@@ -820,26 +827,31 @@
             "avatar": {
               "description": "The avatar is the image or video that represents the profile in the public experience. Create or upload at least one avatar before publishing.",
               "eyebrow": "Avatar",
+              "mobileDescription": "Create or upload the image or video visitors will see. It is one of the requirements before publishing.",
               "title": "Create an avatar"
             },
             "publication": {
               "description": "This bar shows whether the profile is ready to be activated and published. Complete the missing requirements before publishing.",
               "eyebrow": "Publishing",
+              "mobileDescription": "This summary shows what is missing before publishing. Move step by step and complete the pending requirements.",
               "title": "Complete what is needed to publish"
             },
             "quality": {
               "description": "The quality bar summarizes whether the profile knowledge has sources, approved facts, and indexed facts to answer better in conversations.",
               "eyebrow": "Quality",
+              "mobileDescription": "Here you can see whether the profile information has sources, approved facts, and indexed facts for better answers.",
               "title": "Review profile quality"
             },
             "source": {
               "description": "A source is a file or text with profile information, such as a CV, biography, projects, or services. Upload and sync at least one source before publishing.",
               "eyebrow": "Sources",
+              "mobileDescription": "Upload a biography, CV, or text and sync it so the AI has reliable information.",
               "title": "Upload and sync a source"
             },
             "voice": {
               "description": "The cloned voice lets the profile answer with audio. Clone at least one voice before activating and publishing.",
               "eyebrow": "Voice",
+              "mobileDescription": "Set up the voice so the profile can answer with audio before you publish it.",
               "title": "Clone the voice"
             }
           }
@@ -1099,15 +1111,20 @@
           "viewPlans": "View plans"
         },
         "onboarding": {
+          "action": "Create profile",
+          "close": "Close guide",
           "descriptionWithPlan": "Use the highlighted Add button to open the form and create the first profile with name, alias, description, profession, and conversational style.",
           "descriptionWithoutPlan": "Use the highlighted Add button to continue with plan selection. Profile creation will be enabled when you have an active subscription.",
           "eyebrow": "First profile",
+          "mobileDescriptionWithPlan": "Start by creating the profile with name, alias, description, and style. Then you can complete avatar, voice, and sources.",
+          "mobileDescriptionWithoutPlan": "Choose a plan first. Then you can create the profile and complete avatar, voice, and sources.",
           "title": "Create your first profile"
         },
         "completionOnboarding": {
           "description": "This profile is not ready to publish yet. Open it and complete the missing requirements before activating it.",
           "eyebrow": "Profile pending",
           "missingItems": "Missing: {{items}}",
+          "mobileDescription": "Open the profile and complete avatar, voice, and source. Then you can activate it and publish its link.",
           "openProfile": "Open profile",
           "title": "Complete this profile"
         },
