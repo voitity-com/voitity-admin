@@ -336,36 +336,50 @@
       "billing": {
         "empty": "No subscription information was returned.",
         "emptySection": "No items were returned.",
-        "errors": {
-          "checkout": "Could not start the payment checkout.",
-          "checkoutUrl": "The payment checkout URL was not returned.",
-          "generic": "Could not load subscription limits."
-        },
-        "actions": {
-          "acquirePlan": "Acquire plan",
-          "cancel": "Cancel",
-          "continueToPayment": "Continue to secure payment",
-          "processing": "Preparing payment",
-          "selectCycle": "Select {{cycle}}",
-          "selected": "Selected"
-        },
-        "noActive": {
-          "eyebrow": "No active subscription",
-          "subheader": "There is no active plan on this account yet. Choose monthly or annual billing to activate Starter.",
-          "title": "Choose your plan"
-        },
-        "currentPlan": {
-          "eyebrow": "Purchased plan",
-          "fallbackName": "Starter",
-          "subheader": "This is the active plan for the account."
-        },
+  "errors": {
+    "action": "Could not update the subscription.",
+    "checkout": "Could not start the payment checkout.",
+    "checkoutUrl": "The payment checkout URL was not returned.",
+    "generic": "Could not load subscription limits."
+  },
+  "actions": {
+    "acquirePlan": "Acquire plan",
+    "cancel": "Cancel",
+    "cancelRenewal": "Cancel automatic renewal",
+    "cancelTrial": "Cancel no-cost trial",
+    "continueToTrial": "Continue and start trial",
+    "continueToPayment": "Continue to secure payment",
+    "processing": "Preparing payment",
+    "reactivateRenewal": "Reactivate renewal",
+    "selectCycle": "Select {{cycle}}",
+    "selected": "Selected",
+    "startTrial": "Start {{days}} days at no cost"
+  },
+  "noActive": {
+    "eyebrow": "No active subscription",
+    "subheader": "There is no active plan on this account yet. Choose monthly or annual billing to activate Starter.",
+    "title": "Choose your plan",
+    "trialSubheader": "Start with {{days}} days at no cost after confirming a payment method. The plan is charged when that period ends unless you cancel first."
+  },
+  "currentPlan": {
+    "cancelRenewalHelper": "You keep access until the end of the paid period. No further automatic charge will be made after that.",
+    "cancelTrialHelper": "You keep access until the trial ends and the first plan charge will not be made.",
+    "eyebrow": "Purchased plan",
+    "fallbackName": "Starter",
+    "reactivateHelper": "You can reactivate renewal before the final date to keep access without interruption.",
+    "renewalCancelledSubheader": "Automatic renewal is cancelled. Access remains active until {{date}}.",
+    "subheader": "This is the active plan for the account.",
+    "trialCancelledSubheader": "The trial is cancelled. Access remains active until {{date}} and there will be no automatic charge.",
+    "trialSubheader": "You are in the no-cost period. It ends on {{date}} and the first charge happens after that."
+  },
         "cycles": {
-          "annual": {
+    "annual": {
             "description": "For keeping the profile active all year at a better price.",
             "label": "Annual",
             "period": "USD /year"
-          },
-          "bestValue": "Best value",
+    },
+    "bestValue": "Best value",
+    "freeTrial": "{{days}} days at no cost",
           "monthly": {
             "description": "For creating and validating a complete conversational profile.",
             "label": "Monthly",
@@ -376,15 +390,19 @@
           "title": "Billing cycle",
           "unavailable": "Unavailable"
         },
-        "checkout": {
-          "displayPrice": "Displayed price",
-          "planValue": "Starter {{cycle}}",
-          "processingAmount": "Processed amount",
-          "subheader": "Review the selected cycle and accept the renewal terms before going to Wompi.",
-          "summaryTitle": "Payment summary",
-          "title": "Checkout",
-          "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
-        },
+  "checkout": {
+    "displayPrice": "Displayed price",
+    "firstPlanCharge": "First plan charge",
+    "planValue": "Starter {{cycle}}",
+    "processingAmount": "Processed amount",
+    "subheader": "Review the selected cycle and accept the renewal terms before going to Wompi.",
+    "summaryTitle": "Payment summary",
+    "todayCharge": "Today charge",
+    "title": "Checkout",
+    "trialSubheader": "Today you start {{days}} days at no cost after Wompi confirms a reusable payment method.",
+    "trialWompiNotice": "This step saves the payment method for the first automatic charge. If Wompi does not confirm a reusable payment method, the trial will not start.",
+    "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
+  },
         "fields": {
           "available": "Available",
           "avatarImages": "Avatar images",
@@ -398,8 +416,10 @@
           "current": "Current",
           "currentPeriodEnd": "Current period end",
           "currentPeriodStart": "Current period start",
-          "endsAt": "Ends at",
-          "expiresAt": "Expires at",
+    "endsAt": "Ends at",
+    "expiresAt": "Expires at",
+    "firstChargeAt": "First charge",
+    "lastBilledAt": "Last billed at",
           "limit": "Limit",
           "name": "Name",
           "plan": "Plan",
@@ -450,7 +470,8 @@
             "monthly": "1000 chat messages with 500 credits"
           },
           "chatMessages": "{{countLabel}} chat messages included",
-          "credits": "{{countLabel}} credits included",
+    "credits": "{{countLabel}} credits included",
+    "freeTrial": "{{days}} days at no cost before the first charge",
           "profile": "1 published profile",
           "profiles": "{{countLabel}} profiles included",
           "savings": "Save {{amount}} compared with monthly billing",
@@ -478,21 +499,31 @@
           "declined": "Declined",
           "error": "Error",
           "expired": "Expired",
-          "failed": "Failed",
-          "inactive": "Inactive",
-          "paid": "Paid",
-          "pastDue": "Past due",
-          "pending": "Pending",
-          "trialing": "Trialing",
-          "voided": "Voided"
-        },
+    "failed": "Failed",
+    "first": "Active",
+    "inactive": "Inactive",
+    "paid": "Paid",
+    "pastDue": "Past due",
+    "pending": "Pending",
+    "renewalCancelled": "Renewal cancelled",
+    "renewed": "Renewed",
+    "trialing": "Trialing",
+    "voided": "Voided"
+  },
         "subheader": "Information loaded from your current subscription.",
         "title": "Subscription limits",
-        "terms": {
-          "acceptance": "I accept the subscription terms and authorize recurring payments.",
-          "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
-          "title": "Subscription terms"
-        },
+  "terms": {
+    "acceptance": "I accept the subscription terms and authorize recurring payments.",
+    "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
+    "title": "Subscription terms",
+    "trialAcceptance": "I accept starting {{days}} days at no cost and authorize the automatic charge after it ends.",
+    "trialBody": "By continuing, you authorize saving your payment method and starting {{days}} days at no cost in Bigmelo. When that period ends, the selected {{interval}} plan will be charged automatically unless you cancel from Billing before that date. If the charge is approved, usage limits reset as a new plan period."
+  },
+  "toasts": {
+    "renewalCancelled": "Automatic renewal cancelled.",
+    "renewalReactivated": "Automatic renewal reactivated.",
+    "trialCancelled": "Free trial cancelled."
+  },
         "usage": {
           "progress": "{{progress}} used",
           "remainingSummary": "{{remaining}} available for the current period.",

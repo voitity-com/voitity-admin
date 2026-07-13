@@ -84,6 +84,15 @@ export async function createWompiCheckout(payload: { plan: string }): Promise<Wo
   return normalizeWompiCheckoutResponse(response);
 }
 
+export async function createSubscriptionTrialCheckout(payload: { plan: string }): Promise<WompiCheckoutResponse> {
+  const response = await requestJson<unknown>('/api/subscription/trial', {
+    body: payload,
+    method: 'POST',
+  });
+
+  return normalizeWompiCheckoutResponse(response);
+}
+
 export async function getPaymentOrder(paymentOrderId: number | string): Promise<PaymentOrder> {
   const response = await requestJson<unknown>(`/api/payments/${encodeURIComponent(String(paymentOrderId))}`, {
     method: 'GET',

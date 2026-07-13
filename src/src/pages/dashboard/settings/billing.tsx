@@ -6,12 +6,20 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { SubscriptionLimits, SubscriptionPlan, SubscriptionPlans } from '@/lib/subscription/api-client';
-import { getSubscriptionLimits, getSubscriptionPlans, SubscriptionApiError } from '@/lib/subscription/api-client';
-import { createWompiCheckout, savePendingPaymentOrderId } from '@/lib/payments/api-client';
+import {
+  cancelSubscriptionRenewal,
+  cancelSubscriptionTrial,
+  getSubscriptionLimits,
+  getSubscriptionPlans,
+  reactivateSubscriptionRenewal,
+  SubscriptionApiError,
+} from '@/lib/subscription/api-client';
+import { createSubscriptionTrialCheckout, createWompiCheckout, savePendingPaymentOrderId } from '@/lib/payments/api-client';
 import { logger } from '@/lib/default-logger';
 import { SubscriptionBilling } from '@/components/dashboard/settings/subscription-limits';
 
@@ -27,6 +35,7 @@ export function Page(): React.JSX.Element {
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [billing, setBilling] = React.useState<BillingState | null>(null);
   const [error, setError] = React.useState<string>('');
+  const [pendingAction, setPendingAction] = React.useState<'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null>(null);
   const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
 
@@ -73,7 +82,9 @@ export function Page(): React.JSX.Element {
       setIsCheckoutPending(true);
 
       try {
-        const checkout = await createWompiCheckout({ plan: plan.id });
+        const checkout = billing?.plans.trial?.available
+          ? await createSubscriptionTrialCheckout({ plan: plan.id })
+          : await createWompiCheckout({ plan: plan.id });
         const checkoutUrl = checkout.checkout.checkout_url ?? checkout.payment_order.checkout_url;
 
         if (!checkoutUrl) {
@@ -88,8 +99,57 @@ export function Page(): React.JSX.Element {
         setIsCheckoutPending(false);
       }
     },
-    [t]
+    [billing?.plans.trial?.available, t]
   );
+
+  const runSubscriptionAction = React.useCallback(
+    async (
+      action: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal',
+      request: () => Promise<unknown>,
+      successMessage: string
+    ): Promise<void> => {
+      setError('');
+      setPendingAction(action);
+
+      try {
+        await request();
+        toast.success(successMessage);
+        await loadBilling();
+      } catch (err) {
+        logger.error(err);
+        const message = getErrorMessage(err, t('dashboard.settings.billing.errors.action'));
+        setError(message);
+        toast.error(message);
+      } finally {
+        setPendingAction(null);
+      }
+    },
+    [loadBilling, t]
+  );
+
+  const handleCancelTrial = React.useCallback(async (): Promise<void> => {
+    await runSubscriptionAction(
+      'cancel-trial',
+      cancelSubscriptionTrial,
+      t('dashboard.settings.billing.toasts.trialCancelled')
+    );
+  }, [runSubscriptionAction, t]);
+
+  const handleCancelRenewal = React.useCallback(async (): Promise<void> => {
+    await runSubscriptionAction(
+      'cancel-renewal',
+      cancelSubscriptionRenewal,
+      t('dashboard.settings.billing.toasts.renewalCancelled')
+    );
+  }, [runSubscriptionAction, t]);
+
+  const handleReactivateRenewal = React.useCallback(async (): Promise<void> => {
+    await runSubscriptionAction(
+      'reactivate-renewal',
+      reactivateSubscriptionRenewal,
+      t('dashboard.settings.billing.toasts.renewalReactivated')
+    );
+  }, [runSubscriptionAction, t]);
 
   return (
     <React.Fragment>
@@ -112,7 +172,11 @@ export function Page(): React.JSX.Element {
             data={billing.limits}
             isCheckoutPending={isCheckoutPending}
             language={language}
+            onCancelRenewal={handleCancelRenewal}
+            onCancelTrial={handleCancelTrial}
+            onReactivateRenewal={handleReactivateRenewal}
             onStartCheckout={handleStartCheckout}
+            pendingAction={pendingAction}
             plansData={billing.plans}
           />
         ) : null}
