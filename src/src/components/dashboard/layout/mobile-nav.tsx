@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Badge from '@mui/material/Badge';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Drawer from '@mui/material/Drawer';
@@ -13,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import type { NavItemConfig } from '@/types/nav';
 import { paths } from '@/paths';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
+import { useBellNotificationCount } from '@/hooks/use-bell-notification-count';
 import { usePathname } from '@/hooks/use-pathname';
 import { RouterLink } from '@/components/core/link';
 import { Logo } from '@/components/core/logo';
@@ -28,6 +30,7 @@ export interface MobileNavProps {
 export function MobileNav({ items = [], open, onClose }: MobileNavProps): React.JSX.Element {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { unreadCount } = useBellNotificationCount();
 
   return (
     <Drawer
@@ -74,7 +77,7 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps): React.
         </div>
       </Stack>
       <Box component="nav" sx={{ flex: '1 1 auto', p: 2 }}>
-        {renderNavGroups({ items, onClose, pathname, t })}
+        {renderNavGroups({ items, onClose, pathname, t, unreadCount })}
       </Box>
     </Drawer>
   );
@@ -85,11 +88,13 @@ function renderNavGroups({
   onClose,
   pathname,
   t,
+  unreadCount,
 }: {
   items: NavItemConfig[];
   onClose?: () => void;
   pathname: string;
   t: TFunction;
+  unreadCount: number;
 }): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     acc.push(
@@ -101,7 +106,7 @@ function renderNavGroups({
             </Typography>
           </div>
         ) : null}
-        <div>{renderNavItems({ depth: 0, items: curr.items, onClose, pathname, t })}</div>
+        <div>{renderNavItems({ depth: 0, items: curr.items, onClose, pathname, t, unreadCount })}</div>
       </Stack>
     );
 
@@ -121,12 +126,14 @@ function renderNavItems({
   onClose,
   pathname,
   t,
+  unreadCount,
 }: {
   depth: number;
   items?: NavItemConfig[];
   onClose?: () => void;
   pathname: string;
   t: TFunction;
+  unreadCount: number;
 }): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     const { items: childItems, key, ...item } = curr;
@@ -142,10 +149,13 @@ function renderNavItems({
         key={key}
         onClose={onClose}
         pathname={pathname}
+        unreadCount={unreadCount}
         {...item}
         title={getNavTitle(curr, t)}
       >
-        {childItems ? renderNavItems({ depth: depth + 1, items: childItems, onClose, pathname, t }) : null}
+        {childItems
+          ? renderNavItems({ depth: depth + 1, items: childItems, onClose, pathname, t, unreadCount })
+          : null}
       </NavItem>
     );
 
@@ -169,6 +179,7 @@ interface NavItemProps extends Omit<NavItemConfig, 'items'> {
   forceOpen?: boolean;
   onClose?: () => void;
   pathname: string;
+  unreadCount: number;
 }
 
 function NavItem({
@@ -184,6 +195,7 @@ function NavItem({
   onClose,
   pathname,
   title,
+  unreadCount,
 }: NavItemProps): React.JSX.Element {
   const [open, setOpen] = React.useState<boolean>(forceOpen);
   const active = isNavItemActive({ disabled, external, href, matcher, pathname });
@@ -262,11 +274,13 @@ function NavItem({
       >
         <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', flex: '0 0 auto' }}>
           {Icon ? (
-            <Icon
-              fill={active ? 'var(--NavItem-icon-active-color)' : 'var(--NavItem-icon-color)'}
-              fontSize="var(--icon-fontSize-md)"
-              weight={forceOpen || active ? 'fill' : undefined}
-            />
+            <NavIconBadge active={active} count={icon === 'bell' ? unreadCount : 0}>
+              <Icon
+                fill={active ? 'var(--NavItem-icon-active-color)' : 'var(--NavItem-icon-color)'}
+                fontSize="var(--icon-fontSize-md)"
+                weight={forceOpen || active ? 'fill' : undefined}
+              />
+            </NavIconBadge>
           ) : null}
         </Box>
         <Box sx={{ flex: '1 1 auto' }}>
@@ -295,5 +309,37 @@ function NavItem({
         </Box>
       ) : null}
     </Box>
+  );
+}
+
+function NavIconBadge({
+  active,
+  children,
+  count,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  count: number;
+}): React.JSX.Element {
+  return (
+    <Badge
+      badgeContent={count > 0 ? count : undefined}
+      color="error"
+      invisible={count === 0}
+      max={99}
+      sx={{
+        '& .MuiBadge-badge': {
+          border: active ? '1px solid var(--NavItem-active-color)' : '1px solid var(--MobileNav-background)',
+          fontSize: '0.625rem',
+          height: 17,
+          minWidth: 17,
+          px: 0.5,
+          right: -2,
+          top: 1,
+        },
+      }}
+    >
+      {children}
+    </Badge>
   );
 }

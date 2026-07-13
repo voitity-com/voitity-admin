@@ -186,7 +186,9 @@
     "notifications": {
       "actions": {
         "dismiss": "Descartar",
-        "markAllRead": "Marcar todas como leídas"
+        "markAllRead": "Marcar todas como leídas",
+        "markRead": "Marcar como leído",
+        "viewAll": "Ver todas"
       },
       "empty": "No hay notificaciones",
       "errors": {
@@ -199,6 +201,55 @@
         "markedRead": "Notificaciones marcadas como leídas."
       },
       "unreadCount": "{{count}} sin leer"
+    },
+    "notificationCenter": {
+      "actions": {
+        "close": "Cerrar",
+        "markAllRead": "Marcar pendientes como leídas",
+        "markRead": "Marcar como leído"
+      },
+      "cardSubheader": "Se muestran primero los eventos más recientes.",
+      "cardTitle": "Historial",
+      "empty": {
+        "description": "Cambia los filtros o vuelve más tarde cuando haya actividad.",
+        "title": "No hay elementos para mostrar"
+      },
+      "errors": {
+        "load": "No se pudieron cargar las notificaciones y logs.",
+        "markRead": "No se pudo marcar como leído."
+      },
+      "filters": {
+        "kind": "Tipo",
+        "kindOptions": {
+          "all": "Todos",
+          "log": "Logs",
+          "notification": "Notificaciones"
+        },
+        "read": "Estado",
+        "readOptions": {
+          "all": "Todos",
+          "read": "Leídos",
+          "unread": "Pendientes por leer"
+        }
+      },
+      "kind": {
+        "log": "Log",
+        "notification": "Notificación"
+      },
+      "pageTitle": "Notificaciones",
+      "pagination": {
+        "displayedRows": "{{from}}-{{to}} de {{count}}",
+        "rowsPerPage": "Filas por página:"
+      },
+      "status": {
+        "read": "Leído",
+        "unread": "Pendiente"
+      },
+      "subtitle": "Revisa avisos importantes y el historial de actividad de tu cuenta.",
+      "toasts": {
+        "markedOneRead": "Notificación marcada como leída.",
+        "markedRead": "Pendientes marcadas como leídas."
+      }
     },
     "settings": {
       "account": {

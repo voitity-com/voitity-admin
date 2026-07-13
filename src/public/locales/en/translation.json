@@ -186,7 +186,9 @@
     "notifications": {
       "actions": {
         "dismiss": "Dismiss",
-        "markAllRead": "Mark all as read"
+        "markAllRead": "Mark all as read",
+        "markRead": "Mark as read",
+        "viewAll": "View all"
       },
       "empty": "There are no notifications",
       "errors": {
@@ -199,6 +201,55 @@
         "markedRead": "Notifications marked as read."
       },
       "unreadCount": "{{count}} unread"
+    },
+    "notificationCenter": {
+      "actions": {
+        "close": "Close",
+        "markAllRead": "Mark pending as read",
+        "markRead": "Mark as read"
+      },
+      "cardSubheader": "The most recent events are shown first.",
+      "cardTitle": "History",
+      "empty": {
+        "description": "Change the filters or check back later when there is activity.",
+        "title": "No items to show"
+      },
+      "errors": {
+        "load": "Could not load notifications and logs.",
+        "markRead": "Could not mark as read."
+      },
+      "filters": {
+        "kind": "Type",
+        "kindOptions": {
+          "all": "All",
+          "log": "Logs",
+          "notification": "Notifications"
+        },
+        "read": "Status",
+        "readOptions": {
+          "all": "All",
+          "read": "Read",
+          "unread": "Pending"
+        }
+      },
+      "kind": {
+        "log": "Log",
+        "notification": "Notification"
+      },
+      "pageTitle": "Notifications",
+      "pagination": {
+        "displayedRows": "{{from}}-{{to}} of {{count}}",
+        "rowsPerPage": "Rows per page:"
+      },
+      "status": {
+        "read": "Read",
+        "unread": "Pending"
+      },
+      "subtitle": "Review important updates and your account activity history.",
+      "toasts": {
+        "markedOneRead": "Notification marked as read.",
+        "markedRead": "Pending items marked as read."
+      }
     },
     "settings": {
       "account": {

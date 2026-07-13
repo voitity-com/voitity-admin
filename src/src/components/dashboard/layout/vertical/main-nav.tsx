@@ -17,7 +17,7 @@ import { useTranslation } from 'react-i18next';
 import type { NavItemConfig } from '@/types/nav';
 import type { User } from '@/types/user';
 import { getSupportedLanguage } from '@/lib/i18n';
-import { getAppNotifications } from '@/lib/notifications/api-client';
+import { useBellNotificationCount } from '@/hooks/use-bell-notification-count';
 import { useDialog } from '@/hooks/use-dialog';
 import { usePopover } from '@/hooks/use-popover';
 import { useUser } from '@/hooks/use-user';
@@ -117,23 +117,8 @@ function SearchButton(): React.JSX.Element {
 
 function NotificationsButton(): React.JSX.Element {
   const popover = usePopover<HTMLButtonElement>();
-  const { i18n, t } = useTranslation();
-  const language = getSupportedLanguage(i18n.language);
-  const [unreadCount, setUnreadCount] = React.useState(0);
-
-  const loadUnreadCount = React.useCallback(async () => {
-    try {
-      const page = await getAppNotifications({ locale: language, perPage: 1 });
-
-      setUnreadCount(page.unread_count);
-    } catch {
-      setUnreadCount(0);
-    }
-  }, [language]);
-
-  React.useEffect(() => {
-    void loadUnreadCount();
-  }, [loadUnreadCount]);
+  const { t } = useTranslation();
+  const { unreadCount } = useBellNotificationCount();
 
   return (
     <React.Fragment>
@@ -156,7 +141,6 @@ function NotificationsButton(): React.JSX.Element {
       </Tooltip>
       <NotificationsPopover
         anchorEl={popover.anchorRef.current}
-        onChanged={setUnreadCount}
         onClose={popover.handleClose}
         open={popover.open}
       />
