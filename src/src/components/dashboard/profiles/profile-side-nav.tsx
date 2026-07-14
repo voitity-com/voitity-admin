@@ -6,6 +6,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
+import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
@@ -25,6 +26,7 @@ const icons = {
   avatar: ImageIcon,
   chats: ChatsCircleIcon,
   data: DatabaseIcon,
+  messages: ChatTextIcon,
   profile: UserCircleIcon,
   quality: GaugeIcon,
   socialNetworks: ShareNetworkIcon,
@@ -56,6 +58,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.voice'),
         href: paths.dashboard.profileDetails.voice(profileId),
         icon: 'voice',
+      },
+      {
+        key: 'messages',
+        title: t('dashboard.profiles.detail.nav.messages'),
+        href: paths.dashboard.profileDetails.messages(profileId),
+        icon: 'messages',
       },
       {
         key: 'dataGroup',
@@ -182,7 +190,10 @@ function NavGroup({ children, icon, pathname, title }: NavGroupProps): React.JSX
             weight={active ? 'fill' : undefined}
           />
         </Box>
-        <Typography component="span" sx={{ color: 'inherit', fontSize: '0.875rem', fontWeight: 600, lineHeight: '28px' }}>
+        <Typography
+          component="span"
+          sx={{ color: 'inherit', fontSize: '0.875rem', fontWeight: 600, lineHeight: '28px' }}
+        >
           {title}
         </Typography>
       </Box>
@@ -238,7 +249,10 @@ function NavItem({ href, icon, itemKey, nested = false, pathname, title }: NavIt
             weight={active ? 'fill' : undefined}
           />
         </Box>
-        <Typography component="span" sx={{ color: 'inherit', fontSize: '0.875rem', fontWeight: 500, lineHeight: '28px' }}>
+        <Typography
+          component="span"
+          sx={{ color: 'inherit', fontSize: '0.875rem', fontWeight: 500, lineHeight: '28px' }}
+        >
           {title}
         </Typography>
       </Box>

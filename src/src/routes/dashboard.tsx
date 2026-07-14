@@ -52,6 +52,13 @@ export const route: RouteObject = {
       },
     },
     {
+      path: 'notifications',
+      lazy: async () => {
+        const { Page } = await import('@/pages/dashboard/notifications');
+        return { Component: Page };
+      },
+    },
+    {
       path: 'blank',
       lazy: async () => {
         const { Page } = await import('@/pages/dashboard/blank');
@@ -444,6 +451,13 @@ export const route: RouteObject = {
               path: 'voice',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/voice');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'messages',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/messages');
                 return { Component: Page };
               },
             },

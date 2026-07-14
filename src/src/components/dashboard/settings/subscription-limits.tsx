@@ -41,12 +41,14 @@ import { RadialBar, RadialBarChart } from 'recharts';
 import { paths } from '@/paths';
 import { NoSsr } from '@/components/core/no-ssr';
 import { RouterLink } from '@/components/core/link';
+import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
 import type {
   JsonObject,
   JsonValue,
   SubscriptionLimits as SubscriptionLimitsData,
   SubscriptionPlan,
   SubscriptionPlans,
+  SubscriptionTrial,
 } from '@/lib/subscription/api-client';
 
 export interface SubscriptionLimitsProps {
@@ -56,22 +58,38 @@ export interface SubscriptionLimitsProps {
 }
 
 export interface SubscriptionBillingProps extends SubscriptionLimitsProps {
+  checkoutIntent?: CheckoutIntent | null;
   isCheckoutPending?: boolean;
+  onCancelRenewal?: () => Promise<void>;
+  onCancelTrial?: () => Promise<void>;
+  onCheckoutIntentHandled?: () => void;
+  onReactivateRenewal?: () => Promise<void>;
   onStartCheckout?: (plan: SubscriptionPlan) => Promise<void>;
+  pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null;
 }
 
 type BillingInterval = 'annual' | 'monthly';
 
 interface CurrentSubscription {
   active?: boolean;
+  billingMode?: string;
+  cancelAtPeriodEnd?: boolean;
+  cancelledAt?: string;
   currency: string;
   interval: BillingInterval;
+  lastBilledAt?: string;
+  nextBillingAt?: string;
   planId?: string;
   planName: string;
   priceUsd?: number;
   renewsAt?: string;
   startedAt?: string;
   status?: string;
+  trialCancelledAt?: string;
+  trialConvertedAt?: string;
+  trialDaysRemaining?: number;
+  trialEndsAt?: string;
+  trialStartedAt?: string;
 }
 
 interface BillingCycleOption {
@@ -88,6 +106,7 @@ interface BillingCycleOption {
   processingCurrency?: string;
   recommended: boolean;
   selected: boolean;
+  trial?: SubscriptionTrial;
 }
 
 interface UsageMetric {
@@ -117,16 +136,23 @@ export function SubscriptionLimits({ data, language, plansData }: SubscriptionLi
 }
 
 export function SubscriptionBilling({
+  checkoutIntent,
   data,
   isCheckoutPending = false,
   language,
+  onCancelRenewal,
+  onCancelTrial,
+  onCheckoutIntentHandled,
+  onReactivateRenewal,
   onStartCheckout,
+  pendingAction = null,
   plansData,
 }: SubscriptionBillingProps): React.JSX.Element {
   const { t } = useTranslation();
   const hasActiveSubscription = hasActiveSubscriptionData(data);
   const [acceptedTerms, setAcceptedTerms] = React.useState<boolean>(false);
   const [checkoutPlanId, setCheckoutPlanId] = React.useState<string | undefined>();
+  const handledCheckoutIntentRef = React.useRef<string | null>(null);
   const subscription = getCurrentSubscription(data, plansData, t);
 
   React.useEffect(() => {
@@ -140,6 +166,33 @@ export function SubscriptionBilling({
   const checkoutCycle = cycles.find((cycle) => cycle.planId === checkoutPlanId && !cycle.disabled);
   const selectedPlan = checkoutCycle?.plan;
   const canStartCheckout = Boolean(!hasActiveSubscription && acceptedTerms && selectedPlan && onStartCheckout && !isCheckoutPending);
+
+  React.useEffect(() => {
+    if (hasActiveSubscription || !checkoutIntent) {
+      return;
+    }
+
+    const intentKey = getCheckoutIntentKey(checkoutIntent);
+
+    if (handledCheckoutIntentRef.current === intentKey) {
+      return;
+    }
+
+    const intendedPlanId = getCheckoutIntentPlanId(cycles, checkoutIntent);
+
+    if (!intendedPlanId) {
+      return;
+    }
+
+    handledCheckoutIntentRef.current = intentKey;
+
+    if (checkoutPlanId !== intendedPlanId) {
+      setAcceptedTerms(false);
+      setCheckoutPlanId(intendedPlanId);
+    }
+
+    onCheckoutIntentHandled?.();
+  }, [checkoutIntent, checkoutPlanId, cycles, hasActiveSubscription, onCheckoutIntentHandled]);
 
   const handleOpenCheckout = React.useCallback((planId: string): void => {
     setAcceptedTerms(false);
@@ -188,9 +241,17 @@ export function SubscriptionBilling({
     <Grid container spacing={3}>
       <Grid lg={5} xs={12}>
         {hasActiveSubscription ? (
-          <CurrentPlanCard language={language} subscription={subscription} t={t} />
+          <CurrentPlanCard
+            language={language}
+            onCancelRenewal={onCancelRenewal}
+            onCancelTrial={onCancelTrial}
+            onReactivateRenewal={onReactivateRenewal}
+            pendingAction={pendingAction}
+            subscription={subscription}
+            t={t}
+          />
         ) : (
-          <NoActiveSubscriptionCard t={t} />
+          <NoActiveSubscriptionCard t={t} trial={plansData?.trial} />
         )}
       </Grid>
       <Grid lg={7} xs={12}>
@@ -233,7 +294,9 @@ export function SubscriptionUsage({ data, language }: SubscriptionLimitsProps): 
   return <UsageOverview language={language} metrics={metrics} t={t} />;
 }
 
-function NoActiveSubscriptionCard({ t }: { t: TFunction }): React.JSX.Element {
+function NoActiveSubscriptionCard({ t, trial }: { t: TFunction; trial?: SubscriptionTrial }): React.JSX.Element {
+  const hasTrial = trial?.available === true;
+
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
@@ -255,7 +318,9 @@ function NoActiveSubscriptionCard({ t }: { t: TFunction }): React.JSX.Element {
               {t('dashboard.settings.billing.noActive.title')}
             </Typography>
             <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-              {t('dashboard.settings.billing.noActive.subheader')}
+              {hasTrial
+                ? t('dashboard.settings.billing.noActive.trialSubheader', { days: trial.days })
+                : t('dashboard.settings.billing.noActive.subheader')}
             </Typography>
           </Box>
         </Stack>
@@ -287,21 +352,56 @@ function SubscriptionRequiredCard({ t }: { t: TFunction }): React.JSX.Element {
 
 function CurrentPlanCard({
   language,
+  onCancelRenewal,
+  onCancelTrial,
+  onReactivateRenewal,
+  pendingAction,
   subscription,
   t,
 }: {
   language: string;
+  onCancelRenewal?: () => Promise<void>;
+  onCancelTrial?: () => Promise<void>;
+  onReactivateRenewal?: () => Promise<void>;
+  pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null;
   subscription: CurrentSubscription;
   t: TFunction;
 }): React.JSX.Element {
   const status = subscription.status ?? (subscription.active === false ? 'inactive' : 'active');
+  const isTrialing = status.toLowerCase() === 'trialing';
+  const isRecurring = subscription.billingMode === 'recurring';
+  const hasCancelledRenewal = subscription.cancelAtPeriodEnd === true;
+  const action = getCurrentPlanAction({ isRecurring, isTrialing, onCancelRenewal, onCancelTrial, onReactivateRenewal, subscription, t });
+  const actionPending = Boolean(action && pendingAction === action.pendingKey);
   const rows = [
     { name: t('dashboard.settings.billing.fields.billingCycle'), value: getIntervalLabel(subscription.interval, t) },
-    { name: t('dashboard.settings.billing.fields.currency'), value: subscription.currency },
-    {
-      name: t('dashboard.settings.billing.fields.renewsAt'),
-      value: subscription.renewsAt ? formatDate(subscription.renewsAt, language) : t('dashboard.settings.billing.values.empty'),
-    },
+    ...(isTrialing
+      ? [
+          {
+            name: t('dashboard.settings.billing.fields.trialEndsAt'),
+            value: subscription.trialEndsAt
+              ? formatDate(subscription.trialEndsAt, language)
+              : t('dashboard.settings.billing.values.empty'),
+          },
+          {
+            name: t('dashboard.settings.billing.fields.firstChargeAt'),
+            value: subscription.nextBillingAt
+              ? formatDate(subscription.nextBillingAt, language)
+              : t('dashboard.settings.billing.values.empty'),
+          },
+        ]
+      : [
+          {
+            name: t('dashboard.settings.billing.fields.renewsAt'),
+            value: subscription.renewsAt ? formatDate(subscription.renewsAt, language) : t('dashboard.settings.billing.values.empty'),
+          },
+          {
+            name: t('dashboard.settings.billing.fields.lastBilledAt'),
+            value: subscription.lastBilledAt
+              ? formatDate(subscription.lastBilledAt, language)
+              : t('dashboard.settings.billing.values.empty'),
+          },
+        ]),
     {
       name: t('dashboard.settings.billing.fields.startedAt'),
       value: subscription.startedAt ? formatDate(subscription.startedAt, language) : t('dashboard.settings.billing.values.empty'),
@@ -344,6 +444,9 @@ function CurrentPlanCard({
               size="small"
               variant="soft"
             />
+            {hasCancelledRenewal ? (
+              <Chip color="warning" label={t('dashboard.settings.billing.status.renewalCancelled')} size="small" variant="soft" />
+            ) : null}
           </Stack>
 
           <Box>
@@ -356,7 +459,7 @@ function CurrentPlanCard({
               </Typography>
             </Stack>
             <Typography color="rgba(255,255,255,0.68)" sx={{ mt: 1 }} variant="body2">
-              {t('dashboard.settings.billing.currentPlan.subheader')}
+              {getCurrentPlanSubheader(subscription, language, t)}
             </Typography>
           </Box>
 
@@ -377,10 +480,117 @@ function CurrentPlanCard({
               </Stack>
             ))}
           </Stack>
+
+          {action ? (
+            <Stack spacing={1.25}>
+              <Typography color="rgba(255,255,255,0.68)" variant="body2">
+                {action.helper}
+              </Typography>
+              <Button
+                color={action.color}
+                disabled={actionPending || Boolean(pendingAction)}
+                onClick={() => {
+                  void action.onClick();
+                }}
+                startIcon={actionPending ? <CircularProgress color="inherit" size={16} /> : undefined}
+                variant={action.variant}
+              >
+                {actionPending ? t('dashboard.settings.billing.actions.processing') : action.label}
+              </Button>
+            </Stack>
+          ) : null}
         </Stack>
       </CardContent>
     </Card>
   );
+}
+
+interface CurrentPlanAction {
+  color: 'error' | 'primary';
+  helper: string;
+  label: string;
+  onClick: () => Promise<void>;
+  pendingKey: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal';
+  variant: 'contained' | 'outlined';
+}
+
+function getCurrentPlanAction({
+  isRecurring,
+  isTrialing,
+  onCancelRenewal,
+  onCancelTrial,
+  onReactivateRenewal,
+  subscription,
+  t,
+}: {
+  isRecurring: boolean;
+  isTrialing: boolean;
+  onCancelRenewal?: () => Promise<void>;
+  onCancelTrial?: () => Promise<void>;
+  onReactivateRenewal?: () => Promise<void>;
+  subscription: CurrentSubscription;
+  t: TFunction;
+}): CurrentPlanAction | null {
+  if (subscription.cancelAtPeriodEnd && onReactivateRenewal) {
+    return {
+      color: 'primary',
+      helper: t('dashboard.settings.billing.currentPlan.reactivateHelper'),
+      label: t('dashboard.settings.billing.actions.reactivateRenewal'),
+      onClick: onReactivateRenewal,
+      pendingKey: 'reactivate-renewal',
+      variant: 'contained',
+    };
+  }
+
+  if (isTrialing && onCancelTrial) {
+    return {
+      color: 'error',
+      helper: t('dashboard.settings.billing.currentPlan.cancelTrialHelper'),
+      label: t('dashboard.settings.billing.actions.cancelTrial'),
+      onClick: onCancelTrial,
+      pendingKey: 'cancel-trial',
+      variant: 'contained',
+    };
+  }
+
+  if (isRecurring && onCancelRenewal) {
+    return {
+      color: 'error',
+      helper: t('dashboard.settings.billing.currentPlan.cancelRenewalHelper'),
+      label: t('dashboard.settings.billing.actions.cancelRenewal'),
+      onClick: onCancelRenewal,
+      pendingKey: 'cancel-renewal',
+      variant: 'contained',
+    };
+  }
+
+  return null;
+}
+
+function getCurrentPlanSubheader(subscription: CurrentSubscription, language: string, t: TFunction): string {
+  const status = subscription.status?.toLowerCase();
+  const endDate = subscription.renewsAt ? formatDate(subscription.renewsAt, language) : t('dashboard.settings.billing.values.empty');
+
+  if (subscription.cancelAtPeriodEnd && status === 'trialing') {
+    return t('dashboard.settings.billing.currentPlan.trialCancelledSubheader', { date: endDate });
+  }
+
+  if (subscription.cancelAtPeriodEnd) {
+    return t('dashboard.settings.billing.currentPlan.renewalCancelledSubheader', { date: endDate });
+  }
+
+  if (status === 'trialing') {
+    const trialEndDate = subscription.trialEndsAt
+      ? formatDate(subscription.trialEndsAt, language)
+      : t('dashboard.settings.billing.values.empty');
+
+    return t('dashboard.settings.billing.currentPlan.trialSubheader', {
+      date: trialEndDate,
+      days: subscription.trialDaysRemaining ?? '',
+    });
+  }
+
+  return t('dashboard.settings.billing.currentPlan.subheader');
 }
 
 function BillingCyclesCard({
@@ -472,6 +682,14 @@ function BillingCycleCard({
           {cycle.recommended ? (
             <Chip color="primary" label={t('dashboard.settings.billing.cycles.bestValue')} size="small" variant="soft" />
           ) : null}
+          {cycle.trial?.available ? (
+            <Chip
+              color="success"
+              label={t('dashboard.settings.billing.cycles.freeTrial', { days: cycle.trial.days })}
+              size="small"
+              variant="soft"
+            />
+          ) : null}
         </Stack>
 
         <Box>
@@ -517,7 +735,9 @@ function BillingCycleCard({
             startIcon={<CreditCardIcon />}
             variant="contained"
           >
-            {t('dashboard.settings.billing.actions.acquirePlan')}
+            {cycle.trial?.available
+              ? t('dashboard.settings.billing.actions.startTrial', { days: cycle.trial.days })
+              : t('dashboard.settings.billing.actions.acquirePlan')}
           </Button>
         ) : null}
       </Stack>
@@ -548,15 +768,20 @@ function CheckoutAgreementDialog({
   open: boolean;
   t: TFunction;
 }): React.JSX.Element {
-  const processingAmount = cycle?.processingAmount;
+  const trial = cycle?.trial?.available ? cycle.trial : undefined;
+  const todayDisplayAmount = trial ? (trial.setup_amount_usd ?? 0) : cycle?.priceUsd;
+  const processingAmount = trial ? (trial.setup_amount_cop ?? 0) : cycle?.processingAmount;
   const processingCurrency = cycle?.processingCurrency ?? 'COP';
+  const firstChargeDate = trial ? formatFutureDate(trial.days, language) : undefined;
 
   return (
     <Dialog fullWidth maxWidth="md" onClose={onClose} open={open}>
       <DialogTitle>{t('dashboard.settings.billing.checkout.title')}</DialogTitle>
       <DialogContent dividers>
         <Typography color="text.secondary" sx={{ mb: 3 }} variant="body2">
-          {t('dashboard.settings.billing.checkout.subheader')}
+          {trial
+            ? t('dashboard.settings.billing.checkout.trialSubheader', { days: trial.days })
+            : t('dashboard.settings.billing.checkout.subheader')}
         </Typography>
         <Grid container spacing={3}>
           <Grid md={5} xs={12}>
@@ -577,24 +802,42 @@ function CheckoutAgreementDialog({
                     value={cycle ? getIntervalLabel(cycle.interval, t) : t('dashboard.settings.billing.values.empty')}
                   />
                   <SummaryRow
-                    label={t('dashboard.settings.billing.checkout.displayPrice')}
+                    label={
+                      trial
+                        ? t('dashboard.settings.billing.checkout.todayCharge')
+                        : t('dashboard.settings.billing.checkout.displayPrice')
+                    }
                     value={
                       cycle
-                        ? formatCurrency(cycle.priceUsd, cycle.currency, language)
+                        ? formatCurrency(todayDisplayAmount, cycle.currency, language)
                         : t('dashboard.settings.billing.values.empty')
                     }
                   />
-                  <SummaryRow
-                    label={t('dashboard.settings.billing.checkout.processingAmount')}
-                    value={
-                      typeof processingAmount === 'number'
-                        ? formatCurrency(processingAmount, processingCurrency, language)
-                        : t('dashboard.settings.billing.values.empty')
-                    }
-                  />
+                  {trial ? (
+                    <SummaryRow
+                      label={t('dashboard.settings.billing.checkout.firstPlanCharge')}
+                      value={
+                        cycle
+                          ? `${formatCurrency(cycle.priceUsd, cycle.currency, language)} - ${firstChargeDate}`
+                          : t('dashboard.settings.billing.values.empty')
+                      }
+                    />
+                  ) : null}
+                  {!trial || (typeof processingAmount === 'number' && processingAmount > 0) ? (
+                    <SummaryRow
+                      label={t('dashboard.settings.billing.checkout.processingAmount')}
+                      value={
+                        typeof processingAmount === 'number'
+                          ? formatCurrency(processingAmount, processingCurrency, language)
+                          : t('dashboard.settings.billing.values.empty')
+                      }
+                    />
+                  ) : null}
                 </Stack>
                 <Alert severity="info" variant="outlined">
-                  {t('dashboard.settings.billing.checkout.wompiNotice')}
+                  {trial
+                    ? t('dashboard.settings.billing.checkout.trialWompiNotice')
+                    : t('dashboard.settings.billing.checkout.wompiNotice')}
                 </Alert>
               </Stack>
             </Card>
@@ -604,9 +847,14 @@ function CheckoutAgreementDialog({
               <Box>
                 <Typography variant="subtitle2">{t('dashboard.settings.billing.terms.title')}</Typography>
                 <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-                  {t('dashboard.settings.billing.terms.body', {
-                    interval: cycle ? getIntervalLabel(cycle.interval, t).toLowerCase() : '',
-                  })}
+                  {trial
+                    ? t('dashboard.settings.billing.terms.trialBody', {
+                        days: trial.days,
+                        interval: cycle ? getIntervalLabel(cycle.interval, t).toLowerCase() : '',
+                      })
+                    : t('dashboard.settings.billing.terms.body', {
+                        interval: cycle ? getIntervalLabel(cycle.interval, t).toLowerCase() : '',
+                      })}
                 </Typography>
               </Box>
               <FormControlLabel
@@ -620,7 +868,9 @@ function CheckoutAgreementDialog({
                 }
                 label={
                   <Typography variant="body2">
-                    {t('dashboard.settings.billing.terms.acceptance')}
+                    {trial
+                      ? t('dashboard.settings.billing.terms.trialAcceptance', { days: trial.days })
+                      : t('dashboard.settings.billing.terms.acceptance')}
                   </Typography>
                 }
               />
@@ -643,7 +893,9 @@ function CheckoutAgreementDialog({
         >
           {isCheckoutPending
             ? t('dashboard.settings.billing.actions.processing')
-            : t('dashboard.settings.billing.actions.continueToPayment')}
+            : trial
+              ? t('dashboard.settings.billing.actions.continueToTrial')
+              : t('dashboard.settings.billing.actions.continueToPayment')}
         </Button>
       </DialogActions>
     </Dialog>
@@ -866,8 +1118,13 @@ function getCurrentSubscription(
 
   return {
     active: typeof subscription.active === 'boolean' ? subscription.active : undefined,
+    billingMode: getStringField(subscription, ['billing_mode', 'billingMode']),
+    cancelAtPeriodEnd: getBooleanField(subscription, ['cancel_at_period_end', 'cancelAtPeriodEnd']),
+    cancelledAt: getStringField(subscription, ['cancelled_at', 'cancelledAt', 'canceled_at', 'canceledAt']),
     currency: getStringField(subscription, ['currency']) ?? matchingPlan?.currency ?? plansData?.display_currency ?? 'USD',
     interval,
+    lastBilledAt: getStringField(subscription, ['last_billed_at', 'lastBilledAt']),
+    nextBillingAt: getStringField(subscription, ['next_billing_at', 'nextBillingAt']),
     planId,
     planName:
       getStringField(subscription, ['plan_name', 'planName', 'name']) ??
@@ -877,6 +1134,11 @@ function getCurrentSubscription(
     renewsAt: getStringField(subscription, ['renews_at', 'renewsAt', 'current_period_end', 'currentPeriodEnd']),
     startedAt: getStringField(subscription, ['started_at', 'startedAt', 'current_period_start', 'currentPeriodStart']),
     status: getStringField(subscription, ['status']),
+    trialCancelledAt: getStringField(subscription, ['trial_cancelled_at', 'trialCancelledAt']),
+    trialConvertedAt: getStringField(subscription, ['trial_converted_at', 'trialConvertedAt']),
+    trialDaysRemaining: getNumberField(subscription, ['trial_days_remaining', 'trialDaysRemaining']),
+    trialEndsAt: getStringField(subscription, ['trial_ends_at', 'trialEndsAt']),
+    trialStartedAt: getStringField(subscription, ['trial_started_at', 'trialStartedAt']),
   };
 }
 
@@ -937,6 +1199,7 @@ function getBillingCycles({
         : undefined);
   const currency = monthlyPlan?.currency ?? annualPlan?.currency ?? subscription.currency;
   const processingCurrency = plansData?.processing_currency ?? 'COP';
+  const trial = plansData?.trial?.available ? plansData.trial : undefined;
   const savings =
     typeof monthlyPrice === 'number' && typeof annualPrice === 'number'
       ? Math.max(monthlyPrice * 12 - annualPrice, 0)
@@ -947,7 +1210,7 @@ function getBillingCycles({
       currency,
       description: t('dashboard.settings.billing.cycles.monthly.description'),
       disabled: !isPurchasablePlan(monthlyPlan),
-      features: getPlanFeatures({ interval: 'monthly', language, plan: monthlyPlan, savings, t, currency }),
+      features: getPlanFeatures({ interval: 'monthly', language, plan: monthlyPlan, savings, t, currency, trial }),
       interval: 'monthly',
       label: t('dashboard.settings.billing.cycles.monthly.label'),
       plan: monthlyPlan,
@@ -957,12 +1220,13 @@ function getBillingCycles({
       processingCurrency,
       recommended: false,
       selected: hasActiveSubscription ? subscription.interval === 'monthly' : monthlyPlan?.id === selectedPlanId,
+      trial,
     },
     {
       currency,
       description: t('dashboard.settings.billing.cycles.annual.description'),
       disabled: !isPurchasablePlan(annualPlan),
-      features: getPlanFeatures({ interval: 'annual', language, plan: annualPlan, savings, t, currency }),
+      features: getPlanFeatures({ interval: 'annual', language, plan: annualPlan, savings, t, currency, trial }),
       interval: 'annual',
       label: t('dashboard.settings.billing.cycles.annual.label'),
       plan: annualPlan,
@@ -972,12 +1236,67 @@ function getBillingCycles({
       processingCurrency,
       recommended: true,
       selected: hasActiveSubscription ? subscription.interval === 'annual' : annualPlan?.id === selectedPlanId,
+      trial,
     },
   ];
 }
 
 function isPurchasablePlan(plan: SubscriptionPlan | undefined): plan is SubscriptionPlan {
   return Boolean(plan && plan.purchasable !== false && typeof plan.price_usd === 'number' && plan.price_usd > 0);
+}
+
+function getCheckoutIntentPlanId(cycles: BillingCycleOption[], intent: CheckoutIntent): string | undefined {
+  const targetInterval = getCheckoutIntentInterval(intent);
+  const targetPlan = normalizePlanKey(intent.plan);
+  const matchingCycle = cycles.find((cycle) => {
+    if (cycle.disabled || !cycle.planId) {
+      return false;
+    }
+
+    if (targetInterval && cycle.interval !== targetInterval) {
+      return false;
+    }
+
+    return !targetPlan || planMatchesIntent(cycle.plan, cycle.planId, targetPlan);
+  });
+
+  return matchingCycle?.planId;
+}
+
+function getCheckoutIntentKey(intent: CheckoutIntent): string {
+  return [intent.intent, intent.plan ?? '', intent.cycle ?? ''].join(':');
+}
+
+function getCheckoutIntentInterval(intent: CheckoutIntent): BillingInterval | undefined {
+  if (intent.cycle === 'year') {
+    return 'annual';
+  }
+
+  if (intent.cycle === 'month') {
+    return 'monthly';
+  }
+
+  return undefined;
+}
+
+function planMatchesIntent(plan: SubscriptionPlan | undefined, planId: string, targetPlan: string): boolean {
+  const normalizedPlanId = normalizePlanKey(planId);
+  const normalizedName = normalizePlanKey(plan?.name);
+
+  return (
+    normalizedPlanId === targetPlan ||
+    getBasePlanKey(normalizedPlanId) === targetPlan ||
+    normalizedName === targetPlan ||
+    getBasePlanKey(normalizedName) === targetPlan
+  );
+}
+
+function getBasePlanKey(value: string): string {
+  return value.replace(/_(?:annual|annually|year|yearly|monthly|month)$/u, '');
+}
+
+function normalizePlanKey(value?: string): string {
+  return value?.trim().toLowerCase().replace(/[^a-z0-9_-]/gu, '') ?? '';
 }
 
 function getProcessingAmount(priceUsd: number | undefined, exchangeRate: number | undefined): number | undefined {
@@ -999,6 +1318,7 @@ function getPlanFeatures({
   plan,
   savings,
   t,
+  trial,
 }: {
   currency: string;
   interval: BillingInterval;
@@ -1006,6 +1326,7 @@ function getPlanFeatures({
   plan?: SubscriptionPlan;
   savings?: number;
   t: TFunction;
+  trial?: SubscriptionTrial;
 }): string[] {
   const features = [
     t('dashboard.settings.billing.planFeatures.profiles', {
@@ -1028,6 +1349,10 @@ function getPlanFeatures({
       countLabel: formatNumber(getPlanCreditsTotal(plan) ?? 1000, language),
     }),
   ];
+
+  if (trial?.available) {
+    features.unshift(t('dashboard.settings.billing.planFeatures.freeTrial', { days: trial.days }));
+  }
 
   if (interval === 'annual' && typeof savings === 'number' && savings > 0) {
     features.push(
@@ -1258,7 +1583,7 @@ function getStatusLabel(status: string, t: TFunction): string {
 function getStatusColor(status: string): 'default' | 'error' | 'success' | 'warning' {
   const normalized = status.toLowerCase();
 
-  if (['active', 'paid', 'succeeded', 'valid'].includes(normalized)) {
+  if (['active', 'first', 'paid', 'renewed', 'succeeded', 'valid'].includes(normalized)) {
     return 'success';
   }
 
@@ -1317,6 +1642,18 @@ function getNumberField(value: JsonObject, fields: readonly string[]): number | 
   return undefined;
 }
 
+function getBooleanField(value: JsonObject, fields: readonly string[]): boolean | undefined {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'boolean') {
+      return rawValue;
+    }
+  }
+
+  return undefined;
+}
+
 function hasNullField(value: JsonObject, fields: readonly string[]): boolean {
   return fields.some((field) => value[field] === null);
 }
@@ -1362,6 +1699,14 @@ function formatDate(value: string, language: string): string {
   if (!Number.isFinite(date.getTime())) {
     return value;
   }
+
+  return new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(date);
+}
+
+function formatFutureDate(days: number, language: string): string {
+  const date = new Date();
+
+  date.setDate(date.getDate() + days);
 
   return new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(date);
 }

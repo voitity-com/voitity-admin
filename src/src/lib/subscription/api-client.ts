@@ -16,7 +16,8 @@ interface ApiEnvelope<T> {
 }
 
 interface RequestOptions {
-  method?: 'GET';
+  body?: unknown;
+  method?: 'GET' | 'POST';
 }
 
 export type SubscriptionLimits = JsonObject;
@@ -37,6 +38,20 @@ export interface SubscriptionPlans {
   exchange_rate?: number;
   plans: SubscriptionPlan[];
   processing_currency?: string;
+  trial?: SubscriptionTrial;
+}
+
+export interface SubscriptionTrial {
+  available: boolean;
+  days: number;
+  enabled: boolean;
+  setup_amount_cop?: number;
+  setup_amount_in_cents?: number;
+  setup_amount_usd?: number;
+}
+
+export interface SubscriptionActionResponse {
+  subscription?: JsonObject;
 }
 
 export class SubscriptionApiError extends Error {
@@ -59,6 +74,24 @@ export async function getSubscriptionPlans(): Promise<SubscriptionPlans> {
   const response = await requestJson<unknown>('/api/subscription/plans', { method: 'GET' });
 
   return normalizeSubscriptionPlansResponse(response);
+}
+
+export async function cancelSubscriptionTrial(): Promise<SubscriptionActionResponse> {
+  const response = await requestJson<unknown>('/api/subscription/trial/cancel', { method: 'POST' });
+
+  return normalizeSubscriptionActionResponse(response);
+}
+
+export async function cancelSubscriptionRenewal(): Promise<SubscriptionActionResponse> {
+  const response = await requestJson<unknown>('/api/subscription/renewal/cancel', { method: 'POST' });
+
+  return normalizeSubscriptionActionResponse(response);
+}
+
+export async function reactivateSubscriptionRenewal(): Promise<SubscriptionActionResponse> {
+  const response = await requestJson<unknown>('/api/subscription/renewal/reactivate', { method: 'POST' });
+
+  return normalizeSubscriptionActionResponse(response);
 }
 
 function normalizeSubscriptionLimitsResponse(response: unknown): SubscriptionLimits {
@@ -99,6 +132,19 @@ function normalizeSubscriptionPlansResponse(response: unknown): SubscriptionPlan
     exchange_rate: getNumberField(data, ['exchange_rate', 'exchangeRate']),
     plans: rawPlans.map(normalizeSubscriptionPlan).filter(isSubscriptionPlan),
     processing_currency: getStringField(data, ['processing_currency', 'processingCurrency']),
+    trial: normalizeSubscriptionTrial(data.trial),
+  };
+}
+
+function normalizeSubscriptionActionResponse(response: unknown): SubscriptionActionResponse {
+  const data = getResponseData(response);
+
+  if (!isRecord(data)) {
+    return {};
+  }
+
+  return {
+    subscription: getFirstRecordField(data, ['subscription']),
   };
 }
 
@@ -128,6 +174,21 @@ function normalizeSubscriptionPlan(value: unknown): SubscriptionPlan | null {
 
 function isSubscriptionPlan(value: SubscriptionPlan | null): value is SubscriptionPlan {
   return value !== null;
+}
+
+function normalizeSubscriptionTrial(value: unknown): SubscriptionTrial | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  return {
+    available: getBooleanField(value, ['available']) ?? false,
+    days: getNumberField(value, ['days']) ?? 7,
+    enabled: getBooleanField(value, ['enabled']) ?? false,
+    setup_amount_cop: getNumberField(value, ['setup_amount_cop', 'setupAmountCop']),
+    setup_amount_in_cents: getNumberField(value, ['setup_amount_in_cents', 'setupAmountInCents']),
+    setup_amount_usd: getNumberField(value, ['setup_amount_usd', 'setupAmountUsd']),
+  };
 }
 
 function getResponseData(response: unknown): unknown {
@@ -194,6 +255,18 @@ function getNumberField(value: JsonObject, fields: string[]): number | undefined
   return undefined;
 }
 
+function getBooleanField(value: JsonObject, fields: string[]): boolean | undefined {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'boolean') {
+      return rawValue;
+    }
+  }
+
+  return undefined;
+}
+
 function getNullableNumberField(value: JsonObject, fields: string[]): null | number {
   for (const field of fields) {
     const rawValue = value[field];
@@ -221,6 +294,7 @@ function getNullableNumberField(value: JsonObject, fields: string[]): null | num
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
   const baseUrl = config.api?.baseUrl;
   const token = getStoredApiToken();
+  const headers: Record<string, string> = { Accept: 'application/json' };
 
   if (!baseUrl) {
     throw new Error('Missing VITE_API_BASE_URL env variable');
@@ -230,9 +304,14 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
     throw new Error('Missing API access token');
   }
 
+  if (options.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+
   const response = await fetch(`${baseUrl}${path}`, {
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
     headers: {
-      Accept: 'application/json',
+      ...headers,
       Authorization: `Bearer ${token}`,
     },
     method: options.method ?? 'GET',

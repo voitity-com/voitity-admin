@@ -32,6 +32,14 @@ export const layoutConfig = {
           implemented: true,
         },
         {
+          key: 'notifications',
+          title: 'Notifications',
+          titleKey: 'dashboard.nav.items.notifications',
+          href: paths.dashboard.notifications,
+          icon: 'bell',
+          implemented: true,
+        },
+        {
           key: 'users',
           title: 'Users',
           titleKey: 'dashboard.nav.items.users',

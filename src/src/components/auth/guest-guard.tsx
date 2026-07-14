@@ -2,9 +2,10 @@
 
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { paths } from '@/paths';
+import { getCheckoutIntentDestination, persistCheckoutIntentFromSearch } from '@/lib/billing/checkout-intent';
 import { logger } from '@/lib/default-logger';
 import { useUser } from '@/hooks/use-user';
 
@@ -13,6 +14,7 @@ export interface GuestGuardProps {
 }
 
 export function GuestGuard({ children }: GuestGuardProps): React.JSX.Element | null {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, error, isLoading } = useUser();
   const [isChecking, setIsChecking] = React.useState<boolean>(true);
@@ -28,11 +30,12 @@ export function GuestGuard({ children }: GuestGuardProps): React.JSX.Element | n
     }
 
     if (user) {
-      logger.debug('[GuestGuard]: User is logged in, redirecting to dashboard');
-      navigate(paths.dashboard.overview, { replace: true });
+      logger.debug('[GuestGuard]: User is logged in, redirecting to intended destination');
+      navigate(getCheckoutIntentDestination(location.search) ?? paths.dashboard.overview, { replace: true });
       return;
     }
 
+    persistCheckoutIntentFromSearch(location.search);
     setIsChecking(false);
   };
 
@@ -41,7 +44,7 @@ export function GuestGuard({ children }: GuestGuardProps): React.JSX.Element | n
       // noop
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Expected
-  }, [user, error, isLoading]);
+  }, [user, error, isLoading, location.search]);
 
   if (isChecking) {
     return null;

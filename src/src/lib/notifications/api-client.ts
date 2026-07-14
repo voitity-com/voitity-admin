@@ -20,10 +20,13 @@ export interface AppNotification {
   body: string;
   category?: null | string;
   created_at?: null | string;
+  dismissed_at?: null | string;
   id: number | string;
   key: string;
+  kind: 'log' | 'notification';
   read_at?: null | string;
   title: string;
+  visible_in_bell: boolean;
 }
 
 export interface AppNotificationPagination {
@@ -49,6 +52,8 @@ export class NotificationPreferencesApiError extends Error {
   }
 }
 
+export const APP_NOTIFICATIONS_CHANGED_EVENT = 'bigmelo:app-notifications-changed';
+
 export async function getNotificationPreferences(): Promise<NotificationPreference[]> {
   const response = await requestJson<unknown>('/api/notification-preferences', { method: 'GET' });
 
@@ -67,7 +72,14 @@ export async function updateNotificationPreferences(
 }
 
 export async function getAppNotifications(
-  params: { locale?: string; page?: number; perPage?: number } = {}
+  params: {
+    kind?: 'all' | 'log' | 'notification';
+    locale?: string;
+    page?: number;
+    perPage?: number;
+    read?: 'all' | 'read' | 'unread';
+    scope?: 'all' | 'bell';
+  } = {}
 ): Promise<AppNotificationPage> {
   const query = new URLSearchParams({
     page: String(params.page ?? 1),
@@ -78,6 +90,18 @@ export async function getAppNotifications(
     query.set('locale', params.locale);
   }
 
+  if (params.scope && params.scope !== 'all') {
+    query.set('scope', params.scope);
+  }
+
+  if (params.kind && params.kind !== 'all') {
+    query.set('kind', params.kind);
+  }
+
+  if (params.read && params.read !== 'all') {
+    query.set('read', params.read);
+  }
+
   const response = await requestJson<unknown>(`/api/notifications?${query.toString()}`, {
     locale: params.locale,
     method: 'GET',
@@ -86,18 +110,57 @@ export async function getAppNotifications(
   return normalizeAppNotificationPage(response);
 }
 
-export async function markAllAppNotificationsAsRead(locale?: string): Promise<void> {
-  await requestJson<unknown>('/api/notifications/read-all', { locale, method: 'PATCH' });
+export async function markAllAppNotificationsAsRead(
+  locale?: string,
+  params: { kind?: 'all' | 'log' | 'notification'; scope?: 'all' | 'bell' } = {}
+): Promise<void> {
+  const query = new URLSearchParams();
+
+  if (locale) {
+    query.set('locale', locale);
+  }
+
+  if (params.scope && params.scope !== 'all') {
+    query.set('scope', params.scope);
+  }
+
+  if (params.kind && params.kind !== 'all') {
+    query.set('kind', params.kind);
+  }
+
+  const queryString = query.toString();
+
+  await requestJson<unknown>(`/api/notifications/read-all${queryString ? `?${queryString}` : ''}`, {
+    locale,
+    method: 'PATCH',
+  });
+  dispatchAppNotificationsChanged();
+}
+
+export async function markBellNotificationsAsRead(locale?: string): Promise<void> {
+  const query = new URLSearchParams({ scope: 'bell' });
+
+  if (locale) {
+    query.set('locale', locale);
+  }
+
+  await requestJson<unknown>(`/api/notifications/read-all?${query.toString()}`, { locale, method: 'PATCH' });
+  dispatchAppNotificationsChanged();
 }
 
 export async function markAppNotificationAsRead(id: number | string, locale?: string): Promise<AppNotification> {
   const response = await requestJson<unknown>(`/api/notifications/${id}/read`, { locale, method: 'PATCH' });
 
-  return normalizeAppNotification(getResponseData(response)) ?? normalizeEmptyNotification(id);
+  const notification = normalizeAppNotification(getResponseData(response)) ?? normalizeEmptyNotification(id);
+
+  dispatchAppNotificationsChanged();
+
+  return notification;
 }
 
 export async function dismissAppNotification(id: number | string, locale?: string): Promise<void> {
   await requestJson<unknown>(`/api/notifications/${id}`, { locale, method: 'DELETE' });
+  dispatchAppNotificationsChanged();
 }
 
 function normalizePreferences(response: unknown): NotificationPreference[] {
@@ -167,10 +230,13 @@ function normalizeAppNotification(value: unknown): AppNotification | null {
     body,
     category: getNullableString(value.category),
     created_at: getNullableString(value.created_at),
+    dismissed_at: getNullableString(value.dismissed_at),
     id,
     key,
+    kind: value.kind === 'log' ? 'log' : 'notification',
     read_at: getNullableString(value.read_at),
     title,
+    visible_in_bell: typeof value.visible_in_bell === 'boolean' ? value.visible_in_bell : true,
   };
 }
 
@@ -273,8 +339,18 @@ function normalizeEmptyNotification(id: number | string): AppNotification {
     body: '',
     id,
     key: '',
+    kind: 'notification',
     title: '',
+    visible_in_bell: false,
   };
+}
+
+function dispatchAppNotificationsChanged(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  window.dispatchEvent(new Event(APP_NOTIFICATIONS_CHANGED_EVENT));
 }
 
 async function getErrorMessage(response: Response): Promise<string> {

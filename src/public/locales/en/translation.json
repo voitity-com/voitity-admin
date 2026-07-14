@@ -186,7 +186,9 @@
     "notifications": {
       "actions": {
         "dismiss": "Dismiss",
-        "markAllRead": "Mark all as read"
+        "markAllRead": "Mark all as read",
+        "markRead": "Mark as read",
+        "viewAll": "View all"
       },
       "empty": "There are no notifications",
       "errors": {
@@ -199,6 +201,55 @@
         "markedRead": "Notifications marked as read."
       },
       "unreadCount": "{{count}} unread"
+    },
+    "notificationCenter": {
+      "actions": {
+        "close": "Close",
+        "markAllRead": "Mark pending as read",
+        "markRead": "Mark as read"
+      },
+      "cardSubheader": "The most recent events are shown first.",
+      "cardTitle": "History",
+      "empty": {
+        "description": "Change the filters or check back later when there is activity.",
+        "title": "No items to show"
+      },
+      "errors": {
+        "load": "Could not load notifications and logs.",
+        "markRead": "Could not mark as read."
+      },
+      "filters": {
+        "kind": "Type",
+        "kindOptions": {
+          "all": "All",
+          "log": "Logs",
+          "notification": "Notifications"
+        },
+        "read": "Status",
+        "readOptions": {
+          "all": "All",
+          "read": "Read",
+          "unread": "Pending"
+        }
+      },
+      "kind": {
+        "log": "Log",
+        "notification": "Notification"
+      },
+      "pageTitle": "Notifications",
+      "pagination": {
+        "displayedRows": "{{from}}-{{to}} of {{count}}",
+        "rowsPerPage": "Rows per page:"
+      },
+      "status": {
+        "read": "Read",
+        "unread": "Pending"
+      },
+      "subtitle": "Review important updates and your account activity history.",
+      "toasts": {
+        "markedOneRead": "Notification marked as read.",
+        "markedRead": "Pending items marked as read."
+      }
     },
     "settings": {
       "account": {
@@ -285,36 +336,50 @@
       "billing": {
         "empty": "No subscription information was returned.",
         "emptySection": "No items were returned.",
-        "errors": {
-          "checkout": "Could not start the payment checkout.",
-          "checkoutUrl": "The payment checkout URL was not returned.",
-          "generic": "Could not load subscription limits."
-        },
-        "actions": {
-          "acquirePlan": "Acquire plan",
-          "cancel": "Cancel",
-          "continueToPayment": "Continue to secure payment",
-          "processing": "Preparing payment",
-          "selectCycle": "Select {{cycle}}",
-          "selected": "Selected"
-        },
-        "noActive": {
-          "eyebrow": "No active subscription",
-          "subheader": "There is no active plan on this account yet. Choose monthly or annual billing to activate Starter.",
-          "title": "Choose your plan"
-        },
-        "currentPlan": {
-          "eyebrow": "Purchased plan",
-          "fallbackName": "Starter",
-          "subheader": "This is the active plan for the account."
-        },
+  "errors": {
+    "action": "Could not update the subscription.",
+    "checkout": "Could not start the payment checkout.",
+    "checkoutUrl": "The payment checkout URL was not returned.",
+    "generic": "Could not load subscription limits."
+  },
+  "actions": {
+    "acquirePlan": "Acquire plan",
+    "cancel": "Cancel",
+    "cancelRenewal": "Cancel automatic renewal",
+    "cancelTrial": "Cancel no-cost trial",
+    "continueToTrial": "Continue and start trial",
+    "continueToPayment": "Continue to secure payment",
+    "processing": "Preparing payment",
+    "reactivateRenewal": "Reactivate renewal",
+    "selectCycle": "Select {{cycle}}",
+    "selected": "Selected",
+    "startTrial": "Start {{days}} days at no cost"
+  },
+  "noActive": {
+    "eyebrow": "No active subscription",
+    "subheader": "There is no active plan on this account yet. Choose monthly or annual billing to activate Starter.",
+    "title": "Choose your plan",
+    "trialSubheader": "Start with {{days}} days at no cost after confirming a payment method. The plan is charged when that period ends unless you cancel first."
+  },
+  "currentPlan": {
+    "cancelRenewalHelper": "You keep access until the end of the paid period. No further automatic charge will be made after that.",
+    "cancelTrialHelper": "You keep access until the trial ends and the first plan charge will not be made.",
+    "eyebrow": "Purchased plan",
+    "fallbackName": "Starter",
+    "reactivateHelper": "You can reactivate renewal before the final date to keep access without interruption.",
+    "renewalCancelledSubheader": "Automatic renewal is cancelled. Access remains active until {{date}}.",
+    "subheader": "This is the active plan for the account.",
+    "trialCancelledSubheader": "The trial is cancelled. Access remains active until {{date}} and there will be no automatic charge.",
+    "trialSubheader": "You are in the no-cost period. It ends on {{date}} and the first charge happens after that."
+  },
         "cycles": {
-          "annual": {
+    "annual": {
             "description": "For keeping the profile active all year at a better price.",
             "label": "Annual",
             "period": "USD /year"
-          },
-          "bestValue": "Best value",
+    },
+    "bestValue": "Best value",
+    "freeTrial": "{{days}} days at no cost",
           "monthly": {
             "description": "For creating and validating a complete conversational profile.",
             "label": "Monthly",
@@ -325,15 +390,19 @@
           "title": "Billing cycle",
           "unavailable": "Unavailable"
         },
-        "checkout": {
-          "displayPrice": "Displayed price",
-          "planValue": "Starter {{cycle}}",
-          "processingAmount": "Processed amount",
-          "subheader": "Review the selected cycle and accept the renewal terms before going to Wompi.",
-          "summaryTitle": "Payment summary",
-          "title": "Checkout",
-          "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
-        },
+  "checkout": {
+    "displayPrice": "Displayed price",
+    "firstPlanCharge": "First plan charge",
+    "planValue": "Starter {{cycle}}",
+    "processingAmount": "Processed amount",
+    "subheader": "Review the selected cycle and accept the renewal terms before going to Wompi.",
+    "summaryTitle": "Payment summary",
+    "todayCharge": "Today charge",
+    "title": "Checkout",
+    "trialSubheader": "Today you start {{days}} days at no cost after Wompi confirms a reusable payment method.",
+    "trialWompiNotice": "This step saves the payment method for the first automatic charge. If Wompi does not confirm a reusable payment method, the trial will not start.",
+    "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
+  },
         "fields": {
           "available": "Available",
           "avatarImages": "Avatar images",
@@ -347,8 +416,10 @@
           "current": "Current",
           "currentPeriodEnd": "Current period end",
           "currentPeriodStart": "Current period start",
-          "endsAt": "Ends at",
-          "expiresAt": "Expires at",
+    "endsAt": "Ends at",
+    "expiresAt": "Expires at",
+    "firstChargeAt": "First charge",
+    "lastBilledAt": "Last billed at",
           "limit": "Limit",
           "name": "Name",
           "plan": "Plan",
@@ -399,7 +470,8 @@
             "monthly": "1000 chat messages with 500 credits"
           },
           "chatMessages": "{{countLabel}} chat messages included",
-          "credits": "{{countLabel}} credits included",
+    "credits": "{{countLabel}} credits included",
+    "freeTrial": "{{days}} days at no cost before the first charge",
           "profile": "1 published profile",
           "profiles": "{{countLabel}} profiles included",
           "savings": "Save {{amount}} compared with monthly billing",
@@ -427,21 +499,31 @@
           "declined": "Declined",
           "error": "Error",
           "expired": "Expired",
-          "failed": "Failed",
-          "inactive": "Inactive",
-          "paid": "Paid",
-          "pastDue": "Past due",
-          "pending": "Pending",
-          "trialing": "Trialing",
-          "voided": "Voided"
-        },
+    "failed": "Failed",
+    "first": "Active",
+    "inactive": "Inactive",
+    "paid": "Paid",
+    "pastDue": "Past due",
+    "pending": "Pending",
+    "renewalCancelled": "Renewal cancelled",
+    "renewed": "Renewed",
+    "trialing": "Trialing",
+    "voided": "Voided"
+  },
         "subheader": "Information loaded from your current subscription.",
         "title": "Subscription limits",
-        "terms": {
-          "acceptance": "I accept the subscription terms and authorize recurring payments.",
-          "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
-          "title": "Subscription terms"
-        },
+  "terms": {
+    "acceptance": "I accept the subscription terms and authorize recurring payments.",
+    "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
+    "title": "Subscription terms",
+    "trialAcceptance": "I accept starting {{days}} days at no cost and authorize the automatic charge after it ends.",
+    "trialBody": "By continuing, you authorize saving your payment method and starting {{days}} days at no cost in Bigmelo. When that period ends, the selected {{interval}} plan will be charged automatically unless you cancel from Billing before that date. If the charge is approved, usage limits reset as a new plan period."
+  },
+  "toasts": {
+    "renewalCancelled": "Automatic renewal cancelled.",
+    "renewalReactivated": "Automatic renewal reactivated.",
+    "trialCancelled": "Free trial cancelled."
+  },
         "usage": {
           "progress": "{{progress}} used",
           "remainingSummary": "{{remaining}} available for the current period.",
@@ -729,6 +811,7 @@
         "avatar": "Avatar",
         "chats": "Chats",
         "data": "Data",
+        "messages": "Messages",
         "profile": "Profile",
         "profileData": "Profile data",
         "quality": "Quality",
@@ -736,6 +819,64 @@
         "sources": "Sources",
         "voice": "Voice"
       },
+        "messages": {
+          "actions": {
+            "clearAudio": "Remove audio",
+            "generateAudio": "Generate audio",
+            "generating": "Generating...",
+            "recordAudio": "Record audio",
+            "removing": "Removing...",
+            "save": "Save text",
+            "saving": "Saving...",
+            "stopRecording": "Stop and save {{seconds}}s"
+          },
+          "audioEmpty": "No audio has been saved for this message yet.",
+          "audioSources": {
+            "default": "default audio",
+            "generated": "generated audio",
+            "none": "no audio",
+            "recorded": "recorded audio",
+            "withSource": "{{source}}"
+          },
+          "audioTitle": "Saved audio",
+          "cards": {
+            "fallback_no_answer": {
+              "description": "Used when the profile detects it does not have enough information to answer.",
+              "helper": "Leave it empty so the AI answers normally when it does not have information.",
+              "title": "Message when it cannot answer"
+            },
+            "initial": {
+              "description": "The first message visitors see when they open the profile chat.",
+              "helper": "Leave it empty to restore the default initial message.",
+              "title": "Initial message"
+            }
+          },
+          "errors": {
+            "generateAudio": "Audio could not be generated. Check that the voice has already been cloned.",
+            "microphoneAccess": "Unable to access the microphone.",
+            "recordingUnsupported": "Audio recording is not supported by this browser.",
+            "uploadAudio": "Recorded audio could not be saved."
+          },
+          "fields": {
+            "text": "Message text"
+          },
+          "status": {
+            "disabled": "Inactive",
+            "enabled": "Active"
+          },
+          "subheader": "Define reusable chat messages and save their audio so they do not need to be generated every time.",
+          "title": "Messages",
+          "toasts": {
+            "audioCleared": "Audio removed",
+            "audioGenerated": "Audio generated",
+            "audioUploaded": "Recorded audio saved",
+            "saved": "Message saved"
+          },
+          "validation": {
+            "tooLong": "{{count}}/{{max}} characters. Shorten the text."
+          },
+          "voiceHint": "You can save the texts now. To generate audio you need a cloned voice; meanwhile you can also record and save manual audio."
+        },
         "profile": {
           "audio": {
             "append": "Append to the end",
@@ -811,7 +952,14 @@
         },
         "onboarding": {
           "actions": {
+            "close": "Close guide",
             "finish": "Finish",
+            "goTo": {
+              "avatar": "Go to Avatar",
+              "quality": "View quality",
+              "source": "Go to Sources",
+              "voice": "Go to Voice"
+            },
             "next": "Next"
           },
           "missingItems": "Missing: {{items}}",
@@ -820,26 +968,31 @@
             "avatar": {
               "description": "The avatar is the image or video that represents the profile in the public experience. Create or upload at least one avatar before publishing.",
               "eyebrow": "Avatar",
+              "mobileDescription": "Create or upload the image or video visitors will see. It is one of the requirements before publishing.",
               "title": "Create an avatar"
             },
             "publication": {
               "description": "This bar shows whether the profile is ready to be activated and published. Complete the missing requirements before publishing.",
               "eyebrow": "Publishing",
+              "mobileDescription": "This summary shows what is missing before publishing. Move step by step and complete the pending requirements.",
               "title": "Complete what is needed to publish"
             },
             "quality": {
               "description": "The quality bar summarizes whether the profile knowledge has sources, approved facts, and indexed facts to answer better in conversations.",
               "eyebrow": "Quality",
+              "mobileDescription": "Here you can see whether the profile information has sources, approved facts, and indexed facts for better answers.",
               "title": "Review profile quality"
             },
             "source": {
               "description": "A source is a file or text with profile information, such as a CV, biography, projects, or services. Upload and sync at least one source before publishing.",
               "eyebrow": "Sources",
+              "mobileDescription": "Upload a biography, CV, or text and sync it so the AI has reliable information.",
               "title": "Upload and sync a source"
             },
             "voice": {
               "description": "The cloned voice lets the profile answer with audio. Clone at least one voice before activating and publishing.",
               "eyebrow": "Voice",
+              "mobileDescription": "Set up the voice so the profile can answer with audio before you publish it.",
               "title": "Clone the voice"
             }
           }
@@ -1099,15 +1252,20 @@
           "viewPlans": "View plans"
         },
         "onboarding": {
+          "action": "Create profile",
+          "close": "Close guide",
           "descriptionWithPlan": "Use the highlighted Add button to open the form and create the first profile with name, alias, description, profession, and conversational style.",
           "descriptionWithoutPlan": "Use the highlighted Add button to continue with plan selection. Profile creation will be enabled when you have an active subscription.",
           "eyebrow": "First profile",
+          "mobileDescriptionWithPlan": "Start by creating the profile with name, alias, description, and style. Then you can complete avatar, voice, and sources.",
+          "mobileDescriptionWithoutPlan": "Choose a plan first. Then you can create the profile and complete avatar, voice, and sources.",
           "title": "Create your first profile"
         },
         "completionOnboarding": {
           "description": "This profile is not ready to publish yet. Open it and complete the missing requirements before activating it.",
           "eyebrow": "Profile pending",
           "missingItems": "Missing: {{items}}",
+          "mobileDescription": "Open the profile and complete avatar, voice, and source. Then you can activate it and publish its link.",
           "openProfile": "Open profile",
           "title": "Complete this profile"
         },

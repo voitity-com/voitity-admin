@@ -26,7 +26,7 @@ import type { User } from '@/types/user';
 import { paths } from '@/paths';
 import { getSupportedLanguage } from '@/lib/i18n';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
-import { getAppNotifications } from '@/lib/notifications/api-client';
+import { useBellNotificationCount } from '@/hooks/use-bell-notification-count';
 import { useDialog } from '@/hooks/use-dialog';
 import { usePathname } from '@/hooks/use-pathname';
 import { usePopover } from '@/hooks/use-popover';
@@ -62,6 +62,7 @@ export interface MainNavProps {
 export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.JSX.Element {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { unreadCount } = useBellNotificationCount();
 
   const [openNav, setOpenNav] = React.useState<boolean>(false);
 
@@ -137,7 +138,7 @@ export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.
             overflowX: 'auto',
           }}
         >
-          {renderNavGroups({ items, pathname, t })}
+          {renderNavGroups({ items, pathname, t, unreadCount })}
         </Box>
       </Box>
       <MobileNav
@@ -168,23 +169,8 @@ function SearchButton(): React.JSX.Element {
 
 function NotificationsButton(): React.JSX.Element {
   const popover = usePopover<HTMLButtonElement>();
-  const { i18n, t } = useTranslation();
-  const language = getSupportedLanguage(i18n.language);
-  const [unreadCount, setUnreadCount] = React.useState(0);
-
-  const loadUnreadCount = React.useCallback(async () => {
-    try {
-      const page = await getAppNotifications({ locale: language, perPage: 1 });
-
-      setUnreadCount(page.unread_count);
-    } catch {
-      setUnreadCount(0);
-    }
-  }, [language]);
-
-  React.useEffect(() => {
-    void loadUnreadCount();
-  }, [loadUnreadCount]);
+  const { t } = useTranslation();
+  const { unreadCount } = useBellNotificationCount();
 
   return (
     <React.Fragment>
@@ -207,7 +193,6 @@ function NotificationsButton(): React.JSX.Element {
       </Tooltip>
       <NotificationsPopover
         anchorEl={popover.anchorRef.current}
-        onChanged={setUnreadCount}
         onClose={popover.handleClose}
         open={popover.open}
       />
@@ -301,15 +286,17 @@ function renderNavGroups({
   items = [],
   pathname,
   t,
+  unreadCount,
 }: {
   items?: NavItemConfig[];
   pathname: string;
   t: TFunction;
+  unreadCount: number;
 }): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     acc.push(
       <Box component="li" key={curr.key} sx={{ flex: '0 0 auto' }}>
-        {renderNavItems({ pathname, items: curr.items, t })}
+        {renderNavItems({ pathname, items: curr.items, t, unreadCount })}
       </Box>
     );
 
@@ -327,15 +314,26 @@ function renderNavItems({
   items = [],
   pathname,
   t,
+  unreadCount,
 }: {
   items?: NavItemConfig[];
   pathname: string;
   t: TFunction;
+  unreadCount: number;
 }): React.JSX.Element {
   const children = items.reduce((acc: React.ReactNode[], curr: NavItemConfig): React.ReactNode[] => {
     const { key, ...item } = curr;
 
-    acc.push(<NavItem key={key} pathname={pathname} t={t} {...item} title={getNavTitle(curr, t)} />);
+    acc.push(
+      <NavItem
+        key={key}
+        pathname={pathname}
+        t={t}
+        unreadCount={unreadCount}
+        {...item}
+        title={getNavTitle(curr, t)}
+      />
+    );
 
     return acc;
   }, []);
@@ -350,6 +348,7 @@ function renderNavItems({
 interface NavItemProps extends NavItemConfig {
   pathname: string;
   t: TFunction;
+  unreadCount: number;
 }
 
 function NavItem({
@@ -363,6 +362,7 @@ function NavItem({
   pathname,
   t,
   title,
+  unreadCount,
 }: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ disabled, external, href, matcher, pathname });
   const Icon = icon ? icons[icon] : null;
@@ -408,13 +408,13 @@ function NavItem({
         tabIndex={0}
       >
         {Icon ? (
-          <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', flex: '0 0 auto' }}>
+          <NavIconBadge active={active} count={icon === 'bell' ? unreadCount : 0}>
             <Icon
               fill={active ? 'var(--NavItem-icon-active-color)' : 'var(--NavItem-icon-color)'}
               fontSize="var(--icon-fontSize-md)"
               weight={active ? 'fill' : undefined}
             />
-          </Box>
+          </NavIconBadge>
         ) : null}
         <Box sx={{ flex: '1 1 auto' }}>
           <Typography
@@ -454,6 +454,37 @@ function NavItem({
   }
 
   return element;
+}
+
+function NavIconBadge({
+  active,
+  children,
+  count,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  count: number;
+}): React.JSX.Element {
+  return (
+    <Badge
+      badgeContent={count > 0 ? count : undefined}
+      color="error"
+      invisible={count === 0}
+      max={99}
+      sx={{
+        '& .MuiBadge-badge': {
+          border: active ? '1px solid var(--NavItem-active-color)' : '1px solid var(--MainNav-background)',
+          fontSize: '0.625rem',
+          height: 17,
+          minWidth: 17,
+          px: 0.5,
+          top: 2,
+        },
+      }}
+    >
+      <Box sx={{ alignItems: 'center', display: 'flex', justifyContent: 'center', flex: '0 0 auto' }}>{children}</Box>
+    </Badge>
+  );
 }
 
 function getNavTitle(item: NavItemConfig, t: TFunction): string {

@@ -17,10 +17,12 @@ import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
 import { EyeSlash as EyeSlashIcon } from '@phosphor-icons/react/dist/ssr/EyeSlash';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
+import { buildAuthPathWithCheckoutIntent, persistCheckoutIntentFromSearch } from '@/lib/billing/checkout-intent';
 import { getSupportedLanguage } from '@/lib/i18n';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
@@ -49,12 +51,17 @@ const defaultValues = { email: '', name: '', password: '', passwordConfirmation:
 export function SignUpForm(): React.JSX.Element {
   const { i18n, t } = useTranslation();
   const { checkSession } = useUser();
+  const [searchParams] = useSearchParams();
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
   const previousLanguageRef = React.useRef(currentLanguage);
 
   const [isPending, setIsPending] = React.useState<boolean>(false);
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
   const [successMessage, setSuccessMessage] = React.useState<null | string>(null);
+  const signInHref = React.useMemo(
+    () => buildAuthPathWithCheckoutIntent(paths.auth.custom.signIn, searchParams),
+    [searchParams]
+  );
 
   const schema = React.useMemo(
     () =>
@@ -100,6 +107,10 @@ export function SignUpForm(): React.JSX.Element {
       });
     }
   }, [currentLanguage, errors.email, errors.name, errors.password, errors.passwordConfirmation, trigger]);
+
+  React.useEffect(() => {
+    persistCheckoutIntentFromSearch(searchParams);
+  }, [searchParams]);
 
   const handleGoogleAuth = React.useCallback(async (): Promise<void> => {
     setIsPending(true);
@@ -167,7 +178,7 @@ export function SignUpForm(): React.JSX.Element {
         <Typography variant="h5">{t('auth.signUp.title')}</Typography>
         <Typography color="text.secondary" variant="body2">
           {t('auth.signUp.hasAccount')}{' '}
-          <Link component={RouterLink} href={paths.auth.custom.signIn} variant="subtitle2">
+          <Link component={RouterLink} href={signInHref} variant="subtitle2">
             {t('auth.signUp.signIn')}
           </Link>
         </Typography>

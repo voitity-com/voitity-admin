@@ -1,6 +1,7 @@
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { AddressBook as AddressBookIcon } from '@phosphor-icons/react/dist/ssr/AddressBook';
 import { AlignLeft as AlignLeftIcon } from '@phosphor-icons/react/dist/ssr/AlignLeft';
+import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
 import { CalendarCheck as CalendarCheckIcon } from '@phosphor-icons/react/dist/ssr/CalendarCheck';
 import { ChartPie as ChartPieIcon } from '@phosphor-icons/react/dist/ssr/ChartPie';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
@@ -33,6 +34,7 @@ import { WarningDiamond as WarningDiamondIcon } from '@phosphor-icons/react/dist
 export const icons = {
   'address-book': AddressBookIcon,
   'align-left': AlignLeftIcon,
+  bell: BellIcon,
   'calendar-check': CalendarCheckIcon,
   'chart-pie': ChartPieIcon,
   'chats-circle': ChatsCircleIcon,
