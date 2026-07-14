@@ -454,6 +454,13 @@ export const route: RouteObject = {
                 return { Component: Page };
               },
             },
+            {
+              path: 'messages',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/messages');
+                return { Component: Page };
+              },
+            },
           ],
         },
       ],

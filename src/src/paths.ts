@@ -74,6 +74,7 @@ export const paths = {
       chat: (profileId: string, chatId: string) => `/dashboard/profiles/${profileId}/chats/${chatId}`,
       chats: (profileId: string) => `/dashboard/profiles/${profileId}/chats`,
       data: (profileId: string) => `/dashboard/profiles/${profileId}/data`,
+      messages: (profileId: string) => `/dashboard/profiles/${profileId}/messages`,
       profile: (profileId: string) => `/dashboard/profiles/${profileId}/profile`,
       quality: (profileId: string) => `/dashboard/profiles/${profileId}/quality`,
       socialNetworks: (profileId: string) => `/dashboard/profiles/${profileId}/social-networks`,

@@ -22,6 +22,7 @@ export interface Profile {
   voice_language_code?: null | string;
   voice_name?: null | string;
   publication?: null | ProfilePublication;
+  conversation_messages?: null | ProfileConversationMessages;
   data?: null | Record<string, unknown>;
   networks?: null | ProfileNetworks;
   created_at?: null | string;
@@ -93,7 +94,7 @@ export interface ProfileProfessionsCatalog {
 interface RequestOptions {
   body?: unknown;
   formData?: FormData;
-  method?: 'GET' | 'PATCH' | 'POST' | 'PUT';
+  method?: 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
 }
 
 export interface ProfileChat {
@@ -297,6 +298,24 @@ export interface VoiceTestAudio {
   voice_id: number | string;
 }
 
+export type ProfileConversationMessageType = 'fallback_no_answer' | 'initial';
+
+export interface ProfileConversationMessage {
+  audio_format?: null | string;
+  audio_source?: null | string;
+  audio_url?: null | string;
+  customized?: boolean;
+  enabled?: boolean;
+  metadata?: Record<string, unknown>;
+  status?: null | string;
+  text?: null | string;
+  type: ProfileConversationMessageType;
+  updated_at?: null | string;
+  voice_id?: null | number | string;
+}
+
+export type ProfileConversationMessages = Record<ProfileConversationMessageType, ProfileConversationMessage>;
+
 export type ProfileAudioTranscriptionField = 'description' | 'personality';
 
 export interface ProfileAudioTranscription {
@@ -473,10 +492,11 @@ export async function listProfileSources(params: {
     searchParams.set('type', params.type);
   }
 
-  const response = await requestJson<ApiEnvelope<{ pagination?: Record<string, unknown>; sources?: ProfileKnowledgeSource[] }>>(
-    `/api/profile/${encodeURIComponent(String(params.profileId))}/sources?${searchParams.toString()}`,
-    { method: 'GET' }
-  );
+  const response = await requestJson<
+    ApiEnvelope<{ pagination?: Record<string, unknown>; sources?: ProfileKnowledgeSource[] }>
+  >(`/api/profile/${encodeURIComponent(String(params.profileId))}/sources?${searchParams.toString()}`, {
+    method: 'GET',
+  });
   const data = isApiEnvelope(response) ? response.data : response;
   const pagination = data.pagination ?? {};
 
@@ -658,6 +678,79 @@ export async function testVoiceAudio(payload: { profile_id: number | string; tex
   return isApiEnvelope<VoiceTestAudio>(response) ? response.data : response;
 }
 
+export async function getProfileConversationMessages(profileId: number | string): Promise<ProfileConversationMessages> {
+  const response = await requestJson<
+    ApiEnvelope<{ messages?: ProfileConversationMessages }> | { messages?: ProfileConversationMessages }
+  >(`/api/profile/${encodeURIComponent(String(profileId))}/conversation-messages`, { method: 'GET' });
+  const data = isApiEnvelope<{ messages?: ProfileConversationMessages }>(response) ? response.data : response;
+
+  return normalizeConversationMessages(data.messages);
+}
+
+export async function updateProfileConversationMessages(
+  profileId: number | string,
+  payload: Partial<Record<ProfileConversationMessageType, { text?: null | string }>>
+): Promise<ProfileConversationMessages> {
+  const response = await requestJson<
+    ApiEnvelope<{ messages?: ProfileConversationMessages }> | { messages?: ProfileConversationMessages }
+  >(`/api/profile/${encodeURIComponent(String(profileId))}/conversation-messages`, {
+    body: payload,
+    method: 'PUT',
+  });
+  const data = isApiEnvelope<{ messages?: ProfileConversationMessages }>(response) ? response.data : response;
+
+  return normalizeConversationMessages(data.messages);
+}
+
+export async function generateProfileConversationMessageAudio(
+  profileId: number | string,
+  type: ProfileConversationMessageType
+): Promise<ProfileConversationMessage> {
+  const response = await requestJson<
+    ApiEnvelope<{ message?: ProfileConversationMessage }> | { message?: ProfileConversationMessage }
+  >(
+    `/api/profile/${encodeURIComponent(String(profileId))}/conversation-messages/${encodeURIComponent(type)}/audio/generate`,
+    { method: 'POST' }
+  );
+  const data = isApiEnvelope<{ message?: ProfileConversationMessage }>(response) ? response.data : response;
+
+  return normalizeConversationMessage(data.message, type);
+}
+
+export async function uploadProfileConversationMessageAudio(params: {
+  audio: Blob | File;
+  filename?: string;
+  profileId: number | string;
+  type: ProfileConversationMessageType;
+}): Promise<ProfileConversationMessage> {
+  const formData = new FormData();
+  formData.append('audio', params.audio, params.filename ?? 'conversation-message.webm');
+
+  const response = await requestJson<
+    ApiEnvelope<{ message?: ProfileConversationMessage }> | { message?: ProfileConversationMessage }
+  >(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/conversation-messages/${encodeURIComponent(params.type)}/audio`,
+    { formData, method: 'POST' }
+  );
+  const data = isApiEnvelope<{ message?: ProfileConversationMessage }>(response) ? response.data : response;
+
+  return normalizeConversationMessage(data.message, params.type);
+}
+
+export async function clearProfileConversationMessageAudio(
+  profileId: number | string,
+  type: ProfileConversationMessageType
+): Promise<ProfileConversationMessage> {
+  const response = await requestJson<
+    ApiEnvelope<{ message?: ProfileConversationMessage }> | { message?: ProfileConversationMessage }
+  >(`/api/profile/${encodeURIComponent(String(profileId))}/conversation-messages/${encodeURIComponent(type)}/audio`, {
+    method: 'DELETE',
+  });
+  const data = isApiEnvelope<{ message?: ProfileConversationMessage }>(response) ? response.data : response;
+
+  return normalizeConversationMessage(data.message, type);
+}
+
 export async function transcribeProfileAudio(
   profileId: number | string,
   params: {
@@ -742,6 +835,63 @@ function normalizeChatMessagesResponse(response: unknown, fallbackPage: number):
   const messages = (result.items as ProfileChatMessage[]).sort(compareMessagesChronologically);
 
   return { ...result, messages };
+}
+
+function normalizeConversationMessages(
+  messages?: null | Partial<ProfileConversationMessages>
+): ProfileConversationMessages {
+  return {
+    fallback_no_answer: normalizeConversationMessage(messages?.fallback_no_answer, 'fallback_no_answer'),
+    initial: normalizeConversationMessage(messages?.initial, 'initial'),
+  };
+}
+
+function normalizeConversationMessage(
+  message: null | ProfileConversationMessage | undefined,
+  type: ProfileConversationMessageType
+): ProfileConversationMessage {
+  return {
+    audio_format: message?.audio_format ?? null,
+    audio_source: message?.audio_source ?? null,
+    audio_url: normalizeAssetUrl(message?.audio_url) ?? null,
+    customized: Boolean(message?.customized),
+    enabled: Boolean(message?.enabled),
+    metadata: message?.metadata ?? {},
+    status: message?.status ?? 'ready',
+    text: message?.text ?? null,
+    type,
+    updated_at: message?.updated_at ?? null,
+    voice_id: message?.voice_id ?? null,
+  };
+}
+
+function normalizeAssetUrl(value?: null | string): null | string {
+  if (!value) {
+    return null;
+  }
+
+  const trimmedValue = value.trim();
+
+  if (
+    !trimmedValue ||
+    /^https?:\/\//i.test(trimmedValue) ||
+    trimmedValue.startsWith('blob:') ||
+    trimmedValue.startsWith('data:')
+  ) {
+    return trimmedValue;
+  }
+
+  const baseUrl = config.api?.baseUrl?.replace(/\/+$/, '');
+
+  if (!baseUrl) {
+    return trimmedValue;
+  }
+
+  if (trimmedValue.startsWith('/')) {
+    return `${baseUrl}${trimmedValue}`;
+  }
+
+  return `${baseUrl}/${trimmedValue}`;
 }
 
 function normalizePaginatedCollection(

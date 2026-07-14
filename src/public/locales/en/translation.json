@@ -811,6 +811,7 @@
         "avatar": "Avatar",
         "chats": "Chats",
         "data": "Data",
+        "messages": "Messages",
         "profile": "Profile",
         "profileData": "Profile data",
         "quality": "Quality",
@@ -818,6 +819,64 @@
         "sources": "Sources",
         "voice": "Voice"
       },
+        "messages": {
+          "actions": {
+            "clearAudio": "Remove audio",
+            "generateAudio": "Generate audio",
+            "generating": "Generating...",
+            "recordAudio": "Record audio",
+            "removing": "Removing...",
+            "save": "Save text",
+            "saving": "Saving...",
+            "stopRecording": "Stop and save {{seconds}}s"
+          },
+          "audioEmpty": "No audio has been saved for this message yet.",
+          "audioSources": {
+            "default": "default audio",
+            "generated": "generated audio",
+            "none": "no audio",
+            "recorded": "recorded audio",
+            "withSource": "{{source}}"
+          },
+          "audioTitle": "Saved audio",
+          "cards": {
+            "fallback_no_answer": {
+              "description": "Used when the profile detects it does not have enough information to answer.",
+              "helper": "Leave it empty so the AI answers normally when it does not have information.",
+              "title": "Message when it cannot answer"
+            },
+            "initial": {
+              "description": "The first message visitors see when they open the profile chat.",
+              "helper": "Leave it empty to restore the default initial message.",
+              "title": "Initial message"
+            }
+          },
+          "errors": {
+            "generateAudio": "Audio could not be generated. Check that the voice has already been cloned.",
+            "microphoneAccess": "Unable to access the microphone.",
+            "recordingUnsupported": "Audio recording is not supported by this browser.",
+            "uploadAudio": "Recorded audio could not be saved."
+          },
+          "fields": {
+            "text": "Message text"
+          },
+          "status": {
+            "disabled": "Inactive",
+            "enabled": "Active"
+          },
+          "subheader": "Define reusable chat messages and save their audio so they do not need to be generated every time.",
+          "title": "Messages",
+          "toasts": {
+            "audioCleared": "Audio removed",
+            "audioGenerated": "Audio generated",
+            "audioUploaded": "Recorded audio saved",
+            "saved": "Message saved"
+          },
+          "validation": {
+            "tooLong": "{{count}}/{{max}} characters. Shorten the text."
+          },
+          "voiceHint": "You can save the texts now. To generate audio you need a cloned voice; meanwhile you can also record and save manual audio."
+        },
         "profile": {
           "audio": {
             "append": "Append to the end",

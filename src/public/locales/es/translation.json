@@ -811,6 +811,7 @@
         "avatar": "Avatar",
         "chats": "Chats",
         "data": "Datos",
+        "messages": "Mensajes",
         "profile": "Perfil",
         "profileData": "Datos del perfil",
         "quality": "Calidad",
@@ -818,6 +819,64 @@
         "sources": "Fuentes",
         "voice": "Voz"
       },
+        "messages": {
+          "actions": {
+            "clearAudio": "Quitar audio",
+            "generateAudio": "Generar audio",
+            "generating": "Generando...",
+            "recordAudio": "Grabar audio",
+            "removing": "Quitando...",
+            "save": "Guardar texto",
+            "saving": "Guardando...",
+            "stopRecording": "Detener y guardar {{seconds}}s"
+          },
+          "audioEmpty": "Aún no hay audio guardado para este mensaje.",
+          "audioSources": {
+            "default": "audio por defecto",
+            "generated": "audio generado",
+            "none": "sin audio",
+            "recorded": "audio grabado",
+            "withSource": "{{source}}"
+          },
+          "audioTitle": "Audio guardado",
+          "cards": {
+            "fallback_no_answer": {
+              "description": "Se usa cuando el perfil detecta que no tiene información suficiente para responder.",
+              "helper": "Déjalo vacío para que la IA responda normalmente cuando no tenga información.",
+              "title": "Mensaje cuando no tiene respuesta"
+            },
+            "initial": {
+              "description": "Es el primer mensaje que ven los visitantes al abrir el chat del perfil.",
+              "helper": "Déjalo vacío para volver al mensaje inicial por defecto.",
+              "title": "Mensaje inicial"
+            }
+          },
+          "errors": {
+            "generateAudio": "No se pudo generar el audio. Revisa que la voz ya esté clonada.",
+            "microphoneAccess": "No se pudo acceder al micrófono.",
+            "recordingUnsupported": "Este navegador no soporta grabación de audio.",
+            "uploadAudio": "No se pudo guardar el audio grabado."
+          },
+          "fields": {
+            "text": "Texto del mensaje"
+          },
+          "status": {
+            "disabled": "Inactivo",
+            "enabled": "Activo"
+          },
+          "subheader": "Define los mensajes reutilizables del chat y guarda sus audios para evitar generarlos cada vez.",
+          "title": "Mensajes",
+          "toasts": {
+            "audioCleared": "Audio eliminado",
+            "audioGenerated": "Audio generado",
+            "audioUploaded": "Audio grabado guardado",
+            "saved": "Mensaje guardado"
+          },
+          "validation": {
+            "tooLong": "{{count}}/{{max}} caracteres. Reduce el texto."
+          },
+          "voiceHint": "Puedes guardar los textos ahora. Para generar audio necesitas una voz clonada; mientras tanto también puedes grabar y guardar un audio manual."
+        },
         "profile": {
           "audio": {
             "append": "Agregar al final",
