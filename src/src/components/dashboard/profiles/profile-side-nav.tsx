@@ -12,6 +12,7 @@ import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr/ShareNetwork';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
 import { useTranslation } from 'react-i18next';
@@ -26,6 +27,7 @@ const icons = {
   avatar: ImageIcon,
   chats: ChatsCircleIcon,
   data: DatabaseIcon,
+  integrations: PlugsConnectedIcon,
   messages: ChatTextIcon,
   profile: UserCircleIcon,
   quality: GaugeIcon,
@@ -64,6 +66,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.messages'),
         href: paths.dashboard.profileDetails.messages(profileId),
         icon: 'messages',
+      },
+      {
+        key: 'integrations',
+        title: t('dashboard.profiles.detail.nav.integrations'),
+        href: paths.dashboard.profileDetails.integrations(profileId),
+        icon: 'integrations',
       },
       {
         key: 'dataGroup',

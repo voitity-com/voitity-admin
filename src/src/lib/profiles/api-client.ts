@@ -11,6 +11,7 @@ export interface Profile {
   name: string;
   description: string;
   genre: string;
+  locale?: null | string;
   personality: string;
   profession_key?: null | string;
   profession_template_version?: null | string;
@@ -48,6 +49,7 @@ export interface ProfilePayload {
   alias: string;
   description: string;
   genre: ProfileGenre;
+  locale: string;
   personality: string;
   profession_key?: null | string;
   profession_template_version?: null | string;

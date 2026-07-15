@@ -21,6 +21,7 @@ import { z as zod } from 'zod';
 
 import type { Profile, ProfilePayload, ProfileProfession } from '@/lib/profiles/api-client';
 import { listProfileProfessions } from '@/lib/profiles/api-client';
+import { getBrowserLanguage, getSupportedLanguage, supportedLanguages } from '@/lib/i18n';
 import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
 import { logger } from '@/lib/default-logger';
 import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
@@ -29,6 +30,7 @@ interface Values {
   alias: string;
   description: string;
   genre: string;
+  locale: string;
   name: string;
   personality: string;
   professionKey: string;
@@ -46,6 +48,10 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
       .string()
       .min(1, t('dashboard.profiles.form.validation.genreRequired'))
       .refine(isProfileGenre, t('dashboard.profiles.form.validation.genreInvalid')),
+    locale: zod
+      .string()
+      .min(1, t('dashboard.profiles.form.validation.localeRequired'))
+      .refine((value) => supportedLanguages.includes(value as (typeof supportedLanguages)[number]), t('dashboard.profiles.form.validation.localeInvalid')),
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
     personality: zod.string().min(1, t('dashboard.profiles.form.validation.personalityRequired')).max(200),
     professionKey: zod.string().min(1, t('dashboard.profiles.form.validation.professionRequired')).max(80),
@@ -59,6 +65,7 @@ function getDefaultValues(profile?: null | Profile): Values {
     alias: profile?.alias ?? '',
     description: profile?.description ?? '',
     genre: normalizeProfileGenre(profile?.genre),
+    locale: getSupportedLanguage(profile?.locale ?? getBrowserLanguage()),
     name: profile?.name ?? '',
     personality: profile?.personality ?? '',
     professionKey: profile?.profession_key ?? 'custom',
@@ -188,6 +195,28 @@ export function ProfileFormDialog({
             />
             <Controller
               control={control}
+              name="locale"
+              render={({ field }) => (
+                <FormControl error={Boolean(errors.locale)}>
+                  <InputLabel id="profile-form-locale-label">{t('dashboard.profiles.fields.locale')}</InputLabel>
+                  <Select
+                    {...field}
+                    label={t('dashboard.profiles.fields.locale')}
+                    labelId="profile-form-locale-label"
+                    value={getSupportedLanguage(field.value)}
+                  >
+                    {supportedLanguages.map((value) => (
+                      <MenuItem key={value} value={value}>
+                        {t(`languages.${value}`)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.locale ? <FormHelperText>{errors.locale.message}</FormHelperText> : null}
+                </FormControl>
+              )}
+            />
+            <Controller
+              control={control}
               name="professionKey"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.professionKey)}>
@@ -238,6 +267,7 @@ function toPayload(values: Values): ProfilePayload {
     alias: values.alias.trim(),
     description: values.description,
     genre: toProfileGenre(values.genre),
+    locale: getSupportedLanguage(values.locale),
     name: values.name,
     personality: values.personality,
     profession_key: values.professionKey,
