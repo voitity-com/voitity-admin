@@ -461,6 +461,13 @@ export const route: RouteObject = {
                 return { Component: Page };
               },
             },
+            {
+              path: 'integrations',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/integrations');
+                return { Component: Page };
+              },
+            },
           ],
         },
       ],
