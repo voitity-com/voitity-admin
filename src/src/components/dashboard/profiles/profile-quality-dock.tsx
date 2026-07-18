@@ -31,9 +31,11 @@ export function ProfileQualityDock(): React.JSX.Element | null {
   const [quality, setQuality] = React.useState<null | ProfileQuality>(null);
   const [error, setError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const qualityHref = profileId ? paths.dashboard.profileDetails.quality(profileId) : '';
+  const isQualityPage = pathname === qualityHref;
 
   const loadQuality = React.useCallback(async (): Promise<void> => {
-    if (!profileId) {
+    if (!profileId || isQualityPage) {
       return;
     }
 
@@ -48,7 +50,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
     } finally {
       setIsLoading(false);
     }
-  }, [profileId, t]);
+  }, [isQualityPage, profileId, t]);
 
   React.useEffect(() => {
     loadQuality().catch((err) => {
@@ -57,7 +59,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
   }, [loadQuality, pathname]);
 
   React.useEffect(() => {
-    if (!profileId) {
+    if (!profileId || isQualityPage) {
       return undefined;
     }
 
@@ -70,7 +72,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [loadQuality, profileId]);
+  }, [isQualityPage, loadQuality, profileId]);
 
   React.useEffect(() => {
     const handleRefresh = (event?: Event): void => {
@@ -102,7 +104,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
     };
   }, [loadQuality, profileId]);
 
-  if (!profileId) {
+  if (!profileId || isQualityPage) {
     return null;
   }
 
@@ -222,7 +224,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
         <IconButton
           aria-label={t('dashboard.profiles.detail.quality.dock.viewDetails')}
           component={RouterLink}
-          href={paths.dashboard.profileDetails.quality(profileId)}
+          href={qualityHref}
           sx={{ alignSelf: 'center', display: { xs: 'inline-flex', sm: 'none' }, height: 40, justifySelf: 'end', width: 40 }}
         >
           <ArrowRightIcon />
@@ -230,7 +232,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
         <Button
           component={RouterLink}
           endIcon={<ArrowRightIcon />}
-          href={paths.dashboard.profileDetails.quality(profileId)}
+          href={qualityHref}
           size="small"
           sx={{ display: { xs: 'none', sm: 'inline-flex' }, justifySelf: { sm: 'stretch', md: 'end' }, whiteSpace: 'nowrap' }}
           variant="outlined"

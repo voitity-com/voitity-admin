@@ -338,6 +338,7 @@
         "emptySection": "No items were returned.",
   "errors": {
     "action": "Could not update the subscription.",
+    "cardValidation": "Wompi could not validate the card. Check the number, expiration date, and CVC, or try another card. No charge was made.",
     "checkout": "Could not start the payment checkout.",
     "checkoutUrl": "The payment checkout URL was not returned.",
     "generic": "Could not load subscription limits.",
@@ -409,7 +410,9 @@
   "paymentMethod": {
     "cardHolder": "Name on card",
     "cardNumber": "Card number",
+    "cardNumberInvalid": "Enter a valid card number.",
     "cvc": "CVC",
+    "cvcInvalid": "3-4 digits.",
     "expMonth": "Month",
     "expYear": "Year",
     "loading": "Preparing secure setup with Wompi.",
@@ -417,7 +420,8 @@
     "setupUnavailable": "Could not load Wompi setup. Try reloading the page.",
     "termsLink": "Wompi terms",
     "title": "Payment method",
-    "wompiContracts": "You must review and accept:"
+    "wompiContracts": "You must review and accept:",
+    "wompiContractsAccepted": "I accept:"
   },
         "fields": {
           "available": "Available",
@@ -532,7 +536,7 @@
     "acceptance": "I accept the subscription terms and authorize recurring payments.",
     "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
     "title": "Subscription terms",
-    "trialAcceptance": "I accept starting {{days}} days at no cost and authorize the automatic charge after it ends.",
+    "trialAcceptance": "I accept starting {{days}} days at no cost and authorize the automatic {{amount}} charge on {{date}} after it ends.",
     "trialBody": "By continuing, you authorize saving your payment method and starting {{days}} days at no cost in Bigmelo. When that period ends, the selected {{interval}} plan will be charged automatically unless you cancel from Billing before that date. If the charge is approved, usage limits reset as a new plan period."
   },
   "toasts": {

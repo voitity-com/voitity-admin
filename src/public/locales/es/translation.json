@@ -338,6 +338,7 @@
         "emptySection": "No se recibieron elementos.",
   "errors": {
     "action": "No se pudo actualizar la suscripción.",
+    "cardValidation": "Wompi no pudo validar la tarjeta. Revisa número, fecha y CVC o intenta con otra tarjeta. No se hizo ningún cobro.",
     "checkout": "No se pudo iniciar el checkout de pago.",
     "checkoutUrl": "No se recibió la URL del checkout de pago.",
     "generic": "No se pudieron cargar los límites de la suscripción.",
@@ -409,7 +410,9 @@
   "paymentMethod": {
     "cardHolder": "Nombre en la tarjeta",
     "cardNumber": "Número de tarjeta",
+    "cardNumberInvalid": "Ingresa un número de tarjeta válido.",
     "cvc": "CVC",
+    "cvcInvalid": "3-4 números.",
     "expMonth": "Mes",
     "expYear": "Año",
     "loading": "Preparando el registro seguro con Wompi.",
@@ -417,7 +420,8 @@
     "setupUnavailable": "No se pudo cargar la configuración de Wompi. Intenta recargar la página.",
     "termsLink": "términos de Wompi",
     "title": "Método de pago",
-    "wompiContracts": "Debes revisar y aceptar:"
+    "wompiContracts": "Debes revisar y aceptar:",
+    "wompiContractsAccepted": "Acepto:"
   },
         "fields": {
           "available": "Disponible",
@@ -532,7 +536,7 @@
     "acceptance": "Acepto los términos de suscripción y autorizo pagos recurrentes.",
     "body": "Al continuar, aceptas iniciar una suscripción recurrente de Bigmelo. La suscripción se renueva automáticamente de forma mensual o anual según el plan seleccionado, hasta que se cancele antes de la siguiente fecha de renovación. Wompi procesa el pago y el acceso se activa solo después de la confirmación del pago. Autorizas los cobros recurrentes para futuras renovaciones y entiendes que los límites de uso se reinician mensualmente, incluso cuando el ciclo de cobro seleccionado sea anual.",
     "title": "Términos de suscripción",
-    "trialAcceptance": "Acepto iniciar {{days}} días sin costo y autorizo el cobro automático al finalizar.",
+    "trialAcceptance": "Acepto iniciar {{days}} días sin costo y autorizo el cobro automático de {{amount}} el {{date}} al finalizar.",
     "trialBody": "Al continuar, autorizas guardar tu método de pago e iniciar {{days}} días sin costo en Bigmelo. Al terminar ese período, se cobrará automáticamente el plan seleccionado con ciclo {{interval}}, salvo que canceles desde Facturación antes de esa fecha. Si el cobro se aprueba, los límites de uso se reiniciarán como un período nuevo del plan."
   },
   "toasts": {

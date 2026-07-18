@@ -24,6 +24,7 @@ import {
 import {
   getSubscriptionPaymentSourceSetup,
   initializeWompiSession,
+  PaymentApiError,
   startSubscriptionTrial,
   startSubscriptionWithPaymentSource,
   tokenizeWompiCard,
@@ -45,6 +46,7 @@ export function Page(): React.JSX.Element {
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [billing, setBilling] = React.useState<BillingState | null>(null);
   const [error, setError] = React.useState<string>('');
+  const [checkoutError, setCheckoutError] = React.useState<string>('');
   const [pendingAction, setPendingAction] = React.useState<'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null>(null);
   const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
@@ -131,6 +133,7 @@ export function Page(): React.JSX.Element {
   const handleStartCheckout = React.useCallback(
     async (plan: SubscriptionPlan, trialPaymentMethod?: TrialPaymentMethod): Promise<void> => {
       setError('');
+      setCheckoutError('');
       setIsCheckoutPending(true);
 
       try {
@@ -191,15 +194,20 @@ export function Page(): React.JSX.Element {
         }
 
         await loadBilling();
+        setCheckoutError('');
         setIsCheckoutPending(false);
       } catch (err) {
         logger.error(err);
-        setError(getErrorMessage(err, t('dashboard.settings.billing.errors.checkout')));
+        setCheckoutError(getCheckoutErrorMessage(err, t));
         setIsCheckoutPending(false);
       }
     },
     [billing?.plans.trial?.available, loadBilling, t, trialPaymentSourceSetup]
   );
+
+  const handleCheckoutErrorClear = React.useCallback((): void => {
+    setCheckoutError('');
+  }, []);
 
   const runSubscriptionAction = React.useCallback(
     async (
@@ -272,6 +280,7 @@ export function Page(): React.JSX.Element {
           </Card>
         ) : billing ? (
           <SubscriptionBilling
+            checkoutError={checkoutError}
             checkoutIntent={checkoutIntent}
             data={billing.limits}
             isCheckoutPending={isCheckoutPending}
@@ -279,6 +288,7 @@ export function Page(): React.JSX.Element {
             language={language}
             onCancelRenewal={handleCancelRenewal}
             onCancelTrial={handleCancelTrial}
+            onCheckoutErrorClear={handleCheckoutErrorClear}
             onCheckoutIntentHandled={handleCheckoutIntentHandled}
             onReactivateRenewal={handleReactivateRenewal}
             onStartCheckout={handleStartCheckout}
@@ -294,6 +304,14 @@ export function Page(): React.JSX.Element {
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function getCheckoutErrorMessage(error: unknown, t: (key: string) => string): string {
+  if (error instanceof PaymentApiError && error.message === 'Payment request failed') {
+    return t('dashboard.settings.billing.errors.cardValidation');
+  }
+
+  return getErrorMessage(error, t('dashboard.settings.billing.errors.checkout'));
 }
 
 function isMissingActiveSubscriptionError(error: unknown): boolean {
