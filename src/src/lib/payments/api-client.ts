@@ -11,8 +11,27 @@ interface RequestOptions {
   method?: 'GET' | 'POST';
 }
 
+interface WompiInitializeData {
+  deviceData?: {
+    deviceID?: string;
+  };
+  sessionId?: string;
+}
+
+interface WompiGlobal {
+  initialize: (callback: (data?: WompiInitializeData, error?: unknown) => void) => void;
+}
+
+declare global {
+  interface Window {
+    $wompi?: WompiGlobal;
+  }
+}
+
 const PENDING_PAYMENT_ORDER_STORAGE_KEY = 'bigmelo.pendingPaymentOrderId';
 const LEGACY_PENDING_PAYMENT_ORDER_STORAGE_KEY = 'voitity.pendingPaymentOrderId';
+const WOMPI_JS_URL = 'https://wompijs.wompi.com/libs/js/v1.js';
+let wompiScriptPromise: Promise<void> | null = null;
 
 export interface PaymentAmounts {
   amount_cop?: number;
@@ -65,6 +84,59 @@ export interface WompiCheckoutResponse {
   payment_order: PaymentOrder;
 }
 
+export interface WompiAcceptanceToken {
+  acceptance_token: string;
+  permalink?: string | null;
+}
+
+export interface WompiPaymentSourceSetup {
+  acceptance: WompiAcceptanceToken;
+  api_url: string;
+  environment?: string | null;
+  personal_data_auth: WompiAcceptanceToken;
+  public_key: string;
+  source: string;
+}
+
+export interface WompiCardDetails {
+  card_holder: string;
+  cvc: string;
+  exp_month: string;
+  exp_year: string;
+  number: string;
+}
+
+export interface WompiCardToken {
+  brand?: string;
+  card_holder?: string;
+  exp_month?: string;
+  exp_year?: string;
+  id: string;
+  last_four?: string;
+  name?: string;
+}
+
+export interface WompiSessionData {
+  device_id?: string;
+  session_id?: string;
+}
+
+export interface SubscriptionTrialStartResponse {
+  payment_order?: PaymentOrder;
+  payment_source?: {
+    id: number | string;
+    provider?: string;
+    provider_source_id?: string;
+    reusable?: boolean;
+    status?: string;
+    type?: string;
+    verified_at?: string | null;
+  };
+  subscription?: Record<string, unknown>;
+}
+
+export type SubscriptionPaymentSourceStartResponse = SubscriptionTrialStartResponse;
+
 export class PaymentApiError extends Error {
   public status: number;
 
@@ -84,13 +156,120 @@ export async function createWompiCheckout(payload: { plan: string }): Promise<Wo
   return normalizeWompiCheckoutResponse(response);
 }
 
-export async function createSubscriptionTrialCheckout(payload: { plan: string }): Promise<WompiCheckoutResponse> {
+export async function getSubscriptionTrialPaymentSourceSetup(): Promise<WompiPaymentSourceSetup> {
+  return getSubscriptionPaymentSourceSetup('/api/subscription/trial/payment-source-setup');
+}
+
+export async function getSubscriptionPaymentSourceSetup(
+  path = '/api/subscription/payment-source-setup'
+): Promise<WompiPaymentSourceSetup> {
+  const response = await requestJson<unknown>(path, {
+    method: 'GET',
+  });
+
+  return normalizeWompiPaymentSourceSetup(response);
+}
+
+export async function startSubscriptionTrial(payload: {
+  payment_source: {
+    accept_personal_auth: string;
+    acceptance_token: string;
+    customer_data?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+    session_id?: string;
+    token: string;
+    type: 'CARD';
+  };
+  plan: string;
+}): Promise<SubscriptionTrialStartResponse> {
   const response = await requestJson<unknown>('/api/subscription/trial', {
     body: payload,
     method: 'POST',
   });
 
-  return normalizeWompiCheckoutResponse(response);
+  return normalizeSubscriptionTrialStartResponse(response);
+}
+
+export async function startSubscriptionWithPaymentSource(payload: {
+  payment_source: {
+    accept_personal_auth: string;
+    acceptance_token: string;
+    customer_data?: Record<string, unknown>;
+    metadata?: Record<string, unknown>;
+    session_id?: string;
+    token: string;
+    type: 'CARD';
+  };
+  plan: string;
+}): Promise<SubscriptionPaymentSourceStartResponse> {
+  const response = await requestJson<unknown>('/api/subscription/payment-source', {
+    body: payload,
+    method: 'POST',
+  });
+
+  return normalizeSubscriptionTrialStartResponse(response);
+}
+
+export async function tokenizeWompiCard(setup: WompiPaymentSourceSetup, card: WompiCardDetails): Promise<WompiCardToken> {
+  const response = await fetch(`${setup.api_url.replace(/\/$/u, '')}/tokens/cards`, {
+    body: JSON.stringify({
+      card_holder: card.card_holder.trim(),
+      cvc: card.cvc.trim(),
+      exp_month: card.exp_month.trim().padStart(2, '0'),
+      exp_year: normalizeExpirationYear(card.exp_year),
+      number: card.number.replace(/\D/gu, ''),
+    }),
+    headers: {
+      Accept: 'application/json',
+      Authorization: `Bearer ${setup.public_key}`,
+      'Content-Type': 'application/json',
+    },
+    method: 'POST',
+  });
+
+  if (!response.ok) {
+    throw new PaymentApiError(await getErrorMessage(response), response.status);
+  }
+
+  const json = (await response.json()) as unknown;
+
+  return normalizeWompiCardToken(json);
+}
+
+export async function initializeWompiSession(setup: WompiPaymentSourceSetup): Promise<WompiSessionData> {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  try {
+    await loadWompiScript(setup.public_key);
+
+    if (!window.$wompi) {
+      return {};
+    }
+
+    return await new Promise<WompiSessionData>((resolve) => {
+      const timeout = window.setTimeout(() => {
+        resolve({});
+      }, 3000);
+
+      window.$wompi?.initialize((data, error) => {
+        window.clearTimeout(timeout);
+
+        if (error || !data) {
+          resolve({});
+          return;
+        }
+
+        resolve({
+          device_id: data.deviceData?.deviceID,
+          session_id: data.sessionId,
+        });
+      });
+    });
+  } catch {
+    return {};
+  }
 }
 
 export async function getPaymentOrder(paymentOrderId: number | string): Promise<PaymentOrder> {
@@ -147,6 +326,71 @@ function normalizeWompiCheckoutResponse(response: unknown): WompiCheckoutRespons
   return { checkout, payment_order: paymentOrder };
 }
 
+function normalizeWompiPaymentSourceSetup(response: unknown): WompiPaymentSourceSetup {
+  const data = getResponseData(response);
+
+  if (!isRecord(data)) {
+    throw new Error('Invalid payment source setup response');
+  }
+
+  const acceptance = isRecord(data.acceptance) ? data.acceptance : {};
+  const personalDataAuth = isRecord(data.personal_data_auth) ? data.personal_data_auth : {};
+  const acceptanceToken = getStringField(acceptance, ['acceptance_token', 'acceptanceToken']);
+  const personalDataAuthToken = getStringField(personalDataAuth, ['acceptance_token', 'acceptanceToken']);
+  const publicKey = getStringField(data, ['public_key', 'publicKey']);
+  const apiUrl = getStringField(data, ['api_url', 'apiUrl']);
+  const source = getStringField(data, ['source']) ?? 'wompi';
+
+  if (!acceptanceToken || !personalDataAuthToken || !publicKey || !apiUrl) {
+    throw new Error('Incomplete payment source setup response');
+  }
+
+  return {
+    acceptance: {
+      acceptance_token: acceptanceToken,
+      permalink: getStringField(acceptance, ['permalink']),
+    },
+    api_url: apiUrl,
+    environment: getStringField(data, ['environment']),
+    personal_data_auth: {
+      acceptance_token: personalDataAuthToken,
+      permalink: getStringField(personalDataAuth, ['permalink']),
+    },
+    public_key: publicKey,
+    source,
+  };
+}
+
+function normalizeSubscriptionTrialStartResponse(response: unknown): SubscriptionTrialStartResponse {
+  const data = getResponseData(response);
+
+  return isRecord(data) ? (data as SubscriptionTrialStartResponse) : {};
+}
+
+function normalizeWompiCardToken(response: unknown): WompiCardToken {
+  const data = getResponseData(response);
+
+  if (!isRecord(data)) {
+    throw new Error('Invalid Wompi card token response');
+  }
+
+  const tokenId = getStringField(data, ['id']);
+
+  if (!tokenId) {
+    throw new Error('Wompi card token was not returned');
+  }
+
+  return {
+    brand: getStringField(data, ['brand']),
+    card_holder: getStringField(data, ['card_holder', 'cardHolder']),
+    exp_month: getStringField(data, ['exp_month', 'expMonth']),
+    exp_year: getStringField(data, ['exp_year', 'expYear']),
+    id: tokenId,
+    last_four: getStringField(data, ['last_four', 'lastFour']),
+    name: getStringField(data, ['name']),
+  };
+}
+
 function normalizePaymentOrderResponse(response: unknown): PaymentOrder {
   const data = getResponseData(response);
   const paymentOrder = normalizePaymentOrder(data);
@@ -186,6 +430,58 @@ function isApiEnvelope<T>(response: unknown): response is ApiEnvelope<T> {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function getStringField(value: Record<string, unknown>, fields: string[]): string | undefined {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'string' && rawValue.trim()) {
+      return rawValue;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeExpirationYear(value: string): string {
+  const digits = value.replace(/\D/gu, '');
+
+  return digits.length > 2 ? digits.slice(-2) : digits.padStart(2, '0');
+}
+
+function loadWompiScript(publicKey: string): Promise<void> {
+  if (typeof window === 'undefined') {
+    return Promise.resolve();
+  }
+
+  if (window.$wompi) {
+    return Promise.resolve();
+  }
+
+  if (wompiScriptPromise) {
+    return wompiScriptPromise;
+  }
+
+  wompiScriptPromise = new Promise<void>((resolve, reject) => {
+    const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${WOMPI_JS_URL}"]`);
+
+    if (existingScript) {
+      existingScript.addEventListener('load', () => resolve(), { once: true });
+      existingScript.addEventListener('error', () => reject(new Error('Could not load Wompi JS')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.dataset.publicKey = publicKey;
+    script.src = WOMPI_JS_URL;
+    script.addEventListener('load', () => resolve(), { once: true });
+    script.addEventListener('error', () => reject(new Error('Could not load Wompi JS')), { once: true });
+    document.head.appendChild(script);
+  });
+
+  return wompiScriptPromise;
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {

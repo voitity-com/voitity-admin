@@ -340,7 +340,10 @@
     "action": "Could not update the subscription.",
     "checkout": "Could not start the payment checkout.",
     "checkoutUrl": "The payment checkout URL was not returned.",
-    "generic": "Could not load subscription limits."
+    "generic": "Could not load subscription limits.",
+    "paymentDeclined": "Wompi did not approve the payment. Try another payment method.",
+    "paymentMethod": "Complete the payment method to continue.",
+    "paymentSourceSetup": "Could not prepare Wompi payment method setup."
   },
   "actions": {
     "acquirePlan": "Acquire plan",
@@ -402,6 +405,19 @@
     "trialSubheader": "Today you start {{days}} days at no cost after Wompi confirms a reusable payment method.",
     "trialWompiNotice": "This step saves the payment method for the first automatic charge. If Wompi does not confirm a reusable payment method, the trial will not start.",
     "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
+  },
+  "paymentMethod": {
+    "cardHolder": "Name on card",
+    "cardNumber": "Card number",
+    "cvc": "CVC",
+    "expMonth": "Month",
+    "expYear": "Year",
+    "loading": "Preparing secure setup with Wompi.",
+    "privacyLink": "data authorization",
+    "setupUnavailable": "Could not load Wompi setup. Try reloading the page.",
+    "termsLink": "Wompi terms",
+    "title": "Payment method",
+    "wompiContracts": "You must review and accept:"
   },
         "fields": {
           "available": "Available",
@@ -522,6 +538,9 @@
   "toasts": {
     "renewalCancelled": "Automatic renewal cancelled.",
     "renewalReactivated": "Automatic renewal reactivated.",
+    "paymentPending": "The payment is pending. We will notify you when Wompi confirms it.",
+    "subscriptionStarted": "Subscription activated.",
+    "trialStarted": "Free trial started.",
     "trialCancelled": "Free trial cancelled."
   },
         "usage": {
@@ -928,6 +947,14 @@
         "publicationDock": {
           "activate": "Activate and publish",
           "blocked": "{{count}} missing requirements",
+          "confirmDialog": {
+            "activateConfirm": "Activate",
+            "activateDescription": "The profile will be available on its public page and able to answer visitors.",
+            "activateTitle": "Activate profile",
+            "deactivateConfirm": "Deactivate",
+            "deactivateDescription": "The profile will no longer be publicly available. You can activate it again later.",
+            "deactivateTitle": "Deactivate profile"
+          },
           "deactivate": "Deactivate profile",
           "dialogDescription": "Complete these requirements before activating and publishing this profile.",
           "dialogTitle": "Profile cannot be activated",

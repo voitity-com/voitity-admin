@@ -2,9 +2,19 @@
 
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import ListSubheader from '@mui/material/ListSubheader';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
+import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
@@ -40,6 +50,8 @@ export function ProfileSideNav(): React.JSX.Element {
   const pathname = usePathname();
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
 
   const items = React.useMemo<NavEntry[]>(
     () => [
@@ -113,24 +125,38 @@ export function ProfileSideNav(): React.JSX.Element {
     ],
     [profileId, t]
   );
+  const activeNavContext = getActiveNavContext(items, pathname);
+  const activeItem = activeNavContext.item;
 
   return (
     <Stack
       id="profile-detail-side-nav"
-      spacing={3}
+      spacing={1}
       sx={{
         flex: '0 0 auto',
-        position: { md: 'sticky' },
-        top: '64px',
+        position: { xs: 'sticky', md: 'sticky' },
+        top: { xs: '64px', md: '64px' },
+        zIndex: { xs: 10, md: 'auto' },
         width: { xs: '100%', md: '240px' },
       }}
     >
-      <Stack component="ul" spacing={1} sx={{ listStyle: 'none', m: 0, p: 0 }}>
+      <MobileProfileNav
+        activeItem={activeItem}
+        activeParentTitle={activeNavContext.parentTitle}
+        includeActiveId={!isDesktop}
+        items={items}
+        pathname={pathname}
+      />
+      <Stack
+        component="ul"
+        spacing={1}
+        sx={{ display: { xs: 'none', md: 'flex' }, listStyle: 'none', m: 0, p: 0 }}
+      >
         {items.map((item) =>
           isNavGroup(item) ? (
-            <NavGroup {...item} key={item.key} pathname={pathname} />
+            <NavGroup {...item} includeItemIds={isDesktop} key={item.key} pathname={pathname} />
           ) : (
-            <NavItem {...item} itemKey={item.key} key={item.key} pathname={pathname} />
+            <NavItem {...item} includeId={isDesktop} itemKey={item.key} key={item.key} pathname={pathname} />
           )
         )}
       </Stack>
@@ -140,6 +166,7 @@ export function ProfileSideNav(): React.JSX.Element {
 
 interface NavGroupProps {
   children: NavItemConfig[];
+  includeItemIds?: boolean;
   icon: string;
   pathname: string;
   title: string;
@@ -148,6 +175,7 @@ interface NavGroupProps {
 interface NavItemProps {
   href: string;
   icon: string;
+  includeId?: boolean;
   itemKey?: string;
   pathname: string;
   title: string;
@@ -174,7 +202,200 @@ function isNavGroup(item: NavEntry): item is NavGroupConfig {
   return 'children' in item;
 }
 
-function NavGroup({ children, icon, pathname, title }: NavGroupProps): React.JSX.Element {
+function getActiveNavContext(items: NavEntry[], pathname: string): { item: NavItemConfig; parentTitle?: string } {
+  for (const entry of items) {
+    if (isNavGroup(entry)) {
+      const activeChild = entry.children.find((item) => isNavItemActive({ href: item.href, pathname }));
+
+      if (activeChild) {
+        return { item: activeChild, parentTitle: entry.title };
+      }
+
+      continue;
+    }
+
+    if (isNavItemActive({ href: entry.href, pathname })) {
+      return { item: entry };
+    }
+  }
+
+  return { item: flattenNavItems(items)[0] };
+}
+
+function flattenNavItems(items: NavEntry[]): NavItemConfig[] {
+  return items.flatMap((item) => (isNavGroup(item) ? item.children : [item]));
+}
+
+function MobileProfileNav({
+  activeItem,
+  activeParentTitle,
+  includeActiveId,
+  items,
+  pathname,
+}: {
+  activeItem: NavItemConfig;
+  activeParentTitle?: string;
+  includeActiveId: boolean;
+  items: NavEntry[];
+  pathname: string;
+}): React.JSX.Element {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const ActiveIcon = icons[activeItem.icon];
+
+  const handleOpen = React.useCallback((event: React.MouseEvent<HTMLButtonElement>): void => {
+    setAnchorEl(event.currentTarget);
+  }, []);
+
+  const handleClose = React.useCallback((): void => {
+    setAnchorEl(null);
+  }, []);
+
+  return (
+    <Box
+      id={includeActiveId ? `profile-detail-nav-${activeItem.key}` : undefined}
+      sx={{
+        bgcolor: 'var(--mui-palette-background-paper)',
+        display: { xs: 'block', md: 'none' },
+        pb: 1,
+      }}
+    >
+      <Button
+        aria-controls={open ? 'profile-detail-mobile-nav-menu' : undefined}
+        aria-expanded={open ? 'true' : undefined}
+        aria-haspopup="menu"
+        endIcon={<CaretDownIcon fontSize="var(--icon-fontSize-sm)" />}
+        fullWidth
+        onClick={handleOpen}
+        startIcon={<ActiveIcon fontSize="var(--icon-fontSize-md)" weight="fill" />}
+        sx={{
+          bgcolor: 'var(--mui-palette-background-paper)',
+          borderColor: 'var(--mui-palette-divider)',
+          color: 'var(--mui-palette-text-primary)',
+          height: 44,
+          justifyContent: 'space-between',
+          px: 1.5,
+          textTransform: 'none',
+          '& .MuiButton-endIcon': { ml: 'auto' },
+          '& .MuiButton-startIcon': { mr: 1 },
+        }}
+        variant="outlined"
+      >
+        <Box component="span" sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis' }}>
+          {activeParentTitle ? `${activeParentTitle} / ${activeItem.title}` : activeItem.title}
+        </Box>
+      </Button>
+      <Menu
+        anchorEl={anchorEl}
+        id="profile-detail-mobile-nav-menu"
+        onClose={handleClose}
+        open={open}
+        PaperProps={{
+          sx: {
+            maxHeight: 'min(380px, 68vh)',
+            mt: 0.75,
+            width: anchorEl?.clientWidth ?? '100%',
+          },
+        }}
+      >
+        {items.map((item, index) =>
+          isNavGroup(item) ? (
+            <React.Fragment key={item.key}>
+              <MobileNavGroupHeader item={item} pathname={pathname} />
+              <Box
+                sx={{
+                  borderLeft: '1px solid var(--mui-palette-divider)',
+                  mb: 0.75,
+                  ml: 2.75,
+                  pl: 0.75,
+                }}
+              >
+                {item.children.map((child) => (
+                  <MobileNavItem item={child} key={child.key} nested onClose={handleClose} pathname={pathname} />
+                ))}
+              </Box>
+              {index < items.length - 1 ? <Divider sx={{ my: 0.5 }} /> : null}
+            </React.Fragment>
+          ) : (
+            <MobileNavItem item={item} key={item.key} onClose={handleClose} pathname={pathname} />
+          )
+        )}
+      </Menu>
+    </Box>
+  );
+}
+
+function MobileNavGroupHeader({ item, pathname }: { item: NavGroupConfig; pathname: string }): React.JSX.Element {
+  const active = item.children.some((child) => isNavItemActive({ href: child.href, pathname }));
+  const Icon = icons[item.icon];
+
+  return (
+    <ListSubheader
+      disableSticky
+      sx={{
+        bgcolor: 'transparent',
+        color: active ? 'var(--mui-palette-text-primary)' : 'var(--mui-palette-text-secondary)',
+        lineHeight: 'normal',
+        px: 1.5,
+        py: 0.75,
+      }}
+    >
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+        <Icon
+          fill={active ? 'var(--mui-palette-text-primary)' : 'var(--mui-palette-text-secondary)'}
+          fontSize="var(--icon-fontSize-sm)"
+          weight={active ? 'fill' : undefined}
+        />
+        <Typography component="span" sx={{ color: 'inherit', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
+          {item.title}
+        </Typography>
+      </Stack>
+    </ListSubheader>
+  );
+}
+
+function MobileNavItem({
+  item,
+  nested = false,
+  onClose,
+  pathname,
+}: {
+  item: NavItemConfig;
+  nested?: boolean;
+  onClose: () => void;
+  pathname: string;
+}): React.JSX.Element {
+  const active = isNavItemActive({ href: item.href, pathname });
+  const Icon = icons[item.icon];
+
+  return (
+    <MenuItem
+      component={RouterLink}
+      href={item.href}
+      onClick={onClose}
+      selected={active}
+      sx={{
+        borderRadius: 1,
+        minHeight: nested ? 40 : 44,
+        mx: 0.75,
+        my: 0.25,
+        pl: nested ? 1 : 1.5,
+        pr: 1.5,
+      }}
+    >
+      <ListItemIcon sx={{ minWidth: nested ? 32 : 36 }}>
+        <Icon
+          fill={active ? 'var(--mui-palette-text-primary)' : 'var(--mui-palette-text-secondary)'}
+          fontSize={nested ? 'var(--icon-fontSize-sm)' : 'var(--icon-fontSize-md)'}
+          weight={active ? 'fill' : undefined}
+        />
+      </ListItemIcon>
+      <ListItemText primary={item.title} primaryTypographyProps={{ noWrap: true }} />
+    </MenuItem>
+  );
+}
+
+function NavGroup({ children, icon, includeItemIds = true, pathname, title }: NavGroupProps): React.JSX.Element {
   const active = children.some((item) => isNavItemActive({ href: item.href, pathname }));
   const Icon = icons[icon];
 
@@ -217,17 +438,17 @@ function NavGroup({ children, icon, pathname, title }: NavGroupProps): React.JSX
         }}
       >
         {children.map((item) => (
-          <NavItem {...item} itemKey={item.key} key={item.key} nested pathname={pathname} />
+          <NavItem {...item} includeId={includeItemIds} itemKey={item.key} key={item.key} nested pathname={pathname} />
         ))}
       </Stack>
     </Box>
   );
 }
 
-function NavItem({ href, icon, itemKey, nested = false, pathname, title }: NavItemProps): React.JSX.Element {
+function NavItem({ href, icon, includeId = true, itemKey, nested = false, pathname, title }: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ href, pathname });
   const Icon = icons[icon];
-  const navItemId = itemKey ? `profile-detail-nav-${itemKey}` : undefined;
+  const navItemId = includeId && itemKey ? `profile-detail-nav-${itemKey}` : undefined;
 
   return (
     <Box component="li" id={navItemId} sx={{ borderRadius: 1, userSelect: 'none' }}>

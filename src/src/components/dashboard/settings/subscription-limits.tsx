@@ -17,11 +17,12 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import Link from '@mui/material/Link';
 import LinearProgress from '@mui/material/LinearProgress';
 import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Unstable_Grid2';
-import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { CheckCircle as CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle';
@@ -42,6 +43,7 @@ import { paths } from '@/paths';
 import { NoSsr } from '@/components/core/no-ssr';
 import { RouterLink } from '@/components/core/link';
 import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
+import type { WompiCardDetails, WompiPaymentSourceSetup } from '@/lib/payments/api-client';
 import type {
   JsonObject,
   JsonValue,
@@ -60,12 +62,18 @@ export interface SubscriptionLimitsProps {
 export interface SubscriptionBillingProps extends SubscriptionLimitsProps {
   checkoutIntent?: CheckoutIntent | null;
   isCheckoutPending?: boolean;
+  isTrialPaymentSourceSetupLoading?: boolean;
   onCancelRenewal?: () => Promise<void>;
   onCancelTrial?: () => Promise<void>;
   onCheckoutIntentHandled?: () => void;
   onReactivateRenewal?: () => Promise<void>;
-  onStartCheckout?: (plan: SubscriptionPlan) => Promise<void>;
+  onStartCheckout?: (plan: SubscriptionPlan, trialPaymentMethod?: TrialPaymentMethod) => Promise<void>;
   pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null;
+  trialPaymentSourceSetup?: WompiPaymentSourceSetup | null;
+}
+
+export interface TrialPaymentMethod {
+  card: WompiCardDetails;
 }
 
 type BillingInterval = 'annual' | 'monthly';
@@ -139,6 +147,7 @@ export function SubscriptionBilling({
   checkoutIntent,
   data,
   isCheckoutPending = false,
+  isTrialPaymentSourceSetupLoading = false,
   language,
   onCancelRenewal,
   onCancelTrial,
@@ -147,6 +156,7 @@ export function SubscriptionBilling({
   onStartCheckout,
   pendingAction = null,
   plansData,
+  trialPaymentSourceSetup = null,
 }: SubscriptionBillingProps): React.JSX.Element {
   const { t } = useTranslation();
   const hasActiveSubscription = hasActiveSubscriptionData(data);
@@ -208,12 +218,12 @@ export function SubscriptionBilling({
     setCheckoutPlanId(undefined);
   }, [isCheckoutPending]);
 
-  const handleStartCheckout = React.useCallback(async (): Promise<void> => {
+  const handleStartCheckout = React.useCallback(async (trialPaymentMethod?: TrialPaymentMethod): Promise<void> => {
     if (!selectedPlan || !onStartCheckout) {
       return;
     }
 
-    await onStartCheckout(selectedPlan);
+    await onStartCheckout(selectedPlan, trialPaymentMethod);
   }, [onStartCheckout, selectedPlan]);
 
   if (!Object.keys(data).length && !plansData?.plans.length) {
@@ -270,12 +280,14 @@ export function SubscriptionBilling({
           canStartCheckout={canStartCheckout}
           cycle={checkoutCycle}
           isCheckoutPending={isCheckoutPending}
+          isTrialPaymentSourceSetupLoading={isTrialPaymentSourceSetupLoading}
           language={language}
           onAcceptedTermsChange={setAcceptedTerms}
           onClose={handleCloseCheckout}
           onStartCheckout={handleStartCheckout}
           open={Boolean(checkoutCycle)}
           t={t}
+          trialPaymentSourceSetup={trialPaymentSourceSetup}
         />
       ) : null}
     </Grid>
@@ -750,29 +762,53 @@ function CheckoutAgreementDialog({
   canStartCheckout,
   cycle,
   isCheckoutPending,
+  isTrialPaymentSourceSetupLoading,
   language,
   onAcceptedTermsChange,
   onClose,
   onStartCheckout,
   open,
   t,
+  trialPaymentSourceSetup,
 }: {
   acceptedTerms: boolean;
   canStartCheckout: boolean;
   cycle?: BillingCycleOption;
   isCheckoutPending: boolean;
+  isTrialPaymentSourceSetupLoading: boolean;
   language: string;
   onAcceptedTermsChange: (value: boolean) => void;
   onClose: () => void;
-  onStartCheckout: () => Promise<void>;
+  onStartCheckout: (trialPaymentMethod?: TrialPaymentMethod) => Promise<void>;
   open: boolean;
   t: TFunction;
+  trialPaymentSourceSetup?: WompiPaymentSourceSetup | null;
 }): React.JSX.Element {
   const trial = cycle?.trial?.available ? cycle.trial : undefined;
+  const requiresPaymentSource = Boolean(cycle);
   const todayDisplayAmount = trial ? (trial.setup_amount_usd ?? 0) : cycle?.priceUsd;
   const processingAmount = trial ? (trial.setup_amount_cop ?? 0) : cycle?.processingAmount;
   const processingCurrency = cycle?.processingCurrency ?? 'COP';
   const firstChargeDate = trial ? formatFutureDate(trial.days, language) : undefined;
+  const [trialCard, setTrialCard] = React.useState<WompiCardDetails>(() => emptyTrialCard());
+  const canSubmit =
+    canStartCheckout &&
+    (!requiresPaymentSource ||
+      (Boolean(trialPaymentSourceSetup) && !isTrialPaymentSourceSetupLoading && isTrialCardValid(trialCard)));
+
+  React.useEffect(() => {
+    if (!open) {
+      setTrialCard(emptyTrialCard());
+    }
+  }, [open]);
+
+  const handleTrialCardChange = React.useCallback(
+    (field: keyof WompiCardDetails) =>
+      (event: React.ChangeEvent<HTMLInputElement>): void => {
+        setTrialCard((current) => ({ ...current, [field]: event.target.value }));
+      },
+    []
+  );
 
   return (
     <Dialog fullWidth maxWidth="md" onClose={onClose} open={open}>
@@ -857,6 +893,90 @@ function CheckoutAgreementDialog({
                       })}
                 </Typography>
               </Box>
+              {requiresPaymentSource ? (
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2">{t('dashboard.settings.billing.paymentMethod.title')}</Typography>
+                  {isTrialPaymentSourceSetupLoading ? (
+                    <Alert severity="info" variant="outlined">
+                      {t('dashboard.settings.billing.paymentMethod.loading')}
+                    </Alert>
+                  ) : trialPaymentSourceSetup ? (
+                    <Typography color="text.secondary" variant="body2">
+                      {t('dashboard.settings.billing.paymentMethod.wompiContracts')}{' '}
+                      {trialPaymentSourceSetup.acceptance.permalink ? (
+                        <Link href={trialPaymentSourceSetup.acceptance.permalink} rel="noreferrer" target="_blank">
+                          {t('dashboard.settings.billing.paymentMethod.termsLink')}
+                        </Link>
+                      ) : null}
+                      {trialPaymentSourceSetup.acceptance.permalink &&
+                      trialPaymentSourceSetup.personal_data_auth.permalink
+                        ? ' · '
+                        : null}
+                      {trialPaymentSourceSetup.personal_data_auth.permalink ? (
+                        <Link href={trialPaymentSourceSetup.personal_data_auth.permalink} rel="noreferrer" target="_blank">
+                          {t('dashboard.settings.billing.paymentMethod.privacyLink')}
+                        </Link>
+                      ) : null}
+                    </Typography>
+                  ) : (
+                    <Alert severity="warning" variant="outlined">
+                      {t('dashboard.settings.billing.paymentMethod.setupUnavailable')}
+                    </Alert>
+                  )}
+                  <Grid container spacing={2}>
+                    <Grid xs={12}>
+                      <TextField
+                        disabled={isCheckoutPending}
+                        fullWidth
+                        label={t('dashboard.settings.billing.paymentMethod.cardHolder')}
+                        onChange={handleTrialCardChange('card_holder')}
+                        value={trialCard.card_holder}
+                      />
+                    </Grid>
+                    <Grid xs={12}>
+                      <TextField
+                        disabled={isCheckoutPending}
+                        fullWidth
+                        inputProps={{ inputMode: 'numeric' }}
+                        label={t('dashboard.settings.billing.paymentMethod.cardNumber')}
+                        onChange={handleTrialCardChange('number')}
+                        value={trialCard.number}
+                      />
+                    </Grid>
+                    <Grid sm={4} xs={12}>
+                      <TextField
+                        disabled={isCheckoutPending}
+                        fullWidth
+                        inputProps={{ inputMode: 'numeric', maxLength: 2 }}
+                        label={t('dashboard.settings.billing.paymentMethod.expMonth')}
+                        onChange={handleTrialCardChange('exp_month')}
+                        value={trialCard.exp_month}
+                      />
+                    </Grid>
+                    <Grid sm={4} xs={12}>
+                      <TextField
+                        disabled={isCheckoutPending}
+                        fullWidth
+                        inputProps={{ inputMode: 'numeric', maxLength: 4 }}
+                        label={t('dashboard.settings.billing.paymentMethod.expYear')}
+                        onChange={handleTrialCardChange('exp_year')}
+                        value={trialCard.exp_year}
+                      />
+                    </Grid>
+                    <Grid sm={4} xs={12}>
+                      <TextField
+                        disabled={isCheckoutPending}
+                        fullWidth
+                        inputProps={{ inputMode: 'numeric', maxLength: 4 }}
+                        label={t('dashboard.settings.billing.paymentMethod.cvc')}
+                        onChange={handleTrialCardChange('cvc')}
+                        type="password"
+                        value={trialCard.cvc}
+                      />
+                    </Grid>
+                  </Grid>
+                </Stack>
+              ) : null}
               <FormControlLabel
                 control={
                   <Checkbox
@@ -883,10 +1003,9 @@ function CheckoutAgreementDialog({
           {t('dashboard.settings.billing.actions.cancel')}
         </Button>
         <Button
-          disabled={!canStartCheckout}
-          endIcon={isCheckoutPending ? undefined : <ArrowSquareOutIcon />}
+          disabled={!canSubmit}
           onClick={() => {
-            void onStartCheckout();
+            void onStartCheckout({ card: normalizedTrialCard(trialCard) });
           }}
           startIcon={isCheckoutPending ? <CircularProgress color="inherit" size={16} /> : <CreditCardIcon />}
           variant="contained"
@@ -912,6 +1031,41 @@ function SummaryRow({ label, value }: { label: string; value: string }): React.J
         {value}
       </Typography>
     </Stack>
+  );
+}
+
+function emptyTrialCard(): WompiCardDetails {
+  return {
+    card_holder: '',
+    cvc: '',
+    exp_month: '',
+    exp_year: '',
+    number: '',
+  };
+}
+
+function normalizedTrialCard(card: WompiCardDetails): WompiCardDetails {
+  return {
+    card_holder: card.card_holder.trim(),
+    cvc: card.cvc.trim(),
+    exp_month: card.exp_month.trim(),
+    exp_year: card.exp_year.trim(),
+    number: card.number.replace(/\s/gu, ''),
+  };
+}
+
+function isTrialCardValid(card: WompiCardDetails): boolean {
+  const normalizedCard = normalizedTrialCard(card);
+  const month = Number(normalizedCard.exp_month);
+
+  return (
+    normalizedCard.card_holder.trim().length >= 5 &&
+    /^\d{12,19}$/u.test(normalizedCard.number.replace(/\D/gu, '')) &&
+    Number.isInteger(month) &&
+    month >= 1 &&
+    month <= 12 &&
+    /^\d{2,4}$/u.test(normalizedCard.exp_year) &&
+    /^\d{3,4}$/u.test(normalizedCard.cvc)
   );
 }
 

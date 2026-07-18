@@ -340,7 +340,10 @@
     "action": "No se pudo actualizar la suscripción.",
     "checkout": "No se pudo iniciar el checkout de pago.",
     "checkoutUrl": "No se recibió la URL del checkout de pago.",
-    "generic": "No se pudieron cargar los límites de la suscripción."
+    "generic": "No se pudieron cargar los límites de la suscripción.",
+    "paymentDeclined": "Wompi no aprobó el pago. Intenta con otro método de pago.",
+    "paymentMethod": "Completa el método de pago para continuar.",
+    "paymentSourceSetup": "No se pudo preparar el registro del método de pago con Wompi."
   },
   "actions": {
     "acquirePlan": "Adquirir plan",
@@ -402,6 +405,19 @@
     "trialSubheader": "Hoy activas {{days}} días sin costo cuando Wompi confirme un método de pago reutilizable.",
     "trialWompiNotice": "Este paso guarda el método de pago para el primer cobro automático. Si Wompi no confirma un método reutilizable, la prueba no se activará.",
     "wompiNotice": "El plan se muestra en USD. Wompi procesa el pago en COP usando la tasa de cambio configurada."
+  },
+  "paymentMethod": {
+    "cardHolder": "Nombre en la tarjeta",
+    "cardNumber": "Número de tarjeta",
+    "cvc": "CVC",
+    "expMonth": "Mes",
+    "expYear": "Año",
+    "loading": "Preparando el registro seguro con Wompi.",
+    "privacyLink": "autorización de datos",
+    "setupUnavailable": "No se pudo cargar la configuración de Wompi. Intenta recargar la página.",
+    "termsLink": "términos de Wompi",
+    "title": "Método de pago",
+    "wompiContracts": "Debes revisar y aceptar:"
   },
         "fields": {
           "available": "Disponible",
@@ -522,6 +538,9 @@
   "toasts": {
     "renewalCancelled": "Renovación automática cancelada.",
     "renewalReactivated": "Renovación automática reactivada.",
+    "paymentPending": "El pago quedó pendiente. Te avisaremos cuando Wompi lo confirme.",
+    "subscriptionStarted": "Suscripción activada.",
+    "trialStarted": "Prueba sin costo activada.",
     "trialCancelled": "Prueba sin costo cancelada."
   },
         "usage": {
@@ -928,6 +947,14 @@
         "publicationDock": {
           "activate": "Activar y publicar",
           "blocked": "{{count}} requisitos pendientes",
+          "confirmDialog": {
+            "activateConfirm": "Activar",
+            "activateDescription": "El perfil quedará disponible en su página pública y podrá responder a visitantes.",
+            "activateTitle": "Activar perfil",
+            "deactivateConfirm": "Desactivar",
+            "deactivateDescription": "El perfil dejará de estar disponible públicamente. Puedes volver a activarlo después.",
+            "deactivateTitle": "Desactivar perfil"
+          },
           "deactivate": "Desactivar perfil",
           "dialogDescription": "Completa estos requisitos antes de activar y publicar este perfil.",
           "dialogTitle": "No se puede activar el perfil",
