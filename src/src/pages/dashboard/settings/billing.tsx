@@ -21,9 +21,16 @@ import {
   reactivateSubscriptionRenewal,
   SubscriptionApiError,
 } from '@/lib/subscription/api-client';
-import { createSubscriptionTrialCheckout, createWompiCheckout, savePendingPaymentOrderId } from '@/lib/payments/api-client';
+import {
+  getSubscriptionPaymentSourceSetup,
+  initializeWompiSession,
+  startSubscriptionTrial,
+  startSubscriptionWithPaymentSource,
+  tokenizeWompiCard,
+  type WompiPaymentSourceSetup,
+} from '@/lib/payments/api-client';
 import { logger } from '@/lib/default-logger';
-import { SubscriptionBilling } from '@/components/dashboard/settings/subscription-limits';
+import { SubscriptionBilling, type TrialPaymentMethod } from '@/components/dashboard/settings/subscription-limits';
 
 const metadata = { title: `Billing | Settings | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -41,6 +48,9 @@ export function Page(): React.JSX.Element {
   const [pendingAction, setPendingAction] = React.useState<'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null>(null);
   const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isTrialPaymentSourceSetupLoading, setIsTrialPaymentSourceSetupLoading] = React.useState<boolean>(false);
+  const [hasRequestedTrialPaymentSourceSetup, setHasRequestedTrialPaymentSourceSetup] = React.useState<boolean>(false);
+  const [trialPaymentSourceSetup, setTrialPaymentSourceSetup] = React.useState<WompiPaymentSourceSetup | null>(null);
   const checkoutIntent = React.useMemo(
     () => getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent(),
     [searchParams]
@@ -83,30 +93,112 @@ export function Page(): React.JSX.Element {
     });
   }, [loadBilling]);
 
+  const loadTrialPaymentSourceSetup = React.useCallback(async (): Promise<void> => {
+    setHasRequestedTrialPaymentSourceSetup(true);
+    setIsTrialPaymentSourceSetupLoading(true);
+
+    try {
+      setTrialPaymentSourceSetup(await getSubscriptionPaymentSourceSetup());
+    } catch (err) {
+      logger.error(err);
+      setTrialPaymentSourceSetup(null);
+      setError(getErrorMessage(err, t('dashboard.settings.billing.errors.paymentSourceSetup')));
+    } finally {
+      setIsTrialPaymentSourceSetupLoading(false);
+    }
+  }, [t]);
+
+  React.useEffect(() => {
+    if (!billing || hasActiveSubscriptionData(billing.limits)) {
+      setTrialPaymentSourceSetup(null);
+      setHasRequestedTrialPaymentSourceSetup(false);
+      return;
+    }
+
+    if (!trialPaymentSourceSetup && !isTrialPaymentSourceSetupLoading && !hasRequestedTrialPaymentSourceSetup) {
+      loadTrialPaymentSourceSetup().catch((err) => {
+        logger.error(err);
+      });
+    }
+  }, [
+    billing,
+    hasRequestedTrialPaymentSourceSetup,
+    isTrialPaymentSourceSetupLoading,
+    loadTrialPaymentSourceSetup,
+    trialPaymentSourceSetup,
+  ]);
+
   const handleStartCheckout = React.useCallback(
-    async (plan: SubscriptionPlan): Promise<void> => {
+    async (plan: SubscriptionPlan, trialPaymentMethod?: TrialPaymentMethod): Promise<void> => {
       setError('');
       setIsCheckoutPending(true);
 
       try {
-        const checkout = billing?.plans.trial?.available
-          ? await createSubscriptionTrialCheckout({ plan: plan.id })
-          : await createWompiCheckout({ plan: plan.id });
-        const checkoutUrl = checkout.checkout.checkout_url ?? checkout.payment_order.checkout_url;
-
-        if (!checkoutUrl) {
-          throw new Error(t('dashboard.settings.billing.errors.checkoutUrl'));
+        if (!trialPaymentSourceSetup) {
+          throw new Error(t('dashboard.settings.billing.errors.paymentSourceSetup'));
         }
 
-        savePendingPaymentOrderId(checkout.payment_order.id);
-        window.location.assign(checkoutUrl);
+        if (!trialPaymentMethod) {
+          throw new Error(t('dashboard.settings.billing.errors.paymentMethod'));
+        }
+
+        const [session, cardToken] = await Promise.all([
+          initializeWompiSession(trialPaymentSourceSetup),
+          tokenizeWompiCard(trialPaymentSourceSetup, trialPaymentMethod.card),
+        ]);
+        const paymentSourcePayload = {
+          accept_personal_auth: trialPaymentSourceSetup.personal_data_auth.acceptance_token,
+          acceptance_token: trialPaymentSourceSetup.acceptance.acceptance_token,
+          customer_data: {
+            device_id: session.device_id,
+            full_name: trialPaymentMethod.card.card_holder,
+          },
+          metadata: {
+            card: {
+              brand: cardToken.brand,
+              exp_month: cardToken.exp_month,
+              exp_year: cardToken.exp_year,
+              last_four: cardToken.last_four,
+              name: cardToken.name,
+            },
+            wompi_environment: trialPaymentSourceSetup.environment,
+          },
+          session_id: session.session_id,
+          token: cardToken.id,
+          type: 'CARD' as const,
+        };
+
+        if (billing?.plans.trial?.available) {
+          await startSubscriptionTrial({
+            payment_source: paymentSourcePayload,
+            plan: plan.id,
+          });
+
+          toast.success(t('dashboard.settings.billing.toasts.trialStarted'));
+        } else {
+          const result = await startSubscriptionWithPaymentSource({
+            payment_source: paymentSourcePayload,
+            plan: plan.id,
+          });
+
+          if (result.payment_order?.status === 'approved') {
+            toast.success(t('dashboard.settings.billing.toasts.subscriptionStarted'));
+          } else if (result.payment_order?.status === 'pending') {
+            toast(t('dashboard.settings.billing.toasts.paymentPending'));
+          } else {
+            throw new Error(t('dashboard.settings.billing.errors.paymentDeclined'));
+          }
+        }
+
+        await loadBilling();
+        setIsCheckoutPending(false);
       } catch (err) {
         logger.error(err);
         setError(getErrorMessage(err, t('dashboard.settings.billing.errors.checkout')));
         setIsCheckoutPending(false);
       }
     },
-    [billing?.plans.trial?.available, t]
+    [billing?.plans.trial?.available, loadBilling, t, trialPaymentSourceSetup]
   );
 
   const runSubscriptionAction = React.useCallback(
@@ -183,6 +275,7 @@ export function Page(): React.JSX.Element {
             checkoutIntent={checkoutIntent}
             data={billing.limits}
             isCheckoutPending={isCheckoutPending}
+            isTrialPaymentSourceSetupLoading={isTrialPaymentSourceSetupLoading}
             language={language}
             onCancelRenewal={handleCancelRenewal}
             onCancelTrial={handleCancelTrial}
@@ -191,6 +284,7 @@ export function Page(): React.JSX.Element {
             onStartCheckout={handleStartCheckout}
             pendingAction={pendingAction}
             plansData={billing.plans}
+            trialPaymentSourceSetup={trialPaymentSourceSetup}
           />
         ) : null}
       </Stack>
@@ -204,4 +298,22 @@ function getErrorMessage(error: unknown, fallback: string): string {
 
 function isMissingActiveSubscriptionError(error: unknown): boolean {
   return error instanceof SubscriptionApiError && error.status === 404;
+}
+
+function hasActiveSubscriptionData(data: SubscriptionLimits): boolean {
+  const subscription = isRecord(data.subscription) ? data.subscription : undefined;
+
+  if (!subscription) {
+    return false;
+  }
+
+  if (subscription.active === false) {
+    return false;
+  }
+
+  return Boolean(subscription.id || subscription.plan || subscription.plan_id || subscription.planId);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }

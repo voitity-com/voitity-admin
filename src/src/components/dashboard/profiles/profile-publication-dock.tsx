@@ -49,6 +49,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [missingDialogOpen, setMissingDialogOpen] = React.useState<boolean>(false);
+  const [publicationAction, setPublicationAction] = React.useState<'activate' | 'deactivate' | null>(null);
 
   const loadProfile = React.useCallback(async (): Promise<void> => {
     if (!profileId) {
@@ -100,26 +101,77 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
       return;
     }
 
+    const nextAction = isPublished ? 'deactivate' : 'activate';
+
+    if (nextAction === 'deactivate') {
+      setPublicationAction(nextAction);
+      return;
+    }
+
+    if (publication.can_activate) {
+      setPublicationAction(nextAction);
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      if (!isPublished && !publication.can_activate) {
+      const refreshedProfile = await getProfile(profileId);
+      const refreshedPublication = refreshedProfile.publication ?? emptyPublication;
+
+      setProfile(refreshedProfile);
+
+      if (!refreshedPublication.can_activate) {
+        setMissingDialogOpen(true);
+        return;
+      }
+
+      setPublicationAction(nextAction);
+    } catch (err) {
+      logger.error(err);
+      toast.error(err instanceof Error ? err.message : t('dashboard.profiles.detail.publicationDock.toasts.error'));
+      await loadProfile();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isPublished, loadProfile, profile, profileId, publication.can_activate, t]);
+
+  const handleCloseConfirmationDialog = React.useCallback((): void => {
+    if (isSubmitting) {
+      return;
+    }
+
+    setPublicationAction(null);
+  }, [isSubmitting]);
+
+  const handleConfirmPublicationAction = React.useCallback(async (): Promise<void> => {
+    if (!profileId || !publicationAction) {
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      if (publicationAction === 'activate') {
         const refreshedProfile = await getProfile(profileId);
         const refreshedPublication = refreshedProfile.publication ?? emptyPublication;
 
         setProfile(refreshedProfile);
 
         if (!refreshedPublication.can_activate) {
+          setPublicationAction(null);
           setMissingDialogOpen(true);
           return;
         }
       }
 
-      const nextProfile = isPublished ? await deactivateProfile(profileId) : await activateProfile(profileId);
+      const nextProfile =
+        publicationAction === 'deactivate' ? await deactivateProfile(profileId) : await activateProfile(profileId);
       setProfile(nextProfile);
+      setPublicationAction(null);
       window.dispatchEvent(new Event('profile-publication:changed'));
       toast.success(
-        isPublished
+        publicationAction === 'deactivate'
           ? t('dashboard.profiles.detail.publicationDock.toasts.deactivated')
           : t('dashboard.profiles.detail.publicationDock.toasts.activated')
       );
@@ -130,7 +182,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isPublished, loadProfile, profile, profileId, publication.can_activate, t]);
+  }, [loadProfile, profileId, publicationAction, t]);
 
   if (!profileId) {
     return null;
@@ -270,6 +322,56 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
             }}
           >
             {t('dashboard.profiles.actions.cancel')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        fullWidth
+        maxWidth="xs"
+        onClose={handleCloseConfirmationDialog}
+        open={publicationAction !== null}
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 3 },
+            width: { xs: 'calc(100% - 32px)', sm: '100%' },
+          },
+        }}
+      >
+        <DialogTitle>
+          {publicationAction === 'deactivate'
+            ? t('dashboard.profiles.detail.publicationDock.confirmDialog.deactivateTitle')
+            : t('dashboard.profiles.detail.publicationDock.confirmDialog.activateTitle')}
+        </DialogTitle>
+        <DialogContent>
+          <Alert color={publicationAction === 'deactivate' ? 'warning' : 'info'}>
+            {publicationAction === 'deactivate'
+              ? t('dashboard.profiles.detail.publicationDock.confirmDialog.deactivateDescription')
+              : t('dashboard.profiles.detail.publicationDock.confirmDialog.activateDescription')}
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button disabled={isSubmitting} onClick={handleCloseConfirmationDialog}>
+            {t('dashboard.profiles.actions.cancel')}
+          </Button>
+          <Button
+            color={publicationAction === 'deactivate' ? 'warning' : 'primary'}
+            disabled={isSubmitting}
+            onClick={handleConfirmPublicationAction}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress color="inherit" size={16} />
+              ) : publicationAction === 'deactivate' ? (
+                <PowerIcon />
+              ) : (
+                <RocketLaunchIcon />
+              )
+            }
+            variant="contained"
+          >
+            {publicationAction === 'deactivate'
+              ? t('dashboard.profiles.detail.publicationDock.confirmDialog.deactivateConfirm')
+              : t('dashboard.profiles.detail.publicationDock.confirmDialog.activateConfirm')}
           </Button>
         </DialogActions>
       </Dialog>

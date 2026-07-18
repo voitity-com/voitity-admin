@@ -24,7 +24,7 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
       }}
     >
       <ProfilePublicationDock />
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={4} sx={{ position: 'relative' }}>
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2, md: 4 }} sx={{ position: 'relative' }}>
         <ProfileSideNav />
         <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>{children}</Box>
       </Stack>
