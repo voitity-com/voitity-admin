@@ -582,7 +582,7 @@ function getSpotlightStyles(targetId: string, zIndex: number): Record<string, un
       outline: '2px solid rgba(255, 255, 255, 0.75)',
       outlineOffset: '4px',
       opacity: isNavItem ? 1 : undefined,
-      pointerEvents: 'none',
+      pointerEvents: isQualityDock ? 'auto' : 'none',
       position: isQualityDock ? undefined : 'relative',
       zIndex: zIndex + 1,
     },
