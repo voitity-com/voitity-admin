@@ -20,6 +20,7 @@ import { RouterLink } from '@/components/core/link';
 import { Logo } from '@/components/core/logo';
 
 import { icons } from './nav-icons';
+import { UsdCopRateIndicator } from './usd-cop-rate-indicator';
 
 export interface MobileNavProps {
   onClose?: () => void;
@@ -76,8 +77,11 @@ export function MobileNav({ items = [], open, onClose }: MobileNavProps): React.
           </Box>
         </div>
       </Stack>
-      <Box component="nav" sx={{ flex: '1 1 auto', p: 2 }}>
+      <Box component="nav" sx={{ flex: '1 1 auto', overflowY: 'auto', p: 2 }}>
         {renderNavGroups({ items, onClose, pathname, t, unreadCount })}
+      </Box>
+      <Box sx={{ borderTop: '1px solid var(--Workspaces-border-color)', p: 2, pt: 1.5 }}>
+        <UsdCopRateIndicator />
       </Box>
     </Drawer>
   );
