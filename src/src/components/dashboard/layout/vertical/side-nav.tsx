@@ -22,6 +22,7 @@ import { Logo } from '@/components/core/logo';
 import type { ColorScheme } from '@/styles/theme/types';
 
 import { icons } from '../nav-icons';
+import { UsdCopRateIndicator } from '../usd-cop-rate-indicator';
 import { navColorStyles } from './styles';
 
 const logoColors = {
@@ -81,6 +82,9 @@ export function SideNav({ color = 'evident', items = [] }: SideNavProps): React.
         }}
       >
         {renderNavGroups({ items, pathname, t, unreadCount })}
+      </Box>
+      <Box sx={{ borderTop: '1px solid var(--Workspaces-border-color)', p: 2, pt: 1.5 }}>
+        <UsdCopRateIndicator />
       </Box>
     </Box>
   );

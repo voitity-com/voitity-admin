@@ -63,6 +63,20 @@ export interface PaymentOrder {
   wompi_status?: string | null;
 }
 
+export interface UsdCopRate {
+  base_currency: string;
+  cache_ttl_seconds?: number;
+  fetched_at?: string | null;
+  pair: string;
+  quote_currency: string;
+  rate: number;
+  source?: string;
+  stale?: boolean;
+  unit?: string;
+  valid_from?: string | null;
+  valid_to?: string | null;
+}
+
 export interface WompiCheckout {
   amount_in_cents?: number;
   checkout_url?: string;
@@ -154,6 +168,14 @@ export async function createWompiCheckout(payload: { plan: string }): Promise<Wo
   });
 
   return normalizeWompiCheckoutResponse(response);
+}
+
+export async function getUsdCopRate(): Promise<UsdCopRate> {
+  const response = await requestJson<unknown>('/api/payments/usd-cop-rate', {
+    method: 'GET',
+  });
+
+  return normalizeUsdCopRateResponse(response);
 }
 
 export async function getSubscriptionTrialPaymentSourceSetup(): Promise<WompiPaymentSourceSetup> {
@@ -326,6 +348,34 @@ function normalizeWompiCheckoutResponse(response: unknown): WompiCheckoutRespons
   return { checkout, payment_order: paymentOrder };
 }
 
+function normalizeUsdCopRateResponse(response: unknown): UsdCopRate {
+  const data = getResponseData(response);
+
+  if (!isRecord(data)) {
+    throw new Error('Invalid USD COP rate response');
+  }
+
+  const rate = getNumberField(data, ['rate', 'value']);
+
+  if (typeof rate !== 'number') {
+    throw new Error('Invalid USD COP rate value');
+  }
+
+  return {
+    base_currency: getStringField(data, ['base_currency', 'baseCurrency']) ?? 'USD',
+    cache_ttl_seconds: getNumberField(data, ['cache_ttl_seconds', 'cacheTtlSeconds']),
+    fetched_at: getStringField(data, ['fetched_at', 'fetchedAt']),
+    pair: getStringField(data, ['pair']) ?? 'USD/COP',
+    quote_currency: getStringField(data, ['quote_currency', 'quoteCurrency']) ?? 'COP',
+    rate,
+    source: getStringField(data, ['source']),
+    stale: typeof data.stale === 'boolean' ? data.stale : undefined,
+    unit: getStringField(data, ['unit']),
+    valid_from: getStringField(data, ['valid_from', 'validFrom']),
+    valid_to: getStringField(data, ['valid_to', 'validTo']),
+  };
+}
+
 function normalizeWompiPaymentSourceSetup(response: unknown): WompiPaymentSourceSetup {
   const data = getResponseData(response);
 
@@ -444,6 +494,22 @@ function getStringField(value: Record<string, unknown>, fields: string[]): strin
   return undefined;
 }
 
+function getNumberField(value: Record<string, unknown>, fields: string[]): number | undefined {
+  for (const field of fields) {
+    const rawValue = value[field];
+
+    if (typeof rawValue === 'number' && Number.isFinite(rawValue)) {
+      return rawValue;
+    }
+
+    if (typeof rawValue === 'string' && rawValue.trim() && Number.isFinite(Number(rawValue))) {
+      return Number(rawValue);
+    }
+  }
+
+  return undefined;
+}
+
 function normalizeExpirationYear(value: string): string {
   const digits = value.replace(/\D/gu, '');
 
@@ -467,8 +533,20 @@ function loadWompiScript(publicKey: string): Promise<void> {
     const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${WOMPI_JS_URL}"]`);
 
     if (existingScript) {
-      existingScript.addEventListener('load', () => resolve(), { once: true });
-      existingScript.addEventListener('error', () => reject(new Error('Could not load Wompi JS')), { once: true });
+      existingScript.addEventListener(
+        'load',
+        () => {
+          resolve();
+        },
+        { once: true }
+      );
+      existingScript.addEventListener(
+        'error',
+        () => {
+          reject(new Error('Could not load Wompi JS'));
+        },
+        { once: true }
+      );
       return;
     }
 
@@ -476,8 +554,20 @@ function loadWompiScript(publicKey: string): Promise<void> {
     script.async = true;
     script.dataset.publicKey = publicKey;
     script.src = WOMPI_JS_URL;
-    script.addEventListener('load', () => resolve(), { once: true });
-    script.addEventListener('error', () => reject(new Error('Could not load Wompi JS')), { once: true });
+    script.addEventListener(
+      'load',
+      () => {
+        resolve();
+      },
+      { once: true }
+    );
+    script.addEventListener(
+      'error',
+      () => {
+        reject(new Error('Could not load Wompi JS'));
+      },
+      { once: true }
+    );
     document.head.appendChild(script);
   });
 

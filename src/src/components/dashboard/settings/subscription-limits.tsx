@@ -45,7 +45,9 @@ import { NoSsr } from '@/components/core/no-ssr';
 import { RouterLink } from '@/components/core/link';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
-import type { WompiCardDetails, WompiPaymentSourceSetup } from '@/lib/payments/api-client';
+import { logger } from '@/lib/default-logger';
+import { getUsdCopRate } from '@/lib/payments/api-client';
+import type { UsdCopRate, WompiCardDetails, WompiPaymentSourceSetup } from '@/lib/payments/api-client';
 import type {
   JsonObject,
   JsonValue,
@@ -810,6 +812,8 @@ function CheckoutAgreementDialog({
   const isMobile = useMediaQuery('down', 'sm');
   const [acceptedWompiContracts, setAcceptedWompiContracts] = React.useState<boolean>(false);
   const [trialCard, setTrialCard] = React.useState<WompiCardDetails>(() => emptyTrialCard());
+  const [usdCopRate, setUsdCopRate] = React.useState<UsdCopRate | null>(null);
+  const [usdCopRateError, setUsdCopRateError] = React.useState<boolean>(false);
   const expirationYears = React.useMemo(() => getExpirationYears(), []);
   const cardNumberError = trialCard.number.length > 0 && !isValidCardNumber(trialCard.number);
   const cvcError = trialCard.cvc.length > 0 && !isValidCvc(trialCard.cvc);
@@ -829,6 +833,41 @@ function CheckoutAgreementDialog({
       setAcceptedWompiContracts(false);
       setTrialCard(emptyTrialCard());
     }
+  }, [open]);
+
+  React.useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const loadUsdCopRate = async (): Promise<void> => {
+      try {
+        const nextRate = await getUsdCopRate();
+
+        if (cancelled) {
+          return;
+        }
+
+        setUsdCopRate(nextRate);
+        setUsdCopRateError(false);
+      } catch (error) {
+        logger.error(error);
+
+        if (cancelled) {
+          return;
+        }
+
+        setUsdCopRateError(true);
+      }
+    };
+
+    void loadUsdCopRate();
+
+    return () => {
+      cancelled = true;
+    };
   }, [open]);
 
   const handleTrialCardChange = React.useCallback(
@@ -908,9 +947,22 @@ function CheckoutAgreementDialog({
                   ) : null}
                 </Stack>
                 <Alert severity="info" variant="outlined">
-                  {trial
-                    ? t('dashboard.settings.billing.checkout.trialWompiNotice')
-                    : t('dashboard.settings.billing.checkout.wompiNotice')}
+                  <Stack spacing={0.75}>
+                    <Typography component="span" variant="body2">
+                      {trial
+                        ? t('dashboard.settings.billing.checkout.trialWompiNotice')
+                        : t('dashboard.settings.billing.checkout.wompiNotice')}
+                    </Typography>
+                    <Typography component="span" sx={{ fontWeight: 600 }} variant="body2">
+                      {usdCopRate
+                        ? t('dashboard.settings.billing.checkout.currentTrm', {
+                            rate: formatExchangeRate(usdCopRate.rate, language),
+                          })
+                        : usdCopRateError
+                          ? t('dashboard.settings.billing.checkout.trmUnavailable')
+                          : t('dashboard.settings.billing.checkout.trmLoading')}
+                    </Typography>
+                  </Stack>
                 </Alert>
               </Stack>
             </Card>
@@ -2016,6 +2068,17 @@ function formatCurrency(value: number | undefined, currency: string, language: s
     currency,
     maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
     style: 'currency',
+  }).format(value);
+}
+
+function formatExchangeRate(value: number | undefined, language: string): string {
+  if (typeof value !== 'number') {
+    return '-';
+  }
+
+  return new Intl.NumberFormat(language, {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
   }).format(value);
 }
 

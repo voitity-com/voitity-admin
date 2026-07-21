@@ -157,6 +157,12 @@
         "personal": "Personal"
       }
     },
+    "trm": {
+      "loading": "1 USD = ... COP",
+      "title": "Current TRM",
+      "unavailable": "TRM unavailable",
+      "value": "1 USD = {{rate}} COP"
+    },
     "impersonation": {
       "actions": {
         "return": "Return as admin",
@@ -395,6 +401,7 @@
           "unavailable": "Unavailable"
         },
   "checkout": {
+    "currentTrm": "Current TRM: 1 USD = {{rate}} COP",
     "displayPrice": "Displayed price",
     "firstPlanCharge": "First plan charge",
     "planValue": "Starter {{cycle}}",
@@ -405,6 +412,8 @@
     "title": "Checkout",
     "trialSubheader": "Today you start {{days}} days at no cost after Wompi confirms a reusable payment method.",
     "trialWompiNotice": "This step saves the payment method for the first automatic charge. If Wompi does not confirm a reusable payment method, the trial will not start.",
+    "trmLoading": "Current TRM: loading...",
+    "trmUnavailable": "Current TRM unavailable.",
     "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
   },
   "paymentMethod": {
