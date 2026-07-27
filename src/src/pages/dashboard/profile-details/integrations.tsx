@@ -11,11 +11,16 @@ import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Divider from '@mui/material/Divider';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
 import { InstagramLogo as InstagramLogoIcon } from '@phosphor-icons/react/dist/ssr/InstagramLogo';
@@ -24,6 +29,7 @@ import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { TiktokLogo as TiktokLogoIcon } from '@phosphor-icons/react/dist/ssr/TiktokLogo';
 import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
+import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -64,6 +70,7 @@ const copy = {
   en: {
     common: {
       connected: 'Connected',
+      closeVideo: 'Close video',
       disconnect: 'Disconnect',
       error: 'Something went wrong',
       filterAll: 'All',
@@ -72,6 +79,8 @@ const copy = {
       integrations: 'Integrations',
       lastSync: 'Last sync',
       observation: 'Conversation note',
+      openOnProvider: 'Open on {{provider}}',
+      playVideo: 'Play {{provider}} video',
       save: 'Save selection',
       select: 'Select',
       selected: '{{count}}/{{limit}} selected',
@@ -124,6 +133,7 @@ const copy = {
   es: {
     common: {
       connected: 'Conectado',
+      closeVideo: 'Cerrar video',
       disconnect: 'Desconectar',
       error: 'Algo salió mal',
       filterAll: 'Todas',
@@ -132,6 +142,8 @@ const copy = {
       integrations: 'Integraciones',
       lastSync: 'Última sincronización',
       observation: 'Observación para conversación',
+      openOnProvider: 'Abrir en {{provider}}',
+      playVideo: 'Reproducir video de {{provider}}',
       save: 'Guardar selección',
       select: 'Seleccionar',
       selected: '{{count}}/{{limit}} seleccionadas',
@@ -674,6 +686,7 @@ function IntegrationPanel({
                 key={item.id}
                 onObservationChange={onObservationChange}
                 onToggleSelected={onToggleSelected}
+                provider={provider}
                 providerConfig={providerConfig}
                 providerText={providerText}
                 selectedCount={selectedCount}
@@ -722,6 +735,7 @@ function IntegrationPanel({
 interface IntegrationMediaCardProps {
   common: (typeof copy)['es']['common'];
   item: IntegrationMedia;
+  provider: IntegrationProvider;
   providerConfig: (typeof providerConfigs)[IntegrationProvider];
   providerText: (typeof copy)['es']['providers'][IntegrationProvider];
   selectedCount: number;
@@ -733,6 +747,7 @@ interface IntegrationMediaCardProps {
 function IntegrationMediaCard({
   common,
   item,
+  provider,
   providerConfig,
   providerText,
   selectedCount,
@@ -744,117 +759,284 @@ function IntegrationMediaCard({
   const disableUnchecked = !item.selected && selectedCount >= selectionLimit;
   const Icon = providerConfig.Icon;
   const isVideo = item.media_type?.trim().toUpperCase().includes('VIDEO') ?? false;
+  const playback = isVideo ? getIntegrationMediaPlayback(item, provider) : null;
+  const [isPlaybackOpen, setIsPlaybackOpen] = React.useState(false);
+  const playVideoLabel = interpolate(common.playVideo, { provider: providerText.label });
 
   return (
-    <Box
-      data-testid={`${providerConfig.testIdPrefix}-media-card`}
-      sx={{
-        border: '1px solid var(--mui-palette-divider)',
-        borderRadius: 1,
-        overflow: 'hidden',
-      }}
-    >
+    <React.Fragment>
       <Box
+        data-testid={`${providerConfig.testIdPrefix}-media-card`}
         sx={{
-          aspectRatio: '1 / 1',
-          bgcolor: 'var(--mui-palette-background-level1)',
+          border: '1px solid var(--mui-palette-divider)',
+          borderRadius: 1,
           overflow: 'hidden',
-          position: 'relative',
         }}
       >
-        {imageUrl ? (
-          <Box
-            alt={item.caption ?? ''}
-            component="img"
-            src={imageUrl}
-            sx={{ height: '100%', objectFit: 'cover', width: '100%' }}
-          />
-        ) : (
-          <Stack sx={{ alignItems: 'center', height: '100%', justifyContent: 'center', p: 2 }}>
-            <Icon fontSize="var(--icon-fontSize-xl)" />
-          </Stack>
-        )}
-        <Chip
-          color={isVideo ? 'primary' : 'default'}
-          label={isVideo ? common.video : common.image}
-          size="small"
-          sx={{ left: 12, position: 'absolute', top: 12 }}
-        />
-        {isVideo ? (
-          <Box
-            aria-hidden="true"
-            sx={{
-              alignItems: 'center',
-              bgcolor: 'rgba(0, 0, 0, 0.7)',
-              borderRadius: '50%',
-              color: 'common.white',
-              display: 'flex',
-              height: 48,
-              justifyContent: 'center',
-              left: '50%',
-              position: 'absolute',
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 48,
-            }}
-          >
-            <PlayIcon size={22} weight="fill" />
-          </Box>
-        ) : null}
-      </Box>
-      <Stack spacing={1.5} sx={{ p: 2 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={item.selected}
-              disabled={disableUnchecked}
-              onChange={(event) => {
-                onToggleSelected(item.id, event.target.checked);
-              }}
-            />
-          }
-          label={common.select}
-        />
-        {item.caption ? (
-          <Typography
-            color="text.secondary"
-            sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
-            variant="body2"
-          >
-            {item.caption}
-          </Typography>
-        ) : null}
-        {item.caption ? (
-          <Button
-            disabled={!item.selected}
-            onClick={() => {
-              onObservationChange(item.id, item.caption ?? '');
-            }}
-            size="small"
-            variant="text"
-          >
-            {common.useCaption}
-          </Button>
-        ) : null}
-        <OutlinedInput
-          disabled={!item.selected}
-          fullWidth
-          multiline
-          onChange={(event) => {
-            onObservationChange(item.id, event.target.value);
+        <Box
+          sx={{
+            aspectRatio: '1 / 1',
+            bgcolor: 'var(--mui-palette-background-level1)',
+            overflow: 'hidden',
+            position: 'relative',
           }}
-          placeholder={providerText.observationPlaceholder}
-          rows={3}
-          value={item.observation ?? ''}
-        />
+        >
+          {imageUrl ? (
+            <Box
+              alt={item.caption ?? ''}
+              component="img"
+              src={imageUrl}
+              sx={{ height: '100%', objectFit: 'cover', width: '100%' }}
+            />
+          ) : (
+            <Stack sx={{ alignItems: 'center', height: '100%', justifyContent: 'center', p: 2 }}>
+              <Icon fontSize="var(--icon-fontSize-xl)" />
+            </Stack>
+          )}
+          <Chip
+            color={isVideo ? 'primary' : 'default'}
+            label={isVideo ? common.video : common.image}
+            size="small"
+            sx={{ left: 12, position: 'absolute', top: 12 }}
+          />
+          {isVideo && playback ? (
+            <Tooltip title={playVideoLabel}>
+              <IconButton
+                aria-label={playVideoLabel}
+                data-testid={`${providerConfig.testIdPrefix}-media-play`}
+                onClick={() => {
+                  setIsPlaybackOpen(true);
+                }}
+                sx={{
+                  '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.82)', transform: 'translate(-50%, -50%) scale(1.06)' },
+                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  color: 'common.white',
+                  height: 48,
+                  left: '50%',
+                  position: 'absolute',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  transition: 'background-color 150ms ease, transform 150ms ease',
+                  width: 48,
+                }}
+              >
+                <PlayIcon size={22} weight="fill" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+        </Box>
+        <Stack spacing={1.5} sx={{ p: 2 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={item.selected}
+                disabled={disableUnchecked}
+                onChange={(event) => {
+                  onToggleSelected(item.id, event.target.checked);
+                }}
+              />
+            }
+            label={common.select}
+          />
+          {item.caption ? (
+            <Typography
+              color="text.secondary"
+              sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+              variant="body2"
+            >
+              {item.caption}
+            </Typography>
+          ) : null}
+          {item.caption ? (
+            <Button
+              disabled={!item.selected}
+              onClick={() => {
+                onObservationChange(item.id, item.caption ?? '');
+              }}
+              size="small"
+              variant="text"
+            >
+              {common.useCaption}
+            </Button>
+          ) : null}
+          <OutlinedInput
+            disabled={!item.selected}
+            fullWidth
+            multiline
+            onChange={(event) => {
+              onObservationChange(item.id, event.target.value);
+            }}
+            placeholder={providerText.observationPlaceholder}
+            rows={3}
+            value={item.observation ?? ''}
+          />
+          {item.permalink ? (
+            <Button component="a" href={item.permalink} rel="noreferrer" size="small" target="_blank" variant="text">
+              {providerText.label}
+            </Button>
+          ) : null}
+        </Stack>
+      </Box>
+      <Dialog
+        aria-label={playVideoLabel}
+        fullWidth
+        maxWidth="sm"
+        onClose={() => {
+          setIsPlaybackOpen(false);
+        }}
+        open={isPlaybackOpen}
+      >
+        <DialogContent
+          sx={{
+            alignItems: 'center',
+            bgcolor: 'common.black',
+            display: 'flex',
+            justifyContent: 'center',
+            minHeight: { sm: 560, xs: 420 },
+            p: 0,
+            position: 'relative',
+          }}
+        >
+          <Tooltip title={common.closeVideo}>
+            <IconButton
+              aria-label={common.closeVideo}
+              onClick={() => {
+                setIsPlaybackOpen(false);
+              }}
+              sx={{
+                bgcolor: 'rgba(0, 0, 0, 0.72)',
+                color: 'common.white',
+                position: 'absolute',
+                right: 12,
+                top: 12,
+                zIndex: 1,
+              }}
+            >
+              <XIcon />
+            </IconButton>
+          </Tooltip>
+          {playback?.kind === 'embed' ? (
+            <Box sx={{ aspectRatio: '9 / 16', maxHeight: '78vh', width: 'min(100%, 440px)' }}>
+              <Box
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                component="iframe"
+                src={playback.src}
+                sx={{ border: 0, height: '100%', width: '100%' }}
+                title={playVideoLabel}
+              />
+            </Box>
+          ) : playback?.kind === 'video' ? (
+            <Box
+              autoPlay
+              component="video"
+              controls
+              playsInline
+              poster={imageUrl ?? undefined}
+              src={playback.src}
+              sx={{ maxHeight: '78vh', objectFit: 'contain', width: '100%' }}
+            />
+          ) : null}
+        </DialogContent>
         {item.permalink ? (
-          <Button component="a" href={item.permalink} rel="noreferrer" size="small" target="_blank" variant="text">
-            {providerText.label}
-          </Button>
+          <DialogActions>
+            <Button component="a" href={item.permalink} rel="noreferrer" target="_blank">
+              {interpolate(common.openOnProvider, { provider: providerText.label })}
+            </Button>
+          </DialogActions>
         ) : null}
-      </Stack>
-    </Box>
+      </Dialog>
+    </React.Fragment>
   );
+}
+
+type IntegrationMediaPlayback =
+  | {
+      kind: 'embed';
+      src: string;
+    }
+  | {
+      kind: 'video';
+      src: string;
+    };
+
+function getIntegrationMediaPlayback(
+  item: IntegrationMedia,
+  provider: IntegrationProvider
+): IntegrationMediaPlayback | null {
+  if (provider === 'tiktok') {
+    const videoId = getTikTokVideoId(item);
+
+    return videoId
+      ? {
+          kind: 'embed',
+          src: `https://www.tiktok.com/player/v1/${videoId}?autoplay=1`,
+        }
+      : null;
+  }
+
+  if (item.media_url && !isInstagramPostUrl(item.media_url)) {
+    return { kind: 'video', src: item.media_url };
+  }
+
+  const embedUrl = getInstagramEmbedUrl(item.permalink || item.media_url);
+
+  return embedUrl ? { kind: 'embed', src: embedUrl } : null;
+}
+
+function getTikTokVideoId(item: IntegrationMedia): string | null {
+  const providerMediaId = String(item.provider_media_id ?? '').trim();
+
+  if (/^\d+$/.test(providerMediaId)) {
+    return providerMediaId;
+  }
+
+  for (const value of [item.media_url, item.permalink]) {
+    if (!value) {
+      continue;
+    }
+
+    try {
+      const videoIdMatch = /\/(?:video|v1|v2)\/(?<videoId>\d+)/.exec(new URL(value).pathname);
+      const videoId = videoIdMatch?.groups?.videoId;
+
+      if (videoId) {
+        return videoId;
+      }
+    } catch {
+      // Try the next provider URL.
+    }
+  }
+
+  return null;
+}
+
+function isInstagramPostUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+
+    return url.hostname === 'instagram.com' || url.hostname.endsWith('.instagram.com');
+  } catch {
+    return false;
+  }
+}
+
+function getInstagramEmbedUrl(value?: null | string): string | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const url = new URL(value);
+
+    if (url.hostname !== 'instagram.com' && !url.hostname.endsWith('.instagram.com')) {
+      return null;
+    }
+
+    return `${url.origin}${url.pathname.replace(/\/+$/, '')}/embed/`;
+  } catch {
+    return null;
+  }
 }
 
 function normalizeProvider(value: null | string): IntegrationProvider | null {
