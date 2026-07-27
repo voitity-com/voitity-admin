@@ -10,25 +10,28 @@ import CardHeader from '@mui/material/CardHeader';
 import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
-import Divider from '@mui/material/Divider';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
 import { InstagramLogo as InstagramLogoIcon } from '@phosphor-icons/react/dist/ssr/InstagramLogo';
 import { LinkSimple as LinkSimpleIcon } from '@phosphor-icons/react/dist/ssr/LinkSimple';
+import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { TiktokLogo as TiktokLogoIcon } from '@phosphor-icons/react/dist/ssr/TiktokLogo';
 import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
+import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -39,13 +42,19 @@ import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
 import {
   createIntegrationConnectUrl,
+  deleteOnlyFansMedia,
   disconnectIntegration,
   getIntegrationMedia,
+  saveOnlyFansIntegration,
   syncIntegrationMedia,
   updateIntegrationMediaSelection,
+  uploadOnlyFansMedia,
   type IntegrationMedia,
   type IntegrationMediaPage,
   type IntegrationProvider,
+  type OnlyFansConnectionInput,
+  type OnlyFansMediaUploadInput,
+  type ProfileIntegration,
 } from '@/lib/integrations/api-client';
 import { toast } from '@/components/core/toaster';
 
@@ -55,28 +64,59 @@ type Language = 'en' | 'es';
 
 const INITIAL_VISIBLE_MEDIA_COUNT = 6;
 
+function OnlyFansIcon({ style, ...props }: React.SVGProps<SVGSVGElement>): React.JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      height="1em"
+      style={{ display: 'block', flex: '0 0 auto', ...style }}
+      viewBox="0 0 24 24"
+      width="1em"
+      {...props}
+    >
+      <circle cx="9.25" cy="12" r="7.25" stroke="currentColor" strokeWidth="2.1" />
+      <circle cx="8.75" cy="12" r="2.15" stroke="currentColor" strokeWidth="2.1" />
+      <path
+        d="M10.75 19.15 14.08 7.9a3.65 3.65 0 0 1 3.5-2.62H22l-1.48 3.62h-3.45l-.98 3.28h4.02c-.9 2.07-2.6 3.2-5.08 3.44l-1.04 3.53"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2.1"
+      />
+    </svg>
+  );
+}
+
 const providerConfigs = {
   instagram: {
     Icon: InstagramLogoIcon,
     testIdPrefix: 'instagram',
   },
+  onlyfans: {
+    Icon: OnlyFansIcon,
+    testIdPrefix: 'onlyfans',
+  },
   tiktok: {
     Icon: TiktokLogoIcon,
     testIdPrefix: 'tiktok',
   },
-} satisfies Record<IntegrationProvider, { Icon: typeof InstagramLogoIcon; testIdPrefix: string }>;
+} satisfies Record<IntegrationProvider, { Icon: React.ElementType; testIdPrefix: string }>;
 
 const copy = {
   en: {
     common: {
+      addMedia: 'Add image or video',
       connected: 'Connected',
       closeVideo: 'Close video',
+      deleteMedia: 'Delete media',
       disconnect: 'Disconnect',
       error: 'Something went wrong',
       filterAll: 'All',
       filterSelected: 'Selected',
       image: 'Image',
       integrations: 'Integrations',
+      ageRestricted: '18+',
       lastSync: 'Last sync',
       observation: 'Conversation note',
       openOnProvider: 'Open on {{provider}}',
@@ -89,6 +129,7 @@ const copy = {
       sync: 'Sync',
       title: 'Profile integrations',
       updated: 'Selection saved',
+      uploaded: 'Media uploaded',
       useCaption: 'Use caption',
       username: '@{{username}}',
       video: 'Video',
@@ -128,18 +169,48 @@ const copy = {
         reconnect: 'Reconnect',
         synced: 'TikTok videos synced',
       },
+      onlyfans: {
+        adultConfirmation: 'I confirm this integration may contain content intended for adults.',
+        cancelUpload: 'Cancel',
+        connect: 'Save OnlyFans',
+        connectedNoSync: '',
+        empty: 'No OnlyFans promotional media has been uploaded yet.',
+        emptySelected: 'No selected OnlyFans media yet.',
+        filterLabel: 'OnlyFans media filter',
+        hint: 'Upload up to {{limit}} selected promotional images or videos. Their notes become verified context for profile conversations.',
+        invalidProfileUrl: 'Use an onlyfans.com profile URL that matches the username.',
+        label: 'OnlyFans',
+        maxSelected: 'You can select up to {{limit}} OnlyFans items.',
+        noConnection:
+          'Add the public profile reference and upload only promotional media you own or are authorized to use.',
+        observationPlaceholder: 'Example: Promotional Hulk-inspired set with green wardrobe.',
+        oauthLocalWarning: '',
+        profileUrl: 'OnlyFans profile URL',
+        reconnect: 'Edit account',
+        rightsConfirmation: 'I own this content or have explicit authorization to publish and use it.',
+        synced: '',
+        upload: 'Upload media',
+        uploadCaption: 'Public caption',
+        uploadFile: 'Choose image or video',
+        uploadObservation: 'Conversation note',
+        selectForChat: 'Use in profile conversations',
+        usernameLabel: 'OnlyFans username',
+      },
     },
   },
   es: {
     common: {
+      addMedia: 'Agregar imagen o video',
       connected: 'Conectado',
       closeVideo: 'Cerrar video',
+      deleteMedia: 'Eliminar contenido',
       disconnect: 'Desconectar',
       error: 'Algo salió mal',
       filterAll: 'Todas',
       filterSelected: 'Seleccionadas',
       image: 'Imagen',
       integrations: 'Integraciones',
+      ageRestricted: '18+',
       lastSync: 'Última sincronización',
       observation: 'Observación para conversación',
       openOnProvider: 'Abrir en {{provider}}',
@@ -152,6 +223,7 @@ const copy = {
       sync: 'Sincronizar',
       title: 'Integraciones del perfil',
       updated: 'Selección guardada',
+      uploaded: 'Contenido cargado',
       useCaption: 'Usar descripción',
       username: '@{{username}}',
       video: 'Video',
@@ -191,6 +263,32 @@ const copy = {
         reconnect: 'Reconectar',
         synced: 'TikTok sincronizado',
       },
+      onlyfans: {
+        adultConfirmation: 'Confirmo que esta integración puede contener contenido dirigido a adultos.',
+        cancelUpload: 'Cancelar',
+        connect: 'Guardar OnlyFans',
+        connectedNoSync: '',
+        empty: 'Aún no has cargado contenido promocional de OnlyFans.',
+        emptySelected: 'Aún no hay contenido de OnlyFans seleccionado.',
+        filterLabel: 'Filtro de contenido de OnlyFans',
+        hint: 'Carga imágenes o videos promocionales y selecciona hasta {{limit}}. Sus observaciones serán contexto verificado para las conversaciones del perfil.',
+        invalidProfileUrl: 'Usa una URL de perfil de onlyfans.com que coincida con el usuario.',
+        label: 'OnlyFans',
+        maxSelected: 'Puedes seleccionar hasta {{limit}} elementos de OnlyFans.',
+        noConnection: 'Agrega la referencia del perfil público y carga solo contenido promocional propio o autorizado.',
+        observationPlaceholder: 'Ejemplo: Set promocional inspirado en Hulk con vestuario verde.',
+        oauthLocalWarning: '',
+        profileUrl: 'URL del perfil de OnlyFans',
+        reconnect: 'Editar cuenta',
+        rightsConfirmation: 'Soy propietario de este contenido o tengo autorización expresa para publicarlo y usarlo.',
+        synced: '',
+        upload: 'Cargar contenido',
+        uploadCaption: 'Descripción pública',
+        uploadFile: 'Elegir imagen o video',
+        uploadObservation: 'Observación para conversación',
+        selectForChat: 'Usar en las conversaciones del perfil',
+        usernameLabel: 'Usuario de OnlyFans',
+      },
     },
   },
 } satisfies Record<
@@ -217,6 +315,7 @@ export function Page(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
   const providerText = t.providers[activeTab];
 
   React.useEffect(() => {
@@ -298,6 +397,57 @@ export function Page(): React.JSX.Element {
       setIsSyncing(false);
     }
   }, [activeTab, loadIntegration, profileId, providerText.synced, t.common.error]);
+
+  const handleOnlyFansConnect = React.useCallback(
+    async (input: OnlyFansConnectionInput): Promise<void> => {
+      setIsConnecting(true);
+
+      try {
+        await saveOnlyFansIntegration(profileId, input);
+        await loadIntegration();
+        toast.success(t.common.connected);
+      } catch (err) {
+        logger.error(err);
+        toast.error(getErrorMessage(err, t.common.error));
+        throw err;
+      } finally {
+        setIsConnecting(false);
+      }
+    },
+    [loadIntegration, profileId, t.common.connected, t.common.error]
+  );
+
+  const handleOnlyFansUpload = React.useCallback(
+    async (input: OnlyFansMediaUploadInput): Promise<void> => {
+      setIsUploading(true);
+
+      try {
+        await uploadOnlyFansMedia(profileId, input);
+        await loadIntegration();
+        toast.success(t.common.uploaded);
+      } catch (err) {
+        logger.error(err);
+        toast.error(getErrorMessage(err, t.common.error));
+        throw err;
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [loadIntegration, profileId, t.common.error, t.common.uploaded]
+  );
+
+  const handleOnlyFansDeleteMedia = React.useCallback(
+    async (mediaId: number | string): Promise<void> => {
+      try {
+        await deleteOnlyFansMedia(profileId, mediaId);
+        await loadIntegration();
+      } catch (err) {
+        logger.error(err);
+        toast.error(getErrorMessage(err, t.common.error));
+      }
+    },
+    [loadIntegration, profileId, t.common.error]
+  );
 
   const handleDisconnect = React.useCallback(async (): Promise<void> => {
     setIsDisconnecting(true);
@@ -404,10 +554,14 @@ export function Page(): React.JSX.Element {
               isLoading={isLoading}
               isSaving={isSaving}
               isSyncing={isSyncing}
+              isUploading={isUploading}
               media={media}
               onConnect={handleConnect}
+              onDeleteMedia={handleOnlyFansDeleteMedia}
               onDisconnect={handleDisconnect}
               onObservationChange={handleObservationChange}
+              onOnlyFansConnect={handleOnlyFansConnect}
+              onOnlyFansUpload={handleOnlyFansUpload}
               onSave={handleSave}
               onSync={handleSync}
               onToggleSelected={handleToggleSelected}
@@ -432,6 +586,7 @@ interface IntegrationPanelProps {
   isLoading: boolean;
   isSaving: boolean;
   isSyncing: boolean;
+  isUploading: boolean;
   media: IntegrationMedia[];
   page: IntegrationMediaPage | null;
   provider: IntegrationProvider;
@@ -441,6 +596,9 @@ interface IntegrationPanelProps {
   selectionLimit: number;
   onConnect: () => void;
   onDisconnect: () => void;
+  onDeleteMedia: (mediaId: number | string) => Promise<void>;
+  onOnlyFansConnect: (input: OnlyFansConnectionInput) => Promise<void>;
+  onOnlyFansUpload: (input: OnlyFansMediaUploadInput) => Promise<void>;
   onObservationChange: (mediaId: number | string, observation: string) => void;
   onSave: () => void;
   onSync: () => void;
@@ -454,6 +612,7 @@ function IntegrationPanel({
   isLoading,
   isSaving,
   isSyncing,
+  isUploading,
   media,
   page,
   provider,
@@ -463,6 +622,9 @@ function IntegrationPanel({
   selectionLimit,
   onConnect,
   onDisconnect,
+  onDeleteMedia,
+  onOnlyFansConnect,
+  onOnlyFansUpload,
   onObservationChange,
   onSave,
   onSync,
@@ -470,6 +632,8 @@ function IntegrationPanel({
 }: IntegrationPanelProps): React.JSX.Element {
   const localRedirectUri = page?.oauth?.uses_local_redirect ? page.oauth.redirect_uri : null;
   const [mediaFilter, setMediaFilter] = React.useState<MediaFilter>('all');
+  const [isAddingOnlyFansMedia, setIsAddingOnlyFansMedia] = React.useState(false);
+  const [isEditingOnlyFans, setIsEditingOnlyFans] = React.useState(false);
   const [visibleMediaCount, setVisibleMediaCount] = React.useState(INITIAL_VISIBLE_MEDIA_COUNT);
   const filteredMedia = React.useMemo(
     () => (mediaFilter === 'selected' ? media.filter((item) => item.selected) : media),
@@ -489,6 +653,8 @@ function IntegrationPanel({
 
   React.useEffect(() => {
     setMediaFilter('all');
+    setIsAddingOnlyFansMedia(false);
+    setIsEditingOnlyFans(false);
   }, [provider]);
 
   if (isLoading) {
@@ -500,6 +666,10 @@ function IntegrationPanel({
   }
 
   if (!page?.integration) {
+    if (provider === 'onlyfans') {
+      return <OnlyFansAccountForm isSaving={isConnecting} onSave={onOnlyFansConnect} providerText={providerText} />;
+    }
+
     return (
       <Stack
         spacing={2}
@@ -564,18 +734,46 @@ function IntegrationPanel({
           ) : null}
         </Stack>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
-            {isSyncing ? `${common.sync}...` : common.sync}
-          </Button>
-          <Button
-            data-testid={`${providerConfig.testIdPrefix}-reconnect-button`}
-            disabled={isConnecting}
-            onClick={onConnect}
-            startIcon={<LinkSimpleIcon />}
-            variant="outlined"
-          >
-            {providerText.reconnect}
-          </Button>
+          {provider !== 'onlyfans' ? (
+            <React.Fragment>
+              <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
+                {isSyncing ? `${common.sync}...` : common.sync}
+              </Button>
+              <Button
+                data-testid={`${providerConfig.testIdPrefix}-reconnect-button`}
+                disabled={isConnecting}
+                onClick={onConnect}
+                startIcon={<LinkSimpleIcon />}
+                variant="outlined"
+              >
+                {providerText.reconnect}
+              </Button>
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              <Button
+                data-testid="onlyfans-add-media-button"
+                disabled={isAddingOnlyFansMedia}
+                onClick={() => {
+                  setIsAddingOnlyFansMedia(true);
+                }}
+                startIcon={<UploadSimpleIcon />}
+                variant="contained"
+              >
+                {common.addMedia}
+              </Button>
+              <Button
+                data-testid="onlyfans-edit-account-button"
+                onClick={() => {
+                  setIsEditingOnlyFans((current) => !current);
+                }}
+                startIcon={<PencilSimpleIcon />}
+                variant="outlined"
+              >
+                {providerText.reconnect}
+              </Button>
+            </React.Fragment>
+          )}
           <Button
             color="error"
             disabled={isDisconnecting}
@@ -587,6 +785,36 @@ function IntegrationPanel({
           </Button>
         </Stack>
       </Stack>
+
+      {provider === 'onlyfans' ? (
+        <React.Fragment>
+          {isEditingOnlyFans ? (
+            <OnlyFansAccountForm
+              integration={page.integration}
+              isSaving={isConnecting}
+              onSave={async (input) => {
+                await onOnlyFansConnect(input);
+                setIsEditingOnlyFans(false);
+              }}
+              providerText={providerText}
+            />
+          ) : null}
+          {isAddingOnlyFansMedia ? (
+            <OnlyFansUploadForm
+              isUploading={isUploading}
+              onCancel={() => {
+                setIsAddingOnlyFansMedia(false);
+              }}
+              onUpload={async (input) => {
+                await onOnlyFansUpload(input);
+                setIsAddingOnlyFansMedia(false);
+              }}
+              providerText={providerText}
+              selectionAvailable={selectedCount < selectionLimit}
+            />
+          ) : null}
+        </React.Fragment>
+      ) : null}
 
       {media.length ? (
         <React.Fragment>
@@ -684,6 +912,7 @@ function IntegrationPanel({
                 common={common}
                 item={item}
                 key={item.id}
+                onDeleteMedia={provider === 'onlyfans' ? onDeleteMedia : undefined}
                 onObservationChange={onObservationChange}
                 onToggleSelected={onToggleSelected}
                 provider={provider}
@@ -723,12 +952,282 @@ function IntegrationPanel({
       ) : (
         <Stack spacing={2} sx={{ alignItems: 'flex-start', py: 2 }}>
           <Typography color="text.secondary">{providerText.empty}</Typography>
-          <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
-            {isSyncing ? `${common.sync}...` : common.sync}
-          </Button>
+          {provider !== 'onlyfans' ? (
+            <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
+              {isSyncing ? `${common.sync}...` : common.sync}
+            </Button>
+          ) : null}
         </Stack>
       )}
     </Stack>
+  );
+}
+
+function OnlyFansAccountForm({
+  integration,
+  isSaving,
+  onSave,
+  providerText,
+}: {
+  integration?: ProfileIntegration;
+  isSaving: boolean;
+  onSave: (input: OnlyFansConnectionInput) => Promise<void>;
+  providerText: Record<string, string>;
+}): React.JSX.Element {
+  const profileUrl =
+    integration?.metadata && typeof integration.metadata.profile_url === 'string'
+      ? integration.metadata.profile_url
+      : '';
+  const [username, setUsername] = React.useState(integration?.username ?? '');
+  const [url, setUrl] = React.useState(profileUrl);
+  const [rightsConfirmed, setRightsConfirmed] = React.useState(Boolean(integration));
+  const [adultContentConfirmed, setAdultContentConfirmed] = React.useState(Boolean(integration));
+  const hasValidProfileUrl = isValidOnlyFansProfileUrl(username, url);
+
+  React.useEffect(() => {
+    setUsername(integration?.username ?? '');
+    setUrl(profileUrl);
+    setRightsConfirmed(Boolean(integration));
+    setAdultContentConfirmed(Boolean(integration));
+  }, [integration, profileUrl]);
+
+  return (
+    <Box
+      component="form"
+      data-testid="onlyfans-account-form"
+      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        onSave({
+          adultContentConfirmed,
+          profileUrl: url.trim(),
+          rightsConfirmed,
+          username: username.trim(),
+        }).catch(() => undefined);
+      }}
+      sx={{
+        border: '1px dashed var(--mui-palette-divider)',
+        borderRadius: 1,
+        p: 3,
+      }}
+    >
+      <Stack spacing={2}>
+        {!integration ? (
+          <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
+            {providerText.noConnection}
+          </Typography>
+        ) : null}
+        <Stack direction={{ md: 'row', xs: 'column' }} spacing={2}>
+          <TextField
+            error={Boolean(url.trim()) && !hasValidProfileUrl}
+            fullWidth
+            helperText={Boolean(url.trim()) && !hasValidProfileUrl ? providerText.invalidProfileUrl : undefined}
+            inputProps={{ 'data-testid': 'onlyfans-username-input' }}
+            label={providerText.usernameLabel}
+            onChange={(event) => {
+              setUsername(event.target.value);
+            }}
+            required
+            value={username}
+          />
+          <TextField
+            fullWidth
+            inputProps={{ 'data-testid': 'onlyfans-profile-url-input' }}
+            label={providerText.profileUrl}
+            onChange={(event) => {
+              setUrl(event.target.value);
+            }}
+            required
+            type="url"
+            value={url}
+          />
+        </Stack>
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={rightsConfirmed}
+              data-testid="onlyfans-account-rights-checkbox"
+              onChange={(event) => {
+                setRightsConfirmed(event.target.checked);
+              }}
+            />
+          }
+          label={providerText.rightsConfirmation}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={adultContentConfirmed}
+              data-testid="onlyfans-adult-checkbox"
+              onChange={(event) => {
+                setAdultContentConfirmed(event.target.checked);
+              }}
+            />
+          }
+          label={providerText.adultConfirmation}
+        />
+        <Box>
+          <Button
+            data-testid="onlyfans-connect-button"
+            disabled={
+              isSaving ||
+              !username.trim() ||
+              !url.trim() ||
+              !hasValidProfileUrl ||
+              !rightsConfirmed ||
+              !adultContentConfirmed
+            }
+            startIcon={<LinkSimpleIcon />}
+            type="submit"
+            variant={integration ? 'outlined' : 'contained'}
+          >
+            {isSaving ? `${providerText.connect}...` : providerText.connect}
+          </Button>
+        </Box>
+      </Stack>
+    </Box>
+  );
+}
+
+function OnlyFansUploadForm({
+  isUploading,
+  onCancel,
+  onUpload,
+  providerText,
+  selectionAvailable,
+}: {
+  isUploading: boolean;
+  onCancel: () => void;
+  onUpload: (input: OnlyFansMediaUploadInput) => Promise<void>;
+  providerText: Record<string, string>;
+  selectionAvailable: boolean;
+}): React.JSX.Element {
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+  const [file, setFile] = React.useState<File | null>(null);
+  const [caption, setCaption] = React.useState('');
+  const [observation, setObservation] = React.useState('');
+  const [rightsConfirmed, setRightsConfirmed] = React.useState(false);
+  const [selected, setSelected] = React.useState(selectionAvailable);
+
+  React.useEffect(() => {
+    if (!selectionAvailable) {
+      setSelected(false);
+    }
+  }, [selectionAvailable]);
+
+  return (
+    <Box
+      component="form"
+      data-testid="onlyfans-upload-form"
+      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        if (!file) {
+          return;
+        }
+
+        onUpload({
+          caption,
+          file,
+          observation,
+          rightsConfirmed,
+          selected,
+        })
+          .then(() => {
+            setFile(null);
+            setCaption('');
+            setObservation('');
+            setRightsConfirmed(false);
+            setSelected(selectionAvailable);
+
+            if (inputRef.current) {
+              inputRef.current.value = '';
+            }
+          })
+          .catch(() => undefined);
+      }}
+      sx={{ border: '1px solid var(--mui-palette-divider)', borderRadius: 1, p: 3 }}
+    >
+      <Stack spacing={2}>
+        <Typography variant="h6">{providerText.upload}</Typography>
+        <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+          <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
+            {providerText.uploadFile}
+            <input
+              accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime,video/webm"
+              data-testid="onlyfans-file-input"
+              hidden
+              onChange={(event) => {
+                setFile(event.target.files?.[0] ?? null);
+              }}
+              ref={inputRef}
+              type="file"
+            />
+          </Button>
+          {file ? (
+            <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="body2">
+              {file.name}
+            </Typography>
+          ) : null}
+        </Stack>
+        <TextField
+          fullWidth
+          label={providerText.uploadCaption}
+          onChange={(event) => {
+            setCaption(event.target.value);
+          }}
+          value={caption}
+        />
+        <TextField
+          fullWidth
+          label={providerText.uploadObservation}
+          multiline
+          onChange={(event) => {
+            setObservation(event.target.value);
+          }}
+          placeholder={providerText.observationPlaceholder}
+          rows={3}
+          value={observation}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={rightsConfirmed}
+              data-testid="onlyfans-upload-rights-checkbox"
+              onChange={(event) => {
+                setRightsConfirmed(event.target.checked);
+              }}
+            />
+          }
+          label={providerText.rightsConfirmation}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={selected}
+              disabled={!selectionAvailable && !selected}
+              onChange={(event) => {
+                setSelected(event.target.checked);
+              }}
+            />
+          }
+          label={providerText.selectForChat}
+        />
+        <Stack direction="row" spacing={1}>
+          <Button
+            data-testid="onlyfans-upload-button"
+            disabled={isUploading || !file || !rightsConfirmed}
+            startIcon={<UploadSimpleIcon />}
+            type="submit"
+            variant="contained"
+          >
+            {isUploading ? `${providerText.upload}...` : providerText.upload}
+          </Button>
+          <Button disabled={isUploading} onClick={onCancel} type="button" variant="outlined">
+            {providerText.cancelUpload}
+          </Button>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }
 
@@ -740,6 +1239,7 @@ interface IntegrationMediaCardProps {
   providerText: (typeof copy)['es']['providers'][IntegrationProvider];
   selectedCount: number;
   selectionLimit: number;
+  onDeleteMedia?: (mediaId: number | string) => Promise<void>;
   onObservationChange: (mediaId: number | string, observation: string) => void;
   onToggleSelected: (mediaId: number | string, checked: boolean) => void;
 }
@@ -753,12 +1253,13 @@ function IntegrationMediaCard({
   selectedCount,
   selectionLimit,
   onObservationChange,
+  onDeleteMedia,
   onToggleSelected,
 }: IntegrationMediaCardProps): React.JSX.Element {
-  const imageUrl = item.thumbnail_url || item.media_url;
+  const isVideo = item.media_type?.trim().toUpperCase().includes('VIDEO') ?? false;
+  const imageUrl = item.thumbnail_url || (!isVideo ? item.media_url : null);
   const disableUnchecked = !item.selected && selectedCount >= selectionLimit;
   const Icon = providerConfig.Icon;
-  const isVideo = item.media_type?.trim().toUpperCase().includes('VIDEO') ?? false;
   const playback = isVideo ? getIntegrationMediaPlayback(item, provider) : null;
   const [isPlaybackOpen, setIsPlaybackOpen] = React.useState(false);
   const playVideoLabel = interpolate(common.playVideo, { provider: providerText.label });
@@ -788,6 +1289,15 @@ function IntegrationMediaCard({
               src={imageUrl}
               sx={{ height: '100%', objectFit: 'cover', width: '100%' }}
             />
+          ) : isVideo && item.media_url ? (
+            <Box
+              component="video"
+              muted
+              playsInline
+              preload="metadata"
+              src={item.media_url}
+              sx={{ height: '100%', objectFit: 'cover', width: '100%' }}
+            />
           ) : (
             <Stack sx={{ alignItems: 'center', height: '100%', justifyContent: 'center', p: 2 }}>
               <Icon fontSize="var(--icon-fontSize-xl)" />
@@ -799,6 +1309,35 @@ function IntegrationMediaCard({
             size="small"
             sx={{ left: 12, position: 'absolute', top: 12 }}
           />
+          {item.age_restricted ? (
+            <Chip
+              color="warning"
+              label={common.ageRestricted}
+              size="small"
+              sx={{ position: 'absolute', right: 12, top: 12 }}
+            />
+          ) : null}
+          {onDeleteMedia ? (
+            <Tooltip title={common.deleteMedia}>
+              <IconButton
+                aria-label={common.deleteMedia}
+                data-testid={`${providerConfig.testIdPrefix}-media-delete`}
+                onClick={() => {
+                  onDeleteMedia(item.id).catch(() => undefined);
+                }}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  bottom: 12,
+                  color: 'common.white',
+                  position: 'absolute',
+                  right: 12,
+                }}
+              >
+                <TrashIcon />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           {isVideo && playback ? (
             <Tooltip title={playVideoLabel}>
               <IconButton
@@ -964,6 +1503,10 @@ function getIntegrationMediaPlayback(
   item: IntegrationMedia,
   provider: IntegrationProvider
 ): IntegrationMediaPlayback | null {
+  if (provider === 'onlyfans') {
+    return item.media_url ? { kind: 'video', src: item.media_url } : null;
+  }
+
   if (provider === 'tiktok') {
     const videoId = getTikTokVideoId(item);
 
@@ -1040,7 +1583,22 @@ function getInstagramEmbedUrl(value?: null | string): string | null {
 }
 
 function normalizeProvider(value: null | string): IntegrationProvider | null {
-  return value === 'instagram' || value === 'tiktok' ? value : null;
+  return value === 'instagram' || value === 'onlyfans' || value === 'tiktok' ? value : null;
+}
+
+function isValidOnlyFansProfileUrl(username: string, value: string): boolean {
+  try {
+    const url = new URL(value.trim());
+    const host = url.hostname.toLowerCase();
+    const profileUsername = decodeURIComponent(url.pathname.split('/').filter(Boolean)[0] ?? '').replace(/^@/, '');
+
+    return (
+      (host === 'onlyfans.com' || host === 'www.onlyfans.com') &&
+      profileUsername.toLowerCase() === username.trim().replace(/^@/, '').toLowerCase()
+    );
+  } catch {
+    return false;
+  }
 }
 
 function interpolate(value: string, params: Record<string, number | string>): string {

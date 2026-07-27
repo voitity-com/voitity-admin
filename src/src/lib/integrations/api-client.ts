@@ -11,7 +11,7 @@ interface RequestOptions {
   method?: 'DELETE' | 'GET' | 'POST' | 'PUT';
 }
 
-export type IntegrationProvider = 'instagram' | 'tiktok';
+export type IntegrationProvider = 'instagram' | 'onlyfans' | 'tiktok';
 
 export interface ProfileIntegration {
   expires_at?: null | string;
@@ -28,6 +28,7 @@ export interface ProfileIntegration {
 }
 
 export interface IntegrationMedia {
+  age_restricted?: boolean;
   caption?: null | string;
   id: number | string;
   media_type?: null | string;
@@ -57,6 +58,21 @@ export interface IntegrationOAuthDiagnostics {
 export interface IntegrationConnectUrl {
   oauth?: IntegrationOAuthDiagnostics | null;
   url: string;
+}
+
+export interface OnlyFansConnectionInput {
+  adultContentConfirmed: boolean;
+  profileUrl: string;
+  rightsConfirmed: boolean;
+  username: string;
+}
+
+export interface OnlyFansMediaUploadInput {
+  caption?: string;
+  file: File;
+  observation?: string;
+  rightsConfirmed: boolean;
+  selected?: boolean;
 }
 
 export type InstagramMedia = IntegrationMedia;
@@ -141,6 +157,52 @@ export async function disconnectIntegration(profileId: number | string, provider
   });
 }
 
+export async function saveOnlyFansIntegration(
+  profileId: number | string,
+  input: OnlyFansConnectionInput
+): Promise<ProfileIntegration> {
+  const response = await requestJson<ApiEnvelope<{ integration: ProfileIntegration }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/onlyfans`,
+    {
+      body: {
+        adult_content_confirmed: input.adultContentConfirmed,
+        profile_url: input.profileUrl,
+        rights_confirmed: input.rightsConfirmed,
+        username: input.username,
+      },
+      method: 'POST',
+    }
+  );
+
+  return response.data.integration;
+}
+
+export async function uploadOnlyFansMedia(
+  profileId: number | string,
+  input: OnlyFansMediaUploadInput
+): Promise<IntegrationMedia> {
+  const formData = new FormData();
+  formData.append('file', input.file);
+  formData.append('caption', input.caption ?? '');
+  formData.append('observation', input.observation ?? '');
+  formData.append('rights_confirmed', input.rightsConfirmed ? '1' : '0');
+  formData.append('selected', input.selected ? '1' : '0');
+
+  const response = await requestJson<ApiEnvelope<{ media: IntegrationMedia }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/onlyfans/media`,
+    { body: formData, method: 'POST' }
+  );
+
+  return response.data.media;
+}
+
+export async function deleteOnlyFansMedia(profileId: number | string, mediaId: number | string): Promise<void> {
+  await requestJson(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/onlyfans/media/${encodeURIComponent(String(mediaId))}`,
+    { method: 'DELETE' }
+  );
+}
+
 export async function createInstagramConnectUrl(profileId: number | string): Promise<InstagramConnectUrl> {
   return createIntegrationConnectUrl(profileId, 'instagram');
 }
@@ -174,7 +236,11 @@ function normalizeIntegrationMediaPage(value: IntegrationMediaPage): Integration
 }
 
 function providerLabel(provider: IntegrationProvider): string {
-  return provider === 'tiktok' ? 'TikTok' : 'Instagram';
+  if (provider === 'tiktok') {
+    return 'TikTok';
+  }
+
+  return provider === 'onlyfans' ? 'OnlyFans' : 'Instagram';
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
@@ -194,12 +260,22 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
     Authorization: `Bearer ${token}`,
   };
 
-  if (options.body !== undefined) {
+  const isFormData = options.body instanceof FormData;
+
+  if (options.body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
+  let body: BodyInit | undefined;
+
+  if (isFormData) {
+    body = options.body as FormData;
+  } else if (options.body !== undefined) {
+    body = JSON.stringify(options.body);
+  }
+
   const response = await fetch(`${baseUrl}${path}`, {
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body,
     cache: options.method === 'GET' || !options.method ? 'no-store' : undefined,
     headers,
     method: options.method ?? 'GET',
