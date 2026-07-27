@@ -11,6 +11,8 @@ interface RequestOptions {
   method?: 'DELETE' | 'GET' | 'POST' | 'PUT';
 }
 
+export type IntegrationProvider = 'instagram' | 'onlyfans' | 'tiktok';
+
 export interface ProfileIntegration {
   expires_at?: null | string;
   id: number | string;
@@ -19,41 +21,64 @@ export interface ProfileIntegration {
   metadata?: null | Record<string, unknown>;
   provider: string;
   provider_user_id?: null | string;
+  refresh_expires_at?: null | string;
   selected_media_count?: number;
   status?: null | string;
   username?: null | string;
 }
 
-export interface InstagramMedia {
+export interface IntegrationMedia {
+  age_restricted?: boolean;
   caption?: null | string;
   id: number | string;
   media_type?: null | string;
   media_url?: null | string;
   observation?: null | string;
   permalink?: null | string;
+  provider?: null | string;
   provider_media_id?: null | string;
   selected: boolean;
   taken_at?: null | string;
   thumbnail_url?: null | string;
 }
 
-export interface InstagramMediaPage {
+export interface IntegrationMediaPage {
   integration: null | ProfileIntegration;
-  media: InstagramMedia[];
-  oauth?: InstagramOAuthDiagnostics | null;
+  media: IntegrationMedia[];
+  oauth?: IntegrationOAuthDiagnostics | null;
   selection_limit: number;
 }
 
-export interface InstagramOAuthDiagnostics {
+export interface IntegrationOAuthDiagnostics {
   redirect_host?: null | string;
   redirect_uri?: null | string;
   uses_local_redirect?: boolean;
 }
 
-export interface InstagramConnectUrl {
-  oauth?: InstagramOAuthDiagnostics | null;
+export interface IntegrationConnectUrl {
+  oauth?: IntegrationOAuthDiagnostics | null;
   url: string;
 }
+
+export interface OnlyFansConnectionInput {
+  adultContentConfirmed: boolean;
+  profileUrl: string;
+  rightsConfirmed: boolean;
+  username: string;
+}
+
+export interface OnlyFansMediaUploadInput {
+  caption?: string;
+  file: File;
+  observation?: string;
+  rightsConfirmed: boolean;
+  selected?: boolean;
+}
+
+export type InstagramMedia = IntegrationMedia;
+export type InstagramMediaPage = IntegrationMediaPage;
+export type InstagramOAuthDiagnostics = IntegrationOAuthDiagnostics;
+export type InstagramConnectUrl = IntegrationConnectUrl;
 
 export class IntegrationApiError extends Error {
   public status: number;
@@ -65,70 +90,157 @@ export class IntegrationApiError extends Error {
   }
 }
 
-export async function createInstagramConnectUrl(profileId: number | string): Promise<InstagramConnectUrl> {
-  const response = await requestJson<ApiEnvelope<Partial<InstagramConnectUrl>> | Partial<InstagramConnectUrl>>(
-    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/instagram/connect-url`,
+export async function createIntegrationConnectUrl(
+  profileId: number | string,
+  provider: IntegrationProvider
+): Promise<IntegrationConnectUrl> {
+  const response = await requestJson<ApiEnvelope<Partial<IntegrationConnectUrl>> | Partial<IntegrationConnectUrl>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}/connect-url`,
     { method: 'POST' }
   );
-  const data = isApiEnvelope<Partial<InstagramConnectUrl>>(response) ? response.data : response;
+  const data = isApiEnvelope<Partial<IntegrationConnectUrl>>(response) ? response.data : response;
 
   if (!data.url) {
-    throw new Error('The API did not return an Instagram connection URL.');
+    throw new Error(`The API did not return a ${providerLabel(provider)} connection URL.`);
   }
 
   return { oauth: data.oauth ?? null, url: data.url };
 }
 
-export async function getInstagramMedia(profileId: number | string): Promise<InstagramMediaPage> {
-  const response = await requestJson<ApiEnvelope<InstagramMediaPage> | InstagramMediaPage>(
-    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/instagram/media`,
+export async function getIntegrationMedia(
+  profileId: number | string,
+  provider: IntegrationProvider
+): Promise<IntegrationMediaPage> {
+  const response = await requestJson<ApiEnvelope<IntegrationMediaPage> | IntegrationMediaPage>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}/media`,
     { method: 'GET' }
   );
 
-  return normalizeInstagramMediaPage(isApiEnvelope<InstagramMediaPage>(response) ? response.data : response);
+  return normalizeIntegrationMediaPage(isApiEnvelope<IntegrationMediaPage>(response) ? response.data : response);
 }
 
-export async function syncInstagramMedia(profileId: number | string): Promise<ProfileIntegration> {
+export async function syncIntegrationMedia(
+  profileId: number | string,
+  provider: IntegrationProvider
+): Promise<ProfileIntegration> {
   const response = await requestJson<
     ApiEnvelope<{ integration?: ProfileIntegration; synced_count?: number }> | { integration?: ProfileIntegration }
-  >(`/api/profile/${encodeURIComponent(String(profileId))}/integrations/instagram/sync`, { method: 'POST' });
+  >(`/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}/sync`, { method: 'POST' });
   const data = isApiEnvelope<{ integration?: ProfileIntegration }>(response) ? response.data : response;
 
   if (!data.integration) {
-    throw new Error('The API did not return the Instagram integration.');
+    throw new Error(`The API did not return the ${providerLabel(provider)} integration.`);
   }
 
   return data.integration;
 }
 
-export async function updateInstagramMediaSelection(
+export async function updateIntegrationMediaSelection(
   profileId: number | string,
-  media: Pick<InstagramMedia, 'id' | 'observation' | 'selected'>[]
-): Promise<InstagramMediaPage> {
-  const response = await requestJson<ApiEnvelope<InstagramMediaPage> | InstagramMediaPage>(
-    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/instagram/media-selection`,
+  provider: IntegrationProvider,
+  media: Pick<IntegrationMedia, 'id' | 'observation' | 'selected'>[]
+): Promise<IntegrationMediaPage> {
+  const response = await requestJson<ApiEnvelope<IntegrationMediaPage> | IntegrationMediaPage>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}/media-selection`,
     {
       body: { media },
       method: 'PUT',
     }
   );
 
-  return normalizeInstagramMediaPage(isApiEnvelope<InstagramMediaPage>(response) ? response.data : response);
+  return normalizeIntegrationMediaPage(isApiEnvelope<IntegrationMediaPage>(response) ? response.data : response);
 }
 
-export async function disconnectInstagram(profileId: number | string): Promise<void> {
-  await requestJson(`/api/profile/${encodeURIComponent(String(profileId))}/integrations/instagram`, {
+export async function disconnectIntegration(profileId: number | string, provider: IntegrationProvider): Promise<void> {
+  await requestJson(`/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}`, {
     method: 'DELETE',
   });
 }
 
-function normalizeInstagramMediaPage(value: InstagramMediaPage): InstagramMediaPage {
+export async function saveOnlyFansIntegration(
+  profileId: number | string,
+  input: OnlyFansConnectionInput
+): Promise<ProfileIntegration> {
+  const response = await requestJson<ApiEnvelope<{ integration: ProfileIntegration }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/onlyfans`,
+    {
+      body: {
+        adult_content_confirmed: input.adultContentConfirmed,
+        profile_url: input.profileUrl,
+        rights_confirmed: input.rightsConfirmed,
+        username: input.username,
+      },
+      method: 'POST',
+    }
+  );
+
+  return response.data.integration;
+}
+
+export async function uploadOnlyFansMedia(
+  profileId: number | string,
+  input: OnlyFansMediaUploadInput
+): Promise<IntegrationMedia> {
+  const formData = new FormData();
+  formData.append('file', input.file);
+  formData.append('caption', input.caption ?? '');
+  formData.append('observation', input.observation ?? '');
+  formData.append('rights_confirmed', input.rightsConfirmed ? '1' : '0');
+  formData.append('selected', input.selected ? '1' : '0');
+
+  const response = await requestJson<ApiEnvelope<{ media: IntegrationMedia }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/onlyfans/media`,
+    { body: formData, method: 'POST' }
+  );
+
+  return response.data.media;
+}
+
+export async function deleteOnlyFansMedia(profileId: number | string, mediaId: number | string): Promise<void> {
+  await requestJson(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/onlyfans/media/${encodeURIComponent(String(mediaId))}`,
+    { method: 'DELETE' }
+  );
+}
+
+export async function createInstagramConnectUrl(profileId: number | string): Promise<InstagramConnectUrl> {
+  return createIntegrationConnectUrl(profileId, 'instagram');
+}
+
+export async function getInstagramMedia(profileId: number | string): Promise<InstagramMediaPage> {
+  return getIntegrationMedia(profileId, 'instagram');
+}
+
+export async function syncInstagramMedia(profileId: number | string): Promise<ProfileIntegration> {
+  return syncIntegrationMedia(profileId, 'instagram');
+}
+
+export async function updateInstagramMediaSelection(
+  profileId: number | string,
+  media: Pick<InstagramMedia, 'id' | 'observation' | 'selected'>[]
+): Promise<InstagramMediaPage> {
+  return updateIntegrationMediaSelection(profileId, 'instagram', media);
+}
+
+export async function disconnectInstagram(profileId: number | string): Promise<void> {
+  await disconnectIntegration(profileId, 'instagram');
+}
+
+function normalizeIntegrationMediaPage(value: IntegrationMediaPage): IntegrationMediaPage {
   return {
     integration: value.integration ?? null,
     media: Array.isArray(value.media) ? value.media : [],
     oauth: value.oauth ?? null,
     selection_limit: Number(value.selection_limit || 10),
   };
+}
+
+function providerLabel(provider: IntegrationProvider): string {
+  if (provider === 'tiktok') {
+    return 'TikTok';
+  }
+
+  return provider === 'onlyfans' ? 'OnlyFans' : 'Instagram';
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {
@@ -148,12 +260,22 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
     Authorization: `Bearer ${token}`,
   };
 
-  if (options.body !== undefined) {
+  const isFormData = options.body instanceof FormData;
+
+  if (options.body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
+  let body: BodyInit | undefined;
+
+  if (isFormData) {
+    body = options.body as FormData;
+  } else if (options.body !== undefined) {
+    body = JSON.stringify(options.body);
+  }
+
   const response = await fetch(`${baseUrl}${path}`, {
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body,
     cache: options.method === 'GET' || !options.method ? 'no-store' : undefined,
     headers,
     method: options.method ?? 'GET',
