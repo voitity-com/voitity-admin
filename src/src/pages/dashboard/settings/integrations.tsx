@@ -22,6 +22,13 @@ export function Page(): React.JSX.Element {
         <Integrations
           integrations={[
             {
+              id: 'tiktok',
+              name: 'TikTok',
+              icon: '/assets/company-avatar-2.png',
+              description: 'Sync public TikTok videos for profile conversations',
+              installed: true,
+            },
+            {
               id: 'vercel',
               name: 'Vercel',
               icon: '/assets/company-avatar-4.png',
