@@ -10,9 +10,9 @@ import ListSubheader from '@mui/material/ListSubheader';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import Stack from '@mui/material/Stack';
+import { useTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme } from '@mui/material/styles';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
@@ -22,6 +22,7 @@ import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr/ShareNetwork';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
@@ -39,6 +40,7 @@ const icons = {
   data: DatabaseIcon,
   integrations: PlugsConnectedIcon,
   messages: ChatTextIcon,
+  products: PackageIcon,
   profile: UserCircleIcon,
   quality: GaugeIcon,
   socialNetworks: ShareNetworkIcon,
@@ -84,6 +86,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.integrations'),
         href: paths.dashboard.profileDetails.integrations(profileId),
         icon: 'integrations',
+      },
+      {
+        key: 'products',
+        title: t('dashboard.profiles.detail.nav.products'),
+        href: paths.dashboard.profileDetails.products(profileId),
+        icon: 'products',
       },
       {
         key: 'dataGroup',
@@ -147,11 +155,7 @@ export function ProfileSideNav(): React.JSX.Element {
         items={items}
         pathname={pathname}
       />
-      <Stack
-        component="ul"
-        spacing={1}
-        sx={{ display: { xs: 'none', md: 'flex' }, listStyle: 'none', m: 0, p: 0 }}
-      >
+      <Stack component="ul" spacing={1} sx={{ display: { xs: 'none', md: 'flex' }, listStyle: 'none', m: 0, p: 0 }}>
         {items.map((item) =>
           isNavGroup(item) ? (
             <NavGroup {...item} includeItemIds={isDesktop} key={item.key} pathname={pathname} />
@@ -281,15 +285,14 @@ function MobileProfileNav({
         }}
         variant="outlined"
       >
-        <Box component="span" sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis' }}>
+        <Box
+          component="span"
+          sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis' }}
+        >
           {activeParentTitle ? `${activeParentTitle} / ${activeItem.title}` : activeItem.title}
         </Box>
       </Button>
       <Menu
-        anchorEl={anchorEl}
-        id="profile-detail-mobile-nav-menu"
-        onClose={handleClose}
-        open={open}
         PaperProps={{
           sx: {
             maxHeight: 'min(380px, 68vh)',
@@ -297,6 +300,10 @@ function MobileProfileNav({
             width: anchorEl?.clientWidth ?? '100%',
           },
         }}
+        anchorEl={anchorEl}
+        id="profile-detail-mobile-nav-menu"
+        onClose={handleClose}
+        open={open}
       >
         {items.map((item, index) =>
           isNavGroup(item) ? (
@@ -346,7 +353,10 @@ function MobileNavGroupHeader({ item, pathname }: { item: NavGroupConfig; pathna
           fontSize="var(--icon-fontSize-sm)"
           weight={active ? 'fill' : undefined}
         />
-        <Typography component="span" sx={{ color: 'inherit', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}>
+        <Typography
+          component="span"
+          sx={{ color: 'inherit', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase' }}
+        >
           {item.title}
         </Typography>
       </Stack>
@@ -445,7 +455,15 @@ function NavGroup({ children, icon, includeItemIds = true, pathname, title }: Na
   );
 }
 
-function NavItem({ href, icon, includeId = true, itemKey, nested = false, pathname, title }: NavItemProps): React.JSX.Element {
+function NavItem({
+  href,
+  icon,
+  includeId = true,
+  itemKey,
+  nested = false,
+  pathname,
+  title,
+}: NavItemProps): React.JSX.Element {
   const active = isNavItemActive({ href, pathname });
   const Icon = icons[icon];
   const navItemId = includeId && itemKey ? `profile-detail-nav-${itemKey}` : undefined;
