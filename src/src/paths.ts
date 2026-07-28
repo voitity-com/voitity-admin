@@ -76,6 +76,7 @@ export const paths = {
       data: (profileId: string) => `/dashboard/profiles/${profileId}/data`,
       integrations: (profileId: string) => `/dashboard/profiles/${profileId}/integrations`,
       messages: (profileId: string) => `/dashboard/profiles/${profileId}/messages`,
+      products: (profileId: string) => `/dashboard/profiles/${profileId}/products`,
       profile: (profileId: string) => `/dashboard/profiles/${profileId}/profile`,
       quality: (profileId: string) => `/dashboard/profiles/${profileId}/quality`,
       socialNetworks: (profileId: string) => `/dashboard/profiles/${profileId}/social-networks`,

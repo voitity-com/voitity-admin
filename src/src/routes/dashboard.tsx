@@ -468,6 +468,13 @@ export const route: RouteObject = {
                 return { Component: Page };
               },
             },
+            {
+              path: 'products',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/products');
+                return { Component: Page };
+              },
+            },
           ],
         },
       ],
