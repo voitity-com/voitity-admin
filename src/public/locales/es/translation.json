@@ -142,6 +142,7 @@
         "analytics": "Analítica",
         "billing": "Facturación y planes",
         "integrations": "Integraciones",
+        "newFeatures": "Nuevas funcionalidades",
         "notifications": "Notificaciones",
         "overview": "Resumen",
         "profile": "Perfil",
@@ -849,6 +850,7 @@
         "profile": "Perfil",
         "profileData": "Datos del perfil",
         "quality": "Calidad",
+        "settings": "Configuración",
         "socialNetworks": "Redes Sociales",
         "sources": "Fuentes",
         "voice": "Voz"

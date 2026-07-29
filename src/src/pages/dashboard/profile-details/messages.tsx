@@ -351,12 +351,14 @@ export function Page(): React.JSX.Element {
           <Stack spacing={3}>
             {MESSAGE_TYPES.map((type) => (
               <ConversationMessageCard
+                description={t(`dashboard.profiles.detail.messages.cards.${type}.description`)}
                 draft={drafts[type]}
                 generating={generatingType === type}
+                helper={t(`dashboard.profiles.detail.messages.cards.${type}.helper`)}
                 key={type}
                 message={messages[type]}
                 onClearAudio={() => handleClearAudio(type)}
-                onDraftChange={(value) => handleDraftChange(type, value)}
+                onDraftChange={(value) => { handleDraftChange(type, value); }}
                 onGenerateAudio={() => handleGenerateAudio(type)}
                 onSave={() => handleSave(type)}
                 onStartRecording={() => handleStartRecording(type)}
@@ -366,8 +368,6 @@ export function Page(): React.JSX.Element {
                 removingAudio={clearingType === type}
                 saving={savingType === type}
                 title={t(`dashboard.profiles.detail.messages.cards.${type}.title`)}
-                description={t(`dashboard.profiles.detail.messages.cards.${type}.description`)}
-                helper={t(`dashboard.profiles.detail.messages.cards.${type}.helper`)}
                 uploading={uploadingType === type}
               />
             ))}
@@ -464,7 +464,7 @@ function ConversationMessageCard({
               label={t('dashboard.profiles.detail.messages.fields.text')}
               minRows={4}
               multiline
-              onChange={(event) => onDraftChange(event.target.value)}
+              onChange={(event) => { onDraftChange(event.target.value); }}
               value={draft}
             />
             <FormHelperText>

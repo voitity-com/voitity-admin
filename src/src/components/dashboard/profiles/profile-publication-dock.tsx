@@ -327,16 +327,16 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
       </Dialog>
 
       <Dialog
-        fullWidth
-        maxWidth="xs"
-        onClose={handleCloseConfirmationDialog}
-        open={publicationAction !== null}
         PaperProps={{
           sx: {
             m: { xs: 2, sm: 3 },
             width: { xs: 'calc(100% - 32px)', sm: '100%' },
           },
         }}
+        fullWidth
+        maxWidth="xs"
+        onClose={handleCloseConfirmationDialog}
+        open={publicationAction !== null}
       >
         <DialogTitle>
           {publicationAction === 'deactivate'

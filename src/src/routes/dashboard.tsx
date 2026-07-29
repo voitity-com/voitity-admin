@@ -59,6 +59,13 @@ export const route: RouteObject = {
       },
     },
     {
+      path: 'new-features',
+      lazy: async () => {
+        const { Page } = await import('@/pages/dashboard/new-features');
+        return { Component: Page };
+      },
+    },
+    {
       path: 'blank',
       lazy: async () => {
         const { Page } = await import('@/pages/dashboard/blank');
@@ -472,6 +479,13 @@ export const route: RouteObject = {
               path: 'products',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/products');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'settings',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/settings');
                 return { Component: Page };
               },
             },

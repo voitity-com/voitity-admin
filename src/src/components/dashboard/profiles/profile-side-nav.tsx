@@ -20,6 +20,7 @@ import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatTex
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
+import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
@@ -30,6 +31,9 @@ import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { paths } from '@/paths';
+import { logger } from '@/lib/default-logger';
+import type { FeatureFlag } from '@/lib/features/api-client';
+import { getProfileFeatures, isFeatureEffective } from '@/lib/features/api-client';
 import { isNavItemActive } from '@/lib/is-nav-item-active';
 import { usePathname } from '@/hooks/use-pathname';
 import { RouterLink } from '@/components/core/link';
@@ -43,6 +47,7 @@ const icons = {
   products: PackageIcon,
   profile: UserCircleIcon,
   quality: GaugeIcon,
+  settings: GearIcon,
   socialNetworks: ShareNetworkIcon,
   sources: FileIcon,
   voice: MicrophoneIcon,
@@ -54,6 +59,53 @@ export function ProfileSideNav(): React.JSX.Element {
   const { t } = useTranslation();
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const [features, setFeatures] = React.useState<FeatureFlag[]>([]);
+
+  const loadFeatures = React.useCallback(async (): Promise<void> => {
+    if (!profileId) {
+      setFeatures([]);
+      return;
+    }
+
+    try {
+      setFeatures(await getProfileFeatures(profileId));
+    } catch (err) {
+      logger.error(err);
+      setFeatures([]);
+    }
+  }, [profileId]);
+
+  React.useEffect(() => {
+    loadFeatures().catch((err) => {
+      logger.error(err);
+    });
+  }, [loadFeatures]);
+
+  React.useEffect(() => {
+    const handleFeaturesUpdated = (event: Event): void => {
+      const detail = (event as CustomEvent<{ profileId?: number | string }>).detail;
+
+      if (detail?.profileId && String(detail.profileId) !== String(profileId)) {
+        return;
+      }
+
+      loadFeatures().catch((err) => {
+        logger.error(err);
+      });
+    };
+
+    window.addEventListener('profile-features-updated', handleFeaturesUpdated);
+
+    return () => {
+      window.removeEventListener('profile-features-updated', handleFeaturesUpdated);
+    };
+  }, [loadFeatures, profileId]);
+
+  const showIntegrations = React.useMemo(
+    () => features.some((feature) => feature.group === 'integrations' && feature.effective),
+    [features]
+  );
+  const showProducts = React.useMemo(() => isFeatureEffective(features, 'products'), [features]);
 
   const items = React.useMemo<NavEntry[]>(
     () => [
@@ -82,17 +134,31 @@ export function ProfileSideNav(): React.JSX.Element {
         icon: 'messages',
       },
       {
-        key: 'integrations',
-        title: t('dashboard.profiles.detail.nav.integrations'),
-        href: paths.dashboard.profileDetails.integrations(profileId),
-        icon: 'integrations',
+        key: 'settings',
+        title: t('dashboard.profiles.detail.nav.settings'),
+        href: paths.dashboard.profileDetails.settings(profileId),
+        icon: 'settings',
       },
-      {
-        key: 'products',
-        title: t('dashboard.profiles.detail.nav.products'),
-        href: paths.dashboard.profileDetails.products(profileId),
-        icon: 'products',
-      },
+      ...(showIntegrations
+        ? [
+            {
+              key: 'integrations',
+              title: t('dashboard.profiles.detail.nav.integrations'),
+              href: paths.dashboard.profileDetails.integrations(profileId),
+              icon: 'integrations',
+            },
+          ]
+        : []),
+      ...(showProducts
+        ? [
+            {
+              key: 'products',
+              title: t('dashboard.profiles.detail.nav.products'),
+              href: paths.dashboard.profileDetails.products(profileId),
+              icon: 'products',
+            },
+          ]
+        : []),
       {
         key: 'dataGroup',
         title: t('dashboard.profiles.detail.nav.data'),
@@ -131,7 +197,7 @@ export function ProfileSideNav(): React.JSX.Element {
         icon: 'quality',
       },
     ],
-    [profileId, t]
+    [profileId, showIntegrations, showProducts, t]
   );
   const activeNavContext = getActiveNavContext(items, pathname);
   const activeItem = activeNavContext.item;

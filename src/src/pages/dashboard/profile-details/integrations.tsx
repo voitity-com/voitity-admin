@@ -41,6 +41,10 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
 import {
+  enabledIntegrationProviders as enabledIntegrationFeatureProviders,
+  getProfileFeatures,
+} from '@/lib/features/api-client';
+import {
   createIntegrationConnectUrl,
   deleteOnlyFansMedia,
   disconnectIntegration,
@@ -310,6 +314,7 @@ export function Page(): React.JSX.Element {
   const [page, setPage] = React.useState<IntegrationMediaPage | null>(null);
   const [media, setMedia] = React.useState<IntegrationMedia[]>([]);
   const [error, setError] = React.useState<string>('');
+  const [enabledProviders, setEnabledProviders] = React.useState<IntegrationProvider[]>([]);
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [isDisconnecting, setIsDisconnecting] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -331,6 +336,20 @@ export function Page(): React.JSX.Element {
     setMedia([]);
 
     try {
+      const features = await getProfileFeatures(profileId);
+      const providers = enabledIntegrationFeatureProviders(features) as IntegrationProvider[];
+
+      setEnabledProviders(providers);
+
+      if (!providers.length) {
+        return;
+      }
+
+      if (!providers.includes(activeTab)) {
+        setActiveTab(providers[0]);
+        return;
+      }
+
       const nextPage = await getIntegrationMedia(profileId, activeTab);
       setPage(nextPage);
       setMedia(nextPage.media);
@@ -364,6 +383,7 @@ export function Page(): React.JSX.Element {
 
   const selectionLimit = page?.selection_limit ?? 10;
   const selectedCount = media.filter((item) => item.selected).length;
+  const activeProviderEnabled = enabledProviders.includes(activeTab);
 
   const handleConnect = React.useCallback(async (): Promise<void> => {
     setIsConnecting(true);
@@ -516,64 +536,83 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
-        <Card>
-          <CardHeader
-            avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
-            subheader={interpolate(providerText.hint, { limit: selectionLimit })}
-            title={t.common.title}
-          />
-          <Divider />
-          <Tabs
-            onChange={(_, value: IntegrationProvider) => {
-              setActiveTab(value);
-            }}
-            sx={{ px: 3 }}
-            value={activeTab}
-          >
-            {Object.entries(providerConfigs).map(([provider, providerConfig]) => {
-              const typedProvider = provider as IntegrationProvider;
-              const Icon = providerConfig.Icon;
 
-              return (
-                <Tab
-                  icon={<Icon />}
-                  iconPosition="start"
-                  key={typedProvider}
-                  label={t.providers[typedProvider].label}
-                  value={typedProvider}
-                />
-              );
-            })}
-          </Tabs>
-          <Divider />
-          <CardContent>
-            <IntegrationPanel
-              common={t.common}
-              isConnecting={isConnecting}
-              isDisconnecting={isDisconnecting}
-              isLoading={isLoading}
-              isSaving={isSaving}
-              isSyncing={isSyncing}
-              isUploading={isUploading}
-              media={media}
-              onConnect={handleConnect}
-              onDeleteMedia={handleOnlyFansDeleteMedia}
-              onDisconnect={handleDisconnect}
-              onObservationChange={handleObservationChange}
-              onOnlyFansConnect={handleOnlyFansConnect}
-              onOnlyFansUpload={handleOnlyFansUpload}
-              onSave={handleSave}
-              onSync={handleSync}
-              onToggleSelected={handleToggleSelected}
-              page={page}
-              provider={activeTab}
-              providerConfig={providerConfigs[activeTab]}
-              providerText={providerText}
-              selectedCount={selectedCount}
-              selectionLimit={selectionLimit}
+        {isLoading ? (
+          <Stack sx={{ alignItems: 'center', p: 5 }}>
+            <CircularProgress />
+          </Stack>
+        ) : null}
+
+        {!isLoading && enabledProviders.length === 0 ? (
+          <Alert color="info">
+            {language === 'en'
+              ? 'No integrations are enabled for this profile. Enable integrations from profile Settings first.'
+              : 'No hay integraciones habilitadas para este perfil. Activa integraciones desde Configuración del perfil primero.'}
+          </Alert>
+        ) : null}
+
+        {enabledProviders.length && activeProviderEnabled ? (
+          <Card>
+            <CardHeader
+              avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
+              subheader={interpolate(providerText.hint, { limit: selectionLimit })}
+              title={t.common.title}
             />
-          </CardContent>
-        </Card>
+            <Divider />
+            <Tabs
+              onChange={(_, value: IntegrationProvider) => {
+                setActiveTab(value);
+              }}
+              sx={{ px: 3 }}
+              value={activeTab}
+            >
+              {Object.entries(providerConfigs)
+                .filter(([provider]) => enabledProviders.includes(provider as IntegrationProvider))
+                .map(([provider, providerConfig]) => {
+                  const typedProvider = provider as IntegrationProvider;
+                  const Icon = providerConfig.Icon;
+
+                  return (
+                    <Tab
+                      icon={<Icon />}
+                      iconPosition="start"
+                      key={typedProvider}
+                      label={t.providers[typedProvider].label}
+                      value={typedProvider}
+                    />
+                  );
+                })}
+            </Tabs>
+            <Divider />
+            <CardContent>
+              <IntegrationPanel
+                common={t.common}
+                isConnecting={isConnecting}
+                isDisconnecting={isDisconnecting}
+                isLoading={isLoading}
+                isSaving={isSaving}
+                isSyncing={isSyncing}
+                isUploading={isUploading}
+                media={media}
+                onConnect={handleConnect}
+                onDeleteMedia={handleOnlyFansDeleteMedia}
+                onDisconnect={handleDisconnect}
+                onObservationChange={handleObservationChange}
+                onOnlyFansConnect={handleOnlyFansConnect}
+                onOnlyFansUpload={handleOnlyFansUpload}
+                onSave={handleSave}
+                onSync={handleSync}
+                onToggleSelected={handleToggleSelected}
+                page={page}
+                provider={activeTab}
+                providerConfig={providerConfigs[activeTab]}
+                providerText={providerText}
+                selectedCount={selectedCount}
+                selectionLimit={selectionLimit}
+              />
+            </CardContent>
+          </Card>
+        ) : null}
       </Stack>
     </React.Fragment>
   );
