@@ -371,28 +371,29 @@ function MobileProfileNav({
         onClose={handleClose}
         open={open}
       >
-        {items.map((item, index) =>
-          isNavGroup(item) ? (
-            <React.Fragment key={item.key}>
-              <MobileNavGroupHeader item={item} pathname={pathname} />
-              <Box
-                sx={{
-                  borderLeft: '1px solid var(--mui-palette-divider)',
-                  mb: 0.75,
-                  ml: 2.75,
-                  pl: 0.75,
-                }}
-              >
-                {item.children.map((child) => (
-                  <MobileNavItem item={child} key={child.key} nested onClose={handleClose} pathname={pathname} />
-                ))}
-              </Box>
-              {index < items.length - 1 ? <Divider sx={{ my: 0.5 }} /> : null}
-            </React.Fragment>
-          ) : (
-            <MobileNavItem item={item} key={item.key} onClose={handleClose} pathname={pathname} />
-          )
-        )}
+        {items.flatMap((item, index) => {
+          if (!isNavGroup(item)) {
+            return [<MobileNavItem item={item} key={item.key} onClose={handleClose} pathname={pathname} />];
+          }
+
+          return [
+            <MobileNavGroupHeader item={item} key={`${item.key}-header`} pathname={pathname} />,
+            <Box
+              key={`${item.key}-items`}
+              sx={{
+                borderLeft: '1px solid var(--mui-palette-divider)',
+                mb: 0.75,
+                ml: 2.75,
+                pl: 0.75,
+              }}
+            >
+              {item.children.map((child) => (
+                <MobileNavItem item={child} key={child.key} nested onClose={handleClose} pathname={pathname} />
+              ))}
+            </Box>,
+            ...(index < items.length - 1 ? [<Divider key={`${item.key}-divider`} sx={{ my: 0.5 }} />] : []),
+          ];
+        })}
       </Menu>
     </Box>
   );

@@ -41,6 +41,8 @@ import { useTranslation } from 'react-i18next';
 import { RadialBar, RadialBarChart } from 'recharts';
 
 import { paths } from '@/paths';
+import { config } from '@/config';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { NoSsr } from '@/components/core/no-ssr';
 import { RouterLink } from '@/components/core/link';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -393,12 +395,16 @@ function CurrentPlanCard({
   subscription: CurrentSubscription;
   t: TFunction;
 }): React.JSX.Element {
+  const [isCancelRenewalDialogOpen, setIsCancelRenewalDialogOpen] = React.useState<boolean>(false);
   const status = subscription.status ?? (subscription.active === false ? 'inactive' : 'active');
   const isTrialing = status.toLowerCase() === 'trialing';
   const isRecurring = subscription.billingMode === 'recurring';
   const hasCancelledRenewal = subscription.cancelAtPeriodEnd === true;
   const action = getCurrentPlanAction({ isRecurring, isTrialing, onCancelRenewal, onCancelTrial, onReactivateRenewal, subscription, t });
   const actionPending = Boolean(action && pendingAction === action.pendingKey);
+  const serviceEndDate = subscription.renewsAt
+    ? formatDate(subscription.renewsAt, language)
+    : t('dashboard.settings.billing.values.empty');
   const rows = [
     { name: t('dashboard.settings.billing.fields.billingCycle'), value: getIntervalLabel(subscription.interval, t) },
     ...(isTrialing
@@ -516,6 +522,12 @@ function CurrentPlanCard({
                 color={action.color}
                 disabled={actionPending || Boolean(pendingAction)}
                 onClick={() => {
+                  if (action.pendingKey === 'cancel-renewal') {
+                    setIsCancelRenewalDialogOpen(true);
+
+                    return;
+                  }
+
                   void action.onClick();
                 }}
                 startIcon={actionPending ? <CircularProgress color="inherit" size={16} /> : undefined}
@@ -527,6 +539,68 @@ function CurrentPlanCard({
           ) : null}
         </Stack>
       </CardContent>
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        onClose={() => {
+          if (!actionPending) {
+            setIsCancelRenewalDialogOpen(false);
+          }
+        }}
+        open={isCancelRenewalDialogOpen}
+      >
+        <DialogTitle>{t('dashboard.settings.billing.currentPlan.cancelRenewalDialog.title')}</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Alert severity="warning">
+              {t('dashboard.settings.billing.currentPlan.cancelRenewalDialog.accessEnds', { date: serviceEndDate })}
+            </Alert>
+            <Typography color="text.secondary" variant="body2">
+              {t('dashboard.settings.billing.currentPlan.cancelRenewalDialog.question')}
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions
+          sx={{
+            '& > :not(style) ~ :not(style)': { ml: 0 },
+            flexDirection: { sm: 'row', xs: 'column' },
+            gap: 1,
+            px: 3,
+            py: 2,
+          }}
+        >
+          <Button
+            disabled={actionPending}
+            onClick={() => {
+              setIsCancelRenewalDialogOpen(false);
+            }}
+            sx={{ width: { sm: 'auto', xs: '100%' } }}
+            variant="outlined"
+          >
+            {t('dashboard.settings.billing.currentPlan.cancelRenewalDialog.keep')}
+          </Button>
+          <Button
+            color="error"
+            disabled={actionPending}
+            onClick={() => {
+              if (!onCancelRenewal) {
+                return;
+              }
+
+              void onCancelRenewal().then(() => {
+                setIsCancelRenewalDialogOpen(false);
+              });
+            }}
+            startIcon={actionPending ? <CircularProgress color="inherit" size={16} /> : undefined}
+            sx={{ width: { sm: 'auto', xs: '100%' } }}
+            variant="contained"
+          >
+            {actionPending
+              ? t('dashboard.settings.billing.actions.processing')
+              : t('dashboard.settings.billing.currentPlan.cancelRenewalDialog.confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }
@@ -803,7 +877,10 @@ function CheckoutAgreementDialog({
   trialPaymentSourceSetup?: WompiPaymentSourceSetup | null;
 }): React.JSX.Element {
   const trial = cycle?.trial?.available ? cycle.trial : undefined;
+  const legalLocale = getSupportedLanguage(language);
+  const privacyUrl = getPublicLegalUrl(legalLocale === 'es' ? '/privacidad' : '/privacy');
   const requiresPaymentSource = Boolean(cycle);
+  const termsUrl = getPublicLegalUrl(legalLocale === 'es' ? '/terminos' : '/terms');
   const todayDisplayAmount = trial ? (trial.setup_amount_usd ?? 0) : cycle?.priceUsd;
   const processingAmount = trial ? (trial.setup_amount_cop ?? 0) : cycle?.processingAmount;
   const processingCurrency = cycle?.processingCurrency ?? 'COP';
@@ -896,7 +973,7 @@ function CheckoutAgreementDialog({
             : t('dashboard.settings.billing.checkout.subheader')}
         </Typography>
         <Grid container spacing={{ sm: 3, xs: 2 }}>
-          <Grid md={5} sx={{ order: { md: 0, xs: 2 } }} xs={12}>
+          <Grid md={5} sx={{ order: { md: 0, xs: 1 } }} xs={12}>
             <Card sx={{ borderRadius: 1, height: '100%' }} variant="outlined">
               <Stack spacing={2} sx={{ p: 2.5 }}>
                 <Typography variant="subtitle2">{t('dashboard.settings.billing.checkout.summaryTitle')}</Typography>
@@ -967,7 +1044,7 @@ function CheckoutAgreementDialog({
               </Stack>
             </Card>
           </Grid>
-          <Grid md={7} sx={{ order: { md: 0, xs: 1 } }} xs={12}>
+          <Grid md={7} sx={{ order: { md: 0, xs: 2 } }} xs={12}>
             <Stack spacing={2}>
               <Box>
                 <Typography variant="subtitle2">{t('dashboard.settings.billing.terms.title')}</Typography>
@@ -1107,6 +1184,17 @@ function CheckoutAgreementDialog({
                           days: trial.days,
                         })
                       : t('dashboard.settings.billing.terms.acceptance')}
+                    <Box component="span" sx={{ display: 'block', mt: 0.5 }}>
+                      {t('dashboard.settings.billing.terms.legalNotice')}{' '}
+                      <Link href={termsUrl} rel="noreferrer" target="_blank">
+                        {t('dashboard.settings.billing.terms.termsLink')}
+                      </Link>{' '}
+                      {t('dashboard.settings.billing.terms.legalConnector')}{' '}
+                      <Link href={privacyUrl} rel="noreferrer" target="_blank">
+                        {t('dashboard.settings.billing.terms.privacyLink')}
+                      </Link>
+                      .
+                    </Box>
                   </Typography>
                 }
                 sx={{ alignItems: 'flex-start', m: 0 }}
@@ -1706,16 +1794,22 @@ function getPlanFeatures({
   t: TFunction;
   trial?: SubscriptionTrial;
 }): string[] {
+  const profiles = getPlanLimit(plan, 'profiles') ?? 1;
+  const avatarImages = getPlanLimit(plan, 'avatar_images') ?? 1;
+  const voiceClones = getPlanLimit(plan, 'voice_clones') ?? 1;
   const features = [
     t('dashboard.settings.billing.planFeatures.profiles', {
-      countLabel: formatNumber(getPlanLimit(plan, 'profiles') ?? 1, language),
+      count: profiles,
+      countLabel: formatNumber(profiles, language),
     }),
     t('dashboard.settings.billing.planFeatures.avatar', {
-      images: formatNumber(getPlanLimit(plan, 'avatar_images') ?? 1, language),
+      count: avatarImages,
+      images: formatNumber(avatarImages, language),
       seconds: formatNumber(getPlanLimit(plan, 'avatar_video_seconds') ?? 5, language),
     }),
     t('dashboard.settings.billing.planFeatures.voice', {
-      countLabel: formatNumber(getPlanLimit(plan, 'voice_clones') ?? 1, language),
+      count: voiceClones,
+      countLabel: formatNumber(voiceClones, language),
     }),
     t('dashboard.settings.billing.planFeatures.chatMessages', {
       countLabel: formatNumber(getPlanLimit(plan, 'chat_messages') ?? 1000, language),
@@ -2069,6 +2163,10 @@ function formatCurrency(value: number | undefined, currency: string, language: s
     maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
     style: 'currency',
   }).format(value);
+}
+
+function getPublicLegalUrl(path: string): string {
+  return new URL(path, config.publicProfile?.baseUrl ?? config.site.url).toString();
 }
 
 function formatExchangeRate(value: number | undefined, language: string): string {

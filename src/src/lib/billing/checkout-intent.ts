@@ -6,10 +6,12 @@ const STORAGE_KEY = 'bigmelo.checkoutIntent';
 
 export type CheckoutIntentType = 'checkout' | 'trial';
 export type CheckoutCycle = 'month' | 'year';
+export type CheckoutLocale = 'en' | 'es';
 
 export interface CheckoutIntent {
   cycle?: CheckoutCycle;
   intent: CheckoutIntentType;
+  locale?: CheckoutLocale;
   plan?: string;
 }
 
@@ -26,10 +28,12 @@ export function getCheckoutIntentFromSearch(search: URLSearchParams | string): C
 
   const plan = normalizePlan(searchParams.get('plan'));
   const cycle = normalizeCycle(searchParams.get('cycle'));
+  const locale = normalizeLocale(searchParams.get('locale'));
 
   return {
     ...(cycle ? { cycle } : {}),
     intent,
+    ...(locale ? { locale } : {}),
     ...(plan ? { plan } : {}),
   };
 }
@@ -55,6 +59,7 @@ export function getStoredCheckoutIntent(): CheckoutIntent | null {
     return {
       ...(isCheckoutCycle(parsed.cycle) ? { cycle: parsed.cycle } : {}),
       intent: parsed.intent,
+      ...(isCheckoutLocale(parsed.locale) ? { locale: parsed.locale } : {}),
       ...(typeof parsed.plan === 'string' && parsed.plan ? { plan: parsed.plan } : {}),
     };
   } catch {
@@ -122,6 +127,10 @@ export function checkoutIntentToSearchParams(intent: CheckoutIntent): URLSearchP
     searchParams.set('cycle', intent.cycle);
   }
 
+  if (intent.locale) {
+    searchParams.set('locale', intent.locale);
+  }
+
   return searchParams;
 }
 
@@ -147,10 +156,18 @@ function normalizeCycle(value: string | null): CheckoutCycle | undefined {
   return isCheckoutCycle(value) ? value : undefined;
 }
 
+function normalizeLocale(value: string | null): CheckoutLocale | undefined {
+  return isCheckoutLocale(value?.toLowerCase()) ? (value?.toLowerCase() as CheckoutLocale) : undefined;
+}
+
 function isCheckoutIntentType(value: unknown): value is CheckoutIntentType {
   return typeof value === 'string' && validIntentTypes.has(value as CheckoutIntentType);
 }
 
 function isCheckoutCycle(value: unknown): value is CheckoutCycle {
   return typeof value === 'string' && validCycles.has(value as CheckoutCycle);
+}
+
+function isCheckoutLocale(value: unknown): value is CheckoutLocale {
+  return value === 'en' || value === 'es';
 }

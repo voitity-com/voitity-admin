@@ -30,6 +30,7 @@ import {
   tokenizeWompiCard,
   type WompiPaymentSourceSetup,
 } from '@/lib/payments/api-client';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { logger } from '@/lib/default-logger';
 import { SubscriptionBilling, type TrialPaymentMethod } from '@/components/dashboard/settings/subscription-limits';
 
@@ -57,6 +58,22 @@ export function Page(): React.JSX.Element {
     () => getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent(),
     [searchParams]
   );
+
+  React.useEffect(() => {
+    const localeParam = searchParams.get('locale');
+
+    if (!localeParam) {
+      return;
+    }
+
+    const nextLanguage = getSupportedLanguage(localeParam);
+
+    if (getSupportedLanguage(language) !== nextLanguage) {
+      i18n.changeLanguage(nextLanguage).catch(() => {
+        // Keep the current language if translations cannot be loaded.
+      });
+    }
+  }, [i18n, language, searchParams]);
 
   const loadBilling = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -175,6 +192,7 @@ export function Page(): React.JSX.Element {
           await startSubscriptionTrial({
             payment_source: paymentSourcePayload,
             plan: plan.id,
+            terms_accepted: true,
           });
 
           toast.success(t('dashboard.settings.billing.toasts.trialStarted'));
@@ -182,6 +200,7 @@ export function Page(): React.JSX.Element {
           const result = await startSubscriptionWithPaymentSource({
             payment_source: paymentSourcePayload,
             plan: plan.id,
+            terms_accepted: true,
           });
 
           if (result.payment_order?.status === 'approved') {

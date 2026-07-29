@@ -24,10 +24,11 @@ import { RocketLaunch as RocketLaunchIcon } from '@phosphor-icons/react/dist/ssr
 import { WarningCircle as WarningCircleIcon } from '@phosphor-icons/react/dist/ssr/WarningCircle';
 import { XCircle as XCircleIcon } from '@phosphor-icons/react/dist/ssr/XCircle';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
+import { paths } from '@/paths';
 import type { Profile, ProfilePublication, ProfilePublicationRequirement } from '@/lib/profiles/api-client';
-import { activateProfile, deactivateProfile, getProfile } from '@/lib/profiles/api-client';
+import { activateProfile, deactivateProfile, getProfile, ProfileApiError } from '@/lib/profiles/api-client';
 import { getPublicProfileUrl } from '@/lib/profiles/public-profile-url';
 import { logger } from '@/lib/default-logger';
 import { usePathname } from '@/hooks/use-pathname';
@@ -41,6 +42,7 @@ const emptyPublication = {
 } satisfies ProfilePublication;
 
 export function ProfilePublicationDock(): React.JSX.Element | null {
+  const navigate = useNavigate();
   const pathname = usePathname();
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
@@ -49,6 +51,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isSubmitting, setIsSubmitting] = React.useState<boolean>(false);
   const [missingDialogOpen, setMissingDialogOpen] = React.useState<boolean>(false);
+  const [activationBlock, setActivationBlock] = React.useState<'limit' | 'subscription' | null>(null);
   const [publicationAction, setPublicationAction] = React.useState<'activate' | 'deactivate' | null>(null);
 
   const loadProfile = React.useCallback(async (): Promise<void> => {
@@ -177,6 +180,21 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
       );
     } catch (err) {
       logger.error(err);
+
+      if (publicationAction === 'activate' && err instanceof ProfileApiError) {
+        if (err.status === 402) {
+          setPublicationAction(null);
+          setActivationBlock('subscription');
+          return;
+        }
+
+        if (err.status === 409 && err.errors.profiles) {
+          setPublicationAction(null);
+          setActivationBlock('limit');
+          return;
+        }
+      }
+
       toast.error(err instanceof Error ? err.message : t('dashboard.profiles.detail.publicationDock.toasts.error'));
       await loadProfile();
     } finally {
@@ -322,6 +340,58 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
             }}
           >
             {t('dashboard.profiles.actions.cancel')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        PaperProps={{
+          sx: {
+            m: { xs: 2, sm: 3 },
+            width: { xs: 'calc(100% - 32px)', sm: '100%' },
+          },
+        }}
+        fullWidth
+        maxWidth="xs"
+        onClose={() => {
+          setActivationBlock(null);
+        }}
+        open={activationBlock !== null}
+      >
+        <DialogTitle>
+          {activationBlock === 'subscription'
+            ? t('dashboard.profiles.detail.publicationDock.activationBlocks.subscriptionTitle')
+            : t('dashboard.profiles.detail.publicationDock.activationBlocks.limitTitle')}
+        </DialogTitle>
+        <DialogContent>
+          <Alert color="warning">
+            {activationBlock === 'subscription'
+              ? t('dashboard.profiles.detail.publicationDock.activationBlocks.subscriptionDescription')
+              : t('dashboard.profiles.detail.publicationDock.activationBlocks.limitDescription')}
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ flexWrap: 'wrap', gap: 1, px: 3, pb: 3 }}>
+          <Button
+            color="secondary"
+            onClick={() => {
+              setActivationBlock(null);
+            }}
+          >
+            {t('dashboard.profiles.actions.cancel')}
+          </Button>
+          <Button
+            onClick={() => {
+              const destination =
+                activationBlock === 'subscription' ? paths.dashboard.settings.billing : paths.dashboard.profiles;
+
+              setActivationBlock(null);
+              navigate(destination);
+            }}
+            variant="contained"
+          >
+            {activationBlock === 'subscription'
+              ? t('dashboard.profiles.detail.publicationDock.activationBlocks.viewPlans')
+              : t('dashboard.profiles.detail.publicationDock.activationBlocks.viewProfiles')}
           </Button>
         </DialogActions>
       </Dialog>
