@@ -35,6 +35,7 @@ import { useParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
+import { getProfileFeatures, isFeatureEffective } from '@/lib/features/api-client';
 import type {
   ProfileProduct,
   ProfileProductDestinationType,
@@ -83,6 +84,7 @@ export function Page(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isMutating, setIsMutating] = React.useState(false);
   const [page, setPage] = React.useState<ProfileProductsPage>(emptyPage);
+  const [productsFeatureEnabled, setProductsFeatureEnabled] = React.useState(false);
   const [productDialogOpen, setProductDialogOpen] = React.useState(false);
   const [settingsConfirmation, setSettingsConfirmation] = React.useState<null | boolean>(null);
   const productIds = React.useMemo(() => page.products.map((product) => product.id), [page.products]);
@@ -93,6 +95,16 @@ export function Page(): React.JSX.Element {
     setError('');
 
     try {
+      const features = await getProfileFeatures(profileId);
+      const productsEnabled = isFeatureEffective(features, 'products');
+
+      setProductsFeatureEnabled(productsEnabled);
+
+      if (!productsEnabled) {
+        setPage(emptyPage);
+        return;
+      }
+
       setPage(await listProfileProducts(profileId));
     } catch (err) {
       logger.error(err);
@@ -239,159 +251,179 @@ export function Page(): React.JSX.Element {
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
 
-        <Stack
-          direction={{ md: 'row', xs: 'column' }}
-          spacing={2}
-          sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between' }}
-        >
-          <Stack spacing={0.5}>
-            <Typography variant="h4">{copy.intro.title}</Typography>
-            <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
-              {interpolate(copy.intro.description, { max: page.max_products })}
-            </Typography>
+        {isLoading ? (
+          <Stack sx={{ alignItems: 'center', p: 5 }}>
+            <CircularProgress />
           </Stack>
-          <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1}>
-            <Button
-              disabled={atLimit}
-              onClick={() => {
-                setEditingProduct(null);
-                setProductDialogOpen(true);
-              }}
-              startIcon={<PlusIcon />}
-              variant="contained"
-            >
-              {copy.actions.add}
-            </Button>
-            <Button
-              onClick={() => {
-                setImportOpen(true);
-              }}
-              startIcon={<FileCsvIcon />}
-              variant="outlined"
-            >
-              {copy.actions.import}
-            </Button>
-          </Stack>
-        </Stack>
+        ) : null}
 
-        {atLimit ? <Alert color="warning">{interpolate(copy.import.limit, { max: page.max_products })}</Alert> : null}
+        {!isLoading && !productsFeatureEnabled ? (
+          <Alert color="info">
+            {language === 'en'
+              ? 'Products are not enabled for this profile. Enable Products from profile Settings first.'
+              : 'Productos no está habilitado para este perfil. Activa Productos desde Configuración del perfil primero.'}
+          </Alert>
+        ) : null}
 
-        <Card>
-          <CardHeader
-            action={
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={page.products_enabled}
-                    disabled={isLoading || isMutating}
-                    onChange={(_, checked) => {
-                      setSettingsConfirmation(checked);
-                    }}
-                  />
-                }
-                label={copy.settings.label}
-              />
-            }
-            subheader={
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.5 }}>
-                <Chip
-                  color={page.products_enabled ? 'success' : 'default'}
-                  label={page.products_enabled ? copy.settings.enabled : copy.settings.disabled}
-                  size="small"
-                />
-                <Typography color="text.secondary" variant="body2">
-                  {interpolate(copy.intro.usage, { count: page.pagination.total, max: page.max_products })}
-                </Typography>
-              </Stack>
-            }
-            title={copy.intro.title}
-          />
-
-          {selection.selectedAny ? (
-            <Stack
-              direction={{ sm: 'row', xs: 'column' }}
-              spacing={1}
-              sx={{
-                alignItems: { sm: 'center' },
-                bgcolor: 'background.level1',
-                borderBlock: '1px solid var(--mui-palette-divider)',
-                px: 2,
-                py: 1.5,
-              }}
-            >
-              <Typography sx={{ flex: '1 1 auto', fontWeight: 600 }} variant="body2">
-                {interpolate(copy.bulk.selected, { count: selection.selected.size })}
+        {productsFeatureEnabled ? (
+          <Stack
+            direction={{ md: 'row', xs: 'column' }}
+            spacing={2}
+            sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between' }}
+          >
+            <Stack spacing={0.5}>
+              <Typography variant="h4">{copy.intro.title}</Typography>
+              <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
+                {interpolate(copy.intro.description, { max: page.max_products })}
               </Typography>
+            </Stack>
+            <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1}>
               <Button
-                disabled={isMutating}
+                disabled={atLimit}
                 onClick={() => {
-                  handleBulkStatus('published').catch((err) => {
-                    logger.error(err);
-                  });
+                  setEditingProduct(null);
+                  setProductDialogOpen(true);
                 }}
-                size="small"
+                startIcon={<PlusIcon />}
+                variant="contained"
               >
-                {copy.actions.publish}
+                {copy.actions.add}
               </Button>
               <Button
-                disabled={isMutating}
                 onClick={() => {
-                  handleBulkStatus('draft').catch((err) => {
-                    logger.error(err);
-                  });
+                  setImportOpen(true);
                 }}
-                size="small"
-              >
-                {copy.actions.draft}
-              </Button>
-              <Button
-                disabled={isMutating}
-                onClick={() => {
-                  setBulkDestinationOpen(true);
-                }}
-                size="small"
+                startIcon={<FileCsvIcon />}
                 variant="outlined"
               >
-                {copy.actions.setDestination}
+                {copy.actions.import}
               </Button>
             </Stack>
-          ) : null}
+          </Stack>
+        ) : null}
 
-          {isLoading ? (
-            <Stack sx={{ alignItems: 'center', p: 5 }}>
-              <CircularProgress />
-            </Stack>
-          ) : (
-            <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-              {page.products.length ? (
-                <Box sx={{ overflowX: 'auto' }}>
-                  <DataTable<ProfileProduct>
-                    columns={columns}
-                    hover
-                    onDeselectAll={selection.deselectAll}
-                    onDeselectOne={(_, product) => {
-                      selection.deselectOne(product.id);
-                    }}
-                    onSelectAll={selection.selectAll}
-                    onSelectOne={(_, product) => {
-                      selection.selectOne(product.id);
-                    }}
-                    rows={page.products}
-                    selectable
-                    selected={selection.selected}
+        {productsFeatureEnabled && atLimit ? (
+          <Alert color="warning">{interpolate(copy.import.limit, { max: page.max_products })}</Alert>
+        ) : null}
+
+        {productsFeatureEnabled ? (
+          <Card>
+            <CardHeader
+              action={
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={page.products_enabled}
+                      disabled={isLoading || isMutating}
+                      onChange={(_, checked) => {
+                        setSettingsConfirmation(checked);
+                      }}
+                    />
+                  }
+                  label={copy.settings.label}
+                />
+              }
+              subheader={
+                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.5 }}>
+                  <Chip
+                    color={page.products_enabled ? 'success' : 'default'}
+                    label={page.products_enabled ? copy.settings.enabled : copy.settings.disabled}
+                    size="small"
                   />
-                </Box>
-              ) : (
-                <Stack sx={{ alignItems: 'center', p: 5 }}>
-                  <StorefrontIcon size={36} />
-                  <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-                    {copy.empty}
+                  <Typography color="text.secondary" variant="body2">
+                    {interpolate(copy.intro.usage, { count: page.pagination.total, max: page.max_products })}
                   </Typography>
                 </Stack>
-              )}
-            </CardContent>
-          )}
-        </Card>
+              }
+              title={copy.intro.title}
+            />
+
+            {selection.selectedAny ? (
+              <Stack
+                direction={{ sm: 'row', xs: 'column' }}
+                spacing={1}
+                sx={{
+                  alignItems: { sm: 'center' },
+                  bgcolor: 'background.level1',
+                  borderBlock: '1px solid var(--mui-palette-divider)',
+                  px: 2,
+                  py: 1.5,
+                }}
+              >
+                <Typography sx={{ flex: '1 1 auto', fontWeight: 600 }} variant="body2">
+                  {interpolate(copy.bulk.selected, { count: selection.selected.size })}
+                </Typography>
+                <Button
+                  disabled={isMutating}
+                  onClick={() => {
+                    handleBulkStatus('published').catch((err) => {
+                      logger.error(err);
+                    });
+                  }}
+                  size="small"
+                >
+                  {copy.actions.publish}
+                </Button>
+                <Button
+                  disabled={isMutating}
+                  onClick={() => {
+                    handleBulkStatus('draft').catch((err) => {
+                      logger.error(err);
+                    });
+                  }}
+                  size="small"
+                >
+                  {copy.actions.draft}
+                </Button>
+                <Button
+                  disabled={isMutating}
+                  onClick={() => {
+                    setBulkDestinationOpen(true);
+                  }}
+                  size="small"
+                  variant="outlined"
+                >
+                  {copy.actions.setDestination}
+                </Button>
+              </Stack>
+            ) : null}
+
+            {isLoading ? (
+              <Stack sx={{ alignItems: 'center', p: 5 }}>
+                <CircularProgress />
+              </Stack>
+            ) : (
+              <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+                {page.products.length ? (
+                  <Box sx={{ overflowX: 'auto' }}>
+                    <DataTable<ProfileProduct>
+                      columns={columns}
+                      hover
+                      onDeselectAll={selection.deselectAll}
+                      onDeselectOne={(_, product) => {
+                        selection.deselectOne(product.id);
+                      }}
+                      onSelectAll={selection.selectAll}
+                      onSelectOne={(_, product) => {
+                        selection.selectOne(product.id);
+                      }}
+                      rows={page.products}
+                      selectable
+                      selected={selection.selected}
+                    />
+                  </Box>
+                ) : (
+                  <Stack sx={{ alignItems: 'center', p: 5 }}>
+                    <StorefrontIcon size={36} />
+                    <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+                      {copy.empty}
+                    </Typography>
+                  </Stack>
+                )}
+              </CardContent>
+            )}
+          </Card>
+        ) : null}
       </Stack>
 
       <ProfileProductDialog

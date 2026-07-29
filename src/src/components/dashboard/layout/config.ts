@@ -49,6 +49,15 @@ export const layoutConfig = {
           roles: ['admin'],
         },
         {
+          key: 'newFeatures',
+          title: 'New features',
+          titleKey: 'dashboard.nav.items.newFeatures',
+          href: paths.dashboard.newFeatures,
+          icon: 'sliders-horizontal',
+          implemented: true,
+          roles: ['admin'],
+        },
+        {
           key: 'billing',
           title: 'Billing & plans',
           titleKey: 'dashboard.nav.items.billing',

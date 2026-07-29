@@ -12,9 +12,9 @@ import { EnvelopeSimple as EnvelopeSimpleIcon } from '@phosphor-icons/react/dist
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
 import { FileDashed as FileDashedIcon } from '@phosphor-icons/react/dist/ssr/FileDashed';
 import { FileX as FileXIcon } from '@phosphor-icons/react/dist/ssr/FileX';
+import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { GraduationCap as GraduationCapIcon } from '@phosphor-icons/react/dist/ssr/GraduationCap';
-import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { House as HouseIcon } from '@phosphor-icons/react/dist/ssr/House';
 import { Kanban as KanbanIcon } from '@phosphor-icons/react/dist/ssr/Kanban';
 import { Link as LinkIcon } from '@phosphor-icons/react/dist/ssr/Link';
@@ -25,6 +25,7 @@ import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr
 import { ShoppingBagOpen as ShoppingBagOpenIcon } from '@phosphor-icons/react/dist/ssr/ShoppingBagOpen';
 import { ShoppingCartSimple as ShoppingCartSimpleIcon } from '@phosphor-icons/react/dist/ssr/ShoppingCartSimple';
 import { SignOut as SignOutIcon } from '@phosphor-icons/react/dist/ssr/SignOut';
+import { SlidersHorizontal as SlidersHorizontalIcon } from '@phosphor-icons/react/dist/ssr/SlidersHorizontal';
 import { TextAlignLeft as TextAlignLeftIcon } from '@phosphor-icons/react/dist/ssr/TextAlignLeft';
 import { Truck as TruckIcon } from '@phosphor-icons/react/dist/ssr/Truck';
 import { Upload as UploadIcon } from '@phosphor-icons/react/dist/ssr/Upload';
@@ -49,6 +50,7 @@ export const icons = {
   'shopping-bag-open': ShoppingBagOpenIcon,
   'shopping-cart-simple': ShoppingCartSimpleIcon,
   'sign-out': SignOutIcon,
+  'sliders-horizontal': SlidersHorizontalIcon,
   'text-align-left': TextAlignLeftIcon,
   'warning-diamond': WarningDiamondIcon,
   cube: CubeIcon,
