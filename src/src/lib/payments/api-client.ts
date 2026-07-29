@@ -161,7 +161,7 @@ export class PaymentApiError extends Error {
   }
 }
 
-export async function createWompiCheckout(payload: { plan: string }): Promise<WompiCheckoutResponse> {
+export async function createWompiCheckout(payload: { plan: string; terms_accepted: true }): Promise<WompiCheckoutResponse> {
   const response = await requestJson<unknown>('/api/payments/wompi/checkout', {
     body: payload,
     method: 'POST',
@@ -203,6 +203,7 @@ export async function startSubscriptionTrial(payload: {
     type: 'CARD';
   };
   plan: string;
+  terms_accepted: true;
 }): Promise<SubscriptionTrialStartResponse> {
   const response = await requestJson<unknown>('/api/subscription/trial', {
     body: payload,
@@ -223,6 +224,7 @@ export async function startSubscriptionWithPaymentSource(payload: {
     type: 'CARD';
   };
   plan: string;
+  terms_accepted: true;
 }): Promise<SubscriptionPaymentSourceStartResponse> {
   const response = await requestJson<unknown>('/api/subscription/payment-source', {
     body: payload,

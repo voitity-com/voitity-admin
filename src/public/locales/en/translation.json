@@ -374,6 +374,13 @@
   },
   "currentPlan": {
     "cancelRenewalHelper": "You keep access until the end of the paid period. No further automatic charge will be made after that.",
+    "cancelRenewalDialog": {
+      "accessEnds": "Your service will remain active until {{date}}. After that date, your profiles will be deactivated.",
+      "confirm": "Yes, cancel renewal",
+      "keep": "Keep renewal",
+      "question": "No further automatic charges will be made. Are you sure you want to cancel renewal?",
+      "title": "Cancel automatic renewal"
+    },
     "cancelTrialHelper": "You keep access until the trial ends and the first plan charge will not be made.",
     "eyebrow": "Purchased plan",
     "fallbackName": "Starter",
@@ -494,7 +501,8 @@
           }
         },
         "planFeatures": {
-          "avatar": "{{images}} avatar images and {{seconds}} seconds of video",
+          "avatar_one": "{{images}} avatar image and {{seconds}} seconds of video",
+          "avatar_other": "{{images}} avatar images and {{seconds}} seconds of video",
           "chat": {
             "annual": "1000 monthly chat messages with 500 credits",
             "monthly": "1000 chat messages with 500 credits"
@@ -503,14 +511,16 @@
     "credits": "{{countLabel}} credits included",
     "freeTrial": "{{days}} days at no cost before the first charge",
           "profile": "1 published profile",
-          "profiles": "{{countLabel}} profiles included",
+          "profiles_one": "{{countLabel}} profile included",
+          "profiles_other": "{{countLabel}} profiles included",
           "savings": "Save {{amount}} compared with monthly billing",
           "tts": {
             "annual": "10,000 monthly TTS characters with 500 credits",
             "monthly": "10,000 TTS characters with 500 credits"
           },
           "ttsCharacters": "{{countLabel}} TTS characters included",
-          "voice": "{{countLabel}} authorized voice clones"
+          "voice_one": "{{countLabel}} authorized voice clone",
+          "voice_other": "{{countLabel}} authorized voice clones"
         },
         "sections": {
           "features": "Features",
@@ -545,8 +555,12 @@
   "terms": {
     "acceptance": "I accept the subscription terms and authorize recurring payments.",
     "body": "By continuing, you agree to start a recurring Bigmelo subscription. The subscription renews automatically monthly or annually according to the plan selected until it is canceled before the next renewal date. Wompi processes the payment, and access is activated only after payment confirmation. You authorize recurring charges for future renewals and understand that usage limits reset monthly, even when the selected billing cycle is annual.",
+    "legalConnector": "and the",
+    "legalNotice": "Review the",
+    "privacyLink": "Privacy Policy",
+    "termsLink": "Terms and Conditions",
     "title": "Subscription terms",
-    "trialAcceptance": "I accept starting {{days}} days at no cost and authorize the automatic {{amount}} charge on {{date}} after it ends.",
+    "trialAcceptance": "I accept starting {{days}} days at no cost and authorize the automatic {{amount}} charge on {{date}} after it ends. The charge will be processed in COP using the exchange rate applicable on that date.",
     "trialBody": "By continuing, you authorize saving your payment method and starting {{days}} days at no cost in Bigmelo. When that period ends, the selected {{interval}} plan will be charged automatically unless you cancel from Billing before that date. If the charge is approved, usage limits reset as a new plan period."
   },
   "toasts": {
@@ -962,6 +976,14 @@
         },
         "publicationDock": {
           "activate": "Activate and publish",
+          "activationBlocks": {
+            "limitDescription": "Your plan allows one active profile. Deactivate the currently published profile before activating this one.",
+            "limitTitle": "Active profile limit reached",
+            "subscriptionDescription": "You need an active subscription to activate and publish this profile.",
+            "subscriptionTitle": "Active subscription required",
+            "viewPlans": "View plans",
+            "viewProfiles": "View profiles"
+          },
           "blocked": "{{count}} missing requirements",
           "confirmDialog": {
             "activateConfirm": "Activate",
