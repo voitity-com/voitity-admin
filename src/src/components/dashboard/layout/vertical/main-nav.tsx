@@ -163,12 +163,15 @@ function LanguageSwitch(): React.JSX.Element {
           onClick={popover.handleOpen}
           ref={popover.anchorRef}
           size="small"
-          sx={{ display: { xs: 'none', lg: 'inline-flex' }, minWidth: 'auto', px: 1 }}
+          sx={{ minWidth: 'auto', px: 1 }}
         >
-          <Box sx={{ height: '22px', mr: 0.75, width: '22px' }}>
+          <Box sx={{ height: '22px', mr: { xs: 0, sm: 0.75 }, width: '22px' }}>
             <Box alt={language.toUpperCase()} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />
           </Box>
-          <Box component="span" sx={{ fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}>
+          <Box
+            component="span"
+            sx={{ display: { xs: 'none', sm: 'inline' }, fontSize: '0.75rem', fontWeight: 700, lineHeight: 1 }}
+          >
             {language.toUpperCase()}
           </Box>
         </Button>

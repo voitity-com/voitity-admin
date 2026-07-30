@@ -37,7 +37,7 @@ import { SpeakerHigh as SpeakerHighIcon } from '@phosphor-icons/react/dist/ssr/S
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
 import { VideoCamera as VideoCameraIcon } from '@phosphor-icons/react/dist/ssr/VideoCamera';
 import type { TFunction } from 'i18next';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import { RadialBar, RadialBarChart } from 'recharts';
 
 import { paths } from '@/paths';
@@ -120,8 +120,6 @@ interface BillingCycleOption {
   plan?: SubscriptionPlan;
   planId?: string;
   priceUsd?: number;
-  processingAmount?: number;
-  processingCurrency?: string;
   recommended: boolean;
   selected: boolean;
   trial?: SubscriptionTrial;
@@ -143,6 +141,7 @@ const usedFields = ['used', 'current', 'count', 'usage', 'consumed'] as const;
 const limitFields = ['limit', 'max', 'maximum', 'total', 'allowed', 'included'] as const;
 const remainingFields = ['remaining', 'available', 'left'] as const;
 const annualIntervals = new Set(['annual', 'annually', 'year', 'yearly']);
+const wompiWebsiteUrl = 'https://wompi.co/es/co/';
 
 export function SubscriptionLimits({ data, language, plansData }: SubscriptionLimitsProps): React.JSX.Element {
   return (
@@ -882,8 +881,6 @@ function CheckoutAgreementDialog({
   const requiresPaymentSource = Boolean(cycle);
   const termsUrl = getPublicLegalUrl(legalLocale === 'es' ? '/terminos' : '/terms');
   const todayDisplayAmount = trial ? (trial.setup_amount_usd ?? 0) : cycle?.priceUsd;
-  const processingAmount = trial ? (trial.setup_amount_cop ?? 0) : cycle?.processingAmount;
-  const processingCurrency = cycle?.processingCurrency ?? 'COP';
   const firstChargeDate = trial ? formatFutureDate(trial.days, language) : undefined;
   const firstChargeAmount = cycle ? formatCurrency(cycle.priceUsd, cycle.currency, language) : t('dashboard.settings.billing.values.empty');
   const isMobile = useMediaQuery('down', 'sm');
@@ -1012,23 +1009,29 @@ function CheckoutAgreementDialog({
                       }
                     />
                   ) : null}
-                  {!trial || (typeof processingAmount === 'number' && processingAmount > 0) ? (
-                    <SummaryRow
-                      label={t('dashboard.settings.billing.checkout.processingAmount')}
-                      value={
-                        typeof processingAmount === 'number'
-                          ? formatCurrency(processingAmount, processingCurrency, language)
-                          : t('dashboard.settings.billing.values.empty')
-                      }
-                    />
-                  ) : null}
                 </Stack>
                 <Alert severity="info" variant="outlined">
                   <Stack spacing={0.75}>
                     <Typography component="span" variant="body2">
                       {trial
                         ? t('dashboard.settings.billing.checkout.trialWompiNotice')
-                        : t('dashboard.settings.billing.checkout.wompiNotice')}
+                        : (
+                            <Trans
+                              components={{
+                                wompi: (
+                                  <Link
+                                    color="inherit"
+                                    href={wompiWebsiteUrl}
+                                    rel="noreferrer"
+                                    target="_blank"
+                                    underline="always"
+                                  />
+                                ),
+                              }}
+                              i18nKey="dashboard.settings.billing.checkout.wompiNotice"
+                              t={t}
+                            />
+                          )}
                     </Typography>
                     <Typography component="span" sx={{ fontWeight: 600 }} variant="body2">
                       {usdCopRate
@@ -1664,7 +1667,6 @@ function getBillingCycles({
         ? Math.round(monthlyPrice * 10 * 100) / 100
         : undefined);
   const currency = monthlyPlan?.currency ?? annualPlan?.currency ?? subscription.currency;
-  const processingCurrency = plansData?.processing_currency ?? 'COP';
   const trial = plansData?.trial?.available ? plansData.trial : undefined;
   const savings =
     typeof monthlyPrice === 'number' && typeof annualPrice === 'number'
@@ -1682,8 +1684,6 @@ function getBillingCycles({
       plan: monthlyPlan,
       planId: monthlyPlan?.id,
       priceUsd: monthlyPrice,
-      processingAmount: getProcessingAmount(monthlyPrice, plansData?.exchange_rate),
-      processingCurrency,
       recommended: false,
       selected: hasActiveSubscription ? subscription.interval === 'monthly' : monthlyPlan?.id === selectedPlanId,
       trial,
@@ -1698,8 +1698,6 @@ function getBillingCycles({
       plan: annualPlan,
       planId: annualPlan?.id,
       priceUsd: annualPrice,
-      processingAmount: getProcessingAmount(annualPrice, plansData?.exchange_rate),
-      processingCurrency,
       recommended: true,
       selected: hasActiveSubscription ? subscription.interval === 'annual' : annualPlan?.id === selectedPlanId,
       trial,
@@ -1765,14 +1763,6 @@ function normalizePlanKey(value?: string): string {
   return value?.trim().toLowerCase().replace(/[^a-z0-9_-]/gu, '') ?? '';
 }
 
-function getProcessingAmount(priceUsd: number | undefined, exchangeRate: number | undefined): number | undefined {
-  if (typeof priceUsd !== 'number' || typeof exchangeRate !== 'number' || exchangeRate <= 0) {
-    return undefined;
-  }
-
-  return Math.round(priceUsd * exchangeRate * 100) / 100;
-}
-
 function findPlanByInterval(plans: SubscriptionPlan[], interval: BillingInterval): SubscriptionPlan | undefined {
   return plans.find((plan) => normalizeInterval(plan.interval) === interval);
 }
@@ -1797,6 +1787,12 @@ function getPlanFeatures({
   const profiles = getPlanLimit(plan, 'profiles') ?? 1;
   const avatarImages = getPlanLimit(plan, 'avatar_images') ?? 1;
   const voiceClones = getPlanLimit(plan, 'voice_clones') ?? 1;
+  const incomingAudioMessages = getPlanLimit(plan, 'incoming_audio_messages') ?? 500;
+  const incomingAudioSeconds = getPlanLimit(plan, 'incoming_audio_seconds') ?? 15000;
+  const audioMaxSeconds =
+    incomingAudioMessages > 0 ? Math.floor(incomingAudioSeconds / incomingAudioMessages) : 30;
+  const productsPerProfile = getPlanCapabilityNumber(plan, ['products_per_profile']) ?? 15;
+  const selectedMedia = getPlanCapabilityNumber(plan, ['integrations', 'instagram', 'selected_media']) ?? 10;
   const features = [
     t('dashboard.settings.billing.planFeatures.profiles', {
       count: profiles,
@@ -1814,9 +1810,20 @@ function getPlanFeatures({
     t('dashboard.settings.billing.planFeatures.chatMessages', {
       countLabel: formatNumber(getPlanLimit(plan, 'chat_messages') ?? 1000, language),
     }),
-    t('dashboard.settings.billing.planFeatures.ttsCharacters', {
-      countLabel: formatNumber(getPlanLimit(plan, 'tts_characters') ?? 10000, language),
+    t('dashboard.settings.billing.planFeatures.incomingAudio', {
+      countLabel: formatNumber(incomingAudioMessages, language),
+      secondsLabel: formatNumber(audioMaxSeconds, language),
     }),
+    t('dashboard.settings.billing.planFeatures.ttsCharacters', {
+      countLabel: formatNumber(getPlanLimit(plan, 'tts_characters') ?? 20000, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.products', {
+      countLabel: formatNumber(productsPerProfile, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.integrations', {
+      countLabel: formatNumber(selectedMedia, language),
+    }),
+    t('dashboard.settings.billing.planFeatures.socialLinks'),
     t('dashboard.settings.billing.planFeatures.credits', {
       countLabel: formatNumber(getPlanCreditsTotal(plan) ?? 1000, language),
     }),
@@ -1845,6 +1852,20 @@ function getPlanLimit(plan: SubscriptionPlan | undefined, metric: string): numbe
 
 function getPlanCreditsTotal(plan: SubscriptionPlan | undefined): number | undefined {
   return getNumericJsonValue(plan?.credits?.total);
+}
+
+function getPlanCapabilityNumber(plan: SubscriptionPlan | undefined, path: string[]): number | undefined {
+  let current: JsonValue | undefined = plan?.capabilities;
+
+  for (const key of path) {
+    if (current === undefined || !isRecord(current)) {
+      return undefined;
+    }
+
+    current = current[key];
+  }
+
+  return getNumericJsonValue(current);
 }
 
 function getNumericJsonValue(value: JsonValue | undefined): number | undefined {
@@ -1999,6 +2020,10 @@ function getMetricIcon(key: string): Icon {
     return MicrophoneIcon;
   }
 
+  if (normalized.includes('audio')) {
+    return MicrophoneIcon;
+  }
+
   if (normalized.includes('tts') || normalized.includes('character')) {
     return SpeakerHighIcon;
   }
@@ -2015,6 +2040,10 @@ function getMetricColor(key: string): string {
 
   if (normalized.includes('credit')) {
     return 'var(--mui-palette-primary-main)';
+  }
+
+  if (normalized.includes('audio')) {
+    return 'var(--mui-palette-info-main)';
   }
 
   if (normalized.includes('chat') || normalized.includes('message')) {
