@@ -23,6 +23,7 @@ interface RequestOptions {
 export type SubscriptionLimits = JsonObject;
 
 export interface SubscriptionPlan {
+  capabilities?: JsonObject;
   credits?: JsonObject;
   currency: string;
   id: string;
@@ -161,6 +162,7 @@ function normalizeSubscriptionPlan(value: unknown): SubscriptionPlan | null {
   }
 
   return {
+    capabilities: isRecord(value.capabilities) ? value.capabilities : undefined,
     credits: isRecord(value.credits) ? value.credits : undefined,
     currency: getStringField(value, ['currency']) ?? 'USD',
     id,

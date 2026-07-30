@@ -413,7 +413,6 @@
     "displayPrice": "Precio mostrado",
     "firstPlanCharge": "Primer cobro del plan",
     "planValue": "Starter {{cycle}}",
-    "processingAmount": "Monto procesado",
     "subheader": "Revisa el ciclo seleccionado y acepta los términos de renovación antes de ir a Wompi.",
     "summaryTitle": "Resumen del pago",
     "todayCharge": "Cobro de hoy",
@@ -422,7 +421,7 @@
     "trialWompiNotice": "Este paso guarda el método de pago para el primer cobro automático. Si Wompi no confirma un método reutilizable, la prueba no se activará.",
     "trmLoading": "TRM actual: cargando...",
     "trmUnavailable": "TRM actual no disponible.",
-    "wompiNotice": "El plan se muestra en USD. Wompi procesa el pago en COP usando la tasa de cambio configurada."
+    "wompiNotice": "El plan se muestra en USD. Nuestro servicio de pagos <wompi>Wompi</wompi> procesa el pago en COP usando la tasa de cambio configurada."
   },
   "paymentMethod": {
     "cardHolder": "Nombre en la tarjeta",
@@ -447,6 +446,8 @@
           "billingCycle": "Ciclo de facturación",
           "cancelAt": "Cancelar en",
           "chatMessages": "Mensajes de chat",
+          "incomingAudioMessages": "Audios entrantes",
+          "incomingAudioSeconds": "Segundos de audio entrante",
           "createdAt": "Creado en",
           "credits": "Créditos",
           "currency": "Moneda",
@@ -508,15 +509,19 @@
             "monthly": "1000 mensajes de chat con 500 créditos"
           },
           "chatMessages": "{{countLabel}} mensajes de chat incluidos",
+          "incomingAudio": "Hasta {{countLabel}} audios entrantes al mes, de máximo {{secondsLabel}} segundos cada uno",
     "credits": "{{countLabel}} créditos incluidos",
     "freeTrial": "{{days}} días sin costo antes del primer cobro",
           "profile": "1 perfil publicado",
           "profiles_one": "{{countLabel}} perfil incluido",
           "profiles_other": "{{countLabel}} perfiles incluidos",
+          "products": "Hasta {{countLabel}} productos por perfil",
+          "integrations": "Instagram, TikTok y OnlyFans con hasta {{countLabel}} contenidos seleccionados por red",
+          "socialLinks": "Enlaces públicos a redes sociales",
           "savings": "Ahorro de {{amount}} frente al pago mensual",
           "tts": {
-            "annual": "10.000 caracteres TTS mensuales con 500 créditos",
-            "monthly": "10.000 caracteres TTS con 500 créditos"
+            "annual": "20.000 caracteres TTS mensuales con 500 créditos",
+            "monthly": "20.000 caracteres TTS con 500 créditos"
           },
           "ttsCharacters": "{{countLabel}} caracteres TTS incluidos",
           "voice_one": "{{countLabel}} clon de voz autorizado",

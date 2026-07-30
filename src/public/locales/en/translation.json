@@ -413,7 +413,6 @@
     "displayPrice": "Displayed price",
     "firstPlanCharge": "First plan charge",
     "planValue": "Starter {{cycle}}",
-    "processingAmount": "Processed amount",
     "subheader": "Review the selected cycle and accept the renewal terms before going to Wompi.",
     "summaryTitle": "Payment summary",
     "todayCharge": "Today charge",
@@ -422,7 +421,7 @@
     "trialWompiNotice": "This step saves the payment method for the first automatic charge. If Wompi does not confirm a reusable payment method, the trial will not start.",
     "trmLoading": "Current TRM: loading...",
     "trmUnavailable": "Current TRM unavailable.",
-    "wompiNotice": "The plan is shown in USD. Wompi processes the payment in COP using the configured exchange rate."
+    "wompiNotice": "The plan is shown in USD. Our payment service <wompi>Wompi</wompi> processes the payment in COP using the configured exchange rate."
   },
   "paymentMethod": {
     "cardHolder": "Name on card",
@@ -447,6 +446,8 @@
           "billingCycle": "Billing cycle",
           "cancelAt": "Cancel at",
           "chatMessages": "Chat messages",
+          "incomingAudioMessages": "Incoming audios",
+          "incomingAudioSeconds": "Incoming audio seconds",
           "createdAt": "Created at",
           "credits": "Credits",
           "currency": "Currency",
@@ -508,15 +509,19 @@
             "monthly": "1000 chat messages with 500 credits"
           },
           "chatMessages": "{{countLabel}} chat messages included",
+          "incomingAudio": "Up to {{countLabel}} incoming audios per month, maximum {{secondsLabel}} seconds each",
     "credits": "{{countLabel}} credits included",
     "freeTrial": "{{days}} days at no cost before the first charge",
           "profile": "1 published profile",
           "profiles_one": "{{countLabel}} profile included",
           "profiles_other": "{{countLabel}} profiles included",
+          "products": "Up to {{countLabel}} products per profile",
+          "integrations": "Instagram, TikTok, and OnlyFans with up to {{countLabel}} selected media items per network",
+          "socialLinks": "Public social network links",
           "savings": "Save {{amount}} compared with monthly billing",
           "tts": {
-            "annual": "10,000 monthly TTS characters with 500 credits",
-            "monthly": "10,000 TTS characters with 500 credits"
+            "annual": "20,000 monthly TTS characters with 500 credits",
+            "monthly": "20,000 TTS characters with 500 credits"
           },
           "ttsCharacters": "{{countLabel}} TTS characters included",
           "voice_one": "{{countLabel}} authorized voice clone",

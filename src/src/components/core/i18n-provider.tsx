@@ -24,5 +24,18 @@ export function I18nProvider({ children, language }: I18nProviderProps): React.J
     });
   }, [i18n, resolvedLanguage]);
 
+  React.useEffect(() => {
+    const syncDocumentLanguage = (nextLanguage: string): void => {
+      document.documentElement.lang = getSupportedLanguage(nextLanguage);
+    };
+
+    syncDocumentLanguage(i18n.resolvedLanguage ?? i18n.language ?? resolvedLanguage);
+    i18n.on('languageChanged', syncDocumentLanguage);
+
+    return () => {
+      i18n.off('languageChanged', syncDocumentLanguage);
+    };
+  }, [i18n, resolvedLanguage]);
+
   return <React.Fragment>{children}</React.Fragment>;
 }
