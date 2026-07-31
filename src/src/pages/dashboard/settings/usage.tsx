@@ -13,7 +13,7 @@ export function Page(): React.JSX.Element {
       <Helmet>
         <title>{metadata.title}</title>
       </Helmet>
-      <UsagePageContent />
+      <UsagePageContent version="v4" />
     </React.Fragment>
   );
 }

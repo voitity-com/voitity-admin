@@ -51,8 +51,47 @@ const warningsToIgnore = [
   ['INVALID_ANNOTATION', 'contains an annotation that Rollup cannot interpret'],
 ];
 
+function vendorChunk(id: string): string | undefined {
+  const moduleId = id.replaceAll('\\', '/');
+
+  if (!moduleId.includes('/node_modules/')) {
+    return undefined;
+  }
+
+  const groups: Array<[string, string[]]> = [
+    ['maps', ['/mapbox-gl/', '/react-map-gl/']],
+    ['pdf', ['/@react-pdf/', '/pdfjs-dist/']],
+    ['code-highlighter', ['/react-syntax-highlighter/', '/highlight.js/', '/refractor/']],
+    ['calendar', ['/@fullcalendar/']],
+    ['charts', ['/recharts/', '/d3-']],
+    ['editor', ['/@tiptap/', '/prosemirror-']],
+    ['mui', ['/@mui/', '/@emotion/']],
+    ['cloud-auth', ['/@aws-amplify/', '/aws-amplify/', '/firebase/', '/@supabase/']],
+    [
+      'react',
+      [
+        '/node_modules/react/',
+        '/node_modules/react-dom/',
+        '/node_modules/react-router/',
+        '/node_modules/react-router-dom/',
+        '/node_modules/react-helmet-async/',
+        '/node_modules/scheduler/',
+      ],
+    ],
+  ];
+
+  return groups.find(([, packages]) => packages.some((packageName) => moduleId.includes(packageName)))?.[0];
+}
+
 export default defineConfig({
   plugins: [react(), muteWarningsPlugin(warningsToIgnore)],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: vendorChunk,
+      },
+    },
+  },
   resolve: {
     alias: [
       {

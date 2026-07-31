@@ -57,6 +57,7 @@ export const paths = {
       account: '/dashboard/settings/account',
       billing: '/dashboard/settings/billing',
       billingPaymentResult: '/dashboard/settings/billing/payment-result',
+      paymentMethods: '/dashboard/settings/payment-methods',
       integrations: '/dashboard/settings/integrations',
       notifications: '/dashboard/settings/notifications',
       security: '/dashboard/settings/security',

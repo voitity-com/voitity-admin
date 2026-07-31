@@ -30,6 +30,7 @@ export const layoutConfig = {
           href: paths.dashboard.analytics,
           icon: 'gauge',
           implemented: true,
+          matcher: { type: 'startsWith', href: '/dashboard/analytics' },
         },
         {
           key: 'notifications',

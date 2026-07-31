@@ -7,6 +7,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { Bell as BellIcon } from '@phosphor-icons/react/dist/ssr/Bell';
+import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
 import type { TFunction } from 'i18next';
@@ -51,9 +52,24 @@ const navItems = [
       },
     ],
   },
+  {
+    key: 'payments',
+    title: 'Payments',
+    titleKey: 'dashboard.nav.settingsGroups.payments',
+    items: [
+      {
+        key: 'payment-methods',
+        title: 'Payment methods',
+        titleKey: 'dashboard.nav.items.paymentMethods',
+        href: paths.dashboard.settings.paymentMethods,
+        icon: 'credit-card',
+      },
+    ],
+  },
 ] satisfies NavItemConfig[];
 
 const icons = {
+  'credit-card': CreditCardIcon,
   'lock-key': LockKeyIcon,
   'user-circle': UserCircleIcon,
   bell: BellIcon,

@@ -33,7 +33,13 @@ interface AnalyticsProps {
  * If GTM ID is not configured, this will no track any event.
  */
 export function Analytics({ children }: AnalyticsProps): React.JSX.Element {
-  if (!config.gtm?.id) {
+  const pathname = usePathname();
+  const isSensitivePaymentPath =
+    pathname === '/checkout' ||
+    pathname.startsWith('/dashboard/settings/billing') ||
+    pathname.startsWith('/dashboard/settings/payment-methods');
+
+  if (!config.gtm?.id || isSensitivePaymentPath) {
     return <React.Fragment>{children}</React.Fragment>;
   }
 

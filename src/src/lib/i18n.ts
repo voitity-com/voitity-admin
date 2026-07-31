@@ -6,6 +6,7 @@ import { logger } from '@/lib/default-logger';
 
 export const fallbackLanguage = 'en';
 export const supportedLanguages = ['en', 'es'] as const;
+export const languageStorageKey = 'bigmelo.language';
 
 export type SupportedLanguage = (typeof supportedLanguages)[number];
 
@@ -18,6 +19,19 @@ export function getSupportedLanguage(language?: null | string): SupportedLanguag
 }
 
 export function getBrowserLanguage(): SupportedLanguage {
+  if (typeof window !== 'undefined') {
+    try {
+      const storedLanguage = window.localStorage.getItem(languageStorageKey);
+      const normalizedStoredLanguage = storedLanguage?.split('-')[0]?.toLowerCase();
+
+      if (supportedLanguages.includes(normalizedStoredLanguage as SupportedLanguage)) {
+        return normalizedStoredLanguage as SupportedLanguage;
+      }
+    } catch {
+      // Continue with browser language when storage is unavailable.
+    }
+  }
+
   if (typeof navigator === 'undefined') {
     return fallbackLanguage;
   }

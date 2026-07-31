@@ -22,7 +22,7 @@ export function Page(): React.JSX.Element {
           width: 'var(--Content-width)',
         }}
       >
-        <UsagePageContent />
+        <UsagePageContent version="v4" />
       </Box>
     </React.Fragment>
   );
