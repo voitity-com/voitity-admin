@@ -149,6 +149,12 @@ export interface UsageAnalytics {
   };
   series: {
     bucket: string;
+    credits: {
+      consumed: number;
+      purchased: number;
+      reserved: number;
+      reversed: number;
+    };
     services: Record<string, { operations: number; purchased_credits: number }>;
   }[];
   summary: {
@@ -171,12 +177,7 @@ export class SubscriptionApiError extends Error {
 
   public status: number;
 
-  public constructor(
-    message: string,
-    status: number,
-    code?: string,
-    errors?: Record<string, string[]>
-  ) {
+  public constructor(message: string, status: number, code?: string, errors?: Record<string, string[]>) {
     super(message);
     this.name = 'SubscriptionApiError';
     this.code = code;

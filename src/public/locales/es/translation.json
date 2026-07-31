@@ -776,12 +776,52 @@
             "voice_tts_characters": "Generación de audio"
           }
         },
+        "dashboard": {
+          "active": "Activa",
+          "activityByPeriod": "Actividad por período",
+          "allHealthy": "Todos los límites del plan están por debajo del umbral de atención.",
+          "attentionCount": "{{count}} límites del plan alcanzaron al menos 80 % de uso.",
+          "averageBurn": "Consumo mensual promedio",
+          "consumptionTrend": "Tendencia de consumo de créditos comprados",
+          "creditExplorer": "Explorador de costos en créditos",
+          "creditFlow": "Créditos comprados, consumidos y reversados",
+          "credits": "créditos",
+          "critical": "Crítico",
+          "currentPeriod": "Período actual del plan",
+          "currentPlan": "Plan actual",
+          "estimatedRunway": "Duración estimada del saldo",
+          "explorerSubheader": "Revisa las entradas de créditos y el consumo por servicio para el rango seleccionado.",
+          "healthy": "Saludable",
+          "highestUsage": "Mayor utilización",
+          "inactive": "Inactiva",
+          "lifetimeConsumed": "{{value}} créditos consumidos durante la vida de la billetera",
+          "limitDetails": "Detalle de límites del plan",
+          "limitsAtRisk": "Límites que requieren atención",
+          "monthsValue": "{{value}} meses",
+          "needsAttention": "Requiere atención",
+          "operations": "Operaciones",
+          "periodEnds": "El período actual termina el {{date}}",
+          "planCapacity": "Capacidad del plan",
+          "remainingCapacity": "Capacidad restante del plan",
+          "renews": "Renueva",
+          "reversed": "Reversados",
+          "serviceAllocation": "Distribución de créditos por servicio",
+          "serviceBreakdown": "Créditos comprados por servicio",
+          "share": "Participación",
+          "status": "Estado",
+          "topDriver": "Principal fuente de uso",
+          "topServices": "Servicios con mayor consumo de créditos",
+          "trackedLimits": "Límites monitoreados",
+          "utilization": "Utilización",
+          "watch": "Atención"
+        },
         "empty": {
           "action": "Ir a Facturación y planes",
           "subheader": "Adquiere una suscripción para activar tus límites y comenzar a ver el consumo.",
           "title": "Necesitas una suscripción activa"
         },
         "errors": {
+          "analytics": "No se pudo cargar el uso de créditos comprados.",
           "generic": "No se pudieron cargar los límites de uso."
         },
         "filters": {
@@ -792,7 +832,19 @@
           "month": "Mes",
           "to": "Hasta"
         },
-        "pageTitle": "Uso"
+        "pageTitle": "Uso",
+        "tabs": {
+          "credits": "Créditos comprados",
+          "label": "Sección del reporte de uso",
+          "plan": "Límites del plan"
+        },
+        "versions": {
+          "v1": "Resumen ejecutivo",
+          "v2": "Monitor de capacidad",
+          "v3": "Explorador de costos",
+          "v4": "Matriz operativa",
+          "v5": "Proyección de créditos"
+        }
       }
     },
     "users": {

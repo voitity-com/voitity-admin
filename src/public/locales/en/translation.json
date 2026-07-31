@@ -776,12 +776,52 @@
             "voice_tts_characters": "Audio generation"
           }
         },
+        "dashboard": {
+          "active": "Active",
+          "activityByPeriod": "Activity by period",
+          "allHealthy": "All plan limits are below the attention threshold.",
+          "attentionCount": "{{count}} plan limits have reached at least 80% utilization.",
+          "averageBurn": "Average monthly burn",
+          "consumptionTrend": "Purchased-credit consumption trend",
+          "creditExplorer": "Credit cost explorer",
+          "creditFlow": "Purchased, consumed and reversed credits",
+          "credits": "credits",
+          "critical": "Critical",
+          "currentPeriod": "Current plan period",
+          "currentPlan": "Current plan",
+          "estimatedRunway": "Estimated runway",
+          "explorerSubheader": "Review credit inflows and service consumption for the selected range.",
+          "healthy": "Healthy",
+          "highestUsage": "Highest utilization",
+          "inactive": "Inactive",
+          "lifetimeConsumed": "{{value}} credits consumed over the wallet lifetime",
+          "limitDetails": "Plan limit details",
+          "limitsAtRisk": "Limits needing attention",
+          "monthsValue": "{{value}} months",
+          "needsAttention": "Needs attention",
+          "operations": "Operations",
+          "periodEnds": "Current period ends {{date}}",
+          "planCapacity": "Plan capacity",
+          "remainingCapacity": "Remaining plan capacity",
+          "renews": "Renews",
+          "reversed": "Reversed",
+          "serviceAllocation": "Credit allocation by service",
+          "serviceBreakdown": "Purchased credits by service",
+          "share": "Share",
+          "status": "Status",
+          "topDriver": "Top usage driver",
+          "topServices": "Top services by credit consumption",
+          "trackedLimits": "Tracked limits",
+          "utilization": "Utilization",
+          "watch": "Watch"
+        },
         "empty": {
           "action": "Go to Billing & plans",
           "subheader": "Acquire a subscription to activate your limits and start seeing usage.",
           "title": "You need an active subscription"
         },
         "errors": {
+          "analytics": "Could not load purchased-credit usage.",
           "generic": "Could not load usage limits."
         },
         "filters": {
@@ -792,7 +832,19 @@
           "month": "Month",
           "to": "To"
         },
-        "pageTitle": "Usage"
+        "pageTitle": "Usage",
+        "tabs": {
+          "credits": "Purchased credits",
+          "label": "Usage report section",
+          "plan": "Plan limits"
+        },
+        "versions": {
+          "v1": "Executive overview",
+          "v2": "Capacity monitor",
+          "v3": "Cost explorer",
+          "v4": "Operational matrix",
+          "v5": "Credit runway"
+        }
       }
     },
     "users": {
