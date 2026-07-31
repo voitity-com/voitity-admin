@@ -141,6 +141,7 @@
         "account": "Account",
         "analytics": "Analytics",
         "billing": "Billing & plans",
+        "help": "Help",
         "integrations": "Integrations",
         "newFeatures": "New features",
         "notifications": "Notifications",
@@ -192,6 +193,139 @@
         "paymentMethods": "Payment methods",
         "security": "Security"
       }
+    },
+    "help": {
+      "description": "Find answers about Bigmelo or get in touch with our team.",
+      "faq": {
+        "description": "Select a question to view its answer.",
+        "items": {
+          "annualLimits": {
+            "answer": "No. Billing may be annual, but usage limits for messages, audio, and AI services reset monthly. Unused capacity does not roll over.",
+            "question": "Do annual plan limits accumulate throughout the year?"
+          },
+          "answerAccuracy": {
+            "answer": "No. Answers are generated automatically and may contain errors or omissions. You can review sources, extracted data, and profile readiness before publishing.",
+            "question": "Are answers always accurate?"
+          },
+          "answerSources": {
+            "answer": "The AI uses information you configure and approve, including the description, experience, projects, education, skills, imported sources, social networks, selected media, and published products.",
+            "question": "Where does it get the information used in answers?"
+          },
+          "audience": {
+            "answer": "It is designed for professionals, creators, educators, public figures, entrepreneurs, and personal brands that want to present their information and answer questions interactively.",
+            "question": "Who is Bigmelo for?"
+          },
+          "cancelRenewal": {
+            "answer": "Yes. You can cancel renewal from Billing. You will keep access until the end of the paid period or trial, and the next automatic charge will not be made.",
+            "question": "Can I cancel automatic renewal?"
+          },
+          "cardData": {
+            "answer": "No. Sensitive card information is sent directly to Wompi. Bigmelo only keeps the information needed to identify and manage the payment method, such as the brand and last four digits.",
+            "question": "Does Bigmelo store my full card details?"
+          },
+          "createPresence": {
+            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources such as your resume, create the avatar and authorized voice, review content quality, and publish your link.",
+            "question": "How do I create my digital presence?"
+          },
+          "dataDeletion": {
+            "answer": "Yes. You can unpublish the profile and request deletion of your account, profiles, images, audio, voice, conversations, products, and integrations by writing to privacy@bigmelo.com.",
+            "question": "Can I hide my profile or delete my data?"
+          },
+          "imageAndVoiceAuthorization": {
+            "answer": "You must use your own image and voice, or have the person's express authorization. Using a third party's image or voice without consent is not allowed.",
+            "question": "What do I need to create the avatar and clone a voice?"
+          },
+          "limits": {
+            "answer": "Some features can continue using additional credits. If neither plan capacity nor credits are available, the affected feature is limited; for example, audio may be disabled or a reply may continue as text only.",
+            "question": "What happens when I reach a monthly limit?"
+          },
+          "missingInformation": {
+            "answer": "The profile is designed to recognize when the available information is insufficient and say that it does not know, instead of presenting missing information as fact.",
+            "question": "What happens when it does not have enough information to answer?"
+          },
+          "paymentCurrency": {
+            "answer": "Prices are shown in US dollars. Wompi processes the payment in Colombian pesos using the exchange rate disclosed for the transaction.",
+            "question": "What currency is used for payments?"
+          },
+          "plans": {
+            "answer": "Monthly and annual Starter plans include one published presence, avatar, authorized voice, text and audio conversations, products, and social connections. Current prices and limits are shown in Billing & plans.",
+            "question": "What is included in Bigmelo plans?"
+          },
+          "socialAndProducts": {
+            "answer": "Yes. You can publish social links and, depending on enabled features, select Instagram or TikTok content to show in conversations. You can also publish products and let the profile recommend them when relevant.",
+            "question": "Can I connect social networks and show products?"
+          },
+          "textAndAudio": {
+            "answer": "Yes. Visitors can write or send audio messages of up to 30 seconds. When a voice is configured and capacity is available, replies can also play as audio; otherwise, they remain available as text.",
+            "question": "Can visitors chat by text and audio?"
+          },
+          "trial": {
+            "answer": "Yes. You can start a seven-day trial with reduced limits. A payment method is required, and the plan is charged when the trial ends unless you cancel first.",
+            "question": "Does Bigmelo offer a free trial?"
+          },
+          "visitorAccount": {
+            "answer": "No. Anyone with the published profile link can visit it and start a conversation. The session is limited to that profile and that conversation.",
+            "question": "Do visitors need to create an account?"
+          },
+          "whatIsBigmelo": {
+            "answer": "Bigmelo lets you create a public, interactive digital presence. Visitors can learn about your story, experience, projects, social networks, and products, and talk with an AI-powered version of you.",
+            "question": "What is Bigmelo?"
+          }
+        },
+        "openSupport": "Go to Support",
+        "stillNeedHelp": "Could not find the answer you needed?",
+        "title": "Frequently asked questions"
+      },
+      "pageTitle": "Help | {{product}}",
+      "support": {
+        "actions": {
+          "contact": "Contact support"
+        },
+        "description": "Send us the details from your authenticated account. Your request will reach the team responsible for reviewing it.",
+        "form": {
+          "cancel": "Cancel",
+          "descriptionCounter": "{{count}} / 3000 characters",
+          "descriptionLabel": "How can we help?",
+          "emailHelper": "This is the email from your signed-in account and cannot be changed here.",
+          "emailLabel": "Account email",
+          "errors": {
+            "generic": "We could not send your request. Please try again.",
+            "profilesLoad": "We could not load your profiles. You can still send the request without selecting one."
+          },
+          "introduction": "Describe what happened and select a related profile only if it helps us understand the request.",
+          "loadingProfiles": "Loading profiles…",
+          "noProfile": "No profile",
+          "profileHelper": "Optional. All your active and inactive profiles are available.",
+          "profileLabel": "Related profile (optional)",
+          "profileState": {
+            "active": "Active",
+            "inactive": "Inactive"
+          },
+          "send": "Send request",
+          "sending": "Sending…",
+          "success": "Your support request was sent successfully.",
+          "title": "Contact support",
+          "validation": {
+            "descriptionMax": "The description cannot exceed 3000 characters.",
+            "descriptionMin": "Please enter at least 10 characters."
+          }
+        },
+        "privacyPrefix": "For requests about privacy, image or voice use, and data deletion, write directly to",
+        "requestDescription": "This information helps us understand the case and provide a more useful response:",
+        "requestItems": {
+          "account": "The email associated with your Bigmelo account.",
+          "evidence": "A clear description of the problem and the steps needed to reproduce it.",
+          "profile": "The name, alias, or link of the related profile."
+        },
+        "requestTitle": "Before sending your request",
+        "title": "Do you need personalized help?"
+      },
+      "tabs": {
+        "ariaLabel": "Help sections",
+        "faq": "Frequently asked questions",
+        "support": "Support"
+      },
+      "title": "Help"
     },
     "products": {
       "recommendationGuide": {

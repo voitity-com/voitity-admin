@@ -59,6 +59,13 @@ export const route: RouteObject = {
       },
     },
     {
+      path: 'help',
+      lazy: async () => {
+        const { Page } = await import('@/pages/dashboard/help');
+        return { Component: Page };
+      },
+    },
+    {
       path: 'new-features',
       lazy: async () => {
         const { Page } = await import('@/pages/dashboard/new-features');
