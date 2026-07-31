@@ -34,7 +34,13 @@ import { useTranslation } from 'react-i18next';
 
 import { config } from '@/config';
 import type { PaymentMethod } from '@/lib/payments/api-client';
-import type { CreditCatalog, CreditPaymentOrder, CreditPurchases, CreditWallet } from '@/lib/subscription/api-client';
+import type {
+  CreditCatalog,
+  CreditPaymentOrder,
+  CreditPurchaseResult,
+  CreditPurchases,
+  CreditWallet,
+} from '@/lib/subscription/api-client';
 import { SubscriptionApiError } from '@/lib/subscription/api-client';
 
 const wompiUrl = 'https://wompi.co/es/co/';
@@ -53,7 +59,7 @@ export interface CreditWalletCardProps {
   isPurchasing?: boolean;
   language: string;
   onAddPaymentMethod: () => void;
-  onPurchase: (credits: number, paymentMethodId: number | string) => Promise<void>;
+  onPurchase: (credits: number, paymentMethodId: number | string) => Promise<CreditPurchaseResult>;
   paymentMethods: PaymentMethod[];
   purchaseDialogResume?: {
     key: number;
@@ -83,7 +89,13 @@ export function CreditWalletCard({
   const [selectedPaymentMethodId, setSelectedPaymentMethodId] = React.useState<string>('');
   const [openPaymentMethodAfterExit, setOpenPaymentMethodAfterExit] = React.useState(false);
   const handledResumeKeyRef = React.useRef(0);
-  const selectedPaymentMethod = paymentMethods.find(
+  const dialogContentRef = React.useRef<HTMLDivElement>(null);
+  const purchaseErrorRef = React.useRef<HTMLDivElement>(null);
+  const chargeablePaymentMethods = React.useMemo(
+    () => paymentMethods.filter((method) => method.is_chargeable),
+    [paymentMethods]
+  );
+  const selectedPaymentMethod = chargeablePaymentMethods.find(
     (method) => String(method.id) === selectedPaymentMethodId
   );
   const priceUsd = (credits / 1000) * catalog.price_per_1000_usd;
@@ -112,7 +124,7 @@ export function CreditWalletCard({
   const open = (): void => {
     setAcceptedTerms(false);
     setPurchaseError('');
-    setSelectedPaymentMethodId(getPreferredPaymentMethodId(paymentMethods));
+    setSelectedPaymentMethodId(getPreferredPaymentMethodId(chargeablePaymentMethods));
     setIsOpen(true);
   };
 
@@ -128,26 +140,51 @@ export function CreditWalletCard({
     }
 
     handledResumeKeyRef.current = purchaseDialogResume.key;
-    const preferred = paymentMethods.find(
+    const preferred = chargeablePaymentMethods.find(
       (method) => String(method.id) === String(purchaseDialogResume.paymentMethodId) && method.is_chargeable
     );
-    const current = paymentMethods.find(
+    const current = chargeablePaymentMethods.find(
       (method) => String(method.id) === selectedPaymentMethodId && method.is_chargeable
     );
 
     setSelectedPaymentMethodId(
-      preferred ? String(preferred.id) : current ? String(current.id) : getPreferredPaymentMethodId(paymentMethods)
+      preferred
+        ? String(preferred.id)
+        : current
+          ? String(current.id)
+          : getPreferredPaymentMethodId(chargeablePaymentMethods)
     );
     setIsOpen(true);
-  }, [paymentMethods, purchaseDialogResume, selectedPaymentMethodId]);
+  }, [chargeablePaymentMethods, purchaseDialogResume, selectedPaymentMethodId]);
 
   React.useEffect(() => {
     if (!isOpen || selectedPaymentMethod?.is_chargeable) {
       return;
     }
 
-    setSelectedPaymentMethodId(getPreferredPaymentMethodId(paymentMethods));
-  }, [isOpen, paymentMethods, selectedPaymentMethod?.is_chargeable]);
+    setSelectedPaymentMethodId(getPreferredPaymentMethodId(chargeablePaymentMethods));
+  }, [chargeablePaymentMethods, isOpen, selectedPaymentMethod?.is_chargeable]);
+
+  React.useEffect(() => {
+    if (!isOpen || !purchaseError) {
+      return;
+    }
+
+    const frame = globalThis.requestAnimationFrame(() => {
+      const reduceMotion = globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+      const content = dialogContentRef.current;
+
+      content?.scrollTo({
+        behavior: reduceMotion ? 'auto' : 'smooth',
+        top: content.scrollHeight,
+      });
+      purchaseErrorRef.current?.focus({ preventScroll: true });
+    });
+
+    return () => {
+      globalThis.cancelAnimationFrame(frame);
+    };
+  }, [isOpen, purchaseError]);
 
   return (
     <Stack spacing={3}>
@@ -246,7 +283,7 @@ export function CreditWalletCard({
         open={isOpen}
       >
         <DialogTitle>{t('dashboard.settings.billing.creditsStore.dialog.title')}</DialogTitle>
-        <DialogContent>
+        <DialogContent ref={dialogContentRef}>
           <Stack spacing={3} sx={{ pt: 1 }}>
             <ToggleButtonGroup
               exclusive
@@ -292,7 +329,7 @@ export function CreditWalletCard({
               <Typography variant="subtitle2">
                 {t('dashboard.settings.billing.creditsStore.dialog.paymentMethodTitle')}
               </Typography>
-              {paymentMethods.length ? (
+              {chargeablePaymentMethods.length ? (
                 <RadioGroup
                   aria-label={t('dashboard.settings.billing.creditsStore.dialog.paymentMethodTitle')}
                   onChange={(event) => {
@@ -310,11 +347,10 @@ export function CreditWalletCard({
                       overflow: 'hidden',
                     }}
                   >
-                    {paymentMethods.map((method) => (
+                    {chargeablePaymentMethods.map((method) => (
                       <FormControlLabel
                         control={<Radio />}
                         data-testid={`credit-payment-method-${method.id}`}
-                        disabled={!method.is_chargeable}
                         key={method.id}
                         label={
                           <Stack
@@ -331,10 +367,7 @@ export function CreditWalletCard({
                             <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', minWidth: 0 }}>
                               <CreditCardIcon fontSize="22px" />
                               <Typography noWrap variant="body2">
-                                {paymentMethodLabel(
-                                  method,
-                                  t('dashboard.settings.billing.paymentMethod.savedCard')
-                                )}
+                                {paymentMethodLabel(method, t('dashboard.settings.billing.paymentMethod.savedCard'))}
                               </Typography>
                             </Stack>
                             <Typography
@@ -374,7 +407,7 @@ export function CreditWalletCard({
                   {t('dashboard.settings.billing.creditsStore.dialog.paymentMethodRequired')}
                 </Alert>
               )}
-              {!selectedPaymentMethod?.is_chargeable && paymentMethods.length ? (
+              {!selectedPaymentMethod && chargeablePaymentMethods.length ? (
                 <Alert severity="warning">
                   {t('dashboard.settings.billing.creditsStore.dialog.noChargeablePaymentMethod')}
                 </Alert>
@@ -385,7 +418,7 @@ export function CreditWalletCard({
                 startIcon={<PlusIcon />}
                 sx={{ alignSelf: 'flex-start' }}
               >
-                {paymentMethods.length
+                {chargeablePaymentMethods.length
                   ? t('dashboard.settings.billing.creditsStore.dialog.addAnotherCard')
                   : t('dashboard.settings.billing.creditsStore.dialog.addCard')}
               </Button>
@@ -428,7 +461,26 @@ export function CreditWalletCard({
                 </Typography>
               }
             />
-            {purchaseError ? <Alert severity="error">{purchaseError}</Alert> : null}
+            {purchaseError ? (
+              <Alert
+                ref={purchaseErrorRef}
+                role="alert"
+                severity="error"
+                sx={{
+                  animation: 'creditPurchaseErrorPulse 520ms ease-in-out 3',
+                  '@keyframes creditPurchaseErrorPulse': {
+                    '0%, 100%': { boxShadow: '0 0 0 0 rgba(211, 47, 47, 0)', transform: 'scale(1)' },
+                    '50%': { boxShadow: '0 0 0 5px rgba(211, 47, 47, 0.18)', transform: 'scale(1.01)' },
+                  },
+                  '@media (prefers-reduced-motion: reduce)': {
+                    animation: 'none',
+                  },
+                }}
+                tabIndex={-1}
+              >
+                {purchaseError}
+              </Alert>
+            ) : null}
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -453,9 +505,11 @@ export function CreditWalletCard({
                       ? t('dashboard.settings.billing.creditsStore.dialog.paymentMethodRequired')
                       : error instanceof SubscriptionApiError && error.code === 'CREDIT_PAYMENT_DECLINED'
                         ? t('dashboard.settings.billing.creditsStore.errors.paymentDeclined')
-                      : error instanceof Error
-                        ? error.message
-                        : t('dashboard.settings.billing.creditsStore.errors.purchase')
+                        : error instanceof SubscriptionApiError && error.code === 'CREDIT_PAYMENT_FAILED'
+                          ? t('dashboard.settings.billing.creditsStore.errors.purchase')
+                          : error instanceof Error
+                            ? error.message
+                            : t('dashboard.settings.billing.creditsStore.errors.purchase')
                   );
                 });
             }}

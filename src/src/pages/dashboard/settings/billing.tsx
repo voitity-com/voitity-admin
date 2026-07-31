@@ -13,49 +13,55 @@ import { toast } from 'sonner';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import {
+  clearCheckoutIntent,
+  getCheckoutIntentFromSearch,
+  getStoredCheckoutIntent,
+} from '@/lib/billing/checkout-intent';
+import { logger } from '@/lib/default-logger';
+import { getSupportedLanguage } from '@/lib/i18n';
+import {
+  addPaymentMethod,
+  getPaymentMethodSetup,
+  getPaymentOrder,
+  getSubscriptionPaymentSourceSetup,
+  initializeWompiSession,
+  listPaymentMethods,
+  PaymentApiError,
+  startSubscriptionTrial,
+  startSubscriptionWithPaymentSource,
+  tokenizeWompiCard,
+  type PaymentMethod,
+  type PaymentMethodPayload,
+  type WompiPaymentSourceSetup,
+} from '@/lib/payments/api-client';
 import type {
   CreditCatalog,
+  CreditPurchaseResult,
   CreditPurchases,
   CreditWallet,
-  SubscriptionLimits,
   SubscriptionBillingState,
+  SubscriptionLimits,
   SubscriptionPlan,
   SubscriptionPlans,
 } from '@/lib/subscription/api-client';
-import { clearCheckoutIntent, getCheckoutIntentFromSearch, getStoredCheckoutIntent } from '@/lib/billing/checkout-intent';
 import {
   cancelSubscriptionRenewal,
   cancelSubscriptionTrial,
-  getSubscriptionLimits,
-  getSubscriptionBillingState,
-  getSubscriptionPlans,
   getCreditCatalog,
   getCreditPurchases,
   getCreditWallet,
+  getSubscriptionBillingState,
+  getSubscriptionLimits,
+  getSubscriptionPlans,
   purchaseCredits,
   reactivateSubscriptionRenewal,
   retrySubscriptionRenewal,
   SubscriptionApiError,
 } from '@/lib/subscription/api-client';
-import {
-  addPaymentMethod,
-  getPaymentMethodSetup,
-  getSubscriptionPaymentSourceSetup,
-  initializeWompiSession,
-  listPaymentMethods,
-  type PaymentMethod,
-  PaymentApiError,
-  startSubscriptionTrial,
-  startSubscriptionWithPaymentSource,
-  tokenizeWompiCard,
-  type WompiPaymentSourceSetup,
-  type PaymentMethodPayload,
-} from '@/lib/payments/api-client';
-import { getSupportedLanguage } from '@/lib/i18n';
-import { logger } from '@/lib/default-logger';
-import { SubscriptionBilling, type TrialPaymentMethod } from '@/components/dashboard/settings/subscription-limits';
 import { CreditWalletCard } from '@/components/dashboard/settings/credit-wallet-card';
 import { PaymentMethodFormDialog } from '@/components/dashboard/settings/payment-method-form-dialog';
+import { SubscriptionBilling, type TrialPaymentMethod } from '@/components/dashboard/settings/subscription-limits';
 
 const metadata = { title: `Billing | Settings | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -85,6 +91,7 @@ export function Page(): React.JSX.Element {
   const [isCheckoutPending, setIsCheckoutPending] = React.useState<boolean>(false);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isPurchasingCredits, setIsPurchasingCredits] = React.useState<boolean>(false);
+  const [pendingCreditPurchaseId, setPendingCreditPurchaseId] = React.useState<number | string | null>(null);
   const [isTrialPaymentSourceSetupLoading, setIsTrialPaymentSourceSetupLoading] = React.useState<boolean>(false);
   const [hasRequestedTrialPaymentSourceSetup, setHasRequestedTrialPaymentSourceSetup] = React.useState<boolean>(false);
   const [trialPaymentSourceSetup, setTrialPaymentSourceSetup] = React.useState<WompiPaymentSourceSetup | null>(null);
@@ -92,8 +99,9 @@ export function Page(): React.JSX.Element {
   const [isPaymentMethodSetupLoading, setIsPaymentMethodSetupLoading] = React.useState(false);
   const [paymentMethodSetup, setPaymentMethodSetup] = React.useState<WompiPaymentSourceSetup | null>(null);
   const [paymentMethodSetupError, setPaymentMethodSetupError] = React.useState('');
-  const [paymentMethodDialogOrigin, setPaymentMethodDialogOrigin] =
-    React.useState<PaymentMethodDialogOrigin | null>(null);
+  const [paymentMethodDialogOrigin, setPaymentMethodDialogOrigin] = React.useState<PaymentMethodDialogOrigin | null>(
+    null
+  );
   const [creditPurchaseDialogResume, setCreditPurchaseDialogResume] = React.useState<{
     key: number;
     paymentMethodId?: number | string;
@@ -171,6 +179,71 @@ export function Page(): React.JSX.Element {
       logger.error(err);
     });
   }, [loadBilling]);
+
+  React.useEffect(() => {
+    if (pendingCreditPurchaseId === null) {
+      return;
+    }
+
+    let active = true;
+    let attempt = 0;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const poll = async (): Promise<void> => {
+      attempt += 1;
+
+      try {
+        const order = await getPaymentOrder(pendingCreditPurchaseId);
+
+        if (!active) {
+          return;
+        }
+
+        if (order.status === 'approved') {
+          toast.success(translationRef.current('dashboard.settings.billing.creditsStore.toasts.approved'));
+          setPendingCreditPurchaseId(null);
+          void loadBilling(false);
+
+          return;
+        }
+
+        if (order.status && order.status !== 'pending') {
+          const message =
+            order.status === 'declined'
+              ? translationRef.current('dashboard.settings.billing.creditsStore.errors.paymentDeclined')
+              : translationRef.current('dashboard.settings.billing.creditsStore.errors.purchase');
+          toast.error(message);
+          setPendingCreditPurchaseId(null);
+          void loadBilling(false);
+
+          return;
+        }
+      } catch (pollError) {
+        logger.error(pollError);
+      }
+
+      if (active) {
+        timer = setTimeout(
+          () => {
+            void poll();
+          },
+          attempt <= 30 ? 2000 : 10000
+        );
+      }
+    };
+
+    timer = setTimeout(() => {
+      void poll();
+    }, 1500);
+
+    return () => {
+      active = false;
+
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [loadBilling, pendingCreditPurchaseId]);
 
   const loadTrialPaymentSourceSetup = React.useCallback(async (): Promise<void> => {
     setHasRequestedTrialPaymentSourceSetup(true);
@@ -321,24 +394,25 @@ export function Page(): React.JSX.Element {
     [loadBilling, t]
   );
 
-  const openPaymentMethodDialog = React.useCallback(async (origin: PaymentMethodDialogOrigin): Promise<void> => {
-    setPaymentMethodDialogOrigin(origin);
-    setIsPaymentMethodOpen(true);
-    setIsPaymentMethodSetupLoading(true);
-    setPaymentMethodSetupError('');
+  const openPaymentMethodDialog = React.useCallback(
+    async (origin: PaymentMethodDialogOrigin): Promise<void> => {
+      setPaymentMethodDialogOrigin(origin);
+      setIsPaymentMethodOpen(true);
+      setIsPaymentMethodSetupLoading(true);
+      setPaymentMethodSetupError('');
 
-    try {
-      setPaymentMethodSetup(await getPaymentMethodSetup());
-    } catch (setupFailure) {
-      logger.error(setupFailure);
-      setPaymentMethodSetup(null);
-      setPaymentMethodSetupError(
-        getErrorMessage(setupFailure, t('dashboard.settings.paymentMethods.errors.setup'))
-      );
-    } finally {
-      setIsPaymentMethodSetupLoading(false);
-    }
-  }, [t]);
+      try {
+        setPaymentMethodSetup(await getPaymentMethodSetup());
+      } catch (setupFailure) {
+        logger.error(setupFailure);
+        setPaymentMethodSetup(null);
+        setPaymentMethodSetupError(getErrorMessage(setupFailure, t('dashboard.settings.paymentMethods.errors.setup')));
+      } finally {
+        setIsPaymentMethodSetupLoading(false);
+      }
+    },
+    [t]
+  );
 
   const handleAddPaymentMethod = React.useCallback(
     async (payload: PaymentMethodPayload): Promise<void> => {
@@ -426,7 +500,7 @@ export function Page(): React.JSX.Element {
   }, []);
 
   const handlePurchaseCredits = React.useCallback(
-    async (credits: number, paymentMethodId: number | string): Promise<void> => {
+    async (credits: number, paymentMethodId: number | string): Promise<CreditPurchaseResult> => {
       setError('');
       setIsPurchasingCredits(true);
 
@@ -442,22 +516,28 @@ export function Page(): React.JSX.Element {
           terms_accepted: true,
         });
 
+        setBilling((current) => mergeCreditPurchaseResult(current, result));
+
         if (result.payment_order.status === 'approved') {
           toast.success(t('dashboard.settings.billing.creditsStore.toasts.approved'));
+          void loadBilling(false);
         } else {
           toast(t('dashboard.settings.billing.creditsStore.toasts.pending'));
+          setPendingCreditPurchaseId(result.payment_order.id);
         }
 
-        await loadBilling(false);
+        return result;
       } catch (err) {
         logger.error(err);
-        await loadBilling(false);
+        void loadBilling(false);
         const message =
           err instanceof SubscriptionApiError && err.code === 'PAYMENT_METHOD_REQUIRED'
             ? t('dashboard.settings.billing.creditsStore.dialog.paymentMethodRequired')
             : err instanceof SubscriptionApiError && err.code === 'CREDIT_PAYMENT_DECLINED'
               ? t('dashboard.settings.billing.creditsStore.errors.paymentDeclined')
-              : getErrorMessage(err, t('dashboard.settings.billing.creditsStore.errors.purchase'));
+              : err instanceof SubscriptionApiError && err.code === 'CREDIT_PAYMENT_FAILED'
+                ? t('dashboard.settings.billing.creditsStore.errors.purchase')
+                : getErrorMessage(err, t('dashboard.settings.billing.creditsStore.errors.purchase'));
 
         toast.error(message);
         throw err;
@@ -605,6 +685,25 @@ function formatCreditBalance(value: number, language: string): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits: 3 }).format(value);
 }
 
+function mergeCreditPurchaseResult(current: BillingState | null, result: CreditPurchaseResult): BillingState | null {
+  if (!current) {
+    return current;
+  }
+
+  const existingItems = current.creditPurchases.items.filter(
+    (item) => String(item.id) !== String(result.payment_order.id)
+  );
+
+  return {
+    ...current,
+    creditPurchases: {
+      ...current.creditPurchases,
+      items: [result.payment_order, ...existingItems],
+    },
+    creditWallet: result.wallet,
+  };
+}
+
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
 }
@@ -642,9 +741,9 @@ function hasActivePaidSubscriptionData(data: SubscriptionLimits): boolean {
 
   const subscription = isRecord(data.subscription) ? data.subscription : undefined;
 
-  return subscription?.status !== 'trialing'
-    && subscription?.billing_mode === 'recurring'
-    && subscription?.plan !== 'admin';
+  return (
+    subscription?.status !== 'trialing' && subscription?.billing_mode === 'recurring' && subscription?.plan !== 'admin'
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
