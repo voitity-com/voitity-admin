@@ -49,6 +49,12 @@ export interface ProfileProductsPage {
   };
   products: ProfileProduct[];
   products_enabled: boolean;
+  recommendation_guidance: null | string;
+}
+
+export interface ProfileProductSettings {
+  products_enabled: boolean;
+  recommendation_guidance: null | string;
 }
 
 export interface ProfileProductInput {
@@ -169,15 +175,27 @@ export async function deleteProfileProduct(profileId: number | string, productId
 }
 
 export async function setProfileProductsEnabled(profileId: number | string, enabled: boolean): Promise<boolean> {
-  const response = await requestJson<ApiEnvelope<{ products_enabled: boolean }>>(
+  const settings = await updateProfileProductSettings(profileId, { enabled });
+
+  return settings.products_enabled;
+}
+
+export async function updateProfileProductSettings(
+  profileId: number | string,
+  input: { enabled: boolean; recommendation_guidance?: null | string }
+): Promise<ProfileProductSettings> {
+  const response = await requestJson<ApiEnvelope<ProfileProductSettings>>(
     `/api/profile/${encodeURIComponent(String(profileId))}/products/settings`,
     {
-      body: { enabled },
+      body: input,
       method: 'PATCH',
     }
   );
 
-  return response.data.products_enabled;
+  return {
+    products_enabled: response.data.products_enabled,
+    recommendation_guidance: response.data.recommendation_guidance ?? null,
+  };
 }
 
 export async function bulkUpdateProfileProductStatus(
