@@ -17,6 +17,7 @@ import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { GraduationCap as GraduationCapIcon } from '@phosphor-icons/react/dist/ssr/GraduationCap';
 import { House as HouseIcon } from '@phosphor-icons/react/dist/ssr/House';
 import { Kanban as KanbanIcon } from '@phosphor-icons/react/dist/ssr/Kanban';
+import { Lifebuoy as LifebuoyIcon } from '@phosphor-icons/react/dist/ssr/Lifebuoy';
 import { Link as LinkIcon } from '@phosphor-icons/react/dist/ssr/Link';
 import { Lock as LockIcon } from '@phosphor-icons/react/dist/ssr/Lock';
 import { ReadCvLogo as ReadCvLogoIcon } from '@phosphor-icons/react/dist/ssr/ReadCvLogo';
@@ -58,6 +59,7 @@ export const icons = {
   gauge: GaugeIcon,
   house: HouseIcon,
   kanban: KanbanIcon,
+  lifebuoy: LifebuoyIcon,
   link: LinkIcon,
   lock: LockIcon,
   receipt: ReceiptIcon,

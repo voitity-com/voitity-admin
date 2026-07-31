@@ -141,6 +141,7 @@
         "account": "Cuenta",
         "analytics": "Analítica",
         "billing": "Facturación y planes",
+        "help": "Ayuda",
         "integrations": "Integraciones",
         "newFeatures": "Nuevas funcionalidades",
         "notifications": "Notificaciones",
@@ -192,6 +193,111 @@
         "paymentMethods": "Métodos de pago",
         "security": "Seguridad"
       }
+    },
+    "help": {
+      "description": "Encuentra respuestas sobre Bigmelo o comunícate con nuestro equipo.",
+      "faq": {
+        "description": "Selecciona una pregunta para consultar la respuesta.",
+        "items": {
+          "annualLimits": {
+            "answer": "No. El cobro del plan puede ser anual, pero los límites de consumo relacionados con mensajes, audio y servicios de IA se reinician mensualmente. La capacidad no utilizada no se acumula.",
+            "question": "¿Los límites del plan anual se acumulan durante todo el año?"
+          },
+          "answerAccuracy": {
+            "answer": "No. Las respuestas se generan automáticamente y pueden contener errores u omisiones. Por eso puedes revisar las fuentes, los datos extraídos y el nivel de preparación del perfil antes de publicarlo.",
+            "question": "¿Las respuestas siempre son exactas?"
+          },
+          "answerSources": {
+            "answer": "La inteligencia artificial utiliza la información que configuras y apruebas: descripción, experiencia, proyectos, estudios, habilidades, fuentes importadas, redes sociales, contenidos seleccionados y productos publicados.",
+            "question": "¿De dónde obtiene la información para responder?"
+          },
+          "audience": {
+            "answer": "Está pensado para profesionales, creadores, educadores, figuras públicas, emprendedores y marcas personales que quieren presentar su información y responder preguntas de forma interactiva.",
+            "question": "¿Para quién está pensado Bigmelo?"
+          },
+          "cancelRenewal": {
+            "answer": "Sí. Puedes cancelar la renovación desde Facturación. Mantendrás el acceso hasta el final del período pagado o de la prueba, y no se realizará el siguiente cobro automático.",
+            "question": "¿Puedo cancelar la renovación automática?"
+          },
+          "cardData": {
+            "answer": "No. La información sensible de la tarjeta se envía directamente a Wompi. Bigmelo conserva únicamente la información necesaria para identificar y administrar el método de pago, como la marca y los últimos cuatro dígitos.",
+            "question": "¿Bigmelo almacena los datos completos de mi tarjeta?"
+          },
+          "createPresence": {
+            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes como tu CV, crea el avatar y la voz autorizada, revisa la calidad del contenido y publica tu enlace.",
+            "question": "¿Cómo creo mi presencia digital?"
+          },
+          "dataDeletion": {
+            "answer": "Sí. Puedes desactivar la publicación del perfil y solicitar la eliminación de tu cuenta, perfiles, imágenes, audios, voz, conversaciones, productos e integraciones escribiendo a privacy@bigmelo.com.",
+            "question": "¿Puedo ocultar mi perfil o eliminar mis datos?"
+          },
+          "imageAndVoiceAuthorization": {
+            "answer": "Debes utilizar tu propia imagen y voz, o contar con autorización expresa de la persona correspondiente. No se permite utilizar imágenes o voces de terceros sin consentimiento.",
+            "question": "¿Qué necesito para crear el avatar y clonar la voz?"
+          },
+          "limits": {
+            "answer": "Algunas funciones pueden continuar usando créditos adicionales. Si no hay capacidad ni créditos suficientes, la función afectada se limita: por ejemplo, el audio puede desactivarse o una respuesta puede continuar únicamente como texto.",
+            "question": "¿Qué sucede cuando alcanzo un límite mensual?"
+          },
+          "missingInformation": {
+            "answer": "El perfil está diseñado para reconocer cuando la información disponible no es suficiente e indicar que no conoce la respuesta, en lugar de presentar información inexistente como un hecho.",
+            "question": "¿Qué sucede cuando el perfil no tiene información para responder?"
+          },
+          "paymentCurrency": {
+            "answer": "Los precios se presentan en dólares estadounidenses. Wompi procesa el cobro en pesos colombianos utilizando la tasa de cambio informada para la transacción.",
+            "question": "¿En qué moneda se realizan los pagos?"
+          },
+          "plans": {
+            "answer": "Los planes Starter mensual y anual incluyen una presencia publicada, avatar, voz autorizada, conversaciones por texto y audio, productos y conexiones sociales. Los precios y límites vigentes se muestran en la sección Facturación y planes.",
+            "question": "¿Qué incluyen los planes de Bigmelo?"
+          },
+          "socialAndProducts": {
+            "answer": "Sí. Puedes publicar enlaces sociales y, según las funciones habilitadas, seleccionar contenido de Instagram o TikTok para mostrarlo en conversaciones. También puedes publicar productos y permitir que el perfil los recomiende cuando sean relevantes.",
+            "question": "¿Puedo conectar mis redes sociales y mostrar productos?"
+          },
+          "textAndAudio": {
+            "answer": "Sí. Los visitantes pueden escribir o enviar audios de hasta 30 segundos. Cuando existe una voz configurada y hay capacidad disponible, las respuestas también pueden reproducirse en audio; de lo contrario, continúan disponibles como texto.",
+            "question": "¿Se puede conversar por texto y por audio?"
+          },
+          "trial": {
+            "answer": "Sí. Puedes iniciar una prueba de siete días sin costo y con límites reducidos. Se requiere registrar un método de pago y el plan se cobra al finalizar la prueba, salvo que canceles antes.",
+            "question": "¿Bigmelo ofrece una prueba sin costo?"
+          },
+          "visitorAccount": {
+            "answer": "No. Cualquier persona con el enlace del perfil publicado puede visitarlo y comenzar una conversación. La sesión se limita a ese perfil y a esa conversación.",
+            "question": "¿Los visitantes necesitan crear una cuenta?"
+          },
+          "whatIsBigmelo": {
+            "answer": "Bigmelo te permite crear una presencia digital pública e interactiva. Tus visitantes pueden conocer tu historia, experiencia, proyectos, redes y productos, y conversar con una versión de ti que responde mediante inteligencia artificial.",
+            "question": "¿Qué es Bigmelo?"
+          }
+        },
+        "openSupport": "Ir a Soporte",
+        "stillNeedHelp": "¿No encontraste la respuesta que necesitabas?",
+        "title": "Preguntas frecuentes"
+      },
+      "pageTitle": "Ayuda | {{product}}",
+      "support": {
+        "actions": {
+          "contact": "Contactar soporte"
+        },
+        "description": "Usa el formulario de contacto de Bigmelo para contarnos qué necesitas. Tu solicitud llegará al equipo encargado de revisarla.",
+        "privacyPrefix": "Para solicitudes relacionadas con privacidad, uso de imagen o voz y eliminación de datos, escribe directamente a",
+        "requestDescription": "Estos datos nos ayudan a entender el caso y darte una respuesta más útil:",
+        "requestItems": {
+          "account": "El correo asociado a tu cuenta de Bigmelo.",
+          "evidence": "Una descripción clara del problema y, si es posible, capturas de pantalla.",
+          "profile": "El nombre, alias o enlace del perfil relacionado."
+        },
+        "requestTitle": "Antes de enviar tu solicitud",
+        "title": "¿Necesitas ayuda personalizada?"
+      },
+      "tabs": {
+        "ariaLabel": "Secciones de ayuda",
+        "faq": "Preguntas frecuentes",
+        "support": "Soporte"
+      },
+      "title": "Ayuda"
     },
     "products": {
       "recommendationGuide": {
