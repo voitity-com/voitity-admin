@@ -281,12 +281,40 @@
         "actions": {
           "contact": "Contact support"
         },
-        "description": "Use the Bigmelo contact form to tell us what you need. Your request will reach the team responsible for reviewing it.",
+        "description": "Send us the details from your authenticated account. Your request will reach the team responsible for reviewing it.",
+        "form": {
+          "cancel": "Cancel",
+          "descriptionCounter": "{{count}} / 3000 characters",
+          "descriptionLabel": "How can we help?",
+          "emailHelper": "This is the email from your signed-in account and cannot be changed here.",
+          "emailLabel": "Account email",
+          "errors": {
+            "generic": "We could not send your request. Please try again.",
+            "profilesLoad": "We could not load your profiles. You can still send the request without selecting one."
+          },
+          "introduction": "Describe what happened and select a related profile only if it helps us understand the request.",
+          "loadingProfiles": "Loading profiles…",
+          "noProfile": "No profile",
+          "profileHelper": "Optional. All your active and inactive profiles are available.",
+          "profileLabel": "Related profile (optional)",
+          "profileState": {
+            "active": "Active",
+            "inactive": "Inactive"
+          },
+          "send": "Send request",
+          "sending": "Sending…",
+          "success": "Your support request was sent successfully.",
+          "title": "Contact support",
+          "validation": {
+            "descriptionMax": "The description cannot exceed 3000 characters.",
+            "descriptionMin": "Please enter at least 10 characters."
+          }
+        },
         "privacyPrefix": "For requests about privacy, image or voice use, and data deletion, write directly to",
         "requestDescription": "This information helps us understand the case and provide a more useful response:",
         "requestItems": {
           "account": "The email associated with your Bigmelo account.",
-          "evidence": "A clear description of the problem and screenshots when possible.",
+          "evidence": "A clear description of the problem and the steps needed to reproduce it.",
           "profile": "The name, alias, or link of the related profile."
         },
         "requestTitle": "Before sending your request",

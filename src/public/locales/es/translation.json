@@ -281,12 +281,40 @@
         "actions": {
           "contact": "Contactar soporte"
         },
-        "description": "Usa el formulario de contacto de Bigmelo para contarnos qué necesitas. Tu solicitud llegará al equipo encargado de revisarla.",
+        "description": "Envíanos los detalles desde tu cuenta autenticada. Tu solicitud llegará al equipo encargado de revisarla.",
+        "form": {
+          "cancel": "Cancelar",
+          "descriptionCounter": "{{count}} / 3000 caracteres",
+          "descriptionLabel": "¿Cómo podemos ayudarte?",
+          "emailHelper": "Este es el correo de tu cuenta autenticada y no se puede modificar aquí.",
+          "emailLabel": "Correo de la cuenta",
+          "errors": {
+            "generic": "No pudimos enviar tu solicitud. Inténtalo nuevamente.",
+            "profilesLoad": "No pudimos cargar tus perfiles. Puedes enviar la solicitud sin seleccionar uno."
+          },
+          "introduction": "Describe lo ocurrido y selecciona un perfil relacionado solo si ayuda a entender la solicitud.",
+          "loadingProfiles": "Cargando perfiles…",
+          "noProfile": "Sin perfil",
+          "profileHelper": "Opcional. Están disponibles todos tus perfiles activos e inactivos.",
+          "profileLabel": "Perfil relacionado (opcional)",
+          "profileState": {
+            "active": "Activo",
+            "inactive": "Inactivo"
+          },
+          "send": "Enviar solicitud",
+          "sending": "Enviando…",
+          "success": "Tu solicitud de soporte se envió correctamente.",
+          "title": "Contactar soporte",
+          "validation": {
+            "descriptionMax": "La descripción no puede superar los 3000 caracteres.",
+            "descriptionMin": "Escribe al menos 10 caracteres."
+          }
+        },
         "privacyPrefix": "Para solicitudes relacionadas con privacidad, uso de imagen o voz y eliminación de datos, escribe directamente a",
         "requestDescription": "Estos datos nos ayudan a entender el caso y darte una respuesta más útil:",
         "requestItems": {
           "account": "El correo asociado a tu cuenta de Bigmelo.",
-          "evidence": "Una descripción clara del problema y, si es posible, capturas de pantalla.",
+          "evidence": "Una descripción clara del problema y los pasos necesarios para reproducirlo.",
           "profile": "El nombre, alias o enlace del perfil relacionado."
         },
         "requestTitle": "Antes de enviar tu solicitud",

@@ -15,7 +15,6 @@ import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
-import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChatCircleDots as ChatCircleDotsIcon } from '@phosphor-icons/react/dist/ssr/ChatCircleDots';
 import { Lifebuoy as LifebuoyIcon } from '@phosphor-icons/react/dist/ssr/Lifebuoy';
@@ -24,6 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
 import { config } from '@/config';
+import { SupportRequestDialog } from '@/components/dashboard/help/support-request-dialog';
 
 const faqKeys = [
   'whatIsBigmelo',
@@ -53,8 +53,8 @@ export function Page(): React.JSX.Element {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [expandedFaq, setExpandedFaq] = React.useState<FaqKey | null>(null);
+  const [supportDialogOpen, setSupportDialogOpen] = React.useState(false);
   const activeTab: HelpTab = searchParams.get('tab') === 'support' ? 'support' : 'faq';
-  const contactUrl = `${config.publicProfile.baseUrl.replace(/\/+$/, '')}/#contact`;
 
   const selectTab = React.useCallback(
     (nextTab: HelpTab): void => {
@@ -246,12 +246,10 @@ export function Page(): React.JSX.Element {
                       </Typography>
                     </Stack>
                     <Button
-                      component="a"
-                      endIcon={<ArrowSquareOutIcon />}
-                      href={contactUrl}
-                      rel="noreferrer"
+                      onClick={() => {
+                        setSupportDialogOpen(true);
+                      }}
                       sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
-                      target="_blank"
                       variant="contained"
                     >
                       {t('dashboard.help.support.actions.contact')}
@@ -288,6 +286,12 @@ export function Page(): React.JSX.Element {
           </Card>
         </Stack>
       </Box>
+      <SupportRequestDialog
+        onClose={() => {
+          setSupportDialogOpen(false);
+        }}
+        open={supportDialogOpen}
+      />
     </React.Fragment>
   );
 }
