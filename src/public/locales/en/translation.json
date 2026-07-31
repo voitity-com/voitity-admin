@@ -145,6 +145,7 @@
         "newFeatures": "New features",
         "notifications": "Notifications",
         "overview": "Overview",
+        "paymentMethods": "Payment methods",
         "profile": "Profile",
         "profiles": "Profiles",
         "security": "Security",
@@ -155,6 +156,7 @@
       },
       "settingsGroups": {
         "organization": "Organization",
+        "payments": "Payments",
         "personal": "Personal"
       }
     },
@@ -187,6 +189,7 @@
       "items": {
         "account": "Account",
         "billing": "Billing",
+        "paymentMethods": "Payment methods",
         "security": "Security"
       }
     },
@@ -340,6 +343,69 @@
         },
         "pageTitle": "Notifications"
       },
+      "paymentMethods": {
+        "actions": {
+          "add": "Add card",
+          "adding": "Adding card",
+          "cancel": "Cancel",
+          "makeDefault": "Make default",
+          "remove": "Remove"
+        },
+        "addDialog": {
+          "acceptanceRegulation": "acceptance regulations",
+          "acceptProvider": "I accept Wompi's",
+          "personalDataAuthorization": "personal data authorization",
+          "title": "Add payment card"
+        },
+        "empty": {
+          "body": "Add a card to use for subscriptions, renewals, and credit purchases.",
+          "title": "No payment methods"
+        },
+        "errors": {
+          "add": "The payment method could not be added.",
+          "default": "The default payment method could not be changed.",
+          "load": "Payment methods could not be loaded.",
+          "remove": "The payment method could not be removed.",
+          "setup": "Secure setup with Wompi could not be initialized."
+        },
+        "fields": {
+          "cardHolder": "Name on card",
+          "cardNumber": "Card number",
+          "cvc": "CVC",
+          "expMonth": "Month",
+          "expYear": "Year"
+        },
+        "providerNotice": "Card data is tokenized directly by",
+        "removeDialog": {
+          "body": "Card ending in {{lastFour}} will no longer be available for future charges.",
+          "title": "Remove payment method"
+        },
+        "subtitle": "Manage the card used for recurring charges and one-time credit purchases.",
+        "title": "Payment methods",
+        "toasts": {
+          "added": "Payment method added.",
+          "defaultUpdated": "Default payment method updated.",
+          "removed": "Payment method removed."
+        },
+        "tooltips": {
+          "defaultCannotBeRemoved": "Select another default card before removing this one."
+        },
+        "validation": {
+          "cardHolder": "Enter the name shown on the card.",
+          "cardNumber": "Enter a valid card number.",
+          "cvc": "Enter a valid CVC.",
+          "expiration": "Select a valid expiration date.",
+          "providerAcceptance": "Accept Wompi's contracts to continue."
+        },
+        "values": {
+          "card": "Card",
+          "default": "Default",
+          "lastPaymentRejected": "The most recent charge with this card was declined.",
+          "noExpiration": "Expiration unavailable",
+          "requiresAttention": "Payment declined",
+          "unknown": "unknown"
+        }
+      },
       "billing": {
         "empty": "No subscription information was returned.",
         "emptySection": "No items were returned.",
@@ -390,6 +456,22 @@
     "trialCancelledSubheader": "The trial is cancelled. Access remains active until {{date}} and there will be no automatic charge.",
     "trialSubheader": "You are in the no-cost period. It ends on {{date}} and the first charge happens after that."
   },
+  "paymentRecovery": {
+    "accessSuspended": "The renewal could not be processed. The subscription and profiles are inactive until payment is approved.",
+    "addPaymentMethod": "Add payment method",
+    "changePaymentMethod": "Change payment method",
+    "nextRetry": "Next automatic attempt: {{date}}.",
+    "noMoreAutomaticRetries": "No automatic attempts remain. You can renew manually with a valid card.",
+    "noPaymentMethod": "There is no valid default card.",
+    "paymentMethod": "Card for renewal",
+    "paymentMethodRequired": "Add or select a valid card before renewing.",
+    "paymentMethodRejected": "The last charge with this card was declined. Add another payment method to renew.",
+    "planSubheader": "This plan is inactive while the renewal payment is pending.",
+    "pending": "Payment pending",
+    "renewNow": "Renew subscription",
+    "renewing": "Renewing",
+    "retryFailed": "The subscription could not be renewed."
+  },
         "cycles": {
     "annual": {
             "description": "For keeping the profile active all year at a better price.",
@@ -423,6 +505,77 @@
     "trmUnavailable": "Current TRM unavailable.",
     "wompiNotice": "The plan is shown in USD. Our payment service <wompi>Wompi</wompi> processes the payment in COP using the configured exchange rate."
   },
+  "creditsStore": {
+    "available": "Available balance",
+    "buy": "Buy credits",
+    "debt": "There is a reversed balance of {{count}} credits. Credits cannot be consumed until it is covered.",
+    "dialog": {
+      "addAnotherCard": "Add another",
+      "addCard": "Add card",
+      "acceptTerms": "I accept the one-time purchase and the",
+      "availableCard": "Available",
+      "cancel": "Cancel",
+      "confirm": "Buy credits",
+      "chargeCard": "The charge will be made to",
+      "credits": "Credits",
+      "custom": "Credit amount",
+      "defaultCard": "Default",
+      "noChargeablePaymentMethod": "Add a valid payment method before continuing.",
+      "paymentMethodTitle": "Payment method for this purchase",
+      "paymentMethodRequired": "Add or change the payment method to purchase credits.",
+      "paymentMethodRejected": "The last payment with {{card}} was declined. Add another payment method.",
+      "price": "Price in USD",
+      "rejectedCard": "Payment declined",
+      "terms": "credit terms",
+      "title": "Buy credits",
+      "unavailableCard": "Unavailable",
+      "wompiPrefix": "The price is shown in USD. Our payment service",
+      "wompiSuffix": "processes the one-time charge in COP using the configured exchange rate."
+    },
+    "errors": {
+      "paymentDeclined": "The credit charge was declined. Add another payment method to continue.",
+      "purchase": "The credit purchase could not be processed."
+    },
+    "history": {
+      "amount": "Price",
+      "credits": "Credits",
+      "date": "Date",
+      "empty": "There are no credit purchases yet.",
+      "status": "Status",
+      "subheader": "One-time charges processed with your payment method.",
+      "title": "Purchase history"
+    },
+    "lifetimeConsumed": "Lifetime consumed",
+    "lifetimePurchased": "Lifetime purchased",
+    "requiresPaidPlan": "An active paid subscription and reusable payment method are required to buy and use credits.",
+    "reserved": "Reserved",
+    "rates": {
+      "services": {
+        "avatar_images": "New avatar image",
+        "avatar_video_seconds": "Avatar video",
+        "chat_messages": "Visitor message",
+        "incoming_audio_seconds": "Incoming audio transcription",
+        "tts_characters": "Audio response generation",
+        "voice_clones": "New voice clone"
+      },
+      "title": "Usage rates",
+      "units": {
+        "avatar_images": "image",
+        "avatar_video_seconds": "second",
+        "chat_messages": "message",
+        "incoming_audio_seconds": "second",
+        "tts_characters": "character",
+        "voice_clones": "clone"
+      },
+      "value": "{{amount}} credits / {{unit}}"
+    },
+    "subheader": "Used only after the corresponding plan limit is exhausted and never reset each month.",
+    "title": "Purchased credits",
+    "toasts": {
+      "approved": "Credits were added to your account.",
+      "pending": "The purchase is pending confirmation."
+    }
+  },
   "paymentMethod": {
     "cardHolder": "Name on card",
     "cardNumber": "Card number",
@@ -431,11 +584,14 @@
     "cvcInvalid": "3-4 digits.",
     "expMonth": "Month",
     "expYear": "Year",
+    "default": "Default",
     "loading": "Preparing secure setup with Wompi.",
     "privacyLink": "data authorization",
     "setupUnavailable": "Could not load Wompi setup. Try reloading the page.",
+    "savedCard": "Saved card",
     "termsLink": "Wompi terms",
     "title": "Payment method",
+    "useNew": "Use another card",
     "wompiContracts": "You must review and accept:",
     "wompiContractsAccepted": "I accept:"
   },
@@ -505,23 +661,23 @@
           "avatar_one": "{{images}} avatar image and {{seconds}} seconds of video",
           "avatar_other": "{{images}} avatar images and {{seconds}} seconds of video",
           "chat": {
-            "annual": "1000 monthly chat messages with 500 credits",
-            "monthly": "1000 chat messages with 500 credits"
+            "annual": "1,000 chat messages included each month",
+            "monthly": "1,000 chat messages included"
           },
           "chatMessages": "{{countLabel}} chat messages included",
           "incomingAudio": "Up to {{countLabel}} incoming audios per month, maximum {{secondsLabel}} seconds each",
-    "credits": "{{countLabel}} credits included",
+    "credits": "Additional credits available for purchase",
     "freeTrial": "{{days}} days at no cost before the first charge",
           "profile": "1 published profile",
           "profiles_one": "{{countLabel}} profile included",
           "profiles_other": "{{countLabel}} profiles included",
           "products": "Up to {{countLabel}} products per profile",
-          "integrations": "Instagram, TikTok, and OnlyFans with up to {{countLabel}} selected media items per network",
+          "integrations": "Instagram and TikTok with up to {{countLabel}} selected media items per network",
           "socialLinks": "Public social network links",
           "savings": "Save {{amount}} compared with monthly billing",
           "tts": {
-            "annual": "20,000 monthly TTS characters with 500 credits",
-            "monthly": "20,000 TTS characters with 500 credits"
+            "annual": "20,000 TTS characters included each month",
+            "monthly": "20,000 TTS characters included"
           },
           "ttsCharacters": "{{countLabel}} TTS characters included",
           "voice_one": "{{countLabel}} authorized voice clone",
@@ -571,6 +727,8 @@
   "toasts": {
     "renewalCancelled": "Automatic renewal cancelled.",
     "renewalReactivated": "Automatic renewal reactivated.",
+    "renewalPaid": "The subscription was renewed and eligible profiles were reactivated.",
+    "renewalPending": "The renewal is pending confirmation.",
     "paymentPending": "The payment is pending. We will notify you when Wompi confirms it.",
     "subscriptionStarted": "Subscription activated.",
     "trialStarted": "Free trial started.",
@@ -594,13 +752,45 @@
         }
       },
       "usage": {
+        "analytics": {
+          "available": "Available balance",
+          "chartSubheader": "Shows only purchased credits consumed after each plan limit was exhausted.",
+          "chartTitle": "Credits consumed by service",
+          "consumed": "Consumed in range",
+          "creditUsage": "Credits used",
+          "noCreditUsage": "No purchased credits were consumed in this range.",
+          "period": "Period",
+          "periodsSubheader": "Compare included usage and credits used in each monthly period.",
+          "periodsTitle": "Period history",
+          "plan": "Plan",
+          "planMessages": "Plan messages",
+          "planTts": "Plan TTS characters",
+          "purchased": "Purchased in range",
+          "reserved": "Reserved in range",
+          "services": {
+            "avatar_image_created": "Avatar image",
+            "avatar_video_created": "Avatar video",
+            "chat_message_received": "Chat message",
+            "incoming_audio_message": "Incoming audio",
+            "voice_cloned": "Voice cloning",
+            "voice_tts_characters": "Audio generation"
+          }
+        },
         "empty": {
           "action": "Go to Billing & plans",
-          "subheader": "Acquire a subscription to activate your limits and start seeing credit usage.",
+          "subheader": "Acquire a subscription to activate your limits and start seeing usage.",
           "title": "You need an active subscription"
         },
         "errors": {
           "generic": "Could not load usage limits."
+        },
+        "filters": {
+          "apply": "Apply",
+          "day": "Day",
+          "from": "From",
+          "groupBy": "Group by",
+          "month": "Month",
+          "to": "To"
         },
         "pageTitle": "Usage"
       }

@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { logger } from '@/lib/default-logger';
-import { getBrowserLanguage, getSupportedLanguage } from '@/lib/i18n';
+import { getBrowserLanguage, getSupportedLanguage, languageStorageKey } from '@/lib/i18n';
 
 export interface I18nProviderProps {
   children: React.ReactNode;
@@ -26,7 +26,15 @@ export function I18nProvider({ children, language }: I18nProviderProps): React.J
 
   React.useEffect(() => {
     const syncDocumentLanguage = (nextLanguage: string): void => {
-      document.documentElement.lang = getSupportedLanguage(nextLanguage);
+      const supportedLanguage = getSupportedLanguage(nextLanguage);
+
+      document.documentElement.lang = supportedLanguage;
+
+      try {
+        window.localStorage.setItem(languageStorageKey, supportedLanguage);
+      } catch {
+        // The current session still changes language when storage is unavailable.
+      }
     };
 
     syncDocumentLanguage(i18n.resolvedLanguage ?? i18n.language ?? resolvedLanguage);

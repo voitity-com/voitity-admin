@@ -37,6 +37,7 @@ export function LanguagePopover({ anchorEl, onClose, open = false }: LanguagePop
     async (language: Language): Promise<void> => {
       onClose?.();
       await i18n.changeLanguage(language);
+      toast.dismiss();
       toast.success(i18n.t('languageChanged'));
     },
     [onClose, i18n]

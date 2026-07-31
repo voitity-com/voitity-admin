@@ -11,6 +11,7 @@ import Typography from '@mui/material/Typography';
 import { CreditCard as CreditCardIcon } from '@phosphor-icons/react/dist/ssr/CreditCard';
 import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { User as UserIcon } from '@phosphor-icons/react/dist/ssr/User';
+import { Wallet as WalletIcon } from '@phosphor-icons/react/dist/ssr/Wallet';
 import { useTranslation } from 'react-i18next';
 
 import { config } from '@/config';
@@ -76,6 +77,14 @@ export function UserPopover({ anchorEl, onClose, open }: UserPopoverProps): Reac
           </ListItemIcon>
           <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
             <span>{t('dashboard.userPopover.items.billing')}</span>
+          </Box>
+        </MenuItem>
+        <MenuItem component={RouterLink} href={paths.dashboard.settings.paymentMethods} onClick={onClose}>
+          <ListItemIcon>
+            <WalletIcon />
+          </ListItemIcon>
+          <Box sx={{ alignItems: 'center', display: 'flex', gap: 1, justifyContent: 'space-between', width: '100%' }}>
+            <span>{t('dashboard.userPopover.items.paymentMethods')}</span>
           </Box>
         </MenuItem>
       </List>

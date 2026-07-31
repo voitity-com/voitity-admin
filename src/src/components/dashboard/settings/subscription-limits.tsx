@@ -20,6 +20,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import Link from '@mui/material/Link';
 import LinearProgress from '@mui/material/LinearProgress';
 import MenuItem from '@mui/material/MenuItem';
+import Radio from '@mui/material/Radio';
+import RadioGroup from '@mui/material/RadioGroup';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -49,11 +51,17 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
 import { logger } from '@/lib/default-logger';
 import { getUsdCopRate } from '@/lib/payments/api-client';
-import type { UsdCopRate, WompiCardDetails, WompiPaymentSourceSetup } from '@/lib/payments/api-client';
+import type {
+  PaymentMethod,
+  UsdCopRate,
+  WompiCardDetails,
+  WompiPaymentSourceSetup,
+} from '@/lib/payments/api-client';
 import type {
   JsonObject,
   JsonValue,
   SubscriptionLimits as SubscriptionLimitsData,
+  SubscriptionBillingState,
   SubscriptionPlan,
   SubscriptionPlans,
   SubscriptionTrial,
@@ -66,22 +74,27 @@ export interface SubscriptionLimitsProps {
 }
 
 export interface SubscriptionBillingProps extends SubscriptionLimitsProps {
+  billingState?: SubscriptionBillingState;
   checkoutError?: string;
   checkoutIntent?: CheckoutIntent | null;
   isCheckoutPending?: boolean;
   isTrialPaymentSourceSetupLoading?: boolean;
+  onAddPaymentMethod?: () => void;
   onCancelRenewal?: () => Promise<void>;
   onCancelTrial?: () => Promise<void>;
   onCheckoutErrorClear?: () => void;
   onCheckoutIntentHandled?: () => void;
   onReactivateRenewal?: () => Promise<void>;
+  onRetryRenewal?: () => Promise<void>;
   onStartCheckout?: (plan: SubscriptionPlan, trialPaymentMethod?: TrialPaymentMethod) => Promise<void>;
-  pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null;
+  pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | 'retry-renewal' | null;
+  paymentMethods?: PaymentMethod[];
   trialPaymentSourceSetup?: WompiPaymentSourceSetup | null;
 }
 
 export interface TrialPaymentMethod {
-  card: WompiCardDetails;
+  card?: WompiCardDetails;
+  paymentSourceId?: number | string;
 }
 
 type BillingInterval = 'annual' | 'monthly';
@@ -153,37 +166,48 @@ export function SubscriptionLimits({ data, language, plansData }: SubscriptionLi
 }
 
 export function SubscriptionBilling({
+  billingState,
   checkoutError = '',
   checkoutIntent,
   data,
   isCheckoutPending = false,
   isTrialPaymentSourceSetupLoading = false,
   language,
+  onAddPaymentMethod,
   onCancelRenewal,
   onCancelTrial,
   onCheckoutErrorClear,
   onCheckoutIntentHandled,
   onReactivateRenewal,
+  onRetryRenewal,
   onStartCheckout,
   pendingAction = null,
+  paymentMethods = [],
   plansData,
   trialPaymentSourceSetup = null,
 }: SubscriptionBillingProps): React.JSX.Element {
   const { t } = useTranslation();
   const hasActiveSubscription = hasActiveSubscriptionData(data);
+  const recoverySubscription = billingState?.subscription;
+  const hasPaymentRecovery = billingState?.payment_recovery.required === true
+    && isRecord(recoverySubscription);
+  const hasCurrentSubscription = hasActiveSubscription || hasPaymentRecovery;
+  const displayData = hasPaymentRecovery
+    ? { ...data, subscription: recoverySubscription }
+    : data;
   const [acceptedTerms, setAcceptedTerms] = React.useState<boolean>(false);
   const [checkoutPlanId, setCheckoutPlanId] = React.useState<string | undefined>();
   const handledCheckoutIntentRef = React.useRef<string | null>(null);
-  const subscription = getCurrentSubscription(data, plansData, t);
+  const subscription = getCurrentSubscription(displayData, plansData, t);
 
   React.useEffect(() => {
-    if (hasActiveSubscription) {
+    if (hasCurrentSubscription) {
       setAcceptedTerms(false);
       setCheckoutPlanId(undefined);
     }
-  }, [hasActiveSubscription]);
+  }, [hasCurrentSubscription]);
 
-  const cycles = getBillingCycles({ hasActiveSubscription, language, plansData, selectedPlanId: checkoutPlanId, subscription, t });
+  const cycles = getBillingCycles({ hasActiveSubscription: hasCurrentSubscription, language, plansData, selectedPlanId: checkoutPlanId, subscription, t });
   const checkoutCycle = cycles.find((cycle) => cycle.planId === checkoutPlanId && !cycle.disabled);
   const selectedPlan = checkoutCycle?.plan;
   const canStartCheckout = Boolean(!hasActiveSubscription && acceptedTerms && selectedPlan && onStartCheckout && !isCheckoutPending);
@@ -263,12 +287,15 @@ export function SubscriptionBilling({
   return (
     <Grid container spacing={3}>
       <Grid lg={5} xs={12}>
-        {hasActiveSubscription ? (
+        {hasCurrentSubscription ? (
           <CurrentPlanCard
+            billingState={billingState}
             language={language}
+            onAddPaymentMethod={onAddPaymentMethod}
             onCancelRenewal={onCancelRenewal}
             onCancelTrial={onCancelTrial}
             onReactivateRenewal={onReactivateRenewal}
+            onRetryRenewal={onRetryRenewal}
             pendingAction={pendingAction}
             subscription={subscription}
             t={t}
@@ -280,14 +307,14 @@ export function SubscriptionBilling({
       <Grid lg={7} xs={12}>
         <BillingCyclesCard
           cycles={cycles}
-          hasActiveSubscription={hasActiveSubscription}
+          hasActiveSubscription={hasCurrentSubscription}
           language={language}
           onSelectPlan={handleOpenCheckout}
           planName={subscription.planName}
           t={t}
         />
       </Grid>
-      {!hasActiveSubscription ? (
+      {!hasCurrentSubscription ? (
         <CheckoutAgreementDialog
           acceptedTerms={acceptedTerms}
           canStartCheckout={canStartCheckout}
@@ -301,6 +328,7 @@ export function SubscriptionBilling({
           onClose={handleCloseCheckout}
           onStartCheckout={handleStartCheckout}
           open={Boolean(checkoutCycle)}
+          paymentMethods={paymentMethods}
           t={t}
           trialPaymentSourceSetup={trialPaymentSourceSetup}
         />
@@ -378,19 +406,25 @@ function SubscriptionRequiredCard({ t }: { t: TFunction }): React.JSX.Element {
 }
 
 function CurrentPlanCard({
+  billingState,
   language,
+  onAddPaymentMethod,
   onCancelRenewal,
   onCancelTrial,
   onReactivateRenewal,
+  onRetryRenewal,
   pendingAction,
   subscription,
   t,
 }: {
+  billingState?: SubscriptionBillingState;
   language: string;
+  onAddPaymentMethod?: () => void;
   onCancelRenewal?: () => Promise<void>;
   onCancelTrial?: () => Promise<void>;
   onReactivateRenewal?: () => Promise<void>;
-  pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | null;
+  onRetryRenewal?: () => Promise<void>;
+  pendingAction?: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal' | 'retry-renewal' | null;
   subscription: CurrentSubscription;
   t: TFunction;
 }): React.JSX.Element {
@@ -399,7 +433,12 @@ function CurrentPlanCard({
   const isTrialing = status.toLowerCase() === 'trialing';
   const isRecurring = subscription.billingMode === 'recurring';
   const hasCancelledRenewal = subscription.cancelAtPeriodEnd === true;
-  const action = getCurrentPlanAction({ isRecurring, isTrialing, onCancelRenewal, onCancelTrial, onReactivateRenewal, subscription, t });
+  const recovery = billingState?.payment_recovery;
+  const paymentMethod = billingState?.payment_method;
+  const isPaymentRecovery = recovery?.required === true;
+  const action = isPaymentRecovery
+    ? null
+    : getCurrentPlanAction({ isRecurring, isTrialing, onCancelRenewal, onCancelTrial, onReactivateRenewal, subscription, t });
   const actionPending = Boolean(action && pendingAction === action.pendingKey);
   const serviceEndDate = subscription.renewsAt
     ? formatDate(subscription.renewsAt, language)
@@ -449,7 +488,7 @@ function CurrentPlanCard({
     >
       <CardContent>
         <Stack spacing={4}>
-          <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
+          <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
             <Stack direction="row" spacing={2} sx={{ alignItems: 'center', minWidth: 0 }}>
               <Avatar
                 sx={{
@@ -511,6 +550,71 @@ function CurrentPlanCard({
               </Stack>
             ))}
           </Stack>
+
+          {isPaymentRecovery ? (
+            <Stack spacing={2}>
+              <Alert severity="error" variant="filled">
+                {t('dashboard.settings.billing.paymentRecovery.accessSuspended')}
+              </Alert>
+              <Stack spacing={0.5}>
+                <Typography color="rgba(255,255,255,0.68)" variant="body2">
+                  {t('dashboard.settings.billing.paymentRecovery.paymentMethod')}
+                </Typography>
+                <Typography variant="subtitle2">
+                  {paymentMethod
+                    ? savedPaymentMethodLabel(paymentMethod, t)
+                    : t('dashboard.settings.billing.paymentRecovery.noPaymentMethod')}
+                </Typography>
+                {paymentMethod?.requires_attention ? (
+                  <Typography color="error.light" variant="body2">
+                    {t('dashboard.settings.billing.paymentRecovery.paymentMethodRejected')}
+                  </Typography>
+                ) : null}
+                {recovery?.next_retry_at ? (
+                  <Typography color="rgba(255,255,255,0.68)" variant="body2">
+                    {t('dashboard.settings.billing.paymentRecovery.nextRetry', {
+                      date: formatDateTime(recovery.next_retry_at, language),
+                    })}
+                  </Typography>
+                ) : (
+                  <Typography color="rgba(255,255,255,0.68)" variant="body2">
+                    {t('dashboard.settings.billing.paymentRecovery.noMoreAutomaticRetries')}
+                  </Typography>
+                )}
+              </Stack>
+              <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1}>
+                <Button
+                  color="inherit"
+                  onClick={onAddPaymentMethod}
+                  startIcon={<CreditCardIcon />}
+                  sx={{ borderColor: 'rgba(255,255,255,0.5)' }}
+                  variant="outlined"
+                >
+                  {paymentMethod
+                    ? t('dashboard.settings.billing.paymentRecovery.changePaymentMethod')
+                    : t('dashboard.settings.billing.paymentRecovery.addPaymentMethod')}
+                </Button>
+                <Button
+                  disabled={!recovery?.can_retry_now || pendingAction === 'retry-renewal'}
+                  onClick={() => {
+                    void onRetryRenewal?.();
+                  }}
+                  startIcon={
+                    pendingAction === 'retry-renewal'
+                      ? <CircularProgress color="inherit" size={16} />
+                      : <CreditCardIcon />
+                  }
+                  variant="contained"
+                >
+                  {pendingAction === 'retry-renewal'
+                    ? t('dashboard.settings.billing.paymentRecovery.renewing')
+                    : recovery?.has_pending_payment
+                      ? t('dashboard.settings.billing.paymentRecovery.pending')
+                      : t('dashboard.settings.billing.paymentRecovery.renewNow')}
+                </Button>
+              </Stack>
+            </Stack>
+          ) : null}
 
           {action ? (
             <Stack spacing={1.25}>
@@ -689,6 +793,10 @@ function getCurrentPlanSubheader(subscription: CurrentSubscription, language: st
     });
   }
 
+  if (status === 'past_due') {
+    return t('dashboard.settings.billing.paymentRecovery.planSubheader');
+  }
+
   return t('dashboard.settings.billing.currentPlan.subheader');
 }
 
@@ -857,6 +965,7 @@ function CheckoutAgreementDialog({
   onCheckoutErrorClear,
   onStartCheckout,
   open,
+  paymentMethods,
   t,
   trialPaymentSourceSetup,
 }: {
@@ -872,6 +981,7 @@ function CheckoutAgreementDialog({
   onCheckoutErrorClear?: () => void;
   onStartCheckout: (trialPaymentMethod?: TrialPaymentMethod) => Promise<void>;
   open: boolean;
+  paymentMethods: PaymentMethod[];
   t: TFunction;
   trialPaymentSourceSetup?: WompiPaymentSourceSetup | null;
 }): React.JSX.Element {
@@ -885,6 +995,7 @@ function CheckoutAgreementDialog({
   const firstChargeAmount = cycle ? formatCurrency(cycle.priceUsd, cycle.currency, language) : t('dashboard.settings.billing.values.empty');
   const isMobile = useMediaQuery('down', 'sm');
   const [acceptedWompiContracts, setAcceptedWompiContracts] = React.useState<boolean>(false);
+  const [paymentMethodChoice, setPaymentMethodChoice] = React.useState<string>('new');
   const [trialCard, setTrialCard] = React.useState<WompiCardDetails>(() => emptyTrialCard());
   const [usdCopRate, setUsdCopRate] = React.useState<UsdCopRate | null>(null);
   const [usdCopRateError, setUsdCopRateError] = React.useState<boolean>(false);
@@ -894,10 +1005,16 @@ function CheckoutAgreementDialog({
   const requiresWompiContracts = Boolean(
     trialPaymentSourceSetup?.acceptance.permalink || trialPaymentSourceSetup?.personal_data_auth.permalink
   );
+  const selectedSavedMethod = paymentMethods.find(
+    (method) => String(method.id) === paymentMethodChoice && method.is_chargeable
+  );
+  const isAddingNewMethod = !selectedSavedMethod;
   const canSubmit =
     canStartCheckout &&
     (!requiresPaymentSource ||
-      (Boolean(trialPaymentSourceSetup) &&
+      Boolean(selectedSavedMethod) ||
+      (isAddingNewMethod &&
+        Boolean(trialPaymentSourceSetup) &&
         !isTrialPaymentSourceSetupLoading &&
         isTrialCardValid(trialCard) &&
         (!requiresWompiContracts || acceptedWompiContracts)));
@@ -906,8 +1023,20 @@ function CheckoutAgreementDialog({
     if (!open) {
       setAcceptedWompiContracts(false);
       setTrialCard(emptyTrialCard());
+      setPaymentMethodChoice('new');
     }
   }, [open]);
+
+  React.useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const preferred = paymentMethods.find((method) => method.is_default && method.is_chargeable)
+      ?? paymentMethods.find((method) => method.is_chargeable);
+
+    setPaymentMethodChoice(preferred ? String(preferred.id) : 'new');
+  }, [open, paymentMethods]);
 
   React.useEffect(() => {
     if (!open) {
@@ -1065,18 +1194,62 @@ function CheckoutAgreementDialog({
               {requiresPaymentSource ? (
                 <Stack spacing={1.5}>
                   <Typography variant="subtitle2">{t('dashboard.settings.billing.paymentMethod.title')}</Typography>
-                  {isTrialPaymentSourceSetupLoading ? (
+                  {paymentMethods.length > 0 ? (
+                    <RadioGroup
+                      onChange={(event) => {
+                        onCheckoutErrorClear?.();
+                        setPaymentMethodChoice(event.target.value);
+                      }}
+                      value={paymentMethodChoice}
+                    >
+                      {paymentMethods.map((method) => (
+                        <FormControlLabel
+                          control={<Radio />}
+                          disabled={!method.is_chargeable || isCheckoutPending}
+                          key={method.id}
+                          label={
+                            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                              <Typography variant="body2">{savedPaymentMethodLabel(method, t)}</Typography>
+                              {method.is_default ? (
+                                <Chip
+                                  label={t('dashboard.settings.billing.paymentMethod.default')}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                              ) : null}
+                              {method.requires_attention ? (
+                                <Chip
+                                  color="error"
+                                  label={t('dashboard.settings.paymentMethods.values.requiresAttention')}
+                                  size="small"
+                                  variant="soft"
+                                />
+                              ) : null}
+                            </Stack>
+                          }
+                          value={String(method.id)}
+                        />
+                      ))}
+                      <FormControlLabel
+                        control={<Radio />}
+                        disabled={isCheckoutPending}
+                        label={t('dashboard.settings.billing.paymentMethod.useNew')}
+                        value="new"
+                      />
+                    </RadioGroup>
+                  ) : null}
+                  {isAddingNewMethod && isTrialPaymentSourceSetupLoading ? (
                     <Alert severity="info" variant="outlined">
                       {t('dashboard.settings.billing.paymentMethod.loading')}
                     </Alert>
-                  ) : trialPaymentSourceSetup ? (
+                  ) : isAddingNewMethod && trialPaymentSourceSetup ? (
                     null
-                  ) : (
+                  ) : isAddingNewMethod ? (
                     <Alert severity="warning" variant="outlined">
                       {t('dashboard.settings.billing.paymentMethod.setupUnavailable')}
                     </Alert>
-                  )}
-                  <Grid container spacing={1.5}>
+                  ) : null}
+                  {isAddingNewMethod ? <Grid container spacing={1.5}>
                     <Grid xs={12}>
                       <TextField
                         disabled={isCheckoutPending}
@@ -1153,10 +1326,10 @@ function CheckoutAgreementDialog({
                         value={trialCard.cvc}
                       />
                     </Grid>
-                  </Grid>
+                  </Grid> : null}
                 </Stack>
               ) : null}
-              {trialPaymentSourceSetup ? (
+              {isAddingNewMethod && trialPaymentSourceSetup ? (
                 <WompiContractsAcceptance
                   checked={acceptedWompiContracts}
                   disabled={isCheckoutPending}
@@ -1219,7 +1392,11 @@ function CheckoutAgreementDialog({
           <Button
             disabled={!canSubmit}
             onClick={() => {
-              void onStartCheckout({ card: normalizedTrialCard(trialCard) });
+              void onStartCheckout(
+                selectedSavedMethod
+                  ? { paymentSourceId: selectedSavedMethod.id }
+                  : { card: normalizedTrialCard(trialCard) }
+              );
             }}
             startIcon={isCheckoutPending ? <CircularProgress color="inherit" size={16} /> : <CreditCardIcon />}
             sx={{ width: { sm: 'auto', xs: '100%' } }}
@@ -1235,6 +1412,13 @@ function CheckoutAgreementDialog({
       </DialogActions>
     </Dialog>
   );
+}
+
+function savedPaymentMethodLabel(method: PaymentMethod, t: TFunction): string {
+  const brand = method.brand?.trim() || t('dashboard.settings.billing.paymentMethod.savedCard');
+  const lastFour = method.last_four?.trim();
+
+  return lastFour ? `${brand} •••• ${lastFour}` : brand;
 }
 
 function WompiContractsAcceptance({
@@ -1824,9 +2008,7 @@ function getPlanFeatures({
       countLabel: formatNumber(selectedMedia, language),
     }),
     t('dashboard.settings.billing.planFeatures.socialLinks'),
-    t('dashboard.settings.billing.planFeatures.credits', {
-      countLabel: formatNumber(getPlanCreditsTotal(plan) ?? 1000, language),
-    }),
+    t('dashboard.settings.billing.planFeatures.credits'),
   ];
 
   if (trial?.available) {
@@ -1848,10 +2030,6 @@ function getPlanLimit(plan: SubscriptionPlan | undefined, metric: string): numbe
   const value = plan?.limits?.[metric];
 
   return getNumericJsonValue(value);
-}
-
-function getPlanCreditsTotal(plan: SubscriptionPlan | undefined): number | undefined {
-  return getNumericJsonValue(plan?.credits?.total);
 }
 
 function getPlanCapabilityNumber(plan: SubscriptionPlan | undefined, path: string[]): number | undefined {
@@ -2159,7 +2337,7 @@ function hasNullField(value: JsonObject, fields: readonly string[]): boolean {
   return fields.some((field) => value[field] === null);
 }
 
-function isRecord(value: JsonValue): value is JsonObject {
+function isRecord(value: unknown): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
@@ -2217,6 +2395,19 @@ function formatDate(value: string, language: string): string {
   }
 
   return new Intl.DateTimeFormat(language, { dateStyle: 'medium' }).format(date);
+}
+
+function formatDateTime(value: string, language: string): string {
+  const date = new Date(value);
+
+  if (!Number.isFinite(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(language, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 }
 
 function formatFutureDate(days: number, language: string): string {

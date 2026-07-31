@@ -8,7 +8,7 @@ interface ApiEnvelope<T> {
 
 interface RequestOptions {
   body?: unknown;
-  method?: 'GET' | 'POST';
+  method?: 'DELETE' | 'GET' | 'PATCH' | 'POST';
 }
 
 interface WompiInitializeData {
@@ -139,8 +139,14 @@ export interface SubscriptionTrialStartResponse {
   payment_order?: PaymentOrder;
   payment_source?: {
     id: number | string;
+    brand?: string | null;
+    expiration_month?: number | null;
+    expiration_year?: number | null;
+    is_chargeable?: boolean;
+    is_default?: boolean;
+    is_expired?: boolean;
+    last_four?: string | null;
     provider?: string;
-    provider_source_id?: string;
     reusable?: boolean;
     status?: string;
     type?: string;
@@ -151,12 +157,58 @@ export interface SubscriptionTrialStartResponse {
 
 export type SubscriptionPaymentSourceStartResponse = SubscriptionTrialStartResponse;
 
+export interface PaymentMethod {
+  brand?: string | null;
+  created_at?: string | null;
+  expiration_month?: number | null;
+  expiration_year?: number | null;
+  id: number | string;
+  is_chargeable: boolean;
+  is_default: boolean;
+  is_expired: boolean;
+  last_four?: string | null;
+  last_failure?: {
+    code?: string | null;
+    failed_at?: string | null;
+    payment_order_id?: number | string | null;
+  } | null;
+  last_used_at?: string | null;
+  provider: string;
+  reusable: boolean;
+  requires_attention: boolean;
+  status: string;
+  type?: string | null;
+  verified_at?: string | null;
+}
+
+export interface PaymentMethodPayload {
+  accept_personal_auth: string;
+  acceptance_token: string;
+  customer_data?: Record<string, unknown>;
+  metadata?: Record<string, unknown>;
+  make_default?: boolean;
+  session_id?: string;
+  token: string;
+  type: 'CARD';
+}
+
 export class PaymentApiError extends Error {
+  public code?: string;
+
+  public errors?: Record<string, string[]>;
+
   public status: number;
 
-  public constructor(message: string, status: number) {
+  public constructor(
+    message: string,
+    status: number,
+    code?: string,
+    errors?: Record<string, string[]>
+  ) {
     super(message);
     this.name = 'PaymentApiError';
+    this.code = code;
+    this.errors = errors;
     this.status = status;
   }
 }
@@ -192,16 +244,45 @@ export async function getSubscriptionPaymentSourceSetup(
   return normalizeWompiPaymentSourceSetup(response);
 }
 
+export async function getPaymentMethodSetup(): Promise<WompiPaymentSourceSetup> {
+  return getSubscriptionPaymentSourceSetup('/api/payment-methods/setup');
+}
+
+export async function listPaymentMethods(): Promise<PaymentMethod[]> {
+  const response = await requestJson<unknown>('/api/payment-methods', { method: 'GET' });
+  const data = getResponseData(response);
+  const methods = isRecord(data) && Array.isArray(data.payment_methods) ? data.payment_methods : [];
+
+  return methods.map(normalizePaymentMethod).filter((method): method is PaymentMethod => method !== null);
+}
+
+export async function addPaymentMethod(payload: PaymentMethodPayload): Promise<PaymentMethod> {
+  const response = await requestJson<unknown>('/api/payment-methods', {
+    body: payload,
+    method: 'POST',
+  });
+
+  return paymentMethodFromResponse(response);
+}
+
+export async function setDefaultPaymentMethod(paymentMethodId: number | string): Promise<PaymentMethod> {
+  const response = await requestJson<unknown>(
+    `/api/payment-methods/${encodeURIComponent(String(paymentMethodId))}/default`,
+    { method: 'PATCH' }
+  );
+
+  return paymentMethodFromResponse(response);
+}
+
+export async function removePaymentMethod(paymentMethodId: number | string): Promise<void> {
+  await requestJson<unknown>(`/api/payment-methods/${encodeURIComponent(String(paymentMethodId))}`, {
+    method: 'DELETE',
+  });
+}
+
 export async function startSubscriptionTrial(payload: {
-  payment_source: {
-    accept_personal_auth: string;
-    acceptance_token: string;
-    customer_data?: Record<string, unknown>;
-    metadata?: Record<string, unknown>;
-    session_id?: string;
-    token: string;
-    type: 'CARD';
-  };
+  payment_source?: PaymentMethodPayload;
+  payment_source_id?: number | string;
   plan: string;
   terms_accepted: true;
 }): Promise<SubscriptionTrialStartResponse> {
@@ -214,15 +295,8 @@ export async function startSubscriptionTrial(payload: {
 }
 
 export async function startSubscriptionWithPaymentSource(payload: {
-  payment_source: {
-    accept_personal_auth: string;
-    acceptance_token: string;
-    customer_data?: Record<string, unknown>;
-    metadata?: Record<string, unknown>;
-    session_id?: string;
-    token: string;
-    type: 'CARD';
-  };
+  payment_source?: PaymentMethodPayload;
+  payment_source_id?: number | string;
   plan: string;
   terms_accepted: true;
 }): Promise<SubscriptionPaymentSourceStartResponse> {
@@ -252,7 +326,9 @@ export async function tokenizeWompiCard(setup: WompiPaymentSourceSetup, card: Wo
   });
 
   if (!response.ok) {
-    throw new PaymentApiError(await getErrorMessage(response), response.status);
+    const error = await getApiError(response);
+
+    throw new PaymentApiError(error.message, response.status, error.code, error.errors);
   }
 
   const json = (await response.json()) as unknown;
@@ -443,6 +519,57 @@ function normalizeWompiCardToken(response: unknown): WompiCardToken {
   };
 }
 
+function paymentMethodFromResponse(response: unknown): PaymentMethod {
+  const data = getResponseData(response);
+  const value = isRecord(data) ? data.payment_method : undefined;
+  const method = normalizePaymentMethod(value);
+
+  if (!method) {
+    throw new Error('Invalid payment method response');
+  }
+
+  return method;
+}
+
+function normalizePaymentMethod(value: unknown): PaymentMethod | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const id = value.id;
+
+  if (typeof id !== 'number' && typeof id !== 'string') {
+    return null;
+  }
+
+  return {
+    brand: getStringField(value, ['brand']) ?? null,
+    created_at: getStringField(value, ['created_at', 'createdAt']) ?? null,
+    expiration_month: getNumberField(value, ['expiration_month', 'expirationMonth']) ?? null,
+    expiration_year: getNumberField(value, ['expiration_year', 'expirationYear']) ?? null,
+    id,
+    is_chargeable: value.is_chargeable === true,
+    is_default: value.is_default === true,
+    is_expired: value.is_expired === true,
+    last_four: getStringField(value, ['last_four', 'lastFour']) ?? null,
+    last_failure: isRecord(value.last_failure)
+      ? {
+          code: getStringField(value.last_failure, ['code']) ?? null,
+          failed_at: getStringField(value.last_failure, ['failed_at', 'failedAt']) ?? null,
+          payment_order_id:
+            getNumberField(value.last_failure, ['payment_order_id', 'paymentOrderId']) ?? null,
+        }
+      : null,
+    last_used_at: getStringField(value, ['last_used_at', 'lastUsedAt']) ?? null,
+    provider: getStringField(value, ['provider']) ?? 'wompi',
+    reusable: value.reusable === true,
+    requires_attention: value.requires_attention === true,
+    status: getStringField(value, ['status']) ?? 'unknown',
+    type: getStringField(value, ['type']) ?? null,
+    verified_at: getStringField(value, ['verified_at', 'verifiedAt']) ?? null,
+  };
+}
+
 function normalizePaymentOrderResponse(response: unknown): PaymentOrder {
   const data = getResponseData(response);
   const paymentOrder = normalizePaymentOrder(data);
@@ -603,7 +730,9 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
   });
 
   if (!response.ok) {
-    throw new PaymentApiError(await getErrorMessage(response), response.status);
+    const error = await getApiError(response);
+
+    throw new PaymentApiError(error.message, response.status, error.code, error.errors);
   }
 
   if (response.status === 204) {
@@ -613,22 +742,38 @@ async function requestJson<T>(path: string, options: RequestOptions): Promise<T>
   return (await response.json()) as T;
 }
 
-async function getErrorMessage(response: Response): Promise<string> {
+async function getApiError(response: Response): Promise<{
+  code?: string;
+  errors?: Record<string, string[]>;
+  message: string;
+}> {
   try {
-    const json = (await response.json()) as { errors?: Record<string, string[]>; message?: string };
+    const json = (await response.json()) as {
+      code?: string;
+      errors?: Record<string, string[]>;
+      message?: string;
+    };
 
     if (json.message) {
-      return json.message;
+      return {
+        code: json.code,
+        errors: json.errors,
+        message: json.message,
+      };
     }
 
     const firstError = Object.values(json.errors ?? {})[0]?.[0];
 
     if (firstError) {
-      return firstError;
+      return {
+        code: json.code,
+        errors: json.errors,
+        message: firstError,
+      };
     }
   } catch {
     // Fall through to generic message.
   }
 
-  return 'Payment request failed';
+  return { message: 'Payment request failed' };
 }

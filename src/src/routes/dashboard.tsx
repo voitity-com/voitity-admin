@@ -523,6 +523,13 @@ export const route: RouteObject = {
           },
         },
         {
+          path: 'payment-methods',
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/settings/payment-methods');
+            return { Component: Page };
+          },
+        },
+        {
           path: 'usage',
           lazy: async () => {
             const { Page } = await import('@/pages/dashboard/settings/usage');
