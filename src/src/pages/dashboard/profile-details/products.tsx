@@ -51,6 +51,7 @@ import {
   listProfileProducts,
   setProfileProductsEnabled,
   updateProfileProduct,
+  updateProfileProductSettings,
 } from '@/lib/products/api-client';
 import { useSelection } from '@/hooks/use-selection';
 import type { ColumnDef } from '@/components/core/data-table';
@@ -61,6 +62,7 @@ import type { ProductLanguage } from '@/components/dashboard/products/profile-pr
 import { interpolate, productCopy } from '@/components/dashboard/products/profile-product-copy';
 import { ProfileProductDialog } from '@/components/dashboard/products/profile-product-dialog';
 import { ProfileProductImportDialog } from '@/components/dashboard/products/profile-product-import-dialog';
+import { ProfileProductRecommendationGuideDialog } from '@/components/dashboard/products/profile-product-recommendation-guide-dialog';
 
 const metadata = { title: `Products | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const emptyPage: ProfileProductsPage = {
@@ -69,11 +71,12 @@ const emptyPage: ProfileProductsPage = {
   pagination: { current_page: 1, last_page: 1, per_page: 100, total: 0 },
   products: [],
   products_enabled: false,
+  recommendation_guidance: null,
 };
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const language: ProductLanguage = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
   const copy = productCopy[language];
   const [bulkDestinationOpen, setBulkDestinationOpen] = React.useState(false);
@@ -86,6 +89,7 @@ export function Page(): React.JSX.Element {
   const [page, setPage] = React.useState<ProfileProductsPage>(emptyPage);
   const [productsFeatureEnabled, setProductsFeatureEnabled] = React.useState(false);
   const [productDialogOpen, setProductDialogOpen] = React.useState(false);
+  const [recommendationGuideOpen, setRecommendationGuideOpen] = React.useState(false);
   const [settingsConfirmation, setSettingsConfirmation] = React.useState<null | boolean>(null);
   const productIds = React.useMemo(() => page.products.map((product) => product.id), [page.products]);
   const selection = useSelection<number>(productIds);
@@ -223,6 +227,29 @@ export function Page(): React.JSX.Element {
     }
   }, [copy.errors.generic, copy.toasts.settings, profileId, settingsConfirmation]);
 
+  const handleSaveRecommendationGuide = React.useCallback(
+    async (guidance: null | string): Promise<void> => {
+      try {
+        const settings = await updateProfileProductSettings(profileId, {
+          enabled: page.products_enabled,
+          recommendation_guidance: guidance,
+        });
+        setPage((current) => ({
+          ...current,
+          products_enabled: settings.products_enabled,
+          recommendation_guidance: settings.recommendation_guidance,
+        }));
+        setRecommendationGuideOpen(false);
+        toast.success(t('dashboard.products.recommendationGuide.toasts.saved'));
+      } catch (err) {
+        logger.error(err);
+        toast.error(t('dashboard.products.recommendationGuide.errors.save'));
+        throw err;
+      }
+    },
+    [page.products_enabled, profileId, t]
+  );
+
   const columns = React.useMemo(
     () =>
       getColumns({
@@ -310,18 +337,31 @@ export function Page(): React.JSX.Element {
           <Card>
             <CardHeader
               action={
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={page.products_enabled}
-                      disabled={isLoading || isMutating}
-                      onChange={(_, checked) => {
-                        setSettingsConfirmation(checked);
-                      }}
-                    />
-                  }
-                  label={copy.settings.label}
-                />
+                <Stack spacing={0.5} sx={{ alignItems: { sm: 'flex-end', xs: 'stretch' } }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={page.products_enabled}
+                        disabled={isLoading || isMutating}
+                        onChange={(_, checked) => {
+                          setSettingsConfirmation(checked);
+                        }}
+                      />
+                    }
+                    label={copy.settings.label}
+                    sx={{ m: 0 }}
+                  />
+                  <Button
+                    disabled={isLoading || isMutating}
+                    onClick={() => {
+                      setRecommendationGuideOpen(true);
+                    }}
+                    size="small"
+                    startIcon={<PencilSimpleIcon />}
+                  >
+                    {t('dashboard.products.recommendationGuide.open')}
+                  </Button>
+                </Stack>
               }
               subheader={
                 <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.5 }}>
@@ -335,6 +375,17 @@ export function Page(): React.JSX.Element {
                   </Typography>
                 </Stack>
               }
+              sx={{
+                alignItems: { sm: 'center', xs: 'flex-start' },
+                flexDirection: { sm: 'row', xs: 'column' },
+                gap: { sm: 2, xs: 1.5 },
+                '& .MuiCardHeader-action': {
+                  alignSelf: { sm: 'center', xs: 'stretch' },
+                  m: 0,
+                  width: { sm: 'auto', xs: '100%' },
+                },
+                '& .MuiCardHeader-content': { minWidth: 0 },
+              }}
               title={copy.intro.title}
             />
 
@@ -447,6 +498,14 @@ export function Page(): React.JSX.Element {
         }}
         open={importOpen}
         profileId={profileId}
+      />
+      <ProfileProductRecommendationGuideDialog
+        guidance={page.recommendation_guidance}
+        onClose={() => {
+          setRecommendationGuideOpen(false);
+        }}
+        onSave={handleSaveRecommendationGuide}
+        open={recommendationGuideOpen}
       />
       <ProfileProductBulkDestinationDialog
         count={selection.selected.size}

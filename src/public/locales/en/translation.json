@@ -193,6 +193,31 @@
         "security": "Security"
       }
     },
+    "products": {
+      "recommendationGuide": {
+        "actions": {
+          "cancel": "Cancel",
+          "save": "Save guide",
+          "saving": "Saving..."
+        },
+        "description": "Add general situations in which the profile may offer product help even when the visitor does not name a specific product.",
+        "errors": {
+          "save": "The product recommendation guide could not be saved."
+        },
+        "fieldLabel": "Guidance",
+        "helper": "Describe related interests or needs and how the profile should offer help.",
+        "notice": "This guide directs the conversation. Product names, specifications, prices, and benefits must still come from each published product.",
+        "open": "Product recommendation guide",
+        "placeholder": "Example: If the visitor mentions football or soccer, offer to help choose a ball. If they talk about gaining muscle, ask whether they want to see available supplements.",
+        "title": "Product recommendation guide",
+        "toasts": {
+          "saved": "Product recommendation guide saved."
+        },
+        "validation": {
+          "max": "The guide may contain up to {{max}} characters."
+        }
+      }
+    },
     "notifications": {
       "actions": {
         "dismiss": "Dismiss",

@@ -193,6 +193,31 @@
         "security": "Seguridad"
       }
     },
+    "products": {
+      "recommendationGuide": {
+        "actions": {
+          "cancel": "Cancelar",
+          "save": "Guardar guía",
+          "saving": "Guardando..."
+        },
+        "description": "Agrega situaciones generales en las que el perfil puede ofrecer ayuda con productos aunque el visitante no mencione uno específico.",
+        "errors": {
+          "save": "No se pudo guardar la guía para recomendar productos."
+        },
+        "fieldLabel": "Indicaciones",
+        "helper": "Describe intereses o necesidades relacionadas y cómo debe ofrecer ayuda el perfil.",
+        "notice": "Esta guía orienta la conversación. Los nombres, especificaciones, precios y beneficios deben seguir proviniendo de cada producto público.",
+        "open": "Guía para recomendar productos",
+        "placeholder": "Ejemplo: Si el visitante menciona fútbol o soccer, ofrécele ayudarle a elegir un balón. Si habla de aumentar masa muscular, pregúntale si quiere ver los suplementos disponibles.",
+        "title": "Guía para recomendar productos",
+        "toasts": {
+          "saved": "Guía para recomendar productos guardada."
+        },
+        "validation": {
+          "max": "La guía puede contener máximo {{max}} caracteres."
+        }
+      }
+    },
     "notifications": {
       "actions": {
         "dismiss": "Descartar",
