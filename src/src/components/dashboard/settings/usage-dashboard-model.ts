@@ -19,6 +19,7 @@ export interface PlanLimitMetric {
   label: string;
   progress: number;
   remaining: number;
+  unit: 'count' | 'seconds';
   used: number;
 }
 
@@ -40,14 +41,26 @@ export interface CreditServiceTotal {
 }
 
 const metricConfigs = [
-  { key: 'profiles', label: 'dashboard.settings.billing.fields.profiles' },
-  { key: 'avatar_images', label: 'dashboard.settings.billing.fields.avatarImages' },
-  { key: 'avatar_video_seconds', label: 'dashboard.settings.billing.fields.avatarVideoSeconds' },
-  { key: 'voice_clones', label: 'dashboard.settings.billing.fields.voiceClones' },
-  { key: 'tts_characters', label: 'dashboard.settings.billing.fields.ttsCharacters' },
-  { key: 'chat_messages', label: 'dashboard.settings.billing.fields.chatMessages' },
-  { key: 'incoming_audio_messages', label: 'dashboard.settings.billing.fields.incomingAudioMessages' },
-  { key: 'incoming_audio_seconds', label: 'dashboard.settings.billing.fields.incomingAudioSeconds' },
+  { key: 'profiles', label: 'dashboard.settings.billing.fields.profiles', unit: 'count' },
+  { key: 'avatar_images', label: 'dashboard.settings.billing.fields.avatarImages', unit: 'count' },
+  {
+    key: 'avatar_video_seconds',
+    label: 'dashboard.settings.billing.fields.avatarVideoSeconds',
+    unit: 'seconds',
+  },
+  { key: 'voice_clones', label: 'dashboard.settings.billing.fields.voiceClones', unit: 'count' },
+  { key: 'tts_characters', label: 'dashboard.settings.billing.fields.ttsCharacters', unit: 'count' },
+  { key: 'chat_messages', label: 'dashboard.settings.billing.fields.chatMessages', unit: 'count' },
+  {
+    key: 'incoming_audio_messages',
+    label: 'dashboard.settings.billing.fields.incomingAudioMessages',
+    unit: 'count',
+  },
+  {
+    key: 'incoming_audio_seconds',
+    label: 'dashboard.settings.billing.fields.incomingAudioSeconds',
+    unit: 'seconds',
+  },
 ] as const;
 
 export function buildPlanUsageModel(data: SubscriptionLimits, t: TFunction): PlanUsageModel | null {
@@ -59,7 +72,7 @@ export function buildPlanUsageModel(data: SubscriptionLimits, t: TFunction): Pla
   }
 
   const metrics = metricConfigs
-    .map(({ key, label }): PlanLimitMetric | null => {
+    .map(({ key, label, unit }): PlanLimitMetric | null => {
       const value = recordValue(rawLimits[key]);
 
       if (!value) {
@@ -80,6 +93,7 @@ export function buildPlanUsageModel(data: SubscriptionLimits, t: TFunction): Pla
         label: t(label),
         progress: included > 0 ? Math.min(100, Math.max(0, (used / included) * 100)) : 0,
         remaining,
+        unit,
         used,
       };
     })
@@ -134,6 +148,12 @@ export function getCreditSeries(data: UsageAnalytics): {
 
 export function formatUsageNumber(value: number, language: string, maximumFractionDigits = 3): string {
   return new Intl.NumberFormat(language, { maximumFractionDigits }).format(value);
+}
+
+export function formatPlanLimitValue(metric: PlanLimitMetric, value: number, language: string): string {
+  const formatted = formatUsageNumber(value, language);
+
+  return metric.unit === 'seconds' ? `${formatted} s` : formatted;
 }
 
 export function formatUsageDate(value: string | undefined, language: string): string {

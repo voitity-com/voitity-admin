@@ -48,6 +48,7 @@ import { NoSsr } from '@/components/core/no-ssr';
 
 import {
   buildPlanUsageModel,
+  formatPlanLimitValue,
   formatUsageDate,
   formatUsageNumber,
   getCreditSeries,
@@ -620,8 +621,8 @@ function LimitProgress({ language, metric }: { language: string; metric: PlanLim
         <Typography variant="subtitle2">{metric.label}</Typography>
         <Typography color="text.secondary" variant="body2">
           {t('dashboard.settings.billing.values.usedOfLimit', {
-            limit: formatUsageNumber(metric.included, language),
-            used: formatUsageNumber(metric.used, language),
+            limit: formatPlanLimitValue(metric, metric.included, language),
+            used: formatPlanLimitValue(metric, metric.used, language),
           })}
         </Typography>
       </Stack>
@@ -633,7 +634,7 @@ function LimitProgress({ language, metric }: { language: string; metric: PlanLim
       />
       <Typography color="text.secondary" variant="caption">
         {t('dashboard.settings.billing.usage.remainingSummary', {
-          remaining: formatUsageNumber(metric.remaining, language),
+          remaining: formatPlanLimitValue(metric, metric.remaining, language),
         })}
       </Typography>
     </Stack>
@@ -688,7 +689,7 @@ function LimitGauge({ language, metric }: { language: string; metric: PlanLimitM
           <Typography variant="subtitle2">{metric.label}</Typography>
           <Typography color="text.secondary" variant="caption">
             {t('dashboard.settings.billing.values.remaining', {
-              remaining: formatUsageNumber(metric.remaining, language),
+              remaining: formatPlanLimitValue(metric, metric.remaining, language),
             })}
           </Typography>
         </Stack>
@@ -766,9 +767,9 @@ function LimitTable({
                 <TableCell>
                   <Typography variant="subtitle2">{metric.label}</Typography>
                 </TableCell>
-                <TableCell>{formatUsageNumber(metric.used, language)}</TableCell>
-                <TableCell>{formatUsageNumber(metric.remaining, language)}</TableCell>
-                <TableCell>{formatUsageNumber(metric.included, language)}</TableCell>
+                <TableCell>{formatPlanLimitValue(metric, metric.used, language)}</TableCell>
+                <TableCell>{formatPlanLimitValue(metric, metric.remaining, language)}</TableCell>
+                <TableCell>{formatPlanLimitValue(metric, metric.included, language)}</TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                     <LinearProgress
@@ -1099,7 +1100,7 @@ function CompactLimitRow({ language, metric }: { language: string; metric: PlanL
         />
       </Box>
       <Box sx={{ flex: '0 0 auto', textAlign: 'right' }}>
-        <Typography variant="subtitle2">{formatUsageNumber(metric.remaining, language)}</Typography>
+        <Typography variant="subtitle2">{formatPlanLimitValue(metric, metric.remaining, language)}</Typography>
         <Typography color="text.secondary" variant="caption">
           {formatPercent(metric.progress, language)}
         </Typography>

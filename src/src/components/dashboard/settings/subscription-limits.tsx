@@ -1985,7 +1985,7 @@ function getPlanFeatures({
     t('dashboard.settings.billing.planFeatures.avatar', {
       count: avatarImages,
       images: formatNumber(avatarImages, language),
-      seconds: formatNumber(getPlanLimit(plan, 'avatar_video_seconds') ?? 5, language),
+      seconds: formatNumber(getPlanLimit(plan, 'avatar_video_seconds') ?? 2, language),
     }),
     t('dashboard.settings.billing.planFeatures.voice', {
       count: voiceClones,
