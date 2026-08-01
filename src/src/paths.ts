@@ -78,6 +78,11 @@ export const paths = {
       chats: (profileId: string) => `/dashboard/profiles/${profileId}/chats`,
       data: (profileId: string) => `/dashboard/profiles/${profileId}/data`,
       integrations: (profileId: string) => `/dashboard/profiles/${profileId}/integrations`,
+      insights: {
+        dashboard: (profileId: string) => `/dashboard/profiles/${profileId}/insights/dashboard`,
+        chats: (profileId: string) => `/dashboard/profiles/${profileId}/insights/chats`,
+        products: (profileId: string) => `/dashboard/profiles/${profileId}/insights/products`,
+      },
       messages: (profileId: string) => `/dashboard/profiles/${profileId}/messages`,
       products: (profileId: string) => `/dashboard/profiles/${profileId}/products`,
       profile: (profileId: string) => `/dashboard/profiles/${profileId}/profile`,

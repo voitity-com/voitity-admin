@@ -266,6 +266,127 @@ export interface ProfileQuality {
   total_weight: number;
 }
 
+export interface ProfileInsightsSummary {
+  instagram_external_clicks: number;
+  instagram_shown: number;
+  new_chats: number;
+  onlyfans_external_clicks: number;
+  onlyfans_images_shown: number;
+  product_clicks: number;
+  profile_answers: number;
+  tiktok_external_clicks: number;
+  tiktok_shown: number;
+  total_messages: number;
+  unique_visitors: number;
+  visitor_messages: number;
+}
+
+export interface ProfileInsightsProvider {
+  ctr: number;
+  external_clicks: number;
+  opened: number;
+  provider: 'instagram' | 'onlyfans' | 'tiktok';
+  shown: number;
+}
+
+export interface ProfileInsightsCategory {
+  average_confidence?: number;
+  count: number;
+  key: string;
+  percent: number;
+}
+
+export interface ProfileInsightsSeriesRow extends ProfileInsightsSummary {
+  bucket: string;
+}
+
+export interface ProfileInsights {
+  analysis_coverage: {
+    classified: number;
+    completed: number;
+    failed: number;
+    needs_review: number;
+    pending: number;
+    total_chats: number;
+  };
+  categories: ProfileInsightsCategory[];
+  definitions_version: string;
+  provider_funnel: ProfileInsightsProvider[];
+  range: { from: string; group_by: 'day' | 'month'; timezone: string; to: string };
+  series: ProfileInsightsSeriesRow[];
+  summary: ProfileInsightsSummary;
+  tabs: { products: ProfileInsightsProductAvailability };
+  tracking_started_at?: null | string;
+}
+
+export interface ProfileInsightsProductAvailability {
+  active_products: number;
+  available: boolean;
+  historical_products: number;
+  mode: 'active' | 'active_and_history' | 'historical_only' | 'none';
+}
+
+export interface ProfileChatInsights {
+  analysis_coverage: ProfileInsights['analysis_coverage'] & { unclassified: number };
+  definitions_version: string;
+  goal_actions: {
+    chats: number;
+    key: string;
+    media_exit_chats: number;
+    product_click_chats: number;
+    product_click_rate: number;
+    social_click_chats: number;
+    whatsapp_click_chats: number;
+  }[];
+  goal_trend: { bucket: string; goals: { count: number; key: string }[] }[];
+  goals: ProfileInsightsCategory[];
+  range: ProfileInsights['range'];
+  summary: {
+    average_confidence: number;
+    average_duration_minutes: number;
+    average_messages_per_chat: number;
+    closed_chats: number;
+    open_chats: number;
+    profile_answers: number;
+    single_message_chats: number;
+    total_chats: number;
+    total_messages: number;
+    visitor_messages: number;
+  };
+  tabs: ProfileInsights['tabs'];
+  tracking_started_at?: null | string;
+}
+
+export interface ProfileProductInsight {
+  button_clicks: number;
+  chats_reached: number;
+  clicks: number;
+  ctr: number;
+  destination_type?: null | string;
+  goals: { chats: number; key: string }[];
+  historical: boolean;
+  image_clicks: number;
+  image_url?: null | string;
+  key: string;
+  name: string;
+  product_id?: null | number;
+  public_id?: null | string;
+  shown: number;
+  status: 'deleted' | 'draft' | 'published';
+  unique_click_visitors: number;
+}
+
+export interface ProfileProductInsights {
+  available: ProfileInsightsProductAvailability;
+  definitions_version: string;
+  products: ProfileProductInsight[];
+  range: ProfileInsights['range'];
+  series: { bucket: string; clicks: number; shown: number }[];
+  summary: { clicks: number; ctr: number; products: number; shown: number; unique_click_visitors: number };
+  tabs: ProfileInsights['tabs'];
+  tracking_started_at?: null | string;
+}
+
 export interface Voice {
   id: number | string;
   name: string;
@@ -615,6 +736,55 @@ export async function getProfileQuality(profileId: number | string): Promise<Pro
   );
 
   return isApiEnvelope<ProfileQuality>(response) ? response.data : response;
+}
+
+export async function getProfileInsights(params: {
+  from: string;
+  groupBy?: 'day' | 'month';
+  profileId: number | string;
+  timezone: string;
+  to: string;
+}): Promise<ProfileInsights> {
+  const searchParams = new URLSearchParams({
+    from: params.from,
+    to: params.to,
+    timezone: params.timezone,
+  });
+
+  if (params.groupBy) {
+    searchParams.set('group_by', params.groupBy);
+  }
+
+  const response = await requestJson<ApiEnvelope<ProfileInsights> | ProfileInsights>(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/insights/dashboard?${searchParams.toString()}`,
+    { method: 'GET' }
+  );
+
+  return isApiEnvelope<ProfileInsights>(response) ? response.data : response;
+}
+
+export async function getProfileChatInsights(params: Parameters<typeof getProfileInsights>[0]): Promise<ProfileChatInsights> {
+  return getProfileInsightsSection<ProfileChatInsights>('chats', params);
+}
+
+export async function getProfileProductInsights(params: Parameters<typeof getProfileInsights>[0]): Promise<ProfileProductInsights> {
+  return getProfileInsightsSection<ProfileProductInsights>('products', params);
+}
+
+async function getProfileInsightsSection<T>(
+  section: 'chats' | 'products',
+  params: Parameters<typeof getProfileInsights>[0]
+): Promise<T> {
+  const searchParams = new URLSearchParams({ from: params.from, timezone: params.timezone, to: params.to });
+
+  if (params.groupBy) searchParams.set('group_by', params.groupBy);
+
+  const response = await requestJson<ApiEnvelope<T> | T>(
+    `/api/profile/${encodeURIComponent(String(params.profileId))}/insights/${section}?${searchParams.toString()}`,
+    { method: 'GET' }
+  );
+
+  return isApiEnvelope<T>(response) ? response.data : response;
 }
 
 export async function createVoice(payload: {

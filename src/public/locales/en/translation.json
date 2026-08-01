@@ -143,6 +143,7 @@
         "billing": "Billing & plans",
         "help": "Help",
         "integrations": "Integrations",
+        "insights": "Insights",
         "newFeatures": "New features",
         "notifications": "Notifications",
         "overview": "Overview",
@@ -1264,6 +1265,7 @@
         "avatar": "Avatar",
         "chats": "Chats",
         "data": "Data",
+        "insights": "Insights",
         "integrations": "Integrations",
         "messages": "Messages",
         "products": "Products",
@@ -1583,6 +1585,126 @@
         },
         "subheader": "Profile knowledge quality",
         "title": "Quality"
+      },
+      "insights": {
+        "title": "Profile insights",
+        "description": "Profile performance, conversation goals, and product outcomes for the selected range.",
+        "trackingSince": "Visitor and click metrics are available since {{date}}. Earlier values are not estimated.",
+        "tabs": {
+          "label": "Insights sections",
+          "dashboard": "Dashboard",
+          "chats": "Chats",
+          "products": "Products"
+        },
+        "filters": {
+          "apply": "Apply",
+          "date": "Date",
+          "from": "From",
+          "to": "To"
+        },
+        "variants": {
+          "label": "V{{version}}",
+          "v1": { "description": "Google Analytics-inspired executive view with KPIs, trends, providers, and goals." },
+          "v2": { "description": "Contact Lens-inspired operational journey from visitor to conversation and classification." },
+          "v3": { "description": "Social content performance with impressions, opens, exits, and provider CTR." },
+          "v4": { "description": "Conversation intelligence focused on goals, confidence, and analysis coverage." },
+          "v5": { "description": "Compact explorer for daily reconciliation and detailed review of every metric." }
+        },
+        "metrics": {
+          "new_chats": "New chats",
+          "total_messages": "Total messages",
+          "unique_visitors": "Unique visitors",
+          "product_clicks": "Product clicks",
+          "instagram_shown": "Instagram shown",
+          "instagram_external_clicks": "Clicks to Instagram",
+          "tiktok_shown": "TikTok shown",
+          "tiktok_external_clicks": "Clicks to TikTok",
+          "onlyfans_images_shown": "OnlyFans images shown",
+          "onlyfans_external_clicks": "Clicks to OnlyFans"
+        },
+        "charts": {
+          "activity": "Activity over time",
+          "dailyTable": "Period reconciliation",
+          "journey": "Conversation journey",
+          "socialActivity": "Social content shown",
+          "trendHelp": "A chat contains multiple messages; visitors, chats, and messages are not interchangeable."
+        },
+        "providers": {
+          "clicks": "Exits",
+          "help": "Showing, opening, and leaving for a provider are independent actions.",
+          "opened": "Opens",
+          "provider": "Provider",
+          "shown": "Shown",
+          "title": "Provider funnel"
+        },
+        "categories": {
+          "title": "Conversation goal",
+          "conversations": "Conversations",
+          "empty": "There are no classified conversations in this range yet.",
+          "irrelevant_or_spam": "Irrelevant or spam",
+          "profile_discovery": "Profile discovery",
+          "social_engagement": "Social engagement",
+          "product_interest": "Product interest",
+          "purchase_intent": "Purchase intent",
+          "business_opportunity": "Business opportunity",
+          "support_or_complaint": "Support or complaint",
+          "other_or_unclear": "Other or unclear"
+        },
+        "coverage": {
+          "classified": "Classified",
+          "failed": "Failed",
+          "pending": "Pending",
+          "review": "Needs review",
+          "summary": "{{classified}} of {{total}} chats are classified.",
+          "unclassified": "Unclassified",
+          "title": "Classification coverage"
+        },
+        "chats": {
+          "actions": "Downstream actions by goal",
+          "actionsHelp": "Counts distinct chats with at least one action; this is not the total number of clicks.",
+          "averageConfidence": "Average confidence",
+          "averageDuration": "Average duration",
+          "averageMessages": "Messages per chat",
+          "closed": "Closed chats",
+          "goalTrend": "Goal trend",
+          "goalTrendHelp": "Each chat receives one primary goal after it closes and is analyzed.",
+          "mediaExits": "Chats with content exit",
+          "minutes": "{{value}} min",
+          "open": "Open chats",
+          "productChats": "Chats with product click",
+          "productRate": "Product rate",
+          "singleMessage": "One-message chats",
+          "socialChats": "Chats with social click",
+          "total": "Total chats"
+        },
+        "products": {
+          "buttonClicks": "Button clicks",
+          "clicks": "Clicks",
+          "ctr": "CTR",
+          "destination": "Destination",
+          "destinations": {
+            "external_url": "Product page",
+            "telegram": "Telegram",
+            "whatsapp": "WhatsApp"
+          },
+          "historicalOnly": "There are no currently published products; historical data for unpublished or deleted products is shown.",
+          "imageClicks": "Image clicks",
+          "performance": "Performance by product",
+          "product": "Product",
+          "products": "Measured products",
+          "shown": "Shown",
+          "status": "Status",
+          "statuses": {
+            "deleted": "Deleted",
+            "draft": "Unpublished",
+            "published": "Published"
+          },
+          "tableHelp": "Deleted or unpublished products retain their historical name and metrics.",
+          "trend": "Product impressions and clicks",
+          "trendHelp": "Showing a product card and clicking it are independent events.",
+          "unavailable": "This tab is unavailable because the profile has no published products or historical activity.",
+          "uniqueVisitors": "Visitors with clicks"
+        }
       },
       "voice": {
           "audio": "Audio",
