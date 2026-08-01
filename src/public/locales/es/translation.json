@@ -143,6 +143,7 @@
         "billing": "Facturación y planes",
         "help": "Ayuda",
         "integrations": "Integraciones",
+        "insights": "Insights",
         "newFeatures": "Nuevas funcionalidades",
         "notifications": "Notificaciones",
         "overview": "Resumen",
@@ -1264,6 +1265,7 @@
         "avatar": "Avatar",
         "chats": "Chats",
         "data": "Datos",
+        "insights": "Insights",
         "integrations": "Integraciones",
         "messages": "Mensajes",
         "products": "Productos",
@@ -1583,6 +1585,126 @@
         },
         "subheader": "Calidad del conocimiento del perfil",
         "title": "Calidad"
+      },
+      "insights": {
+        "title": "Insights del perfil",
+        "description": "Rendimiento del perfil, objetivos de conversación y resultados de productos dentro del rango seleccionado.",
+        "trackingSince": "Las métricas de visitantes y clics están disponibles desde {{date}}. Los valores anteriores no se estiman.",
+        "tabs": {
+          "label": "Secciones de Insights",
+          "dashboard": "Dashboard",
+          "chats": "Chats",
+          "products": "Productos"
+        },
+        "filters": {
+          "apply": "Aplicar",
+          "date": "Fecha",
+          "from": "Desde",
+          "to": "Hasta"
+        },
+        "variants": {
+          "label": "V{{version}}",
+          "v1": { "description": "Resumen ejecutivo inspirado en Google Analytics: KPIs, tendencia, proveedores y objetivos." },
+          "v2": { "description": "Recorrido operativo inspirado en Contact Lens: visitante, conversación, mensajes y clasificación." },
+          "v3": { "description": "Rendimiento de contenido social con impresiones, aperturas, salidas y CTR por proveedor." },
+          "v4": { "description": "Inteligencia conversacional centrada en objetivos, confianza y cobertura del análisis." },
+          "v5": { "description": "Explorador compacto para conciliación diaria y revisión detallada de todas las métricas." }
+        },
+        "metrics": {
+          "new_chats": "Nuevos chats",
+          "total_messages": "Total de mensajes",
+          "unique_visitors": "Visitantes diferentes",
+          "product_clicks": "Clics en productos",
+          "instagram_shown": "Instagram mostrados",
+          "instagram_external_clicks": "Clics para ir a Instagram",
+          "tiktok_shown": "TikTok mostrados",
+          "tiktok_external_clicks": "Clics para ir a TikTok",
+          "onlyfans_images_shown": "Imágenes de OnlyFans mostradas",
+          "onlyfans_external_clicks": "Clics para ir a OnlyFans"
+        },
+        "charts": {
+          "activity": "Actividad en el tiempo",
+          "dailyTable": "Conciliación por periodo",
+          "journey": "Recorrido de la conversación",
+          "socialActivity": "Contenido social mostrado",
+          "trendHelp": "Un chat contiene varios mensajes; visitantes, chats y mensajes no son intercambiables."
+        },
+        "providers": {
+          "clicks": "Salidas",
+          "help": "Mostrar, abrir y salir al proveedor son acciones independientes.",
+          "opened": "Aperturas",
+          "provider": "Proveedor",
+          "shown": "Mostrados",
+          "title": "Embudo por proveedor"
+        },
+        "categories": {
+          "title": "Objetivo de la conversación",
+          "conversations": "Conversaciones",
+          "empty": "Todavía no hay conversaciones clasificadas en el rango.",
+          "irrelevant_or_spam": "Irrelevante o spam",
+          "profile_discovery": "Descubrimiento del perfil",
+          "social_engagement": "Interacción social",
+          "product_interest": "Interés en producto",
+          "purchase_intent": "Intención de compra",
+          "business_opportunity": "Oportunidad comercial",
+          "support_or_complaint": "Soporte o reclamo",
+          "other_or_unclear": "Otro o no concluyente"
+        },
+        "coverage": {
+          "classified": "Clasificados",
+          "failed": "Fallidos",
+          "pending": "Pendientes",
+          "review": "Por revisar",
+          "summary": "{{classified}} de {{total}} chats tienen clasificación.",
+          "unclassified": "Sin clasificar",
+          "title": "Cobertura de clasificación"
+        },
+        "chats": {
+          "actions": "Acciones posteriores por objetivo",
+          "actionsHelp": "Cuenta chats diferentes que tuvieron al menos una acción; no equivale al total de clics.",
+          "averageConfidence": "Confianza promedio",
+          "averageDuration": "Duración promedio",
+          "averageMessages": "Mensajes por chat",
+          "closed": "Chats cerrados",
+          "goalTrend": "Evolución de objetivos",
+          "goalTrendHelp": "Cada chat se asigna a un objetivo principal después de cerrarse y analizarse.",
+          "mediaExits": "Chats con salida a contenido",
+          "minutes": "{{value}} min",
+          "open": "Chats abiertos",
+          "productChats": "Chats con clic en producto",
+          "productRate": "Tasa a producto",
+          "singleMessage": "Chats de un mensaje",
+          "socialChats": "Chats con clic social",
+          "total": "Total de chats"
+        },
+        "products": {
+          "buttonClicks": "Clics en botón",
+          "clicks": "Clics",
+          "ctr": "CTR",
+          "destination": "Destino",
+          "destinations": {
+            "external_url": "Página del producto",
+            "telegram": "Telegram",
+            "whatsapp": "WhatsApp"
+          },
+          "historicalOnly": "No hay productos publicados actualmente; se muestra el histórico de productos despublicados o eliminados.",
+          "imageClicks": "Clics en imagen",
+          "performance": "Rendimiento por producto",
+          "product": "Producto",
+          "products": "Productos medidos",
+          "shown": "Mostrados",
+          "status": "Estado",
+          "statuses": {
+            "deleted": "Eliminado",
+            "draft": "Despublicado",
+            "published": "Publicado"
+          },
+          "tableHelp": "Los productos eliminados o despublicados conservan su nombre y métricas históricas.",
+          "trend": "Productos mostrados y clics",
+          "trendHelp": "Mostrar una tarjeta y hacer clic son eventos independientes.",
+          "unavailable": "Esta pestaña no está disponible porque el perfil no tiene productos publicados ni actividad histórica.",
+          "uniqueVisitors": "Visitantes con clic"
+        }
       },
       "voice": {
           "audio": "Audio",

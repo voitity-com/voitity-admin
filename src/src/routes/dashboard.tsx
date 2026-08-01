@@ -496,6 +496,25 @@ export const route: RouteObject = {
                 return { Component: Page };
               },
             },
+            {
+              path: 'insights',
+              children: [
+                {
+                  index: true,
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/insights');
+                    return { Component: Page };
+                  },
+                },
+                ...['dashboard', 'chats', 'products', 'v1', 'v2', 'v3', 'v4', 'v5'].map((path) => ({
+                  path,
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/insights');
+                    return { Component: Page };
+                  },
+                })),
+              ],
+            },
           ],
         },
       ],

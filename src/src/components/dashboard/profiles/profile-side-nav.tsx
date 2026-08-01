@@ -16,6 +16,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
+import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
@@ -43,6 +44,7 @@ const icons = {
   chats: ChatsCircleIcon,
   data: DatabaseIcon,
   integrations: PlugsConnectedIcon,
+  insights: ChartLineUpIcon,
   messages: ChatTextIcon,
   products: PackageIcon,
   profile: UserCircleIcon,
@@ -195,6 +197,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.quality'),
         href: paths.dashboard.profileDetails.quality(profileId),
         icon: 'quality',
+      },
+      {
+        key: 'insights',
+        title: t('dashboard.profiles.detail.nav.insights'),
+        href: paths.dashboard.profileDetails.insights.dashboard(profileId),
+        icon: 'insights',
       },
     ],
     [profileId, showIntegrations, showProducts, t]
