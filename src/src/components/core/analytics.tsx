@@ -59,7 +59,7 @@ export function Analytics({ children }: AnalyticsProps): React.JSX.Element {
       {children}
       {isOpen || consent === 'unset' ? (
         <Paper
-          aria-label={t('analyticsConsent.title')}
+          aria-label={String(t('analyticsConsent.title'))}
           elevation={16}
           role="dialog"
           sx={{
@@ -90,19 +90,32 @@ export function Analytics({ children }: AnalyticsProps): React.JSX.Element {
             </Typography>
           </Box>
           <Stack direction="row" spacing={1} sx={{ alignSelf: { xs: 'stretch', md: 'center' } }}>
-            <Button fullWidth variant="outlined" onClick={() => chooseConsent('denied')}>
+            <Button
+              fullWidth
+              onClick={() => {
+                chooseConsent('denied');
+              }}
+              variant="outlined"
+            >
               {t('analyticsConsent.reject')}
             </Button>
-            <Button fullWidth variant="contained" onClick={() => chooseConsent('granted')}>
+            <Button
+              fullWidth
+              onClick={() => {
+                chooseConsent('granted');
+              }}
+              variant="contained"
+            >
               {t('analyticsConsent.accept')}
             </Button>
           </Stack>
         </Paper>
       ) : (
         <Button
+          onClick={() => {
+            setIsOpen(true);
+          }}
           size="small"
-          variant="outlined"
-          onClick={() => setIsOpen(true)}
           sx={{
             bgcolor: 'background.paper',
             bottom: 12,
@@ -114,6 +127,7 @@ export function Analytics({ children }: AnalyticsProps): React.JSX.Element {
             py: 0.5,
             zIndex: 1300,
           }}
+          variant="outlined"
         >
           {t('analyticsConsent.manage')}
         </Button>

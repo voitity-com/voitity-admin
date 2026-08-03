@@ -1,12 +1,12 @@
 {
   "languageChanged": "Language changed",
   "analyticsConsent": {
-    "accept": "Accept analytics",
+    "accept": "Accept cookies",
     "body": "We use optional Google Analytics cookies to understand aggregate usage. We do not send profile names, chat content, contact information, or payment data.",
     "manage": "Cookie preferences",
     "privacy": "Privacy policy",
-    "reject": "Reject",
-    "title": "Your privacy choices"
+    "reject": "Reject Cookies",
+    "title": "Accept Cookies"
   },
   "languages": {
     "en": "English",

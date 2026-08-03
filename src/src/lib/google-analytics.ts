@@ -36,8 +36,9 @@ export function isGoogleAnalyticsEnabled(): boolean {
 
 function invokeGtag(...args: unknown[]): void {
   window.dataLayer ??= [];
-  window.gtag ??= (...gtagArguments: unknown[]) => {
-    window.dataLayer?.push(gtagArguments);
+  window.gtag ??= function gtag(): void {
+    // eslint-disable-next-line prefer-rest-params -- Google Tag requires the native Arguments object.
+    window.dataLayer?.push(arguments);
   };
   window.gtag(...args);
 }
@@ -176,7 +177,11 @@ export function sanitizeAdminPath(pathname: string): string {
     .replace(/\/conversations\/[^/]+/g, '/conversations/:conversation_id')
     .replace(/\/users\/[^/]+/g, '/users/:user_id')
     .replace(/\/products\/[^/]+/g, '/products/:product_id')
-    .replace(/\/(courses|blog|customers|invoices|companies|orders)\/[^/]+/g, '/$1/:id')
+    .replace(/\/(?:courses|blog|customers|invoices|companies|orders)\/[^/]+/g, (match) => {
+      const resourceName = match.split('/')[1];
+
+      return `/${resourceName}/:id`;
+    })
     .replace(/\/chat\/[^/]+\/[^/]+/g, '/chat/:thread_type/:thread_id')
     .replace(/\/mail\/[^/]+\/[^/]+/g, '/mail/:label_id/:thread_id')
     .replace(/\/mail\/[^/]+/g, '/mail/:label_id')
