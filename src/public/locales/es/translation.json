@@ -1620,7 +1620,12 @@
           "tiktok_shown": "TikTok mostrados",
           "tiktok_external_clicks": "Clics para ir a TikTok",
           "onlyfans_images_shown": "Imágenes de OnlyFans mostradas",
-          "onlyfans_external_clicks": "Clics para ir a OnlyFans"
+          "onlyfans_external_clicks": "Clics para ir a OnlyFans",
+          "youtube_shown": "Videos de YouTube mostrados",
+          "youtube_opened": "Videos de YouTube abiertos",
+          "youtube_external_clicks": "Salidas a YouTube",
+          "youtube_video_clicks": "Clics en videos de YouTube",
+          "youtube_channel_clicks": "Clics en el canal de YouTube"
         },
         "charts": {
           "activity": "Actividad en el tiempo",
@@ -1631,10 +1636,12 @@
         },
         "providers": {
           "clicks": "Salidas",
+          "channelClicks": "Salidas al canal",
           "help": "Mostrar, abrir y salir al proveedor son acciones independientes.",
           "opened": "Aperturas",
           "provider": "Proveedor",
           "shown": "Mostrados",
+          "videoClicks": "Salidas al video",
           "title": "Embudo por proveedor"
         },
         "categories": {

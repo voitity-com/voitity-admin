@@ -12,8 +12,13 @@ interface RequestOptions {
 }
 
 export type FeatureGroup = 'integrations' | 'products';
-export type FeatureKey = 'integrations.instagram' | 'integrations.onlyfans' | 'integrations.tiktok' | 'products';
-export type IntegrationFeatureProvider = 'instagram' | 'onlyfans' | 'tiktok';
+export type FeatureKey =
+  | 'integrations.instagram'
+  | 'integrations.onlyfans'
+  | 'integrations.tiktok'
+  | 'integrations.youtube'
+  | 'products';
+export type IntegrationFeatureProvider = 'instagram' | 'onlyfans' | 'tiktok' | 'youtube';
 
 export interface FeatureFlag {
   available?: boolean;

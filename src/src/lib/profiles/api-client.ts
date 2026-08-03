@@ -279,14 +279,21 @@ export interface ProfileInsightsSummary {
   total_messages: number;
   unique_visitors: number;
   visitor_messages: number;
+  youtube_channel_clicks: number;
+  youtube_external_clicks: number;
+  youtube_opened: number;
+  youtube_shown: number;
+  youtube_video_clicks: number;
 }
 
 export interface ProfileInsightsProvider {
   ctr: number;
+  channel_clicks: number;
   external_clicks: number;
   opened: number;
-  provider: 'instagram' | 'onlyfans' | 'tiktok';
+  provider: 'instagram' | 'onlyfans' | 'tiktok' | 'youtube';
   shown: number;
+  video_clicks: number;
 }
 
 export interface ProfileInsightsCategory {

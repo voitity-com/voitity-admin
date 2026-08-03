@@ -33,6 +33,7 @@ import { TiktokLogo as TiktokLogoIcon } from '@phosphor-icons/react/dist/ssr/Tik
 import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
 import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
+import { YoutubeLogo as YoutubeLogoIcon } from '@phosphor-icons/react/dist/ssr/YoutubeLogo';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -45,11 +46,14 @@ import {
   getProfileFeatures,
 } from '@/lib/features/api-client';
 import {
+  addYouTubeMedia,
   createIntegrationConnectUrl,
   deleteOnlyFansMedia,
+  deleteYouTubeMedia,
   disconnectIntegration,
   getIntegrationMedia,
   saveOnlyFansIntegration,
+  saveYouTubeIntegration,
   syncIntegrationMedia,
   updateIntegrationMediaSelection,
   uploadOnlyFansMedia,
@@ -59,6 +63,8 @@ import {
   type OnlyFansConnectionInput,
   type OnlyFansMediaUploadInput,
   type ProfileIntegration,
+  type YouTubeConnectionInput,
+  type YouTubeMediaInput,
 } from '@/lib/integrations/api-client';
 import { toast } from '@/components/core/toaster';
 
@@ -105,6 +111,10 @@ const providerConfigs = {
     Icon: TiktokLogoIcon,
     testIdPrefix: 'tiktok',
   },
+  youtube: {
+    Icon: YoutubeLogoIcon,
+    testIdPrefix: 'youtube',
+  },
 } satisfies Record<IntegrationProvider, { Icon: React.ElementType; testIdPrefix: string }>;
 
 const copy = {
@@ -120,6 +130,7 @@ const copy = {
       filterSelected: 'Selected',
       image: 'Image',
       integrations: 'Integrations',
+      goToChannel: 'Go to channel',
       ageRestricted: '18+',
       lastSync: 'Last sync',
       observation: 'Conversation note',
@@ -200,6 +211,27 @@ const copy = {
         selectForChat: 'Use in profile conversations',
         usernameLabel: 'OnlyFans username',
       },
+      youtube: {
+        addVideo: 'Add video',
+        cancelUpload: 'Cancel',
+        channelUrl: 'YouTube channel URL',
+        connect: 'Add channel',
+        connectedNoSync: '',
+        description: 'Description for profile conversations',
+        empty: 'No YouTube videos have been added yet.',
+        emptySelected: 'No selected YouTube videos yet.',
+        filterLabel: 'YouTube video filter',
+        hint: 'Add a YouTube channel and up to {{limit}} selected videos. Their descriptions become verified context for profile conversations.',
+        label: 'YouTube',
+        maxSelected: 'You can select up to {{limit}} YouTube videos.',
+        noConnection: 'Add the public YouTube channel whose videos will be available in profile conversations.',
+        observationPlaceholder: 'Explain when the profile should recommend this video.',
+        oauthLocalWarning: '',
+        reconnect: 'Edit channel',
+        selectForChat: 'Use in profile conversations',
+        synced: '',
+        videoUrl: 'YouTube video URL',
+      },
     },
   },
   es: {
@@ -214,6 +246,7 @@ const copy = {
       filterSelected: 'Seleccionadas',
       image: 'Imagen',
       integrations: 'Integraciones',
+      goToChannel: 'Ir al canal',
       ageRestricted: '18+',
       lastSync: 'Última sincronización',
       observation: 'Observación para conversación',
@@ -292,6 +325,27 @@ const copy = {
         uploadObservation: 'Observación para conversación',
         selectForChat: 'Usar en las conversaciones del perfil',
         usernameLabel: 'Usuario de OnlyFans',
+      },
+      youtube: {
+        addVideo: 'Agregar video',
+        cancelUpload: 'Cancelar',
+        channelUrl: 'URL del canal de YouTube',
+        connect: 'Agregar canal',
+        connectedNoSync: '',
+        description: 'Descripción para las conversaciones del perfil',
+        empty: 'Aún no has agregado videos de YouTube.',
+        emptySelected: 'Aún no hay videos de YouTube seleccionados.',
+        filterLabel: 'Filtro de videos de YouTube',
+        hint: 'Agrega un canal de YouTube y selecciona hasta {{limit}} videos. Sus descripciones serán contexto verificado para las conversaciones del perfil.',
+        label: 'YouTube',
+        maxSelected: 'Puedes seleccionar hasta {{limit}} videos de YouTube.',
+        noConnection: 'Agrega el canal público de YouTube cuyos videos estarán disponibles en las conversaciones del perfil.',
+        observationPlaceholder: 'Explica cuándo debe el perfil recomendar este video.',
+        oauthLocalWarning: '',
+        reconnect: 'Editar canal',
+        selectForChat: 'Usar en las conversaciones del perfil',
+        synced: '',
+        videoUrl: 'URL del video de YouTube',
       },
     },
   },
@@ -456,17 +510,59 @@ export function Page(): React.JSX.Element {
     [loadIntegration, profileId, t.common.error, t.common.uploaded]
   );
 
-  const handleOnlyFansDeleteMedia = React.useCallback(
+  const handleYouTubeConnect = React.useCallback(
+    async (input: YouTubeConnectionInput): Promise<void> => {
+      setIsConnecting(true);
+
+      try {
+        await saveYouTubeIntegration(profileId, input);
+        await loadIntegration();
+        toast.success(t.common.connected);
+      } catch (err) {
+        logger.error(err);
+        toast.error(getErrorMessage(err, t.common.error));
+        throw err;
+      } finally {
+        setIsConnecting(false);
+      }
+    },
+    [loadIntegration, profileId, t.common.connected, t.common.error]
+  );
+
+  const handleYouTubeAddMedia = React.useCallback(
+    async (input: YouTubeMediaInput): Promise<void> => {
+      setIsUploading(true);
+
+      try {
+        await addYouTubeMedia(profileId, input);
+        await loadIntegration();
+        toast.success(t.common.uploaded);
+      } catch (err) {
+        logger.error(err);
+        toast.error(getErrorMessage(err, t.common.error));
+        throw err;
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [loadIntegration, profileId, t.common.error, t.common.uploaded]
+  );
+
+  const handleDeleteMedia = React.useCallback(
     async (mediaId: number | string): Promise<void> => {
       try {
-        await deleteOnlyFansMedia(profileId, mediaId);
+        if (activeTab === 'youtube') {
+          await deleteYouTubeMedia(profileId, mediaId);
+        } else {
+          await deleteOnlyFansMedia(profileId, mediaId);
+        }
         await loadIntegration();
       } catch (err) {
         logger.error(err);
         toast.error(getErrorMessage(err, t.common.error));
       }
     },
-    [loadIntegration, profileId, t.common.error]
+    [activeTab, loadIntegration, profileId, t.common.error]
   );
 
   const handleDisconnect = React.useCallback(async (): Promise<void> => {
@@ -595,7 +691,7 @@ export function Page(): React.JSX.Element {
                 isUploading={isUploading}
                 media={media}
                 onConnect={handleConnect}
-                onDeleteMedia={handleOnlyFansDeleteMedia}
+                onDeleteMedia={handleDeleteMedia}
                 onDisconnect={handleDisconnect}
                 onObservationChange={handleObservationChange}
                 onOnlyFansConnect={handleOnlyFansConnect}
@@ -603,6 +699,8 @@ export function Page(): React.JSX.Element {
                 onSave={handleSave}
                 onSync={handleSync}
                 onToggleSelected={handleToggleSelected}
+                onYouTubeAddMedia={handleYouTubeAddMedia}
+                onYouTubeConnect={handleYouTubeConnect}
                 page={page}
                 provider={activeTab}
                 providerConfig={providerConfigs[activeTab]}
@@ -642,6 +740,8 @@ interface IntegrationPanelProps {
   onSave: () => void;
   onSync: () => void;
   onToggleSelected: (mediaId: number | string, checked: boolean) => void;
+  onYouTubeAddMedia: (input: YouTubeMediaInput) => Promise<void>;
+  onYouTubeConnect: (input: YouTubeConnectionInput) => Promise<void>;
 }
 
 function IntegrationPanel({
@@ -668,11 +768,14 @@ function IntegrationPanel({
   onSave,
   onSync,
   onToggleSelected,
+  onYouTubeAddMedia,
+  onYouTubeConnect,
 }: IntegrationPanelProps): React.JSX.Element {
   const localRedirectUri = page?.oauth?.uses_local_redirect ? page.oauth.redirect_uri : null;
   const [mediaFilter, setMediaFilter] = React.useState<MediaFilter>('all');
   const [isAddingOnlyFansMedia, setIsAddingOnlyFansMedia] = React.useState(false);
   const [isEditingOnlyFans, setIsEditingOnlyFans] = React.useState(false);
+  const [isAddingYouTubeMedia, setIsAddingYouTubeMedia] = React.useState(false);
   const [visibleMediaCount, setVisibleMediaCount] = React.useState(INITIAL_VISIBLE_MEDIA_COUNT);
   const filteredMedia = React.useMemo(
     () => (mediaFilter === 'selected' ? media.filter((item) => item.selected) : media),
@@ -685,6 +788,7 @@ function IntegrationPanel({
   const hasMoreMedia = filteredMedia.length > visibleMedia.length;
   const remainingMediaCount = Math.min(INITIAL_VISIBLE_MEDIA_COUNT, filteredMedia.length - visibleMedia.length);
   const Icon = providerConfig.Icon;
+  const addYouTubeVideoLabel = 'addVideo' in providerText ? providerText.addVideo : common.addMedia;
 
   React.useEffect(() => {
     setVisibleMediaCount(INITIAL_VISIBLE_MEDIA_COUNT);
@@ -694,6 +798,7 @@ function IntegrationPanel({
     setMediaFilter('all');
     setIsAddingOnlyFansMedia(false);
     setIsEditingOnlyFans(false);
+    setIsAddingYouTubeMedia(false);
   }, [provider]);
 
   if (isLoading) {
@@ -707,6 +812,10 @@ function IntegrationPanel({
   if (!page?.integration) {
     if (provider === 'onlyfans') {
       return <OnlyFansAccountForm isSaving={isConnecting} onSave={onOnlyFansConnect} providerText={providerText} />;
+    }
+
+    if (provider === 'youtube') {
+      return <YouTubeChannelForm isSaving={isConnecting} onSave={onYouTubeConnect} providerText={providerText} />;
     }
 
     return (
@@ -773,7 +882,7 @@ function IntegrationPanel({
           ) : null}
         </Stack>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {provider !== 'onlyfans' ? (
+          {provider !== 'onlyfans' && provider !== 'youtube' ? (
             <React.Fragment>
               <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
                 {isSyncing ? `${common.sync}...` : common.sync}
@@ -788,7 +897,7 @@ function IntegrationPanel({
                 {providerText.reconnect}
               </Button>
             </React.Fragment>
-          ) : (
+          ) : provider === 'onlyfans' ? (
             <React.Fragment>
               <Button
                 data-testid="onlyfans-add-media-button"
@@ -812,6 +921,18 @@ function IntegrationPanel({
                 {providerText.reconnect}
               </Button>
             </React.Fragment>
+          ) : (
+            <Button
+              data-testid="youtube-add-media-button"
+              disabled={isAddingYouTubeMedia}
+              onClick={() => {
+                setIsAddingYouTubeMedia(true);
+              }}
+              startIcon={<YoutubeLogoIcon />}
+              variant="contained"
+            >
+              {addYouTubeVideoLabel}
+            </Button>
           )}
           <Button
             color="error"
@@ -853,6 +974,21 @@ function IntegrationPanel({
             />
           ) : null}
         </React.Fragment>
+      ) : null}
+
+      {provider === 'youtube' && isAddingYouTubeMedia ? (
+        <YouTubeMediaForm
+          isSaving={isUploading}
+          onCancel={() => {
+            setIsAddingYouTubeMedia(false);
+          }}
+          onSave={async (input) => {
+            await onYouTubeAddMedia(input);
+            setIsAddingYouTubeMedia(false);
+          }}
+          providerText={providerText}
+          selectionAvailable={selectedCount < selectionLimit}
+        />
       ) : null}
 
       {media.length ? (
@@ -951,7 +1087,7 @@ function IntegrationPanel({
                 common={common}
                 item={item}
                 key={item.id}
-                onDeleteMedia={provider === 'onlyfans' ? onDeleteMedia : undefined}
+                onDeleteMedia={provider === 'onlyfans' || provider === 'youtube' ? onDeleteMedia : undefined}
                 onObservationChange={onObservationChange}
                 onToggleSelected={onToggleSelected}
                 provider={provider}
@@ -991,7 +1127,7 @@ function IntegrationPanel({
       ) : (
         <Stack spacing={2} sx={{ alignItems: 'flex-start', py: 2 }}>
           <Typography color="text.secondary">{providerText.empty}</Typography>
-          {provider !== 'onlyfans' ? (
+          {provider !== 'onlyfans' && provider !== 'youtube' ? (
             <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
               {isSyncing ? `${common.sync}...` : common.sync}
             </Button>
@@ -999,6 +1135,154 @@ function IntegrationPanel({
         </Stack>
       )}
     </Stack>
+  );
+}
+
+function YouTubeChannelForm({
+  isSaving,
+  onSave,
+  providerText,
+}: {
+  isSaving: boolean;
+  onSave: (input: YouTubeConnectionInput) => Promise<void>;
+  providerText: Record<string, string>;
+}): React.JSX.Element {
+  const [channelUrl, setChannelUrl] = React.useState('');
+  const validUrl = isValidYouTubeUrl(channelUrl, 'channel');
+
+  return (
+    <Box
+      component="form"
+      data-testid="youtube-channel-form"
+      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        onSave({ channelUrl: channelUrl.trim() }).catch(() => undefined);
+      }}
+      sx={{ border: '1px dashed var(--mui-palette-divider)', borderRadius: 1, p: 3 }}
+    >
+      <Stack spacing={2}>
+        <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
+          {providerText.noConnection}
+        </Typography>
+        <TextField
+          error={Boolean(channelUrl.trim()) && !validUrl}
+          fullWidth
+          inputProps={{ 'data-testid': 'youtube-channel-url-input' }}
+          label={providerText.channelUrl}
+          onChange={(event) => {
+            setChannelUrl(event.target.value);
+          }}
+          placeholder="https://www.youtube.com/@canal"
+          required
+          type="url"
+          value={channelUrl}
+        />
+        <Box>
+          <Button
+            data-testid="youtube-connect-button"
+            disabled={isSaving || !validUrl}
+            startIcon={<YoutubeLogoIcon />}
+            type="submit"
+            variant="contained"
+          >
+            {isSaving ? `${providerText.connect}...` : providerText.connect}
+          </Button>
+        </Box>
+      </Stack>
+    </Box>
+  );
+}
+
+function YouTubeMediaForm({
+  isSaving,
+  onCancel,
+  onSave,
+  providerText,
+  selectionAvailable,
+}: {
+  isSaving: boolean;
+  onCancel: () => void;
+  onSave: (input: YouTubeMediaInput) => Promise<void>;
+  providerText: Record<string, string>;
+  selectionAvailable: boolean;
+}): React.JSX.Element {
+  const [videoUrl, setVideoUrl] = React.useState('');
+  const [description, setDescription] = React.useState('');
+  const [selected, setSelected] = React.useState(selectionAvailable);
+  const validUrl = isValidYouTubeUrl(videoUrl, 'video');
+
+  React.useEffect(() => {
+    if (!selectionAvailable) {
+      setSelected(false);
+    }
+  }, [selectionAvailable]);
+
+  return (
+    <Box
+      component="form"
+      data-testid="youtube-media-form"
+      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        onSave({ description: description.trim(), selected, videoUrl: videoUrl.trim() }).catch(() => undefined);
+      }}
+      sx={{ border: '1px solid var(--mui-palette-divider)', borderRadius: 1, p: 3 }}
+    >
+      <Stack spacing={2}>
+        <Typography variant="h6">{providerText.addVideo}</Typography>
+        <TextField
+          error={Boolean(videoUrl.trim()) && !validUrl}
+          fullWidth
+          inputProps={{ 'data-testid': 'youtube-video-url-input' }}
+          label={providerText.videoUrl}
+          onChange={(event) => {
+            setVideoUrl(event.target.value);
+          }}
+          placeholder="https://www.youtube.com/watch?v=..."
+          required
+          type="url"
+          value={videoUrl}
+        />
+        <TextField
+          fullWidth
+          inputProps={{ 'data-testid': 'youtube-video-description-input' }}
+          label={providerText.description}
+          multiline
+          onChange={(event) => {
+            setDescription(event.target.value);
+          }}
+          placeholder={providerText.observationPlaceholder}
+          required
+          rows={3}
+          value={description}
+        />
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={selected}
+              disabled={!selectionAvailable && !selected}
+              onChange={(event) => {
+                setSelected(event.target.checked);
+              }}
+            />
+          }
+          label={providerText.selectForChat}
+        />
+        <Stack direction="row" spacing={1}>
+          <Button
+            data-testid="youtube-media-save-button"
+            disabled={isSaving || !validUrl || !description.trim()}
+            startIcon={<YoutubeLogoIcon />}
+            type="submit"
+            variant="contained"
+          >
+            {isSaving ? `${providerText.addVideo}...` : providerText.addVideo}
+          </Button>
+          <Button disabled={isSaving} onClick={onCancel} type="button" variant="outlined">
+            {providerText.cancelUpload}
+          </Button>
+        </Stack>
+      </Stack>
+    </Box>
   );
 }
 
@@ -1449,9 +1733,16 @@ function IntegrationMediaCard({
             value={item.observation ?? ''}
           />
           {item.permalink ? (
-            <Button component="a" href={item.permalink} rel="noreferrer" size="small" target="_blank" variant="text">
-              {providerText.label}
-            </Button>
+            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
+              <Button component="a" href={item.permalink} rel="noreferrer" size="small" target="_blank" variant="text">
+                {providerText.label}
+              </Button>
+              {provider === 'youtube' && item.channel_url ? (
+                <Button component="a" href={item.channel_url} rel="noreferrer" size="small" target="_blank" variant="text">
+                  {common.goToChannel}
+                </Button>
+              ) : null}
+            </Stack>
           ) : null}
         </Stack>
       </Box>
@@ -1494,7 +1785,13 @@ function IntegrationMediaCard({
             </IconButton>
           </Tooltip>
           {playback?.kind === 'embed' ? (
-            <Box sx={{ aspectRatio: '9 / 16', maxHeight: '78vh', width: 'min(100%, 440px)' }}>
+            <Box
+              sx={{
+                aspectRatio: provider === 'youtube' ? '16 / 9' : '9 / 16',
+                maxHeight: '78vh',
+                width: provider === 'youtube' ? '100%' : 'min(100%, 440px)',
+              }}
+            >
               <Box
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
@@ -1516,11 +1813,18 @@ function IntegrationMediaCard({
             />
           ) : null}
         </DialogContent>
-        {item.permalink ? (
+        {item.permalink || item.channel_url ? (
           <DialogActions>
-            <Button component="a" href={item.permalink} rel="noreferrer" target="_blank">
-              {interpolate(common.openOnProvider, { provider: providerText.label })}
-            </Button>
+            {item.permalink ? (
+              <Button component="a" href={item.permalink} rel="noreferrer" target="_blank">
+                {interpolate(common.openOnProvider, { provider: providerText.label })}
+              </Button>
+            ) : null}
+            {provider === 'youtube' && item.channel_url ? (
+              <Button component="a" href={item.channel_url} rel="noreferrer" target="_blank">
+                {common.goToChannel}
+              </Button>
+            ) : null}
           </DialogActions>
         ) : null}
       </Dialog>
@@ -1557,6 +1861,17 @@ function getIntegrationMediaPlayback(
       : null;
   }
 
+  if (provider === 'youtube') {
+    const videoId = getYouTubeVideoId(item);
+
+    return videoId
+      ? {
+          kind: 'embed',
+          src: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0`,
+        }
+      : null;
+  }
+
   if (item.media_url && !isInstagramPostUrl(item.media_url)) {
     return { kind: 'video', src: item.media_url };
   }
@@ -1564,6 +1879,36 @@ function getIntegrationMediaPlayback(
   const embedUrl = getInstagramEmbedUrl(item.permalink || item.media_url);
 
   return embedUrl ? { kind: 'embed', src: embedUrl } : null;
+}
+
+function getYouTubeVideoId(item: IntegrationMedia): string | null {
+  const providerMediaId = String(item.provider_media_id ?? '').trim();
+
+  if (/^[\w-]{11}$/.test(providerMediaId)) {
+    return providerMediaId;
+  }
+
+  for (const value of [item.media_url, item.permalink]) {
+    if (!value) {
+      continue;
+    }
+
+    try {
+      const url = new URL(value);
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      const candidate = url.hostname.endsWith('youtu.be')
+        ? pathParts[0]
+        : url.searchParams.get('v') || (['embed', 'live', 'shorts'].includes(pathParts[0] ?? '') ? pathParts[1] : null);
+
+      if (candidate && /^[\w-]{11}$/.test(candidate)) {
+        return candidate;
+      }
+    } catch {
+      // Try the next provider URL.
+    }
+  }
+
+  return null;
 }
 
 function getTikTokVideoId(item: IntegrationMedia): string | null {
@@ -1622,7 +1967,26 @@ function getInstagramEmbedUrl(value?: null | string): string | null {
 }
 
 function normalizeProvider(value: null | string): IntegrationProvider | null {
-  return value === 'instagram' || value === 'onlyfans' || value === 'tiktok' ? value : null;
+  return value === 'instagram' || value === 'onlyfans' || value === 'tiktok' || value === 'youtube' ? value : null;
+}
+
+function isValidYouTubeUrl(value: string, kind: 'channel' | 'video'): boolean {
+  try {
+    const url = new URL(value.trim());
+    const host = url.hostname.toLowerCase();
+
+    if (url.protocol !== 'https:' || !['youtube.com', 'youtu.be'].some((domain) => host === domain || host.endsWith(`.${domain}`))) {
+      return false;
+    }
+
+    if (kind === 'channel') {
+      return (host === 'youtube.com' || host.endsWith('.youtube.com')) && /^\/(?:@[^/]+|channel\/[^/]+|user\/[^/]+)\/?$/.test(url.pathname);
+    }
+
+    return host === 'youtu.be' || url.searchParams.has('v') || /^\/(?:shorts|live|embed)\/[^/]+/.test(url.pathname);
+  } catch {
+    return false;
+  }
 }
 
 function isValidOnlyFansProfileUrl(username: string, value: string): boolean {
