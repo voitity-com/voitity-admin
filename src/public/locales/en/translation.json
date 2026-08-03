@@ -1,5 +1,13 @@
 {
   "languageChanged": "Language changed",
+  "analyticsConsent": {
+    "accept": "Accept analytics",
+    "body": "We use optional Google Analytics cookies to understand aggregate usage. We do not send profile names, chat content, contact information, or payment data.",
+    "manage": "Cookie preferences",
+    "privacy": "Privacy policy",
+    "reject": "Reject",
+    "title": "Your privacy choices"
+  },
   "languages": {
     "en": "English",
     "es": "Spanish"
@@ -1620,7 +1628,12 @@
           "tiktok_shown": "TikTok shown",
           "tiktok_external_clicks": "Clicks to TikTok",
           "onlyfans_images_shown": "OnlyFans images shown",
-          "onlyfans_external_clicks": "Clicks to OnlyFans"
+          "onlyfans_external_clicks": "Clicks to OnlyFans",
+          "youtube_shown": "YouTube videos shown",
+          "youtube_opened": "YouTube videos opened",
+          "youtube_external_clicks": "YouTube exits",
+          "youtube_video_clicks": "Clicks to YouTube videos",
+          "youtube_channel_clicks": "Clicks to YouTube channel"
         },
         "charts": {
           "activity": "Activity over time",
@@ -1631,10 +1644,12 @@
         },
         "providers": {
           "clicks": "Exits",
+          "channelClicks": "Channel exits",
           "help": "Showing, opening, and leaving for a provider are independent actions.",
           "opened": "Opens",
           "provider": "Provider",
           "shown": "Shown",
+          "videoClicks": "Video exits",
           "title": "Provider funnel"
         },
         "categories": {

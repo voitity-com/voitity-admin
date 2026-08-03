@@ -11,7 +11,7 @@ interface RequestOptions {
   method?: 'DELETE' | 'GET' | 'POST' | 'PUT';
 }
 
-export type IntegrationProvider = 'instagram' | 'onlyfans' | 'tiktok';
+export type IntegrationProvider = 'instagram' | 'onlyfans' | 'tiktok' | 'youtube';
 
 export interface ProfileIntegration {
   expires_at?: null | string;
@@ -29,7 +29,9 @@ export interface ProfileIntegration {
 
 export interface IntegrationMedia {
   age_restricted?: boolean;
+  availability?: null | string;
   caption?: null | string;
+  channel_url?: null | string;
   id: number | string;
   media_type?: null | string;
   media_url?: null | string;
@@ -73,6 +75,16 @@ export interface OnlyFansMediaUploadInput {
   observation?: string;
   rightsConfirmed: boolean;
   selected?: boolean;
+}
+
+export interface YouTubeConnectionInput {
+  channelUrl: string;
+}
+
+export interface YouTubeMediaInput {
+  description: string;
+  selected?: boolean;
+  videoUrl: string;
 }
 
 export type InstagramMedia = IntegrationMedia;
@@ -203,6 +215,44 @@ export async function deleteOnlyFansMedia(profileId: number | string, mediaId: n
   );
 }
 
+export async function saveYouTubeIntegration(
+  profileId: number | string,
+  input: YouTubeConnectionInput
+): Promise<ProfileIntegration> {
+  const response = await requestJson<ApiEnvelope<{ integration: ProfileIntegration }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/youtube`,
+    { body: { channel_url: input.channelUrl }, method: 'POST' }
+  );
+
+  return response.data.integration;
+}
+
+export async function addYouTubeMedia(
+  profileId: number | string,
+  input: YouTubeMediaInput
+): Promise<IntegrationMedia> {
+  const response = await requestJson<ApiEnvelope<{ media: IntegrationMedia }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/youtube/media`,
+    {
+      body: {
+        description: input.description,
+        selected: input.selected ?? true,
+        video_url: input.videoUrl,
+      },
+      method: 'POST',
+    }
+  );
+
+  return response.data.media;
+}
+
+export async function deleteYouTubeMedia(profileId: number | string, mediaId: number | string): Promise<void> {
+  await requestJson(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/youtube/media/${encodeURIComponent(String(mediaId))}`,
+    { method: 'DELETE' }
+  );
+}
+
 export async function createInstagramConnectUrl(profileId: number | string): Promise<InstagramConnectUrl> {
   return createIntegrationConnectUrl(profileId, 'instagram');
 }
@@ -238,6 +288,10 @@ function normalizeIntegrationMediaPage(value: IntegrationMediaPage): Integration
 function providerLabel(provider: IntegrationProvider): string {
   if (provider === 'tiktok') {
     return 'TikTok';
+  }
+
+  if (provider === 'youtube') {
+    return 'YouTube';
   }
 
   return provider === 'onlyfans' ? 'OnlyFans' : 'Instagram';

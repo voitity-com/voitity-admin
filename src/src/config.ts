@@ -27,7 +27,7 @@ export interface Config {
   };
   supabase: { url?: string; anonKey?: string };
   mapbox: { apiKey?: string };
-  gtm?: { id?: string };
+  analytics: { measurementId: string };
   google?: { clientId?: string };
   api?: { baseUrl?: string };
   publicProfile?: { baseUrl?: string };
@@ -61,7 +61,7 @@ export const config = {
   },
   supabase: { url: import.meta.env.VITE_SUPABASE_URL, anonKey: import.meta.env.VITE_SUPABASE_ANON_KEY },
   mapbox: { apiKey: import.meta.env.VITE_MAPBOX_API_KEY },
-  gtm: { id: import.meta.env.VITE_GOOGLE_TAG_MANAGER_ID },
+  analytics: { measurementId: import.meta.env.VITE_GA4_MEASUREMENT_ID || 'G-T9MKE6R87P' },
   google: { clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID },
   api: { baseUrl: import.meta.env.VITE_API_BASE_URL },
   publicProfile: { baseUrl: import.meta.env.VITE_PUBLIC_PROFILE_BASE_URL || 'http://localhost:3001' },

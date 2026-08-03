@@ -78,6 +78,11 @@ type MetricKey = keyof Pick<
   | 'tiktok_shown'
   | 'total_messages'
   | 'unique_visitors'
+  | 'youtube_channel_clicks'
+  | 'youtube_external_clicks'
+  | 'youtube_opened'
+  | 'youtube_shown'
+  | 'youtube_video_clicks'
 >;
 
 const metricKeys: MetricKey[] = [
@@ -91,6 +96,11 @@ const metricKeys: MetricKey[] = [
   'tiktok_external_clicks',
   'onlyfans_images_shown',
   'onlyfans_external_clicks',
+  'youtube_shown',
+  'youtube_opened',
+  'youtube_external_clicks',
+  'youtube_video_clicks',
+  'youtube_channel_clicks',
 ];
 
 export function Page(): React.JSX.Element {
@@ -297,13 +307,18 @@ function ProviderFunnel({ providers, t }: { providers: ProfileInsightsProvider[]
               <TableCell align="right">{t('dashboard.profiles.detail.insights.providers.shown')}</TableCell>
               <TableCell align="right">{t('dashboard.profiles.detail.insights.providers.opened')}</TableCell>
               <TableCell align="right">{t('dashboard.profiles.detail.insights.providers.clicks')}</TableCell>
+              <TableCell align="right">{t('dashboard.profiles.detail.insights.providers.videoClicks')}</TableCell>
+              <TableCell align="right">{t('dashboard.profiles.detail.insights.providers.channelClicks')}</TableCell>
               <TableCell align="right">{t('dashboard.profiles.detail.insights.products.ctr')}</TableCell>
             </TableRow></TableHead>
             <TableBody>{providers.map((provider) => (
               <TableRow key={provider.provider}>
                 <TableCell sx={{ textTransform: 'capitalize' }}>{provider.provider}</TableCell>
                 <TableCell align="right">{provider.shown}</TableCell><TableCell align="right">{provider.opened}</TableCell>
-                <TableCell align="right">{provider.external_clicks}</TableCell><TableCell align="right">{provider.ctr.toFixed(1)}%</TableCell>
+                <TableCell align="right">{provider.external_clicks}</TableCell>
+                <TableCell align="right">{provider.video_clicks}</TableCell>
+                <TableCell align="right">{provider.channel_clicks}</TableCell>
+                <TableCell align="right">{provider.ctr.toFixed(1)}%</TableCell>
               </TableRow>
             ))}</TableBody>
           </Table>

@@ -27,20 +27,20 @@ export function Root({ children }: RootProps): React.JSX.Element {
   const settings = React.useRef(applyDefaultSettings(getPersistedSettings()));
 
   const appTree = (
-    <Analytics>
-      <LocalizationProvider>
-        <UserProvider>
-          <SettingsProvider settings={settings.current}>
-            <I18nProvider>
-              <ThemeProvider>
+    <LocalizationProvider>
+      <UserProvider>
+        <SettingsProvider settings={settings.current}>
+          <I18nProvider>
+            <ThemeProvider>
+              <Analytics>
                 {children}
                 <Toaster position="bottom-right" />
-              </ThemeProvider>
-            </I18nProvider>
-          </SettingsProvider>
-        </UserProvider>
-      </LocalizationProvider>
-    </Analytics>
+              </Analytics>
+            </ThemeProvider>
+          </I18nProvider>
+        </SettingsProvider>
+      </UserProvider>
+    </LocalizationProvider>
   );
   return (
     <HelmetProvider>
