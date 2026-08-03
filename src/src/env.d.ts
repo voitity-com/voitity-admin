@@ -37,8 +37,8 @@ interface ImportMetaEnv {
   // Mapbox
   VITE_MAPBOX_API_KEY?: string;
 
-  // Google Tag Manager
-  VITE_GOOGLE_TAG_MANAGER_ID?: string;
+  // Google Analytics 4
+  VITE_GA4_MEASUREMENT_ID?: string;
 
   // Google OAuth
   VITE_GOOGLE_CLIENT_ID?: string;

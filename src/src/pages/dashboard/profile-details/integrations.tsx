@@ -41,6 +41,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import {
   enabledIntegrationProviders as enabledIntegrationFeatureProviders,
   getProfileFeatures,
@@ -432,6 +433,8 @@ export function Page(): React.JSX.Element {
       } else {
         toast.success(t.common.connected);
       }
+
+      trackAnalyticsEvent('integration_connected', { provider: connectedProvider });
     }
   }, [searchParams, t.common.connected, t.providers]);
 
@@ -444,6 +447,8 @@ export function Page(): React.JSX.Element {
 
     try {
       const connection = await createIntegrationConnectUrl(profileId, activeTab);
+
+      trackAnalyticsEvent('integration_connect_started', { provider: activeTab });
 
       if (connection.oauth?.uses_local_redirect && connection.oauth.redirect_uri) {
         toast.warning(interpolate(providerText.oauthLocalWarning, { redirectUri: connection.oauth.redirect_uri }));
@@ -464,6 +469,7 @@ export function Page(): React.JSX.Element {
       await syncIntegrationMedia(profileId, activeTab);
       await loadIntegration();
       toast.success(providerText.synced);
+      trackAnalyticsEvent('integration_synced', { provider: activeTab });
     } catch (err) {
       logger.error(err);
       toast.error(getErrorMessage(err, t.common.error));
@@ -480,6 +486,7 @@ export function Page(): React.JSX.Element {
         await saveOnlyFansIntegration(profileId, input);
         await loadIntegration();
         toast.success(t.common.connected);
+        trackAnalyticsEvent('integration_connected', { provider: 'onlyfans' });
       } catch (err) {
         logger.error(err);
         toast.error(getErrorMessage(err, t.common.error));
@@ -499,6 +506,7 @@ export function Page(): React.JSX.Element {
         await uploadOnlyFansMedia(profileId, input);
         await loadIntegration();
         toast.success(t.common.uploaded);
+        trackAnalyticsEvent('integration_media_added', { media_type: 'upload', provider: 'onlyfans' });
       } catch (err) {
         logger.error(err);
         toast.error(getErrorMessage(err, t.common.error));
@@ -518,6 +526,7 @@ export function Page(): React.JSX.Element {
         await saveYouTubeIntegration(profileId, input);
         await loadIntegration();
         toast.success(t.common.connected);
+        trackAnalyticsEvent('integration_connected', { provider: 'youtube' });
       } catch (err) {
         logger.error(err);
         toast.error(getErrorMessage(err, t.common.error));
@@ -537,6 +546,7 @@ export function Page(): React.JSX.Element {
         await addYouTubeMedia(profileId, input);
         await loadIntegration();
         toast.success(t.common.uploaded);
+        trackAnalyticsEvent('integration_media_added', { media_type: 'video', provider: 'youtube' });
       } catch (err) {
         logger.error(err);
         toast.error(getErrorMessage(err, t.common.error));
@@ -572,6 +582,7 @@ export function Page(): React.JSX.Element {
       await disconnectIntegration(profileId, activeTab);
       setPage({ integration: null, media: [], selection_limit: selectionLimit });
       setMedia([]);
+      trackAnalyticsEvent('integration_disconnected', { provider: activeTab });
     } catch (err) {
       logger.error(err);
       toast.error(getErrorMessage(err, t.common.error));
@@ -617,6 +628,10 @@ export function Page(): React.JSX.Element {
       setPage(nextPage);
       setMedia(nextPage.media);
       toast.success(t.common.updated);
+      trackAnalyticsEvent('integration_selection_saved', {
+        provider: activeTab,
+        selected_count: nextPage.media.filter((item) => item.selected).length,
+      });
     } catch (err) {
       logger.error(err);
       toast.error(getErrorMessage(err, t.common.error));
