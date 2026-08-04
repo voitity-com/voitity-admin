@@ -28,7 +28,7 @@ export function Analytics({ children }: AnalyticsProps): React.JSX.Element {
   const pathname = usePathname();
   const { i18n, t } = useTranslation();
   const [consent, setConsent] = React.useState<AnalyticsConsentValue>(() => getAnalyticsConsent());
-  const [isOpen, setIsOpen] = React.useState(consent === 'unset');
+  const [isOpen, setIsOpen] = React.useState(consent !== 'granted');
   const privacyUrl = `${config.publicProfile?.baseUrl ?? 'https://bigmelo.com'}/${
     i18n.resolvedLanguage?.startsWith('en') ? 'privacy' : 'privacidad'
   }`;
@@ -110,28 +110,7 @@ export function Analytics({ children }: AnalyticsProps): React.JSX.Element {
             </Button>
           </Stack>
         </Paper>
-      ) : (
-        <Button
-          onClick={() => {
-            setIsOpen(true);
-          }}
-          size="small"
-          sx={{
-            bgcolor: 'background.paper',
-            bottom: 12,
-            fontSize: '0.7rem',
-            left: 12,
-            minWidth: 0,
-            position: 'fixed',
-            px: 1.25,
-            py: 0.5,
-            zIndex: 1300,
-          }}
-          variant="outlined"
-        >
-          {t('analyticsConsent.manage')}
-        </Button>
-      )}
+      ) : null}
     </React.Fragment>
   );
 }

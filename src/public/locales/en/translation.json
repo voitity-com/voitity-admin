@@ -3,7 +3,6 @@
   "analyticsConsent": {
     "accept": "Accept cookies",
     "body": "We use optional Google Analytics cookies to understand aggregate usage. We do not send profile names, chat content, contact information, or payment data.",
-    "manage": "Cookie preferences",
     "privacy": "Privacy policy",
     "reject": "Reject Cookies",
     "title": "Accept Cookies"
