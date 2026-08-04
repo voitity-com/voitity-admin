@@ -18,6 +18,8 @@ export interface Profile {
   active?: boolean;
   status?: null | string;
   voice?: boolean;
+  voice_autoplay_enabled?: boolean;
+  voice_enabled?: boolean;
   voice_id?: null | number | string;
   voice_description?: null | string;
   voice_language_code?: null | string;
@@ -536,6 +538,23 @@ export async function updateProfileData(id: number | string, data: Record<string
     {
       body: { data },
       method: 'PUT',
+    }
+  );
+  return unwrapProfile(response);
+}
+
+export async function updateProfileVoiceSettings(
+  id: number | string,
+  payload: {
+    voice_autoplay_enabled: boolean;
+    voice_enabled: boolean;
+  }
+): Promise<Profile> {
+  const response = await requestJson<ApiEnvelope<Profile> | Profile>(
+    `/api/profile/${encodeURIComponent(String(id))}/voice-settings`,
+    {
+      body: payload,
+      method: 'PATCH',
     }
   );
   return unwrapProfile(response);

@@ -1740,14 +1740,19 @@
             "recordingStartFailed": "Recording could not be started. Please try again.",
             "recordingUnsupported": "Audio recording is not supported by this browser."
           },
-          "fields": {
-            "description": "Description",
-            "language": "Language",
-            "languageCode": "Language code: {{code}}",
-            "languageHelper": "Used for voice cloning and sample uploads.",
-            "text": "Text",
-            "voiceName": "Voice name"
-          },
+	          "fields": {
+	            "description": "Description",
+	            "language": "Language",
+	            "languageCode": "Language code: {{code}}",
+	            "languageHelper": "Used for voice cloning and sample uploads.",
+	            "text": "Text",
+	            "voiceAutoplayDisabledHelper": "Enable profile voice first to allow audio.",
+	            "voiceAutoplayEnabled": "Start with audio on",
+	            "voiceAutoplayHelper": "Visitors enter with audio enabled; if they mute it, audio is not generated until they turn it back on.",
+	            "voiceEnabled": "Enable profile voice",
+	            "voiceEnabledHelper": "When off, the profile replies only by text and does not generate ElevenLabs audio.",
+	            "voiceName": "Voice name"
+	          },
           "languages": {
             "en": "English",
             "es": "Spanish"
