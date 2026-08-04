@@ -8,12 +8,14 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
+import Checkbox from '@mui/material/Checkbox';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import LinearProgress from '@mui/material/LinearProgress';
@@ -43,6 +45,7 @@ import {
   processVoiceSample,
   testVoiceAudio,
   updateVoice,
+  updateProfileVoiceSettings,
   uploadVoiceSample,
 } from '@/lib/profiles/api-client';
 import { toast } from '@/components/core/toaster';
@@ -64,6 +67,8 @@ export function Page(): React.JSX.Element {
   const [voiceDescription, setVoiceDescription] = React.useState<string>('');
   const [voiceLanguageCode, setVoiceLanguageCode] =
     React.useState<VoiceLanguageCode>(DEFAULT_VOICE_LANGUAGE_CODE);
+  const [voiceResponsesEnabled, setVoiceResponsesEnabled] = React.useState<boolean>(true);
+  const [voiceAutoplayEnabled, setVoiceAutoplayEnabled] = React.useState<boolean>(true);
   const [audioBlob, setAudioBlob] = React.useState<null | Blob>(null);
   const [audioUrl, setAudioUrl] = React.useState<string>('');
   const [error, setError] = React.useState<string>('');
@@ -205,6 +210,8 @@ export function Page(): React.JSX.Element {
       );
       setVoiceDescription(nextProfile.voice_description || '');
       setVoiceLanguageCode(normalizeVoiceLanguageCode(nextProfile.voice_language_code));
+      setVoiceResponsesEnabled(getProfileVoiceResponsesEnabled(nextProfile));
+      setVoiceAutoplayEnabled(getProfileVoiceAutoplayEnabled(nextProfile));
 
       if (nextVoiceId) {
         storeVoiceId(profileId, nextVoiceId);
@@ -275,6 +282,13 @@ export function Page(): React.JSX.Element {
 
     try {
       await saveVoiceDetails();
+      const updatedProfile = await updateProfileVoiceSettings(profileId, {
+        voice_autoplay_enabled: voiceResponsesEnabled && voiceAutoplayEnabled,
+        voice_enabled: voiceResponsesEnabled,
+      });
+      setProfile(updatedProfile);
+      setVoiceResponsesEnabled(getProfileVoiceResponsesEnabled(updatedProfile));
+      setVoiceAutoplayEnabled(getProfileVoiceAutoplayEnabled(updatedProfile));
       toast.success(t('dashboard.profiles.detail.voice.toasts.voiceSaved'));
     } catch (err) {
       const message = getErrorMessage(err, t('dashboard.profiles.detail.errors.generic'));
@@ -283,7 +297,7 @@ export function Page(): React.JSX.Element {
     } finally {
       setIsCreating(false);
     }
-  }, [saveVoiceDetails, t]);
+  }, [profileId, saveVoiceDetails, t, voiceAutoplayEnabled, voiceResponsesEnabled]);
 
   const handleStartRecording = React.useCallback(async (): Promise<void> => {
     setError('');
@@ -489,7 +503,7 @@ export function Page(): React.JSX.Element {
     }
   }, [profileId, t, testAudioUrl, testText]);
 
-  const voiceEnabled = hasProfileVoiceEnabled(profile);
+  const hasConfiguredVoice = hasProfileVoiceEnabled(profile);
   const isLastScriptPart = scriptPartIndex >= sampleScriptParts.length - 1;
   const playbackProgress = playbackDuration > 0 ? Math.min(100, (playbackSeconds / playbackDuration) * 100) : 0;
   const scriptProgress = ((scriptPartIndex + 1) / sampleScriptParts.length) * 100;
@@ -516,28 +530,6 @@ export function Page(): React.JSX.Element {
                 <Stack spacing={3}>
                   <Stack spacing={2}>
                     <FormControl>
-                      <InputLabel>{t('dashboard.profiles.detail.voice.fields.voiceName')}</InputLabel>
-                      <OutlinedInput
-                        label={t('dashboard.profiles.detail.voice.fields.voiceName')}
-                        onChange={(event) => {
-                          setVoiceName(event.target.value);
-                        }}
-                        value={voiceName}
-                      />
-                    </FormControl>
-                    <FormControl>
-                      <InputLabel>{t('dashboard.profiles.detail.voice.fields.description')}</InputLabel>
-                      <OutlinedInput
-                        label={t('dashboard.profiles.detail.voice.fields.description')}
-                        multiline
-                        onChange={(event) => {
-                          setVoiceDescription(event.target.value);
-                        }}
-                        rows={3}
-                        value={voiceDescription}
-                      />
-                    </FormControl>
-                    <FormControl>
                       <InputLabel id="voice-language-label">
                         {t('dashboard.profiles.detail.voice.fields.language')}
                       </InputLabel>
@@ -559,11 +551,46 @@ export function Page(): React.JSX.Element {
                         {t('dashboard.profiles.detail.voice.fields.languageHelper')}
                       </FormHelperText>
                     </FormControl>
-                    {voiceId ? (
-                      <Alert color="success" variant="outlined">
-                        {t('dashboard.profiles.detail.voice.voiceId', { id: voiceId })}
-                      </Alert>
-                    ) : null}
+                    <Box>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={voiceResponsesEnabled}
+                            onChange={(event) => {
+                              const checked = event.target.checked;
+                              setVoiceResponsesEnabled(checked);
+
+                              if (!checked) {
+                                setVoiceAutoplayEnabled(false);
+                              }
+                            }}
+                          />
+                        }
+                        label={t('dashboard.profiles.detail.voice.fields.voiceEnabled')}
+                      />
+                      <FormHelperText sx={{ ml: 4 }}>
+                        {t('dashboard.profiles.detail.voice.fields.voiceEnabledHelper')}
+                      </FormHelperText>
+                    </Box>
+                    <Box>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={Boolean(voiceResponsesEnabled && voiceAutoplayEnabled)}
+                            disabled={!voiceResponsesEnabled}
+                            onChange={(event) => {
+                              setVoiceAutoplayEnabled(event.target.checked);
+                            }}
+                          />
+                        }
+                        label={t('dashboard.profiles.detail.voice.fields.voiceAutoplayEnabled')}
+                      />
+                      <FormHelperText sx={{ ml: 4 }}>
+                        {voiceResponsesEnabled
+                          ? t('dashboard.profiles.detail.voice.fields.voiceAutoplayHelper')
+                          : t('dashboard.profiles.detail.voice.fields.voiceAutoplayDisabledHelper')}
+                      </FormHelperText>
+                    </Box>
                   </Stack>
                 </Stack>
               </CardContent>
@@ -580,7 +607,7 @@ export function Page(): React.JSX.Element {
                   >
                     {t('dashboard.profiles.detail.voice.cloneVoice')}
                   </Button>
-                  {voiceEnabled ? (
+	                  {hasConfiguredVoice ? (
                     <Button
                       color="secondary"
                       onClick={() => {
@@ -1011,6 +1038,34 @@ function hasProfileVoiceEnabled(profile: null | Profile): boolean {
   }
 
   return profile.data?.voice === true;
+}
+
+function getProfileVoiceResponsesEnabled(profile: Profile): boolean {
+  if (typeof profile.voice_enabled === 'boolean') {
+    return profile.voice_enabled;
+  }
+
+  if (typeof profile.data?.voice_enabled === 'boolean') {
+    return profile.data.voice_enabled;
+  }
+
+  return true;
+}
+
+function getProfileVoiceAutoplayEnabled(profile: Profile): boolean {
+  if (!getProfileVoiceResponsesEnabled(profile)) {
+    return false;
+  }
+
+  if (typeof profile.voice_autoplay_enabled === 'boolean') {
+    return profile.voice_autoplay_enabled;
+  }
+
+  if (typeof profile.data?.voice_autoplay_enabled === 'boolean') {
+    return profile.data.voice_autoplay_enabled;
+  }
+
+  return true;
 }
 
 function getProfileVoiceId(profile: Profile): string {

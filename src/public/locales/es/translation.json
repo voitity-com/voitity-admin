@@ -1740,14 +1740,19 @@
             "recordingStartFailed": "No se pudo iniciar la grabación. Intenta de nuevo.",
             "recordingUnsupported": "Este navegador no soporta grabación de audio."
           },
-          "fields": {
-            "description": "Descripción",
-            "language": "Idioma",
-            "languageCode": "Código de idioma: {{code}}",
-            "languageHelper": "Se usará al clonar la voz y al subir muestras.",
-            "text": "Texto",
-            "voiceName": "Nombre de la voz"
-          },
+	          "fields": {
+	            "description": "Descripción",
+	            "language": "Idioma",
+	            "languageCode": "Código de idioma: {{code}}",
+	            "languageHelper": "Se usará al clonar la voz y al subir muestras.",
+	            "text": "Texto",
+	            "voiceAutoplayDisabledHelper": "Activa primero la voz del perfil para permitir audio.",
+	            "voiceAutoplayEnabled": "Iniciar con audio activado",
+	            "voiceAutoplayHelper": "Los visitantes entran con el audio activo; si lo silencian, no se generará audio hasta que lo reactiven.",
+	            "voiceEnabled": "Habilitar voz del perfil",
+	            "voiceEnabledHelper": "Si está desactivado, el perfil responde solo por texto y no genera audio con ElevenLabs.",
+	            "voiceName": "Nombre de la voz"
+	          },
           "languages": {
             "en": "Inglés",
             "es": "Español"
