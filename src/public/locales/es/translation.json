@@ -213,11 +213,36 @@
           },
           "answerAccuracy": {
             "answer": "No. Las respuestas se generan automáticamente y pueden contener errores u omisiones. Por eso puedes revisar las fuentes, los datos extraídos y el nivel de preparación del perfil antes de publicarlo.",
-            "question": "¿Las respuestas siempre son exactas?"
+            "question": "¿Las respuestas siempre son exactas?",
+            "video": {
+              "iframeTitle": "Tutorial para mejorar la información y la calidad de las respuestas en Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para cargar información y redes sociales en Bigmelo",
+              "title": "Cómo mejorar la información y la calidad de las respuestas"
+            }
           },
           "answerSources": {
             "answer": "La inteligencia artificial utiliza la información que configuras y apruebas: descripción, experiencia, proyectos, estudios, habilidades, fuentes importadas, redes sociales, contenidos seleccionados y productos publicados.",
-            "question": "¿De dónde obtiene la información para responder?"
+            "question": "¿De dónde obtiene la información para responder?",
+            "video": {
+              "iframeTitle": "Tutorial para cargar la información que utiliza el perfil en Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para cargar información y redes sociales en Bigmelo",
+              "title": "Cómo cargar la información que utiliza tu perfil"
+            }
+          },
+          "avatarAndVoice": {
+            "answer": "Abre Perfiles y selecciona la presencia que quieres configurar. En Avatar, sube una imagen JPG, PNG o WEBP, ajusta el encuadre y guarda; cuando termine el procesamiento, selecciona el avatar generado. Después entra en Voz, elige el idioma y pulsa Clonar voz. Busca un lugar silencioso, lee de forma natural el texto guiado completo, revisa la grabación y guarda la muestra. Finalmente, prueba la voz y habilítala para el perfil. Utiliza únicamente tu propia imagen y voz, o material para el que tengas autorización expresa.",
+            "question": "¿Cómo crear mi avatar y clonar mi voz?",
+            "video": {
+              "iframeTitle": "Tutorial para crear tu avatar y clonar tu voz en Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para crear un avatar y clonar una voz en Bigmelo",
+              "title": "Cómo crear tu avatar y clonar tu voz"
+            }
           },
           "audience": {
             "answer": "Está pensado para profesionales, creadores, educadores, figuras públicas, emprendedores y marcas personales que quieren presentar su información y responder preguntas de forma interactiva.",
@@ -233,7 +258,14 @@
           },
           "createPresence": {
             "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes como tu CV, crea el avatar y la voz autorizada, revisa la calidad del contenido y publica tu enlace.",
-            "question": "¿Cómo creo mi presencia digital?"
+            "question": "¿Cómo creo mi presencia digital?",
+            "video": {
+              "iframeTitle": "Tutorial para crear tu presencia digital en Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para crear un perfil en Bigmelo",
+              "title": "Cómo crear tu perfil en Bigmelo desde cero"
+            }
           },
           "dataDeletion": {
             "answer": "Sí. Puedes desactivar la publicación del perfil y solicitar la eliminación de tu cuenta, perfiles, imágenes, audios, voz, conversaciones, productos e integraciones escribiendo a privacy@bigmelo.com.",
@@ -249,7 +281,14 @@
           },
           "missingInformation": {
             "answer": "El perfil está diseñado para reconocer cuando la información disponible no es suficiente e indicar que no conoce la respuesta, en lugar de presentar información inexistente como un hecho.",
-            "question": "¿Qué sucede cuando el perfil no tiene información para responder?"
+            "question": "¿Qué sucede cuando el perfil no tiene información para responder?",
+            "video": {
+              "iframeTitle": "Tutorial para completar la información disponible en un perfil de Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para cargar información y redes sociales en Bigmelo",
+              "title": "Cómo completar la información disponible para responder"
+            }
           },
           "paymentCurrency": {
             "answer": "Los precios se presentan en dólares estadounidenses. Wompi procesa el cobro en pesos colombianos utilizando la tasa de cambio informada para la transacción.",
@@ -259,9 +298,27 @@
             "answer": "Los planes Starter mensual y anual incluyen una presencia publicada, avatar, voz autorizada, conversaciones por texto y audio, productos y conexiones sociales. Los precios y límites vigentes se muestran en la sección Facturación y planes.",
             "question": "¿Qué incluyen los planes de Bigmelo?"
           },
-          "socialAndProducts": {
-            "answer": "Sí. Puedes publicar enlaces sociales y, según las funciones habilitadas, seleccionar contenido de Instagram o TikTok para mostrarlo en conversaciones. También puedes publicar productos y permitir que el perfil los recomiende cuando sean relevantes.",
-            "question": "¿Puedo conectar mis redes sociales y mostrar productos?"
+          "products": {
+            "answer": "Abre Perfiles, selecciona el perfil y entra en Productos. Si la función no está habilitada, actívala primero desde Configuración. Pulsa Agregar producto, sube una imagen, escribe el nombre y la descripción, elige si el destino será un link de tienda, WhatsApp o Telegram y selecciona el estado Público. Guarda el producto y habilita Usar productos en las conversaciones. Solo los productos públicos podrán mostrarse y recomendarse cuando sean relevantes para la pregunta del visitante. También puedes cargar varios productos mediante un archivo CSV.",
+            "question": "¿Cómo agregar productos?",
+            "video": {
+              "iframeTitle": "Tutorial para agregar y vender productos con inteligencia artificial en Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para agregar productos en Bigmelo",
+              "title": "Cómo agregar y vender tus productos con inteligencia artificial"
+            }
+          },
+          "socialNetworks": {
+            "answer": "Puedes hacerlo de dos formas. Para mostrar enlaces simples en tu perfil público, abre Perfiles, selecciona el perfil, entra en Datos y agrega cada red con su URL en la sección Redes; después guarda los cambios. Para una integración completa, entra en Integraciones y selecciona Instagram, TikTok o YouTube. Conecta la cuenta o agrega el canal, sincroniza o añade su contenido, selecciona las publicaciones o videos que quieres usar y agrega una descripción u observaciones. Según las funciones habilitadas, el contenido seleccionado podrá mostrarse y utilizarse como contexto en las conversaciones.",
+            "question": "¿Cómo se integran mis redes sociales?",
+            "video": {
+              "iframeTitle": "Tutorial para integrar Instagram, TikTok y YouTube en Bigmelo",
+              "openOnYouTube": "Ver en YouTube",
+              "play": "Ver tutorial",
+              "thumbnailAlt": "Vista previa del tutorial para integrar redes sociales en Bigmelo",
+              "title": "Cómo integrar Instagram, TikTok y YouTube"
+            }
           },
           "textAndAudio": {
             "answer": "Sí. Los visitantes pueden escribir o enviar audios de hasta 30 segundos. Cuando existe una voz configurada y hay capacidad disponible, las respuestas también pueden reproducirse en audio; de lo contrario, continúan disponibles como texto.",

@@ -18,6 +18,7 @@ import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChatCircleDots as ChatCircleDotsIcon } from '@phosphor-icons/react/dist/ssr/ChatCircleDots';
 import { Lifebuoy as LifebuoyIcon } from '@phosphor-icons/react/dist/ssr/Lifebuoy';
+import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
@@ -29,12 +30,14 @@ const faqKeys = [
   'whatIsBigmelo',
   'audience',
   'createPresence',
+  'avatarAndVoice',
   'answerSources',
   'missingInformation',
   'answerAccuracy',
   'visitorAccount',
   'textAndAudio',
-  'socialAndProducts',
+  'socialNetworks',
+  'products',
   'imageAndVoiceAuthorization',
   'plans',
   'trial',
@@ -48,6 +51,136 @@ const faqKeys = [
 
 type FaqKey = (typeof faqKeys)[number];
 type HelpTab = 'faq' | 'support';
+
+interface FaqVideo {
+  id: string;
+  startSeconds?: number;
+  thumbnailUrl: string;
+  youtubeUrl: string;
+}
+
+const profileInformationVideo: FaqVideo = {
+  id: 'H2yMw2IFG00',
+  startSeconds: 4,
+  thumbnailUrl: 'https://i.ytimg.com/vi/H2yMw2IFG00/hqdefault.jpg',
+  youtubeUrl: 'https://www.youtube.com/watch?v=H2yMw2IFG00&t=4s',
+};
+
+const faqVideos: Partial<Record<FaqKey, FaqVideo>> = {
+  answerAccuracy: profileInformationVideo,
+  answerSources: profileInformationVideo,
+  avatarAndVoice: {
+    id: 'Rj1OGNxBBdg',
+    thumbnailUrl: 'https://i.ytimg.com/vi/Rj1OGNxBBdg/hqdefault.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=Rj1OGNxBBdg',
+  },
+  createPresence: {
+    id: '4gJl-UWeIvU',
+    thumbnailUrl: 'https://i.ytimg.com/vi/4gJl-UWeIvU/hqdefault.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=4gJl-UWeIvU',
+  },
+  missingInformation: profileInformationVideo,
+  products: {
+    id: '_kuJeulksuA',
+    thumbnailUrl: 'https://i.ytimg.com/vi/_kuJeulksuA/hqdefault.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=_kuJeulksuA',
+  },
+  socialNetworks: {
+    id: 'Jf3ylNa2zmM',
+    thumbnailUrl: 'https://i.ytimg.com/vi/Jf3ylNa2zmM/hqdefault.jpg',
+    youtubeUrl: 'https://www.youtube.com/watch?v=Jf3ylNa2zmM',
+  },
+};
+
+interface FaqVideoTutorialProps {
+  faqKey: FaqKey;
+  video: FaqVideo;
+}
+
+function FaqVideoTutorial({ faqKey, video }: FaqVideoTutorialProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const startParameter = video.startSeconds === undefined ? '' : `&start=${video.startSeconds}`;
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&playsinline=1&rel=0${startParameter}&origin=${encodeURIComponent(window.location.origin)}`;
+  const translationKey = `dashboard.help.faq.items.${faqKey}.video`;
+
+  return (
+    <Stack spacing={1.25} sx={{ maxWidth: 760, pt: 0.5 }}>
+      <Typography fontWeight={600} variant="subtitle2">
+        {t(`${translationKey}.title`)}
+      </Typography>
+      <Box
+        sx={{
+          aspectRatio: '16 / 9',
+          bgcolor: 'common.black',
+          borderRadius: 2,
+          overflow: 'hidden',
+          position: 'relative',
+          width: '100%',
+        }}
+      >
+        {isPlaying ? (
+          <Box
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            component="iframe"
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+            src={embedUrl}
+            sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
+            title={String(t(`${translationKey}.iframeTitle`))}
+          />
+        ) : (
+          <React.Fragment>
+            <Box
+              alt={String(t(`${translationKey}.thumbnailAlt`))}
+              component="img"
+              loading="lazy"
+              src={video.thumbnailUrl}
+              sx={{ display: 'block', height: '100%', objectFit: 'cover', width: '100%' }}
+            />
+            <Box
+              sx={{
+                bgcolor: 'rgba(15, 23, 42, 0.34)',
+                inset: 0,
+                position: 'absolute',
+              }}
+            />
+            <Button
+              color="inherit"
+              onClick={() => {
+                setIsPlaying(true);
+              }}
+              startIcon={<PlayIcon size={20} weight="fill" />}
+              sx={{
+                bgcolor: 'rgba(255, 255, 255, 0.94)',
+                color: 'text.primary',
+                left: '50%',
+                position: 'absolute',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                whiteSpace: 'nowrap',
+                '&:hover': { bgcolor: 'common.white' },
+              }}
+              variant="contained"
+            >
+              {t(`${translationKey}.play`)}
+            </Button>
+          </React.Fragment>
+        )}
+      </Box>
+      <Link
+        href={video.youtubeUrl}
+        rel="noopener noreferrer"
+        sx={{ alignSelf: 'flex-start', fontWeight: 600 }}
+        target="_blank"
+        variant="body2"
+      >
+        {t(`${translationKey}.openOnYouTube`)}
+      </Link>
+    </Stack>
+  );
+}
 
 export function Page(): React.JSX.Element {
   const { t } = useTranslation();
@@ -109,12 +242,7 @@ export function Page(): React.JSX.Element {
               value={activeTab}
               variant="scrollable"
             >
-              <Tab
-                aria-controls="help-panel-faq"
-                id="help-tab-faq"
-                label={t('dashboard.help.tabs.faq')}
-                value="faq"
-              />
+              <Tab aria-controls="help-panel-faq" id="help-tab-faq" label={t('dashboard.help.tabs.faq')} value="faq" />
               <Tab
                 aria-controls="help-panel-support"
                 id="help-tab-support"
@@ -125,12 +253,7 @@ export function Page(): React.JSX.Element {
             <Divider />
 
             {activeTab === 'faq' ? (
-              <Box
-                aria-labelledby="help-tab-faq"
-                id="help-panel-faq"
-                role="tabpanel"
-                sx={{ p: { xs: 2, sm: 3 } }}
-              >
+              <Box aria-labelledby="help-tab-faq" id="help-panel-faq" role="tabpanel" sx={{ p: { xs: 2, sm: 3 } }}>
                 <Stack spacing={3}>
                   <Stack spacing={0.5}>
                     <Typography variant="h5">{t('dashboard.help.faq.title')}</Typography>
@@ -142,6 +265,7 @@ export function Page(): React.JSX.Element {
                   <Stack spacing={1.25}>
                     {faqKeys.map((faqKey) => {
                       const expanded = expandedFaq === faqKey;
+                      const video = faqVideos[faqKey];
 
                       return (
                         <Accordion
@@ -179,12 +303,13 @@ export function Page(): React.JSX.Element {
                               {t(`dashboard.help.faq.items.${faqKey}.question`)}
                             </Typography>
                           </AccordionSummary>
-                          <AccordionDetails
-                            sx={{ px: { xs: 2, sm: 2.5 }, pb: 2.5, pt: 0 }}
-                          >
-                            <Typography color="text.secondary" sx={{ maxWidth: 920 }} variant="body2">
-                              {t(`dashboard.help.faq.items.${faqKey}.answer`)}
-                            </Typography>
+                          <AccordionDetails sx={{ px: { xs: 2, sm: 2.5 }, pb: 2.5, pt: 0 }}>
+                            <Stack spacing={2}>
+                              <Typography color="text.secondary" sx={{ maxWidth: 920 }} variant="body2">
+                                {t(`dashboard.help.faq.items.${faqKey}.answer`)}
+                              </Typography>
+                              {expanded && video ? <FaqVideoTutorial faqKey={faqKey} video={video} /> : null}
+                            </Stack>
                           </AccordionDetails>
                         </Accordion>
                       );
