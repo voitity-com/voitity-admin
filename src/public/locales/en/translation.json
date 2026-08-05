@@ -213,11 +213,36 @@
           },
           "answerAccuracy": {
             "answer": "No. Answers are generated automatically and may contain errors or omissions. You can review sources, extracted data, and profile readiness before publishing.",
-            "question": "Are answers always accurate?"
+            "question": "Are answers always accurate?",
+            "video": {
+              "iframeTitle": "Tutorial for improving information and answer quality on Bigmelo",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for adding information and social networks on Bigmelo",
+              "title": "How to improve information and answer quality"
+            }
           },
           "answerSources": {
             "answer": "The AI uses information you configure and approve, including the description, experience, projects, education, skills, imported sources, social networks, selected media, and published products.",
-            "question": "Where does it get the information used in answers?"
+            "question": "Where does it get the information used in answers?",
+            "video": {
+              "iframeTitle": "Tutorial for adding the information used by a Bigmelo profile",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for adding information and social networks on Bigmelo",
+              "title": "How to add the information used by your profile"
+            }
+          },
+          "avatarAndVoice": {
+            "answer": "Open Profiles and select the presence you want to configure. Under Avatar, upload a JPG, PNG, or WEBP image, adjust the crop, and save it; once processing finishes, select the generated avatar. Then open Voice, choose the language, and select Clone your voice. Find a quiet place, read the complete guided text naturally, review the recording, and save the sample. Finally, test the voice and enable it for the profile. Only use your own image and voice, or material you are expressly authorized to use.",
+            "question": "How do I create my avatar and clone my voice?",
+            "video": {
+              "iframeTitle": "Tutorial for creating your avatar and cloning your voice on Bigmelo",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for creating an avatar and cloning a voice on Bigmelo",
+              "title": "How to create your avatar and clone your voice"
+            }
           },
           "audience": {
             "answer": "It is designed for professionals, creators, educators, public figures, entrepreneurs, and personal brands that want to present their information and answer questions interactively.",
@@ -233,7 +258,14 @@
           },
           "createPresence": {
             "answer": "Create your account, select a plan or start the trial, configure the profile, add sources such as your resume, create the avatar and authorized voice, review content quality, and publish your link.",
-            "question": "How do I create my digital presence?"
+            "question": "How do I create my digital presence?",
+            "video": {
+              "iframeTitle": "Tutorial for creating your digital presence on Bigmelo",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for creating a Bigmelo profile",
+              "title": "How to create your Bigmelo profile from scratch"
+            }
           },
           "dataDeletion": {
             "answer": "Yes. You can unpublish the profile and request deletion of your account, profiles, images, audio, voice, conversations, products, and integrations by writing to privacy@bigmelo.com.",
@@ -249,7 +281,14 @@
           },
           "missingInformation": {
             "answer": "The profile is designed to recognize when the available information is insufficient and say that it does not know, instead of presenting missing information as fact.",
-            "question": "What happens when it does not have enough information to answer?"
+            "question": "What happens when it does not have enough information to answer?",
+            "video": {
+              "iframeTitle": "Tutorial for completing the information available to a Bigmelo profile",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for adding information and social networks on Bigmelo",
+              "title": "How to complete the information available for answers"
+            }
           },
           "paymentCurrency": {
             "answer": "Prices are shown in US dollars. Wompi processes the payment in Colombian pesos using the exchange rate disclosed for the transaction.",
@@ -259,9 +298,27 @@
             "answer": "Monthly and annual Starter plans include one published presence, avatar, authorized voice, text and audio conversations, products, and social connections. Current prices and limits are shown in Billing & plans.",
             "question": "What is included in Bigmelo plans?"
           },
-          "socialAndProducts": {
-            "answer": "Yes. You can publish social links and, depending on enabled features, select Instagram or TikTok content to show in conversations. You can also publish products and let the profile recommend them when relevant.",
-            "question": "Can I connect social networks and show products?"
+          "products": {
+            "answer": "Open Profiles, select the profile, and go to Products. If the feature is not enabled, activate it first under Settings. Select Add product, upload an image, enter the name and description, choose whether the destination is a store link, WhatsApp, or Telegram, and set the status to Public. Save the product and enable Use products in conversations. Only public products can be shown and recommended when relevant to a visitor's question. You can also upload multiple products from a CSV file.",
+            "question": "How do I add products?",
+            "video": {
+              "iframeTitle": "Tutorial for adding and selling products with artificial intelligence on Bigmelo",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for adding products on Bigmelo",
+              "title": "How to add and sell your products with artificial intelligence"
+            }
+          },
+          "socialNetworks": {
+            "answer": "You can do this in two ways. To display simple links on your public profile, open Profiles, select the profile, go to Data, and add each network with its URL under Networks; then save your changes. For a full integration, go to Integrations and select Instagram, TikTok, or YouTube. Connect the account or add the channel, sync or add its content, select the posts or videos you want to use, and add a description or notes. Depending on enabled features, selected content can be displayed and used as context in conversations.",
+            "question": "How do I integrate my social networks?",
+            "video": {
+              "iframeTitle": "Tutorial for integrating Instagram, TikTok, and YouTube on Bigmelo",
+              "openOnYouTube": "Watch on YouTube",
+              "play": "Watch tutorial",
+              "thumbnailAlt": "Preview of the tutorial for integrating social networks on Bigmelo",
+              "title": "How to integrate Instagram, TikTok, and YouTube"
+            }
           },
           "textAndAudio": {
             "answer": "Yes. Visitors can write or send audio messages of up to 30 seconds. When a voice is configured and capacity is available, replies can also play as audio; otherwise, they remain available as text.",
@@ -283,6 +340,48 @@
         "openSupport": "Go to Support",
         "stillNeedHelp": "Could not find the answer you needed?",
         "title": "Frequently asked questions"
+      },
+      "guide": {
+        "badge": "5 tutorials",
+        "close": "Close",
+        "description": "View the five tutorials in the order you need. The recommended path runs from step 1 to 5, but you can open any of them at any time.",
+        "eyebrow": "Quick guide",
+        "links": {
+          "avatarAndVoice": "How to edit, personalize the avatar, and clone the voice",
+          "createProfile": "How to create a profile",
+          "informationSources": "How to add profile information and sources",
+          "products": "How to manage products",
+          "socialNetworks": "How to integrate your social networks"
+        },
+        "openAriaLabel": "Open tutorial for step {{number}}: {{title}}",
+        "openOnYouTube": "Watch on YouTube",
+        "stepLabel": "Step {{number}}",
+        "stepOfTotal": "Step {{number}} of {{total}}",
+        "steps": {
+          "avatarAndVoice": {
+            "description": "Edit the profile, create your avatar, and clone your voice for a more personal experience.",
+            "title": "Personalize your avatar and voice"
+          },
+          "createProfile": {
+            "description": "Configure the initial details and publish the digital presence you will share with visitors.",
+            "title": "Create your profile"
+          },
+          "informationSources": {
+            "description": "Add your experience, projects, education, and documents that the AI will use to answer.",
+            "title": "Add your information and sources"
+          },
+          "products": {
+            "description": "Publish products with an image, description, and destination so they can be recommended in conversations.",
+            "title": "Show your products"
+          },
+          "socialNetworks": {
+            "description": "Add links or connect Instagram, TikTok, and YouTube to use and display content.",
+            "title": "Integrate your social networks"
+          }
+        },
+        "title": "Manage your profile in 5 steps",
+        "viewFullGuide": "View full guide",
+        "watchTutorial": "Watch tutorial"
       },
       "pageTitle": "Help | {{product}}",
       "support": {
@@ -331,6 +430,7 @@
       "tabs": {
         "ariaLabel": "Help sections",
         "faq": "Frequently asked questions",
+        "guide": "Profile guide",
         "support": "Support"
       },
       "title": "Help"

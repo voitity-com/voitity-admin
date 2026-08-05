@@ -36,6 +36,7 @@ import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import { activateProfileAvatar, generateAvatar, listProfileAvatarHistory } from '@/lib/avatar/api-client';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Avatar | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -357,6 +358,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="avatarAndVoice" />
         <Card>
           <CardHeader
             action={
@@ -388,9 +390,7 @@ export function Page(): React.JSX.Element {
                 {avatarFailureMessage ? (
                   <Alert color="error" sx={{ width: '100%' }}>
                     <Stack spacing={0.5}>
-                      <Typography variant="subtitle2">
-                        {t('dashboard.profiles.detail.avatar.failedMessage')}
-                      </Typography>
+                      <Typography variant="subtitle2">{t('dashboard.profiles.detail.avatar.failedMessage')}</Typography>
                       <Typography variant="body2">{avatarFailureMessage}</Typography>
                     </Stack>
                   </Alert>

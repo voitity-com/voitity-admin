@@ -32,6 +32,7 @@ import { z as zod } from 'zod';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { logger } from '@/lib/default-logger';
 import type { ProfileKnowledgeSource, ProfileSourcesPage } from '@/lib/profiles/api-client';
 import {
   approveProfileSource,
@@ -40,10 +41,10 @@ import {
   uploadProfileCvSource,
 } from '@/lib/profiles/api-client';
 import { notifyProfileQualityChanged } from '@/lib/profiles/profile-quality-events';
-import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Sources | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const acceptedSourceFormats = ['PDF', 'DOC', 'DOCX', 'TXT', 'MD'];
@@ -203,6 +204,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="informationSources" />
         <Box
           sx={(theme) => ({
             bgcolor: alpha(theme.palette.primary.main, 0.06),
@@ -388,7 +390,8 @@ function getColumns({
       width: '260px',
     },
     {
-      formatter: (source): string => t(`dashboard.profiles.detail.sources.types.${source.type}`, { defaultValue: source.type }),
+      formatter: (source): string =>
+        t(`dashboard.profiles.detail.sources.types.${source.type}`, { defaultValue: source.type }),
       name: t('dashboard.profiles.detail.sources.fields.type'),
       width: '120px',
     },
@@ -417,7 +420,7 @@ function getColumns({
       width: '180px',
     },
     {
-      formatter: (source): React.ReactNode =>
+      formatter: (source): React.ReactNode => (
         <Stack direction="row" spacing={1}>
           <Button
             disabled={!hasSourceFile(source) || previewingId === String(source.id)}
@@ -442,7 +445,8 @@ function getColumns({
               ? t('dashboard.profiles.detail.sources.actions.sync')
               : t('dashboard.profiles.detail.sources.actions.approve')}
           </Button>
-        </Stack>,
+        </Stack>
+      ),
       name: t('dashboard.profiles.detail.sources.fields.actions'),
       width: '260px',
     },

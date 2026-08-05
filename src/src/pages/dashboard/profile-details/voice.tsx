@@ -44,11 +44,12 @@ import {
   getProfile,
   processVoiceSample,
   testVoiceAudio,
-  updateVoice,
   updateProfileVoiceSettings,
+  updateVoice,
   uploadVoiceSample,
 } from '@/lib/profiles/api-client';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Voice | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 type VoiceLanguageCode = 'es' | 'en';
@@ -65,8 +66,7 @@ export function Page(): React.JSX.Element {
   const [voiceId, setVoiceId] = React.useState<string>(() => getStoredVoiceId(profileId));
   const [voiceName, setVoiceName] = React.useState<string>('');
   const [voiceDescription, setVoiceDescription] = React.useState<string>('');
-  const [voiceLanguageCode, setVoiceLanguageCode] =
-    React.useState<VoiceLanguageCode>(DEFAULT_VOICE_LANGUAGE_CODE);
+  const [voiceLanguageCode, setVoiceLanguageCode] = React.useState<VoiceLanguageCode>(DEFAULT_VOICE_LANGUAGE_CODE);
   const [voiceResponsesEnabled, setVoiceResponsesEnabled] = React.useState<boolean>(true);
   const [voiceAutoplayEnabled, setVoiceAutoplayEnabled] = React.useState<boolean>(true);
   const [audioBlob, setAudioBlob] = React.useState<null | Blob>(null);
@@ -515,6 +515,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="avatarAndVoice" />
         <Card>
           <CardHeader
             subheader={profile ? profile.name : t('dashboard.profiles.detail.voice.createSubheader')}
@@ -547,9 +548,7 @@ export function Page(): React.JSX.Element {
                           </MenuItem>
                         ))}
                       </Select>
-                      <FormHelperText>
-                        {t('dashboard.profiles.detail.voice.fields.languageHelper')}
-                      </FormHelperText>
+                      <FormHelperText>{t('dashboard.profiles.detail.voice.fields.languageHelper')}</FormHelperText>
                     </FormControl>
                     <Box>
                       <FormControlLabel
@@ -607,7 +606,7 @@ export function Page(): React.JSX.Element {
                   >
                     {t('dashboard.profiles.detail.voice.cloneVoice')}
                   </Button>
-	                  {hasConfiguredVoice ? (
+                  {hasConfiguredVoice ? (
                     <Button
                       color="secondary"
                       onClick={() => {

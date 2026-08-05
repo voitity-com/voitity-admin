@@ -57,6 +57,7 @@ import { useSelection } from '@/hooks/use-selection';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 import { ProfileProductBulkDestinationDialog } from '@/components/dashboard/products/profile-product-bulk-destination-dialog';
 import type { ProductLanguage } from '@/components/dashboard/products/profile-product-copy';
 import { interpolate, productCopy } from '@/components/dashboard/products/profile-product-copy';
@@ -277,6 +278,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="products" />
 
         {isLoading ? (
           <Stack sx={{ alignItems: 'center', p: 5 }}>

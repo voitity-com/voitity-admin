@@ -14,9 +14,9 @@ import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
+import Stack from '@mui/material/Stack';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
-import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { Helmet } from 'react-helmet-async';
@@ -25,11 +25,12 @@ import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { logger } from '@/lib/default-logger';
 import type { Profile } from '@/lib/profiles/api-client';
 import { getProfile, updateProfileData } from '@/lib/profiles/api-client';
 import { notifyProfileQualityChanged } from '@/lib/profiles/profile-quality-events';
-import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Data | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -187,6 +188,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="informationSources" />
         <Card>
           <CardHeader
             action={
@@ -463,7 +465,10 @@ function ReadOnlyArraySection({ items, section }: { items: JsonValue[]; section:
           {isRecord(item) ? (
             <ReadOnlyProfileListItem index={index} item={item} />
           ) : (
-            <ReadOnlyDataField field={t('dashboard.profiles.detail.data.itemTitle', { index: index + 1 })} value={item} />
+            <ReadOnlyDataField
+              field={t('dashboard.profiles.detail.data.itemTitle', { index: index + 1 })}
+              value={item}
+            />
           )}
         </Stack>
       ))}
@@ -858,7 +863,9 @@ function normalizeData(value: unknown): JsonObject {
 
 function getVisibleTabs(data: JsonObject, isEditing: boolean): SectionKey[] {
   const knownTabs = isEditing ? [...tabKeys] : tabKeys.filter((key) => Object.hasOwn(data, key));
-  const extraTabs = Object.keys(data).filter((key) => !isKnownTab(key) && key !== 'networks' && !isNonEditableDataField(key));
+  const extraTabs = Object.keys(data).filter(
+    (key) => !isKnownTab(key) && key !== 'networks' && !isNonEditableDataField(key)
+  );
   const visibleTabs = [...knownTabs, ...extraTabs];
 
   return visibleTabs.length ? visibleTabs : ['me'];

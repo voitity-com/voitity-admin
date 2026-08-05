@@ -41,11 +41,11 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
-import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import {
   enabledIntegrationProviders as enabledIntegrationFeatureProviders,
   getProfileFeatures,
 } from '@/lib/features/api-client';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import {
   addYouTubeMedia,
   createIntegrationConnectUrl,
@@ -68,6 +68,7 @@ import {
   type YouTubeMediaInput,
 } from '@/lib/integrations/api-client';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Integrations | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 type MediaFilter = 'all' | 'selected';
@@ -340,7 +341,8 @@ const copy = {
         hint: 'Agrega un canal de YouTube y selecciona hasta {{limit}} videos. Sus descripciones serán contexto verificado para las conversaciones del perfil.',
         label: 'YouTube',
         maxSelected: 'Puedes seleccionar hasta {{limit}} videos de YouTube.',
-        noConnection: 'Agrega el canal público de YouTube cuyos videos estarán disponibles en las conversaciones del perfil.',
+        noConnection:
+          'Agrega el canal público de YouTube cuyos videos estarán disponibles en las conversaciones del perfil.',
         observationPlaceholder: 'Explica cuándo debe el perfil recomendar este video.',
         oauthLocalWarning: '',
         reconnect: 'Editar canal',
@@ -647,6 +649,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="socialNetworks" />
 
         {isLoading ? (
           <Stack sx={{ alignItems: 'center', p: 5 }}>
@@ -1753,7 +1756,14 @@ function IntegrationMediaCard({
                 {providerText.label}
               </Button>
               {provider === 'youtube' && item.channel_url ? (
-                <Button component="a" href={item.channel_url} rel="noreferrer" size="small" target="_blank" variant="text">
+                <Button
+                  component="a"
+                  href={item.channel_url}
+                  rel="noreferrer"
+                  size="small"
+                  target="_blank"
+                  variant="text"
+                >
                   {common.goToChannel}
                 </Button>
               ) : null}
@@ -1990,12 +2000,18 @@ function isValidYouTubeUrl(value: string, kind: 'channel' | 'video'): boolean {
     const url = new URL(value.trim());
     const host = url.hostname.toLowerCase();
 
-    if (url.protocol !== 'https:' || !['youtube.com', 'youtu.be'].some((domain) => host === domain || host.endsWith(`.${domain}`))) {
+    if (
+      url.protocol !== 'https:' ||
+      !['youtube.com', 'youtu.be'].some((domain) => host === domain || host.endsWith(`.${domain}`))
+    ) {
       return false;
     }
 
     if (kind === 'channel') {
-      return (host === 'youtube.com' || host.endsWith('.youtube.com')) && /^\/(?:@[^/]+|channel\/[^/]+|user\/[^/]+)\/?$/.test(url.pathname);
+      return (
+        (host === 'youtube.com' || host.endsWith('.youtube.com')) &&
+        /^\/(?:@[^/]+|channel\/[^/]+|user\/[^/]+)\/?$/.test(url.pathname)
+      );
     }
 
     return host === 'youtu.be' || url.searchParams.has('v') || /^\/(?:shorts|live|embed)\/[^/]+/.test(url.pathname);
