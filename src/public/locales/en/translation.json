@@ -341,6 +341,40 @@
         "stillNeedHelp": "Could not find the answer you needed?",
         "title": "Frequently asked questions"
       },
+      "guide": {
+        "badge": "5 tutorials",
+        "close": "Close",
+        "description": "View the five tutorials in the order you need. The recommended path runs from step 1 to 5, but you can open any of them at any time.",
+        "eyebrow": "Quick guide",
+        "openAriaLabel": "Open tutorial for step {{number}}: {{title}}",
+        "openOnYouTube": "Watch on YouTube",
+        "stepLabel": "Step {{number}}",
+        "stepOfTotal": "Step {{number}} of {{total}}",
+        "steps": {
+          "avatarAndVoice": {
+            "description": "Edit the profile, create your avatar, and clone your voice for a more personal experience.",
+            "title": "Personalize your avatar and voice"
+          },
+          "createProfile": {
+            "description": "Configure the initial details and publish the digital presence you will share with visitors.",
+            "title": "Create your profile"
+          },
+          "informationSources": {
+            "description": "Add your experience, projects, education, and documents that the AI will use to answer.",
+            "title": "Add your information and sources"
+          },
+          "products": {
+            "description": "Publish products with an image, description, and destination so they can be recommended in conversations.",
+            "title": "Show your products"
+          },
+          "socialNetworks": {
+            "description": "Add links or connect Instagram, TikTok, and YouTube to use and display content.",
+            "title": "Integrate your social networks"
+          }
+        },
+        "title": "Manage your profile in 5 steps",
+        "watchTutorial": "Watch tutorial"
+      },
       "pageTitle": "Help | {{product}}",
       "support": {
         "actions": {
@@ -388,6 +422,7 @@
       "tabs": {
         "ariaLabel": "Help sections",
         "faq": "Frequently asked questions",
+        "guide": "Profile guide",
         "support": "Support"
       },
       "title": "Help"

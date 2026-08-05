@@ -341,6 +341,40 @@
         "stillNeedHelp": "¿No encontraste la respuesta que necesitabas?",
         "title": "Preguntas frecuentes"
       },
+      "guide": {
+        "badge": "5 tutoriales",
+        "close": "Cerrar",
+        "description": "Consulta los cinco tutoriales en el orden que necesites. El recorrido recomendado va del paso 1 al 5, pero puedes abrir cualquiera en cualquier momento.",
+        "eyebrow": "Guía rápida",
+        "openAriaLabel": "Abrir tutorial del paso {{number}}: {{title}}",
+        "openOnYouTube": "Ver en YouTube",
+        "stepLabel": "Paso {{number}}",
+        "stepOfTotal": "Paso {{number}} de {{total}}",
+        "steps": {
+          "avatarAndVoice": {
+            "description": "Edita el perfil, crea tu avatar y clona tu voz para ofrecer una experiencia más personal.",
+            "title": "Personaliza tu avatar y tu voz"
+          },
+          "createProfile": {
+            "description": "Configura los datos iniciales y publica la presencia digital que compartirás con tus visitantes.",
+            "title": "Crea tu perfil"
+          },
+          "informationSources": {
+            "description": "Agrega tu experiencia, proyectos, estudios y documentos que utilizará la inteligencia artificial para responder.",
+            "title": "Carga tu información y tus fuentes"
+          },
+          "products": {
+            "description": "Publica productos con imagen, descripción y destino para recomendarlos en las conversaciones.",
+            "title": "Muestra tus productos"
+          },
+          "socialNetworks": {
+            "description": "Añade enlaces o conecta Instagram, TikTok y YouTube para utilizar y mostrar contenido.",
+            "title": "Integra tus redes sociales"
+          }
+        },
+        "title": "Administra tu perfil en 5 pasos",
+        "watchTutorial": "Ver tutorial"
+      },
       "pageTitle": "Ayuda | {{product}}",
       "support": {
         "actions": {
@@ -388,6 +422,7 @@
       "tabs": {
         "ariaLabel": "Secciones de ayuda",
         "faq": "Preguntas frecuentes",
+        "guide": "Guía del perfil",
         "support": "Soporte"
       },
       "title": "Ayuda"
