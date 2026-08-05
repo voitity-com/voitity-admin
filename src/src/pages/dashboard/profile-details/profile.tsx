@@ -36,13 +36,24 @@ import { z as zod } from 'zod';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { Profile, ProfileAudioTranscriptionField, ProfilePayload, ProfileProfession } from '@/lib/profiles/api-client';
-import { getProfile, listProfileProfessions, updateProfile } from '@/lib/profiles/api-client';
-import { getSupportedLanguage, supportedLanguages } from '@/lib/i18n';
-import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
-import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
 import { logger } from '@/lib/default-logger';
+import { getSupportedLanguage, supportedLanguages } from '@/lib/i18n';
+import type {
+  Profile,
+  ProfileAudioTranscriptionField,
+  ProfilePayload,
+  ProfileProfession,
+} from '@/lib/profiles/api-client';
+import { getProfile, listProfileProfessions, updateProfile } from '@/lib/profiles/api-client';
+import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
+import {
+  isProfileGenre,
+  normalizeProfileGenre,
+  profileGenreValues,
+  toProfileGenre,
+} from '@/lib/profiles/profile-genre';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 import { ProfileAudioTranscriptionDialog } from '@/components/dashboard/profiles/profile-audio-transcription-dialog';
 
 const metadata = { title: `Profile | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
@@ -80,7 +91,10 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
     locale: zod
       .string()
       .min(1, t('dashboard.profiles.form.validation.localeRequired'))
-      .refine((value) => supportedLanguages.includes(value as (typeof supportedLanguages)[number]), t('dashboard.profiles.form.validation.localeInvalid')),
+      .refine(
+        (value) => supportedLanguages.includes(value as (typeof supportedLanguages)[number]),
+        t('dashboard.profiles.form.validation.localeInvalid')
+      ),
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
     personality: zod
       .string()
@@ -219,6 +233,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="avatarAndVoice" />
         {isLoading ? (
           <Card>
             <Stack sx={{ alignItems: 'center', p: 4 }}>
@@ -351,7 +366,9 @@ export function Page(): React.JSX.Element {
                     name="professionKey"
                     render={({ field }) => (
                       <FormControl error={Boolean(errors.professionKey)}>
-                        <InputLabel id="profile-profession-label">{t('dashboard.profiles.fields.profession')}</InputLabel>
+                        <InputLabel id="profile-profession-label">
+                          {t('dashboard.profiles.fields.profession')}
+                        </InputLabel>
                         <Select
                           {...field}
                           label={t('dashboard.profiles.fields.profession')}
@@ -493,9 +510,16 @@ function ProfileOverview({
                 <Chip
                   label={t(`dashboard.profiles.status.${status}`)}
                   size="small"
-                  sx={{ bgcolor: isPublic ? 'success.light' : 'rgba(255,255,255,0.16)', color: isPublic ? 'success.contrastText' : 'common.white' }}
+                  sx={{
+                    bgcolor: isPublic ? 'success.light' : 'rgba(255,255,255,0.16)',
+                    color: isPublic ? 'success.contrastText' : 'common.white',
+                  }}
                 />
-                <Chip label={professionLabel} size="small" sx={{ bgcolor: 'rgba(255,255,255,0.16)', color: 'common.white' }} />
+                <Chip
+                  label={professionLabel}
+                  size="small"
+                  sx={{ bgcolor: 'rgba(255,255,255,0.16)', color: 'common.white' }}
+                />
                 <Chip
                   label={t(`dashboard.profiles.genreOptions.${normalizeProfileGenre(profile.genre)}`)}
                   size="small"
@@ -540,8 +564,14 @@ function ProfileOverview({
               gridTemplateColumns: { md: 'repeat(3, minmax(0, 1fr))', sm: 'repeat(2, minmax(0, 1fr))', xs: '1fr' },
             }}
           >
-            <ProfileAttribute label={t('dashboard.profiles.detail.profile.fields.profileId')} value={String(profile.id)} />
-            <ProfileAttribute label={t('dashboard.profiles.fields.alias')} value={profile.alias ? `@${profile.alias}` : notProvided} />
+            <ProfileAttribute
+              label={t('dashboard.profiles.detail.profile.fields.profileId')}
+              value={String(profile.id)}
+            />
+            <ProfileAttribute
+              label={t('dashboard.profiles.fields.alias')}
+              value={profile.alias ? `@${profile.alias}` : notProvided}
+            />
             <ProfileAttribute label={t('dashboard.profiles.fields.profession')} value={professionLabel} />
             <ProfileAttribute
               label={t('dashboard.profiles.fields.genre')}

@@ -37,6 +37,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 
 import { config } from '@/config';
+import { profileGuideTutorials } from '@/components/dashboard/help/profile-guide-tutorial-link';
 import { SupportRequestDialog } from '@/components/dashboard/help/support-request-dialog';
 
 const faqKeys = [
@@ -72,37 +73,16 @@ interface FaqVideo {
   youtubeUrl: string;
 }
 
-const profileInformationVideo: FaqVideo = {
-  id: 'H2yMw2IFG00',
-  startSeconds: 4,
-  thumbnailUrl: 'https://i.ytimg.com/vi/H2yMw2IFG00/hqdefault.jpg',
-  youtubeUrl: 'https://www.youtube.com/watch?v=H2yMw2IFG00&t=4s',
-};
+const profileInformationVideo = profileGuideTutorials.informationSources;
 
 const faqVideos: Partial<Record<FaqKey, FaqVideo>> = {
   answerAccuracy: profileInformationVideo,
   answerSources: profileInformationVideo,
-  avatarAndVoice: {
-    id: 'Rj1OGNxBBdg',
-    thumbnailUrl: 'https://i.ytimg.com/vi/Rj1OGNxBBdg/hqdefault.jpg',
-    youtubeUrl: 'https://www.youtube.com/watch?v=Rj1OGNxBBdg',
-  },
-  createPresence: {
-    id: '4gJl-UWeIvU',
-    thumbnailUrl: 'https://i.ytimg.com/vi/4gJl-UWeIvU/hqdefault.jpg',
-    youtubeUrl: 'https://www.youtube.com/watch?v=4gJl-UWeIvU',
-  },
+  avatarAndVoice: profileGuideTutorials.avatarAndVoice,
+  createPresence: profileGuideTutorials.createProfile,
   missingInformation: profileInformationVideo,
-  products: {
-    id: '_kuJeulksuA',
-    thumbnailUrl: 'https://i.ytimg.com/vi/_kuJeulksuA/hqdefault.jpg',
-    youtubeUrl: 'https://www.youtube.com/watch?v=_kuJeulksuA',
-  },
-  socialNetworks: {
-    id: 'Jf3ylNa2zmM',
-    thumbnailUrl: 'https://i.ytimg.com/vi/Jf3ylNa2zmM/hqdefault.jpg',
-    youtubeUrl: 'https://www.youtube.com/watch?v=Jf3ylNa2zmM',
-  },
+  products: profileGuideTutorials.products,
+  socialNetworks: profileGuideTutorials.socialNetworks,
 };
 
 const guideSteps = [

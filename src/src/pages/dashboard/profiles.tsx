@@ -40,6 +40,7 @@ import {
 import { useDelayedOpen } from '@/hooks/use-delayed-open';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 import { ProfilesFilters } from '@/components/dashboard/profiles/profiles-filters';
 import type { Filters, SortDir } from '@/components/dashboard/profiles/profiles-filters';
@@ -308,12 +309,13 @@ export function Page(): React.JSX.Element {
       >
         <Stack spacing={4}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} sx={{ alignItems: 'flex-start' }}>
-            <Box sx={{ flex: '1 1 auto' }}>
+            <Stack spacing={0.5} sx={{ flex: '1 1 auto' }}>
               <Typography variant="h4">{t('dashboard.profiles.list.title')}</Typography>
               <Typography color="text.secondary" variant="body2">
                 {t('dashboard.profiles.list.description')}
               </Typography>
-            </Box>
+              <ProfileGuideTutorialLink step="createProfile" />
+            </Stack>
             <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 aria-describedby={profileOnboardingOpen ? 'profile-creation-onboarding' : undefined}

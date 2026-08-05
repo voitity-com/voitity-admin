@@ -32,10 +32,11 @@ import { z as zod } from 'zod';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { logger } from '@/lib/default-logger';
 import type { Profile, ProfileNetworks, SocialNetworkDefinition } from '@/lib/profiles/api-client';
 import { getProfile, listProfileSocialNetworks, updateProfileNetworks } from '@/lib/profiles/api-client';
-import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
+import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Social Networks | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -184,6 +185,7 @@ export function Page(): React.JSX.Element {
       </Helmet>
       <Stack spacing={3}>
         {error ? <Alert color="error">{error}</Alert> : null}
+        <ProfileGuideTutorialLink step="informationSources" />
         <Card>
           <CardHeader
             subheader={profile ? profile.name : t('dashboard.profiles.detail.socialNetworks.subheader')}
@@ -336,9 +338,7 @@ function getSelectableDefinitions(
 ): SocialNetworkDefinition[] {
   const currentKey = selectedNetworks[currentIndex]?.network;
   const selectedKeys = new Set(
-    selectedNetworks
-      .map((item, index) => (index === currentIndex ? '' : item.network))
-      .filter(Boolean)
+    selectedNetworks.map((item, index) => (index === currentIndex ? '' : item.network)).filter(Boolean)
   );
 
   return catalog.filter((definition) => definition.key === currentKey || !selectedKeys.has(definition.key));

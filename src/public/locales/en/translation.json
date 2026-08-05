@@ -346,6 +346,13 @@
         "close": "Close",
         "description": "View the five tutorials in the order you need. The recommended path runs from step 1 to 5, but you can open any of them at any time.",
         "eyebrow": "Quick guide",
+        "links": {
+          "avatarAndVoice": "How to edit, personalize the avatar, and clone the voice",
+          "createProfile": "How to create a profile",
+          "informationSources": "How to add profile information and sources",
+          "products": "How to manage products",
+          "socialNetworks": "How to integrate your social networks"
+        },
         "openAriaLabel": "Open tutorial for step {{number}}: {{title}}",
         "openOnYouTube": "Watch on YouTube",
         "stepLabel": "Step {{number}}",
@@ -373,6 +380,7 @@
           }
         },
         "title": "Manage your profile in 5 steps",
+        "viewFullGuide": "View full guide",
         "watchTutorial": "Watch tutorial"
       },
       "pageTitle": "Help | {{product}}",

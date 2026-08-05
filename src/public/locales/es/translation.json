@@ -346,6 +346,13 @@
         "close": "Cerrar",
         "description": "Consulta los cinco tutoriales en el orden que necesites. El recorrido recomendado va del paso 1 al 5, pero puedes abrir cualquiera en cualquier momento.",
         "eyebrow": "Guía rápida",
+        "links": {
+          "avatarAndVoice": "Cómo editar, personalizar el avatar y clonar la voz",
+          "createProfile": "Cómo crear un perfil",
+          "informationSources": "Cómo cargar información y fuentes del perfil",
+          "products": "Cómo gestionar productos",
+          "socialNetworks": "Cómo integrar tus redes sociales"
+        },
         "openAriaLabel": "Abrir tutorial del paso {{number}}: {{title}}",
         "openOnYouTube": "Ver en YouTube",
         "stepLabel": "Paso {{number}}",
@@ -373,6 +380,7 @@
           }
         },
         "title": "Administra tu perfil en 5 pasos",
+        "viewFullGuide": "Ver guía completa",
         "watchTutorial": "Ver tutorial"
       },
       "pageTitle": "Ayuda | {{product}}",
@@ -1907,8 +1915,8 @@
         "filterByName": "Filtrar por nombre",
         "selected": "{{count}} seleccionados",
         "sort": {
-          "newest": "Más recientes",
-          "oldest": "Más antiguos"
+          "newest": "Recientes",
+          "oldest": "Antiguos"
         },
         "tabs": {
           "active": "Activos",
