@@ -199,10 +199,14 @@ function FeatureSwitch({
   feature: FeatureFlag;
   onChange: (key: FeatureKey, enabled: boolean) => void;
 }): React.JSX.Element {
+  const { t } = useTranslation();
+  const featureName =
+    feature.provider === 'other' ? t('dashboard.profiles.detail.integrations.other.label') : feature.name;
+
   return (
     <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>
       <Stack spacing={0.5} sx={{ flex: '1 1 auto', minWidth: 0 }}>
-        <Typography variant="subtitle1">{feature.name}</Typography>
+        <Typography variant="subtitle1">{featureName}</Typography>
         <Chip
           color={feature.enabled ? 'success' : 'default'}
           label={feature.enabled ? enabledLabel : disabledLabel}

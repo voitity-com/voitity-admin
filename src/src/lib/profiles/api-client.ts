@@ -293,7 +293,7 @@ export interface ProfileInsightsProvider {
   channel_clicks: number;
   external_clicks: number;
   opened: number;
-  provider: 'instagram' | 'onlyfans' | 'tiktok' | 'youtube';
+  provider: 'instagram' | 'onlyfans' | 'other' | 'tiktok' | 'youtube';
   shown: number;
   video_clicks: number;
 }

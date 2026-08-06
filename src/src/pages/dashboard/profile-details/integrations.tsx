@@ -13,6 +13,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
@@ -25,6 +26,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
 import { InstagramLogo as InstagramLogoIcon } from '@phosphor-icons/react/dist/ssr/InstagramLogo';
+import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
 import { LinkSimple as LinkSimpleIcon } from '@phosphor-icons/react/dist/ssr/LinkSimple';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
@@ -49,30 +51,47 @@ import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import {
   addYouTubeMedia,
   createIntegrationConnectUrl,
+  deleteOtherMedia,
   deleteOnlyFansMedia,
   deleteYouTubeMedia,
   disconnectIntegration,
+  getIntegrationDestinations,
   getIntegrationMedia,
   saveOnlyFansIntegration,
   saveYouTubeIntegration,
   syncIntegrationMedia,
   updateIntegrationMediaSelection,
+  updateOtherMedia,
   uploadOnlyFansMedia,
+  uploadOtherMedia,
+  type IntegrationDestination,
   type IntegrationMedia,
   type IntegrationMediaPage,
   type IntegrationProvider,
   type OnlyFansConnectionInput,
   type OnlyFansMediaUploadInput,
+  type OtherMediaInput,
+  type OtherMediaUploadInput,
   type ProfileIntegration,
   type YouTubeConnectionInput,
   type YouTubeMediaInput,
 } from '@/lib/integrations/api-client';
 import { toast } from '@/components/core/toaster';
+import { OtherMediaForm } from '@/components/dashboard/profiles/integrations/other-media-form';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Integrations | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 type MediaFilter = 'all' | 'selected';
 type Language = 'en' | 'es';
+type LegacyIntegrationProvider = Exclude<IntegrationProvider, 'other'>;
+type DisconnectableIntegrationProvider = 'instagram' | 'tiktok' | 'youtube';
+
+interface DisconnectConfirmationCopy {
+  body: string;
+  cancel: string;
+  confirm: string;
+  title: string;
+}
 
 const INITIAL_VISIBLE_MEDIA_COUNT = 6;
 
@@ -116,6 +135,10 @@ const providerConfigs = {
   youtube: {
     Icon: YoutubeLogoIcon,
     testIdPrefix: 'youtube',
+  },
+  other: {
+    Icon: ImagesSquareIcon,
+    testIdPrefix: 'other',
   },
 } satisfies Record<IntegrationProvider, { Icon: React.ElementType; testIdPrefix: string }>;
 
@@ -356,13 +379,13 @@ const copy = {
   Language,
   {
     common: Record<string, string>;
-    providers: Record<IntegrationProvider, Record<string, string>>;
+    providers: Record<LegacyIntegrationProvider, Record<string, string>>;
   }
 >;
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
-  const { i18n } = useTranslation();
+  const { i18n, t: translate } = useTranslation();
   const [searchParams] = useSearchParams();
   const language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
   const t = copy[language];
@@ -371,6 +394,7 @@ export function Page(): React.JSX.Element {
   const [page, setPage] = React.useState<IntegrationMediaPage | null>(null);
   const [media, setMedia] = React.useState<IntegrationMedia[]>([]);
   const [error, setError] = React.useState<string>('');
+  const [destinations, setDestinations] = React.useState<IntegrationDestination[]>([]);
   const [enabledProviders, setEnabledProviders] = React.useState<IntegrationProvider[]>([]);
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [isDisconnecting, setIsDisconnecting] = React.useState(false);
@@ -378,7 +402,37 @@ export function Page(): React.JSX.Element {
   const [isSaving, setIsSaving] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
-  const providerText = t.providers[activeTab];
+  const providerText: Record<string, string> =
+    activeTab === 'other'
+      ? {
+          connect: translate('dashboard.profiles.detail.integrations.other.addMedia'),
+          connectedNoSync: '',
+          empty: translate('dashboard.profiles.detail.integrations.other.empty'),
+          emptySelected: translate('dashboard.profiles.detail.integrations.other.emptySelected'),
+          editMedia: translate('dashboard.profiles.detail.integrations.other.editMedia'),
+          filterLabel: translate('dashboard.profiles.detail.integrations.other.filterLabel'),
+          hint: translate('dashboard.profiles.detail.integrations.other.hint'),
+          label: translate('dashboard.profiles.detail.integrations.other.label'),
+          maxSelected: translate('dashboard.profiles.detail.integrations.other.maxSelected'),
+          noConnection: translate('dashboard.profiles.detail.integrations.other.noConnection'),
+          observationPlaceholder: translate('dashboard.profiles.detail.integrations.other.descriptionPlaceholder'),
+          oauthLocalWarning: '',
+          reconnect: '',
+          synced: '',
+        }
+      : t.providers[activeTab as LegacyIntegrationProvider];
+  const disconnectConfirmation: DisconnectConfirmationCopy | null = isDisconnectableProvider(activeTab)
+    ? {
+        body: translate(
+          `dashboard.profiles.detail.integrations.disconnectConfirmation.${activeTab}.body`
+        ),
+        cancel: translate('dashboard.profiles.detail.integrations.disconnectConfirmation.cancel'),
+        confirm: translate('dashboard.profiles.detail.integrations.disconnectConfirmation.confirm'),
+        title: translate(
+          `dashboard.profiles.detail.integrations.disconnectConfirmation.${activeTab}.title`
+        ),
+      }
+    : null;
 
   React.useEffect(() => {
     if (providerFromQuery) {
@@ -407,16 +461,20 @@ export function Page(): React.JSX.Element {
         return;
       }
 
-      const nextPage = await getIntegrationMedia(profileId, activeTab);
+      const [nextPage, nextDestinations] = await Promise.all([
+        getIntegrationMedia(profileId, activeTab, language),
+        activeTab === 'other' ? getIntegrationDestinations(language) : Promise.resolve([]),
+      ]);
       setPage(nextPage);
       setMedia(nextPage.media);
+      setDestinations(nextDestinations);
     } catch (err) {
       logger.error(err);
       setError(getErrorMessage(err, t.common.error));
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, profileId, t.common.error]);
+  }, [activeTab, language, profileId, t.common.error]);
 
   React.useEffect(() => {
     loadIntegration().catch((err) => {
@@ -427,7 +485,7 @@ export function Page(): React.JSX.Element {
   React.useEffect(() => {
     const connectedProvider = normalizeProvider(searchParams.get('provider'));
 
-    if (connectedProvider && searchParams.get('connected') === '1') {
+    if (connectedProvider && connectedProvider !== 'other' && searchParams.get('connected') === '1') {
       const messages = t.providers[connectedProvider];
 
       if (searchParams.get('synced') === '0') {
@@ -560,11 +618,54 @@ export function Page(): React.JSX.Element {
     [loadIntegration, profileId, t.common.error, t.common.uploaded]
   );
 
+  const handleOtherMediaSave = React.useCallback(
+    async (input: OtherMediaInput, mediaId?: number | string): Promise<void> => {
+      setIsUploading(true);
+
+      try {
+        if (mediaId === undefined) {
+          if (!input.file) {
+            throw new Error(
+              translate('dashboard.profiles.detail.integrations.other.validation.fileRequired')
+            );
+          }
+
+          const uploadInput: OtherMediaUploadInput = {
+            ...input,
+            file: input.file,
+            rightsConfirmed: Boolean(input.rightsConfirmed),
+          };
+          await uploadOtherMedia(profileId, uploadInput, language);
+          trackAnalyticsEvent('integration_media_added', { media_type: 'upload', provider: 'other' });
+        } else {
+          await updateOtherMedia(profileId, mediaId, input, language);
+          trackAnalyticsEvent('integration_media_updated', { provider: 'other' });
+        }
+
+        await loadIntegration();
+        toast.success(
+          translate(
+            `dashboard.profiles.detail.integrations.other.${mediaId === undefined ? 'uploaded' : 'updated'}`
+          )
+        );
+      } catch (err) {
+        logger.error(err);
+        toast.error(getErrorMessage(err, t.common.error));
+        throw err;
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [language, loadIntegration, profileId, t.common.error, translate]
+  );
+
   const handleDeleteMedia = React.useCallback(
     async (mediaId: number | string): Promise<void> => {
       try {
         if (activeTab === 'youtube') {
           await deleteYouTubeMedia(profileId, mediaId);
+        } else if (activeTab === 'other') {
+          await deleteOtherMedia(profileId, mediaId);
         } else {
           await deleteOnlyFansMedia(profileId, mediaId);
         }
@@ -577,7 +678,7 @@ export function Page(): React.JSX.Element {
     [activeTab, loadIntegration, profileId, t.common.error]
   );
 
-  const handleDisconnect = React.useCallback(async (): Promise<void> => {
+  const handleDisconnect = React.useCallback(async (): Promise<boolean> => {
     setIsDisconnecting(true);
 
     try {
@@ -585,9 +686,13 @@ export function Page(): React.JSX.Element {
       setPage({ integration: null, media: [], selection_limit: selectionLimit });
       setMedia([]);
       trackAnalyticsEvent('integration_disconnected', { provider: activeTab });
+
+      return true;
     } catch (err) {
       logger.error(err);
       toast.error(getErrorMessage(err, t.common.error));
+
+      return false;
     } finally {
       setIsDisconnecting(false);
     }
@@ -691,7 +796,11 @@ export function Page(): React.JSX.Element {
                       icon={<Icon />}
                       iconPosition="start"
                       key={typedProvider}
-                      label={t.providers[typedProvider].label}
+                      label={
+                        typedProvider === 'other'
+                          ? translate('dashboard.profiles.detail.integrations.other.label')
+                          : t.providers[typedProvider].label
+                      }
                       value={typedProvider}
                     />
                   );
@@ -701,6 +810,8 @@ export function Page(): React.JSX.Element {
             <CardContent>
               <IntegrationPanel
                 common={t.common}
+                destinations={destinations}
+                disconnectConfirmation={disconnectConfirmation}
                 isConnecting={isConnecting}
                 isDisconnecting={isDisconnecting}
                 isLoading={isLoading}
@@ -712,6 +823,7 @@ export function Page(): React.JSX.Element {
                 onDeleteMedia={handleDeleteMedia}
                 onDisconnect={handleDisconnect}
                 onObservationChange={handleObservationChange}
+                onOtherMediaSave={handleOtherMediaSave}
                 onOnlyFansConnect={handleOnlyFansConnect}
                 onOnlyFansUpload={handleOnlyFansUpload}
                 onSave={handleSave}
@@ -736,6 +848,8 @@ export function Page(): React.JSX.Element {
 
 interface IntegrationPanelProps {
   common: (typeof copy)['es']['common'];
+  destinations: IntegrationDestination[];
+  disconnectConfirmation: DisconnectConfirmationCopy | null;
   isConnecting: boolean;
   isDisconnecting: boolean;
   isLoading: boolean;
@@ -746,14 +860,15 @@ interface IntegrationPanelProps {
   page: IntegrationMediaPage | null;
   provider: IntegrationProvider;
   providerConfig: (typeof providerConfigs)[IntegrationProvider];
-  providerText: (typeof copy)['es']['providers'][IntegrationProvider];
+  providerText: Record<string, string>;
   selectedCount: number;
   selectionLimit: number;
   onConnect: () => void;
-  onDisconnect: () => void;
+  onDisconnect: () => Promise<boolean>;
   onDeleteMedia: (mediaId: number | string) => Promise<void>;
   onOnlyFansConnect: (input: OnlyFansConnectionInput) => Promise<void>;
   onOnlyFansUpload: (input: OnlyFansMediaUploadInput) => Promise<void>;
+  onOtherMediaSave: (input: OtherMediaInput, mediaId?: number | string) => Promise<void>;
   onObservationChange: (mediaId: number | string, observation: string) => void;
   onSave: () => void;
   onSync: () => void;
@@ -764,6 +879,8 @@ interface IntegrationPanelProps {
 
 function IntegrationPanel({
   common,
+  destinations,
+  disconnectConfirmation,
   isConnecting,
   isDisconnecting,
   isLoading,
@@ -782,6 +899,7 @@ function IntegrationPanel({
   onDeleteMedia,
   onOnlyFansConnect,
   onOnlyFansUpload,
+  onOtherMediaSave,
   onObservationChange,
   onSave,
   onSync,
@@ -792,8 +910,11 @@ function IntegrationPanel({
   const localRedirectUri = page?.oauth?.uses_local_redirect ? page.oauth.redirect_uri : null;
   const [mediaFilter, setMediaFilter] = React.useState<MediaFilter>('all');
   const [isAddingOnlyFansMedia, setIsAddingOnlyFansMedia] = React.useState(false);
+  const [isAddingOtherMedia, setIsAddingOtherMedia] = React.useState(false);
   const [isEditingOnlyFans, setIsEditingOnlyFans] = React.useState(false);
+  const [editingOtherMedia, setEditingOtherMedia] = React.useState<IntegrationMedia | null>(null);
   const [isAddingYouTubeMedia, setIsAddingYouTubeMedia] = React.useState(false);
+  const [isDisconnectConfirmationOpen, setIsDisconnectConfirmationOpen] = React.useState(false);
   const [visibleMediaCount, setVisibleMediaCount] = React.useState(INITIAL_VISIBLE_MEDIA_COUNT);
   const filteredMedia = React.useMemo(
     () => (mediaFilter === 'selected' ? media.filter((item) => item.selected) : media),
@@ -815,8 +936,11 @@ function IntegrationPanel({
   React.useEffect(() => {
     setMediaFilter('all');
     setIsAddingOnlyFansMedia(false);
+    setIsAddingOtherMedia(false);
     setIsEditingOnlyFans(false);
+    setEditingOtherMedia(null);
     setIsAddingYouTubeMedia(false);
+    setIsDisconnectConfirmationOpen(false);
   }, [provider]);
 
   if (isLoading) {
@@ -828,6 +952,55 @@ function IntegrationPanel({
   }
 
   if (!page?.integration) {
+    if (provider === 'other') {
+      return (
+        <React.Fragment>
+          <Stack
+            spacing={2}
+            sx={{
+              alignItems: 'flex-start',
+              border: '1px dashed var(--mui-palette-divider)',
+              borderRadius: 1,
+              p: 3,
+            }}
+          >
+            <Stack spacing={0.75}>
+              <Typography variant="h6">{providerText.label}</Typography>
+              <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
+                {providerText.noConnection}
+              </Typography>
+            </Stack>
+            <Button
+              data-testid="other-add-media-button"
+              disabled={isAddingOtherMedia}
+              onClick={() => {
+                setEditingOtherMedia(null);
+                setIsAddingOtherMedia(true);
+              }}
+              startIcon={<UploadSimpleIcon />}
+              variant="contained"
+            >
+              {common.addMedia}
+            </Button>
+          </Stack>
+          <OtherMediaDialog
+            destinations={destinations}
+            isSaving={isUploading}
+            label={common.addMedia}
+            onClose={() => {
+              setIsAddingOtherMedia(false);
+            }}
+            onSave={async (input) => {
+              await onOtherMediaSave(input);
+              setIsAddingOtherMedia(false);
+            }}
+            open={isAddingOtherMedia}
+            selectionAvailable={selectedCount < selectionLimit}
+          />
+        </React.Fragment>
+      );
+    }
+
     if (provider === 'onlyfans') {
       return <OnlyFansAccountForm isSaving={isConnecting} onSave={onOnlyFansConnect} providerText={providerText} />;
     }
@@ -900,7 +1073,7 @@ function IntegrationPanel({
           ) : null}
         </Stack>
         <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {provider !== 'onlyfans' && provider !== 'youtube' ? (
+          {provider !== 'onlyfans' && provider !== 'other' && provider !== 'youtube' ? (
             <React.Fragment>
               <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
                 {isSyncing ? `${common.sync}...` : common.sync}
@@ -939,6 +1112,19 @@ function IntegrationPanel({
                 {providerText.reconnect}
               </Button>
             </React.Fragment>
+          ) : provider === 'other' ? (
+            <Button
+              data-testid="other-add-media-button"
+              disabled={isAddingOtherMedia}
+              onClick={() => {
+                setEditingOtherMedia(null);
+                setIsAddingOtherMedia(true);
+              }}
+              startIcon={<UploadSimpleIcon />}
+              variant="contained"
+            >
+              {common.addMedia}
+            </Button>
           ) : (
             <Button
               data-testid="youtube-add-media-button"
@@ -952,15 +1138,19 @@ function IntegrationPanel({
               {addYouTubeVideoLabel}
             </Button>
           )}
-          <Button
-            color="error"
-            disabled={isDisconnecting}
-            onClick={onDisconnect}
-            startIcon={<TrashIcon />}
-            variant="outlined"
-          >
-            {common.disconnect}
-          </Button>
+          {disconnectConfirmation ? (
+            <Button
+              color="error"
+              disabled={isDisconnecting}
+              onClick={() => {
+                setIsDisconnectConfirmationOpen(true);
+              }}
+              startIcon={<TrashIcon />}
+              variant="outlined"
+            >
+              {common.disconnect}
+            </Button>
+          ) : null}
         </Stack>
       </Stack>
 
@@ -1006,6 +1196,26 @@ function IntegrationPanel({
           }}
           providerText={providerText}
           selectionAvailable={selectedCount < selectionLimit}
+        />
+      ) : null}
+
+      {provider === 'other' ? (
+        <OtherMediaDialog
+          destinations={destinations}
+          editingMedia={editingOtherMedia}
+          isSaving={isUploading}
+          label={editingOtherMedia ? providerText.editMedia : common.addMedia}
+          onClose={() => {
+            setIsAddingOtherMedia(false);
+            setEditingOtherMedia(null);
+          }}
+          onSave={async (input) => {
+            await onOtherMediaSave(input, editingOtherMedia?.id);
+            setIsAddingOtherMedia(false);
+            setEditingOtherMedia(null);
+          }}
+          open={isAddingOtherMedia || Boolean(editingOtherMedia)}
+          selectionAvailable={selectedCount < selectionLimit || Boolean(editingOtherMedia?.selected)}
         />
       ) : null}
 
@@ -1105,7 +1315,17 @@ function IntegrationPanel({
                 common={common}
                 item={item}
                 key={item.id}
-                onDeleteMedia={provider === 'onlyfans' || provider === 'youtube' ? onDeleteMedia : undefined}
+                onDeleteMedia={
+                  provider === 'onlyfans' || provider === 'other' || provider === 'youtube' ? onDeleteMedia : undefined
+                }
+                onEditMedia={
+                  provider === 'other'
+                    ? (itemToEdit) => {
+                        setIsAddingOtherMedia(false);
+                        setEditingOtherMedia(itemToEdit);
+                      }
+                    : undefined
+                }
                 onObservationChange={onObservationChange}
                 onToggleSelected={onToggleSelected}
                 provider={provider}
@@ -1145,14 +1365,105 @@ function IntegrationPanel({
       ) : (
         <Stack spacing={2} sx={{ alignItems: 'flex-start', py: 2 }}>
           <Typography color="text.secondary">{providerText.empty}</Typography>
-          {provider !== 'onlyfans' && provider !== 'youtube' ? (
+          {provider !== 'onlyfans' && provider !== 'other' && provider !== 'youtube' ? (
             <Button disabled={isSyncing} onClick={onSync} startIcon={<ArrowsClockwiseIcon />} variant="outlined">
               {isSyncing ? `${common.sync}...` : common.sync}
             </Button>
           ) : null}
         </Stack>
       )}
+      {disconnectConfirmation ? (
+        <Dialog
+          aria-labelledby="integration-disconnect-confirmation-title"
+          fullWidth
+          maxWidth="sm"
+          onClose={() => {
+            if (!isDisconnecting) {
+              setIsDisconnectConfirmationOpen(false);
+            }
+          }}
+          open={isDisconnectConfirmationOpen}
+        >
+          <DialogTitle id="integration-disconnect-confirmation-title">
+            {disconnectConfirmation.title}
+          </DialogTitle>
+          <DialogContent>
+            <Typography color="text.secondary" variant="body2">
+              {disconnectConfirmation.body}
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button
+              disabled={isDisconnecting}
+              onClick={() => {
+                setIsDisconnectConfirmationOpen(false);
+              }}
+            >
+              {disconnectConfirmation.cancel}
+            </Button>
+            <Button
+              color="error"
+              disabled={isDisconnecting}
+              onClick={() => {
+                void onDisconnect().then((disconnected) => {
+                  if (disconnected) {
+                    setIsDisconnectConfirmationOpen(false);
+                  }
+                });
+              }}
+              variant="contained"
+            >
+              {isDisconnecting ? `${common.disconnect}...` : disconnectConfirmation.confirm}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      ) : null}
     </Stack>
+  );
+}
+
+function OtherMediaDialog({
+  destinations,
+  editingMedia,
+  isSaving,
+  label,
+  onClose,
+  onSave,
+  open,
+  selectionAvailable,
+}: {
+  destinations: IntegrationDestination[];
+  editingMedia?: IntegrationMedia | null;
+  isSaving: boolean;
+  label: string;
+  onClose: () => void;
+  onSave: (input: OtherMediaInput) => Promise<void>;
+  open: boolean;
+  selectionAvailable: boolean;
+}): React.JSX.Element {
+  return (
+    <Dialog
+      aria-label={label}
+      fullWidth
+      maxWidth="sm"
+      onClose={() => {
+        if (!isSaving) {
+          onClose();
+        }
+      }}
+      open={open}
+    >
+      <DialogContent sx={{ p: { sm: 3, xs: 2 } }}>
+        <OtherMediaForm
+          destinations={destinations}
+          editingMedia={editingMedia}
+          isSaving={isSaving}
+          onCancel={onClose}
+          onSave={onSave}
+          selectionAvailable={selectionAvailable}
+        />
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -1577,10 +1888,11 @@ interface IntegrationMediaCardProps {
   item: IntegrationMedia;
   provider: IntegrationProvider;
   providerConfig: (typeof providerConfigs)[IntegrationProvider];
-  providerText: (typeof copy)['es']['providers'][IntegrationProvider];
+  providerText: Record<string, string>;
   selectedCount: number;
   selectionLimit: number;
   onDeleteMedia?: (mediaId: number | string) => Promise<void>;
+  onEditMedia?: (media: IntegrationMedia) => void;
   onObservationChange: (mediaId: number | string, observation: string) => void;
   onToggleSelected: (mediaId: number | string, checked: boolean) => void;
 }
@@ -1595,6 +1907,7 @@ function IntegrationMediaCard({
   selectionLimit,
   onObservationChange,
   onDeleteMedia,
+  onEditMedia,
   onToggleSelected,
 }: IntegrationMediaCardProps): React.JSX.Element {
   const isVideo = item.media_type?.trim().toUpperCase().includes('VIDEO') ?? false;
@@ -1679,6 +1992,27 @@ function IntegrationMediaCard({
               </IconButton>
             </Tooltip>
           ) : null}
+          {onEditMedia ? (
+            <Tooltip title={providerText.editMedia}>
+              <IconButton
+                aria-label={providerText.editMedia}
+                data-testid={`${providerConfig.testIdPrefix}-media-edit`}
+                onClick={() => {
+                  onEditMedia(item);
+                }}
+                size="small"
+                sx={{
+                  bgcolor: 'rgba(0, 0, 0, 0.7)',
+                  bottom: 12,
+                  color: 'common.white',
+                  left: 12,
+                  position: 'absolute',
+                }}
+              >
+                <PencilSimpleIcon />
+              </IconButton>
+            </Tooltip>
+          ) : null}
           {isVideo && playback ? (
             <Tooltip title={playVideoLabel}>
               <IconButton
@@ -1727,7 +2061,7 @@ function IntegrationMediaCard({
               {item.caption}
             </Typography>
           ) : null}
-          {item.caption ? (
+          {item.caption && provider !== 'other' ? (
             <Button
               disabled={!item.selected}
               onClick={() => {
@@ -1739,21 +2073,25 @@ function IntegrationMediaCard({
               {common.useCaption}
             </Button>
           ) : null}
-          <OutlinedInput
-            disabled={!item.selected}
-            fullWidth
-            multiline
-            onChange={(event) => {
-              onObservationChange(item.id, event.target.value);
-            }}
-            placeholder={providerText.observationPlaceholder}
-            rows={3}
-            value={item.observation ?? ''}
-          />
+          {provider !== 'other' ? (
+            <OutlinedInput
+              disabled={!item.selected}
+              fullWidth
+              multiline
+              onChange={(event) => {
+                onObservationChange(item.id, event.target.value);
+              }}
+              placeholder={providerText.observationPlaceholder}
+              rows={3}
+              value={item.observation ?? ''}
+            />
+          ) : item.destination_label ? (
+            <Chip label={item.destination_label} size="small" sx={{ alignSelf: 'flex-start' }} variant="outlined" />
+          ) : null}
           {item.permalink ? (
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
               <Button component="a" href={item.permalink} rel="noreferrer" size="small" target="_blank" variant="text">
-                {providerText.label}
+                {provider === 'other' && item.action_label ? item.action_label : providerText.label}
               </Button>
               {provider === 'youtube' && item.channel_url ? (
                 <Button
@@ -1842,7 +2180,9 @@ function IntegrationMediaCard({
           <DialogActions>
             {item.permalink ? (
               <Button component="a" href={item.permalink} rel="noreferrer" target="_blank">
-                {interpolate(common.openOnProvider, { provider: providerText.label })}
+                {provider === 'other' && item.action_label
+                  ? item.action_label
+                  : interpolate(common.openOnProvider, { provider: providerText.label })}
               </Button>
             ) : null}
             {provider === 'youtube' && item.channel_url ? (
@@ -1991,8 +2331,18 @@ function getInstagramEmbedUrl(value?: null | string): string | null {
   }
 }
 
+function isDisconnectableProvider(value: IntegrationProvider): value is DisconnectableIntegrationProvider {
+  return value === 'instagram' || value === 'tiktok' || value === 'youtube';
+}
+
 function normalizeProvider(value: null | string): IntegrationProvider | null {
-  return value === 'instagram' || value === 'onlyfans' || value === 'tiktok' || value === 'youtube' ? value : null;
+  return value === 'instagram' ||
+    value === 'onlyfans' ||
+    value === 'other' ||
+    value === 'tiktok' ||
+    value === 'youtube'
+    ? value
+    : null;
 }
 
 function isValidYouTubeUrl(value: string, kind: 'channel' | 'video'): boolean {

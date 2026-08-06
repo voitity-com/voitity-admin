@@ -313,7 +313,11 @@ function ProviderFunnel({ providers, t }: { providers: ProfileInsightsProvider[]
             </TableRow></TableHead>
             <TableBody>{providers.map((provider) => (
               <TableRow key={provider.provider}>
-                <TableCell sx={{ textTransform: 'capitalize' }}>{provider.provider}</TableCell>
+                <TableCell sx={{ textTransform: 'capitalize' }}>
+                  {provider.provider === 'other'
+                    ? t('dashboard.profiles.detail.integrations.other.label')
+                    : provider.provider}
+                </TableCell>
                 <TableCell align="right">{provider.shown}</TableCell><TableCell align="right">{provider.opened}</TableCell>
                 <TableCell align="right">{provider.external_clicks}</TableCell>
                 <TableCell align="right">{provider.video_clicks}</TableCell>

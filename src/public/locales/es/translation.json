@@ -1368,6 +1368,65 @@
         "errors": {
           "generic": "Algo salió mal"
         },
+        "integrations": {
+          "disconnectConfirmation": {
+            "cancel": "Cancelar",
+            "confirm": "Sí, desconectar",
+            "instagram": {
+              "body": "Al desconectar Instagram se eliminarán las publicaciones sincronizadas, la selección actual y sus observaciones. Si conectas nuevamente la misma cuenta u otra, deberás sincronizar y seleccionar otra vez las publicaciones que quieras usar y volver a agregar la descripción u observación de cada una.",
+              "title": "¿Desconectar Instagram?"
+            },
+            "tiktok": {
+              "body": "Al desconectar TikTok se eliminarán las publicaciones sincronizadas, la selección actual y sus observaciones. Si conectas nuevamente la misma cuenta u otra, deberás sincronizar y seleccionar otra vez las publicaciones que quieras usar y volver a agregar la descripción u observación de cada una.",
+              "title": "¿Desconectar TikTok?"
+            },
+            "youtube": {
+              "body": "Al desconectar YouTube se eliminarán el canal y los videos incluidos, junto con la selección actual y sus descripciones. Si agregas nuevamente el mismo canal u otro, deberás incluir otra vez los videos que quieras usar y volver a agregar la descripción de cada uno.",
+              "title": "¿Desconectar YouTube?"
+            }
+          },
+          "other": {
+            "actionPreview": "El botón público dirá: {{action}}",
+            "addMedia": "Agregar contenido",
+            "cancel": "Cancelar",
+            "createTitle": "Agregar imagen o video",
+            "descriptionPlaceholder": "Explica cuándo debería recomendarse este contenido.",
+            "editMedia": "Editar contenido",
+            "editTitle": "Editar contenido",
+            "empty": "Aún no has agregado imágenes o videos en Otro.",
+            "emptySelected": "No hay contenido seleccionado en Otro.",
+            "fields": {
+              "customDestination": "Nombre del otro destino",
+              "description": "Descripción",
+              "destination": "Destino del enlace",
+              "file": "Seleccionar imagen o video",
+              "link": "Enlace de destino",
+              "rights": "Confirmo que soy propietario de este contenido o tengo autorización para publicarlo y usarlo.",
+              "selected": "Usar en las conversaciones del perfil"
+            },
+            "fileHelp": "JPG, PNG, WEBP o GIF hasta 10 MB; MP4, MOV o WEBM hasta 100 MB.",
+            "filterLabel": "Filtro de contenido de Otro",
+            "formHelp": "La descripción sirve como contexto para el chat y el destino construye automáticamente el texto del botón.",
+            "hint": "Agrega imágenes o videos propios con descripción y enlace. Puedes seleccionar hasta {{limit}} para las conversaciones del perfil.",
+            "label": "Otro",
+            "maxSelected": "Puedes seleccionar hasta {{limit}} contenidos de Otro.",
+            "noConnection": "Agrega imágenes o videos propios, una descripción y el enlace al que debe llevar el botón.",
+            "save": "Guardar contenido",
+            "saving": "Guardando...",
+            "updated": "Contenido actualizado",
+            "uploaded": "Contenido agregado",
+            "validation": {
+              "customMax": "El nombre puede tener máximo 60 caracteres.",
+              "customRequired": "Escribe el nombre del otro destino.",
+              "descriptionMax": "La descripción puede tener máximo 2000 caracteres.",
+              "descriptionRequired": "Escribe una descripción.",
+              "destinationRequired": "Selecciona el destino del enlace.",
+              "fileRequired": "Selecciona una imagen o un video.",
+              "linkInvalid": "Escribe un enlace http o https válido.",
+              "rightsRequired": "Debes confirmar los derechos sobre el contenido."
+            }
+          }
+        },
       "nav": {
         "avatar": "Avatar",
         "chats": "Chats",
