@@ -8,10 +8,10 @@ interface ApiEnvelope<T> {
 
 interface RequestOptions {
   body?: unknown;
-  method?: 'DELETE' | 'GET' | 'POST' | 'PUT';
+  method?: 'DELETE' | 'GET' | 'PATCH' | 'POST' | 'PUT';
 }
 
-export type IntegrationProvider = 'instagram' | 'onlyfans' | 'tiktok' | 'youtube';
+export type IntegrationProvider = 'instagram' | 'onlyfans' | 'other' | 'tiktok' | 'youtube';
 
 export interface ProfileIntegration {
   expires_at?: null | string;
@@ -28,10 +28,14 @@ export interface ProfileIntegration {
 }
 
 export interface IntegrationMedia {
+  action_label?: null | string;
+  action_type?: null | string;
   age_restricted?: boolean;
   availability?: null | string;
   caption?: null | string;
   channel_url?: null | string;
+  destination_label?: null | string;
+  destination_type?: null | string;
   id: number | string;
   media_type?: null | string;
   media_url?: null | string;
@@ -42,6 +46,13 @@ export interface IntegrationMedia {
   selected: boolean;
   taken_at?: null | string;
   thumbnail_url?: null | string;
+}
+
+export interface IntegrationDestination {
+  action_label: string;
+  action_type: string;
+  label: string;
+  value: string;
 }
 
 export interface IntegrationMediaPage {
@@ -87,6 +98,21 @@ export interface YouTubeMediaInput {
   videoUrl: string;
 }
 
+export interface OtherMediaInput {
+  customDestinationLabel?: string;
+  description: string;
+  destinationType: string;
+  file?: File;
+  link: string;
+  rightsConfirmed?: boolean;
+  selected?: boolean;
+}
+
+export interface OtherMediaUploadInput extends OtherMediaInput {
+  file: File;
+  rightsConfirmed: boolean;
+}
+
 export type InstagramMedia = IntegrationMedia;
 export type InstagramMediaPage = IntegrationMediaPage;
 export type InstagramOAuthDiagnostics = IntegrationOAuthDiagnostics;
@@ -121,14 +147,28 @@ export async function createIntegrationConnectUrl(
 
 export async function getIntegrationMedia(
   profileId: number | string,
-  provider: IntegrationProvider
+  provider: IntegrationProvider,
+  locale?: string
 ): Promise<IntegrationMediaPage> {
+  const query = locale ? `?locale=${encodeURIComponent(locale)}` : '';
   const response = await requestJson<ApiEnvelope<IntegrationMediaPage> | IntegrationMediaPage>(
-    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}/media`,
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/${provider}/media${query}`,
     { method: 'GET' }
   );
 
   return normalizeIntegrationMediaPage(isApiEnvelope<IntegrationMediaPage>(response) ? response.data : response);
+}
+
+export async function getIntegrationDestinations(locale: string): Promise<IntegrationDestination[]> {
+  const response = await requestJson<
+    ApiEnvelope<{ destinations: IntegrationDestination[]; locale: string }> | {
+      destinations: IntegrationDestination[];
+      locale: string;
+    }
+  >(`/api/profile/integration-destinations?locale=${encodeURIComponent(locale)}`, { method: 'GET' });
+  const data = isApiEnvelope<{ destinations: IntegrationDestination[] }>(response) ? response.data : response;
+
+  return Array.isArray(data.destinations) ? data.destinations : [];
 }
 
 export async function syncIntegrationMedia(
@@ -253,6 +293,58 @@ export async function deleteYouTubeMedia(profileId: number | string, mediaId: nu
   );
 }
 
+export async function uploadOtherMedia(
+  profileId: number | string,
+  input: OtherMediaUploadInput,
+  locale: string
+): Promise<IntegrationMedia> {
+  const formData = new FormData();
+  formData.append('file', input.file);
+  formData.append('description', input.description);
+  formData.append('link', input.link);
+  formData.append('destination_type', input.destinationType);
+  formData.append('custom_destination_label', input.customDestinationLabel ?? '');
+  formData.append('rights_confirmed', input.rightsConfirmed ? '1' : '0');
+  formData.append('selected', input.selected ? '1' : '0');
+
+  const response = await requestJson<ApiEnvelope<{ media: IntegrationMedia }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/other/media?locale=${encodeURIComponent(locale)}`,
+    { body: formData, method: 'POST' }
+  );
+
+  return response.data.media;
+}
+
+export async function updateOtherMedia(
+  profileId: number | string,
+  mediaId: number | string,
+  input: OtherMediaInput,
+  locale: string
+): Promise<IntegrationMedia> {
+  const response = await requestJson<ApiEnvelope<{ media: IntegrationMedia }>>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/other/media/${encodeURIComponent(String(mediaId))}?locale=${encodeURIComponent(locale)}`,
+    {
+      body: {
+        custom_destination_label: input.customDestinationLabel ?? '',
+        description: input.description,
+        destination_type: input.destinationType,
+        link: input.link,
+        selected: input.selected ?? false,
+      },
+      method: 'PATCH',
+    }
+  );
+
+  return response.data.media;
+}
+
+export async function deleteOtherMedia(profileId: number | string, mediaId: number | string): Promise<void> {
+  await requestJson(
+    `/api/profile/${encodeURIComponent(String(profileId))}/integrations/other/media/${encodeURIComponent(String(mediaId))}`,
+    { method: 'DELETE' }
+  );
+}
+
 export async function createInstagramConnectUrl(profileId: number | string): Promise<InstagramConnectUrl> {
   return createIntegrationConnectUrl(profileId, 'instagram');
 }
@@ -294,7 +386,11 @@ function providerLabel(provider: IntegrationProvider): string {
     return 'YouTube';
   }
 
-  return provider === 'onlyfans' ? 'OnlyFans' : 'Instagram';
+  if (provider === 'onlyfans') {
+    return 'OnlyFans';
+  }
+
+  return provider === 'other' ? 'Other' : 'Instagram';
 }
 
 async function requestJson<T>(path: string, options: RequestOptions): Promise<T> {

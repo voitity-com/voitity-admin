@@ -1368,6 +1368,65 @@
         "errors": {
           "generic": "Something went wrong"
         },
+        "integrations": {
+          "disconnectConfirmation": {
+            "cancel": "Cancel",
+            "confirm": "Disconnect",
+            "instagram": {
+              "body": "Disconnecting Instagram will remove the synced posts, current selection, and conversation notes. If you later connect the same account or a different one, you will need to sync and select the posts again and add each description or conversation note again.",
+              "title": "Disconnect Instagram?"
+            },
+            "tiktok": {
+              "body": "Disconnecting TikTok will remove the synced posts, current selection, and conversation notes. If you later connect the same account or a different one, you will need to sync and select the posts again and add each description or conversation note again.",
+              "title": "Disconnect TikTok?"
+            },
+            "youtube": {
+              "body": "Disconnecting YouTube will remove the channel and included videos, along with the current selection and their descriptions. If you later add the same channel or a different one, you will need to include the videos again and add each description again.",
+              "title": "Disconnect YouTube?"
+            }
+          },
+          "other": {
+            "actionPreview": "The public button will say: {{action}}",
+            "addMedia": "Add content",
+            "cancel": "Cancel",
+            "createTitle": "Add image or video",
+            "descriptionPlaceholder": "Explain when this content should be recommended.",
+            "editMedia": "Edit content",
+            "editTitle": "Edit content",
+            "empty": "No images or videos have been added under Other yet.",
+            "emptySelected": "No Other content is selected.",
+            "fields": {
+              "customDestination": "Other destination name",
+              "description": "Description",
+              "destination": "Link destination",
+              "file": "Choose image or video",
+              "link": "Destination link",
+              "rights": "I confirm I own this content or have authorization to publish and use it.",
+              "selected": "Use in profile conversations"
+            },
+            "fileHelp": "JPG, PNG, WEBP, or GIF up to 10 MB; MP4, MOV, or WEBM up to 100 MB.",
+            "filterLabel": "Other content filter",
+            "formHelp": "The description becomes chat context and the destination automatically builds the button text.",
+            "hint": "Add owned images or videos with a description and link. You can select up to {{limit}} for profile conversations.",
+            "label": "Other",
+            "maxSelected": "You can select up to {{limit}} Other items.",
+            "noConnection": "Add owned images or videos, a description, and the link the button should open.",
+            "save": "Save content",
+            "saving": "Saving...",
+            "updated": "Content updated",
+            "uploaded": "Content added",
+            "validation": {
+              "customMax": "The name can have at most 60 characters.",
+              "customRequired": "Enter the other destination name.",
+              "descriptionMax": "The description can have at most 2000 characters.",
+              "descriptionRequired": "Enter a description.",
+              "destinationRequired": "Select the link destination.",
+              "fileRequired": "Choose an image or video.",
+              "linkInvalid": "Enter a valid http or https link.",
+              "rightsRequired": "You must confirm the content rights."
+            }
+          }
+        },
       "nav": {
         "avatar": "Avatar",
         "chats": "Chats",
