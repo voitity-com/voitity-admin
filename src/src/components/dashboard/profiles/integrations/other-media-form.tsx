@@ -318,7 +318,14 @@ export function OtherMediaForm({
             render={({ field }) => (
               <React.Fragment>
                 <FormControlLabel
-                  control={<Checkbox checked={field.value} onChange={(_, checked) => field.onChange(checked)} />}
+                  control={
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(_, checked) => {
+                        field.onChange(checked);
+                      }}
+                    />
+                  }
                   label={t(`${translationKey}.fields.rights`)}
                 />
                 {errors.rightsConfirmed ? (
@@ -338,7 +345,9 @@ export function OtherMediaForm({
                 <Checkbox
                   checked={field.value}
                   disabled={!selectionAvailable && !editingMedia?.selected}
-                  onChange={(_, checked) => field.onChange(checked)}
+                  onChange={(_, checked) => {
+                    field.onChange(checked);
+                  }}
                 />
               }
               label={t(`${translationKey}.fields.selected`)}
