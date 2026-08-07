@@ -234,7 +234,7 @@
             }
           },
           "avatarAndVoice": {
-            "answer": "Open Profiles and select the presence you want to configure. Under Avatar, upload a JPG, PNG, or WEBP image, adjust the crop, and save it; once processing finishes, select the generated avatar. Then open Voice, choose the language, and select Clone your voice. Find a quiet place, read the complete guided text naturally, review the recording, and save the sample. Finally, test the voice and enable it for the profile. Only use your own image and voice, or material you are expressly authorized to use.",
+            "answer": "Open Profiles and select the presence you want to configure. Under Avatar, upload a JPG, PNG, or WEBP image, adjust the crop, and save it; once processing finishes, select the generated avatar. Then open Voice, choose the language, and select Clone your voice. Find a quiet place, read the complete guided text naturally, review the recording, and save the sample. Finally, test the clone of your own voice and enable it for the profile. Only use your own image and voice, or material you are expressly authorized to use.",
             "question": "How do I create my avatar and clone my voice?",
             "video": {
               "iframeTitle": "Tutorial for creating your avatar and cloning your voice on Bigmelo",
@@ -257,7 +257,7 @@
             "question": "Does Bigmelo store my full card details?"
           },
           "createPresence": {
-            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources such as your resume, create the avatar and authorized voice, review content quality, and publish your link.",
+            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources such as your resume, create the avatar and clone your own voice, review content quality, and publish your link.",
             "question": "How do I create my digital presence?",
             "video": {
               "iframeTitle": "Tutorial for creating your digital presence on Bigmelo",
@@ -295,7 +295,7 @@
             "question": "What currency is used for payments?"
           },
           "plans": {
-            "answer": "Monthly and annual Starter plans include one published presence, avatar, authorized voice, text and audio conversations, products, and social connections. Current prices and limits are shown in Billing & plans.",
+            "answer": "Monthly and annual Starter plans include one published presence, an avatar, a clone of your own voice, text and audio conversations, products, and social connections. Current prices and limits are shown in Billing & plans.",
             "question": "What is included in Bigmelo plans?"
           },
           "products": {
@@ -947,8 +947,8 @@
             "monthly": "20,000 TTS characters included"
           },
           "ttsCharacters": "{{countLabel}} TTS characters included",
-          "voice_one": "{{countLabel}} authorized voice clone",
-          "voice_other": "{{countLabel}} authorized voice clones"
+          "voice_one": "{{countLabel}} clone of your own voice",
+          "voice_other": "{{countLabel}} clones of your own voice"
         },
         "sections": {
           "features": "Features",
@@ -1499,7 +1499,7 @@
           "validation": {
             "tooLong": "{{count}}/{{max}} characters. Shorten the text."
           },
-          "voiceHint": "You can save the texts now. To generate audio you need a cloned voice; meanwhile you can also record and save manual audio."
+          "voiceHint": "You can save the texts now. To generate audio you need a clone of your own voice; meanwhile you can also record and save manual audio."
         },
         "profile": {
           "audio": {
@@ -1581,7 +1581,7 @@
             "description": "Description",
             "name": "Name",
             "source": "Approved synced source",
-            "voice": "Cloned voice"
+            "voice": "Your cloned voice"
           },
           "title": "Publication",
           "toasts": {
@@ -1630,10 +1630,10 @@
               "title": "Upload and sync a source"
             },
             "voice": {
-              "description": "The cloned voice lets the profile answer with audio. Clone at least one voice before activating and publishing.",
+              "description": "The clone of your own voice lets the profile answer with audio. Clone your voice before activating and publishing.",
               "eyebrow": "Voice",
-              "mobileDescription": "Set up the voice so the profile can answer with audio before you publish it.",
-              "title": "Clone the voice"
+              "mobileDescription": "Set up a clone of your own voice so the profile can answer with audio before you publish it.",
+              "title": "Clone your voice"
             }
           }
         },
@@ -1886,12 +1886,12 @@
           "cloneIntroTitle": "Prepare your voice sample",
           "continueReading": "Keep reading",
           "countdownTitle": "Get ready, recording starts when the countdown ends.",
-          "createSubheader": "Create voice and upload a voice sample",
+          "createSubheader": "Clone your own voice and upload a voice sample",
           "duration": "Duration: {{duration}}s",
           "estimatedDuration": "Approximate read: 3 minutes",
           "errors": {
             "audioNotReturned": "The API did not return audio.",
-            "createBeforeUpload": "Create a voice before uploading a sample.",
+            "createBeforeUpload": "Create your voice clone before uploading a sample.",
             "encoderFailed": "MP3 encoder failed to load.",
             "enterText": "Enter text to generate audio.",
             "microphoneAccess": "Unable to access the microphone.",
@@ -1903,7 +1903,7 @@
 	            "description": "Description",
 	            "language": "Language",
 	            "languageCode": "Language code: {{code}}",
-	            "languageHelper": "Used for voice cloning and sample uploads.",
+	            "languageHelper": "Used when cloning your voice and uploading samples.",
 	            "text": "Text",
 	            "voiceAutoplayDisabledHelper": "Enable profile voice first to allow audio.",
 	            "voiceAutoplayEnabled": "Start with audio on",

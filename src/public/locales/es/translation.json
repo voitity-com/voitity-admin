@@ -234,7 +234,7 @@
             }
           },
           "avatarAndVoice": {
-            "answer": "Abre Perfiles y selecciona la presencia que quieres configurar. En Avatar, sube una imagen JPG, PNG o WEBP, ajusta el encuadre y guarda; cuando termine el procesamiento, selecciona el avatar generado. Después entra en Voz, elige el idioma y pulsa Clonar voz. Busca un lugar silencioso, lee de forma natural el texto guiado completo, revisa la grabación y guarda la muestra. Finalmente, prueba la voz y habilítala para el perfil. Utiliza únicamente tu propia imagen y voz, o material para el que tengas autorización expresa.",
+            "answer": "Abre Perfiles y selecciona la presencia que quieres configurar. En Avatar, sube una imagen JPG, PNG o WEBP, ajusta el encuadre y guarda; cuando termine el procesamiento, selecciona el avatar generado. Después entra en Voz, elige el idioma y pulsa Clonar tu voz. Busca un lugar silencioso, lee de forma natural el texto guiado completo, revisa la grabación y guarda la muestra. Finalmente, prueba el clon de tu propia voz y habilítalo para el perfil. Utiliza únicamente tu propia imagen y voz, o material para el que tengas autorización expresa.",
             "question": "¿Cómo crear mi avatar y clonar mi voz?",
             "video": {
               "iframeTitle": "Tutorial para crear tu avatar y clonar tu voz en Bigmelo",
@@ -257,7 +257,7 @@
             "question": "¿Bigmelo almacena los datos completos de mi tarjeta?"
           },
           "createPresence": {
-            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes como tu CV, crea el avatar y la voz autorizada, revisa la calidad del contenido y publica tu enlace.",
+            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes como tu CV, crea el avatar y clona tu propia voz, revisa la calidad del contenido y publica tu enlace.",
             "question": "¿Cómo creo mi presencia digital?",
             "video": {
               "iframeTitle": "Tutorial para crear tu presencia digital en Bigmelo",
@@ -295,7 +295,7 @@
             "question": "¿En qué moneda se realizan los pagos?"
           },
           "plans": {
-            "answer": "Los planes Starter mensual y anual incluyen una presencia publicada, avatar, voz autorizada, conversaciones por texto y audio, productos y conexiones sociales. Los precios y límites vigentes se muestran en la sección Facturación y planes.",
+            "answer": "Los planes Starter mensual y anual incluyen una presencia publicada, avatar, un clon de tu propia voz, conversaciones por texto y audio, productos y conexiones sociales. Los precios y límites vigentes se muestran en la sección Facturación y planes.",
             "question": "¿Qué incluyen los planes de Bigmelo?"
           },
           "products": {
@@ -947,8 +947,8 @@
             "monthly": "20.000 caracteres TTS incluidos"
           },
           "ttsCharacters": "{{countLabel}} caracteres TTS incluidos",
-          "voice_one": "{{countLabel}} clon de voz autorizado",
-          "voice_other": "{{countLabel}} clones de voz autorizados"
+          "voice_one": "{{countLabel}} clon de tu propia voz",
+          "voice_other": "{{countLabel}} clones de tu propia voz"
         },
         "sections": {
           "features": "Características",
@@ -1499,7 +1499,7 @@
           "validation": {
             "tooLong": "{{count}}/{{max}} caracteres. Reduce el texto."
           },
-          "voiceHint": "Puedes guardar los textos ahora. Para generar audio necesitas una voz clonada; mientras tanto también puedes grabar y guardar un audio manual."
+          "voiceHint": "Puedes guardar los textos ahora. Para generar audio necesitas un clon de tu propia voz; mientras tanto también puedes grabar y guardar un audio manual."
         },
         "profile": {
           "audio": {
@@ -1581,7 +1581,7 @@
             "description": "Descripción",
             "name": "Nombre",
             "source": "Fuente aprobada y sincronizada",
-            "voice": "Voz clonada"
+            "voice": "Tu voz clonada"
           },
           "title": "Publicación",
           "toasts": {
@@ -1630,10 +1630,10 @@
               "title": "Carga y sincroniza una fuente"
             },
             "voice": {
-              "description": "La voz clonada permite que el perfil responda con audio. Clona al menos una voz antes de activar y publicar.",
+              "description": "El clon de tu propia voz permite que el perfil responda con audio. Clona tu voz antes de activar y publicar.",
               "eyebrow": "Voz",
-              "mobileDescription": "Configura la voz para que el perfil pueda responder con audio antes de publicarlo.",
-              "title": "Clona la voz"
+              "mobileDescription": "Configura un clon de tu propia voz para que el perfil pueda responder con audio antes de publicarlo.",
+              "title": "Clona tu voz"
             }
           }
         },
@@ -1881,17 +1881,17 @@
       },
       "voice": {
           "audio": "Audio",
-          "cloneVoice": "Clonar voz",
+          "cloneVoice": "Clonar tu voz",
           "cloneIntroDescription": "Al iniciar la grabación aparecerá un texto para leer en voz alta. La lectura completa puede durar hasta 3 minutos.",
           "cloneIntroTitle": "Prepara tu muestra de voz",
           "continueReading": "Seguir leyendo",
           "countdownTitle": "Prepárate, la grabación empezará al terminar la cuenta.",
-          "createSubheader": "Crear voz y subir una muestra de voz",
+          "createSubheader": "Clona tu propia voz y sube una muestra de voz",
           "duration": "Duración: {{duration}}s",
           "estimatedDuration": "Lectura aproximada: 3 minutos",
           "errors": {
             "audioNotReturned": "La API no devolvió audio.",
-            "createBeforeUpload": "Crea una voz antes de subir una muestra.",
+            "createBeforeUpload": "Crea el clon de tu voz antes de subir una muestra.",
             "encoderFailed": "No se pudo cargar el codificador MP3.",
             "enterText": "Ingresa texto para generar audio.",
             "microphoneAccess": "No se pudo acceder al micrófono.",
@@ -1903,7 +1903,7 @@
 	            "description": "Descripción",
 	            "language": "Idioma",
 	            "languageCode": "Código de idioma: {{code}}",
-	            "languageHelper": "Se usará al clonar la voz y al subir muestras.",
+	            "languageHelper": "Se usará al clonar tu voz y al subir muestras.",
 	            "text": "Texto",
 	            "voiceAutoplayDisabledHelper": "Activa primero la voz del perfil para permitir audio.",
 	            "voiceAutoplayEnabled": "Iniciar con audio activado",
