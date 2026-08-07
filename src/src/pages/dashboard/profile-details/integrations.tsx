@@ -823,9 +823,9 @@ export function Page(): React.JSX.Element {
                 onDeleteMedia={handleDeleteMedia}
                 onDisconnect={handleDisconnect}
                 onObservationChange={handleObservationChange}
-                onOtherMediaSave={handleOtherMediaSave}
                 onOnlyFansConnect={handleOnlyFansConnect}
                 onOnlyFansUpload={handleOnlyFansUpload}
+                onOtherMediaSave={handleOtherMediaSave}
                 onSave={handleSave}
                 onSync={handleSync}
                 onToggleSelected={handleToggleSelected}
