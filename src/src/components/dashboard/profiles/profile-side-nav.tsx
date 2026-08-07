@@ -15,8 +15,8 @@ import Typography from '@mui/material/Typography';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Icon } from '@phosphor-icons/react/dist/lib/types';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
-import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
+import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
@@ -130,38 +130,6 @@ export function ProfileSideNav(): React.JSX.Element {
         icon: 'voice',
       },
       {
-        key: 'messages',
-        title: t('dashboard.profiles.detail.nav.messages'),
-        href: paths.dashboard.profileDetails.messages(profileId),
-        icon: 'messages',
-      },
-      {
-        key: 'settings',
-        title: t('dashboard.profiles.detail.nav.settings'),
-        href: paths.dashboard.profileDetails.settings(profileId),
-        icon: 'settings',
-      },
-      ...(showIntegrations
-        ? [
-            {
-              key: 'integrations',
-              title: t('dashboard.profiles.detail.nav.integrations'),
-              href: paths.dashboard.profileDetails.integrations(profileId),
-              icon: 'integrations',
-            },
-          ]
-        : []),
-      ...(showProducts
-        ? [
-            {
-              key: 'products',
-              title: t('dashboard.profiles.detail.nav.products'),
-              href: paths.dashboard.profileDetails.products(profileId),
-              icon: 'products',
-            },
-          ]
-        : []),
-      {
         key: 'dataGroup',
         title: t('dashboard.profiles.detail.nav.data'),
         icon: 'data',
@@ -186,6 +154,32 @@ export function ProfileSideNav(): React.JSX.Element {
           },
         ],
       },
+      ...(showIntegrations
+        ? [
+            {
+              key: 'integrations',
+              title: t('dashboard.profiles.detail.nav.integrations'),
+              href: paths.dashboard.profileDetails.integrations(profileId),
+              icon: 'integrations',
+            },
+          ]
+        : []),
+      ...(showProducts
+        ? [
+            {
+              key: 'products',
+              title: t('dashboard.profiles.detail.nav.products'),
+              href: paths.dashboard.profileDetails.products(profileId),
+              icon: 'products',
+            },
+          ]
+        : []),
+      {
+        key: 'messages',
+        title: t('dashboard.profiles.detail.nav.messages'),
+        href: paths.dashboard.profileDetails.messages(profileId),
+        icon: 'messages',
+      },
       {
         key: 'chats',
         title: t('dashboard.profiles.detail.nav.chats'),
@@ -203,6 +197,12 @@ export function ProfileSideNav(): React.JSX.Element {
         title: t('dashboard.profiles.detail.nav.insights'),
         href: paths.dashboard.profileDetails.insights.dashboard(profileId),
         icon: 'insights',
+      },
+      {
+        key: 'settings',
+        title: t('dashboard.profiles.detail.nav.settings'),
+        href: paths.dashboard.profileDetails.settings(profileId),
+        icon: 'settings',
       },
     ],
     [profileId, showIntegrations, showProducts, t]
