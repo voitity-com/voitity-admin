@@ -257,7 +257,7 @@
             "question": "Does Bigmelo store my full card details?"
           },
           "createPresence": {
-            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources such as your resume, create the avatar and clone your own voice, review content quality, and publish your link.",
+            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources with relevant data, create the avatar and clone your own voice, review content quality, and publish your link.",
             "question": "How do I create my digital presence?",
             "video": {
               "iframeTitle": "Tutorial for creating your digital presence on Bigmelo",
@@ -1624,9 +1624,9 @@
               "title": "Review profile quality"
             },
             "source": {
-              "description": "A source is a file or text with profile information, such as a CV, biography, projects, or services. Upload and sync at least one source before publishing.",
+              "description": "A source is a file or text with profile information, such as a biography, projects, services, or other relevant data. Upload and sync at least one source before publishing.",
               "eyebrow": "Sources",
-              "mobileDescription": "Upload a biography, CV, or text and sync it so the AI has reliable information.",
+              "mobileDescription": "Upload a file or add text and sync it so the AI has reliable information.",
               "title": "Upload and sync a source"
             },
             "voice": {
@@ -1665,7 +1665,7 @@
           "addSource": "Add source",
           "approve": "Approve",
           "cancel": "Cancel",
-          "importCv": "Import CV",
+          "save": "Save",
           "previewFile": "View file",
           "selectFile": "Select file",
           "sync": "Sync"
@@ -1677,14 +1677,14 @@
           "facts": "Facts",
           "name": "Name",
           "status": "Status",
-          "text": "CV text",
+          "text": "Source text",
           "type": "Type",
           "updated": "Updated"
         },
         "listSubheader": "Reviewed sources become available to profile conversations.",
         "listTitle": "Imported sources",
         "intro": {
-          "description": "Upload a CV, biography, about-me text, projects, services, achievements, or any document that describes and informs something important about the profile you are creating. Approved information will be used to answer better in conversations.",
+          "description": "Upload a biography, documents, about-me text, projects, services, achievements, or any supported file with important information about the profile you are creating. Approved information will be used to answer better in conversations.",
           "eyebrow": "Profile knowledge",
           "formats": "Accepted formats",
           "title": "Add sources that explain who you are"
@@ -1699,23 +1699,23 @@
           "unknown": "Unknown",
           "uploaded": "Uploaded"
         },
-        "textHelper": "Paste the CV text when a PDF cannot be parsed automatically.",
+        "textHelper": "Paste or enter the source information if the file cannot be parsed automatically or if you want to create it using text only.",
         "textOnlySource": "Text-only source, no uploaded file.",
         "toasts": {
           "approved": "Source approved",
-          "imported": "CV source imported",
+          "imported": "Source saved",
           "synced": "Source synced to data"
         },
         "types": {
-          "cv": "CV",
+          "cv": "File or text",
           "instagram": "Instagram",
           "manual": "Manual",
           "website": "Website"
         },
-        "uploadSubheader": "Upload a CV file and optionally paste extracted text.",
-        "uploadTitle": "Import CV",
+        "uploadSubheader": "Upload a supported file or add information as text. You can use either or both options.",
+        "uploadTitle": "Add source",
         "validation": {
-          "fileOrText": "Select a file or paste CV text.",
+          "fileOrText": "Select a file or add the source text.",
           "nameMax": "Name must be at most 150 characters",
           "textMax": "Text must be at most 50000 characters"
         }

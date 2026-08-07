@@ -346,7 +346,7 @@ export function Page(): React.JSX.Element {
               {t('dashboard.profiles.detail.sources.actions.cancel')}
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {t('dashboard.profiles.detail.sources.actions.importCv')}
+              {t('dashboard.profiles.detail.sources.actions.save')}
             </Button>
           </DialogActions>
         </form>

@@ -257,7 +257,7 @@
             "question": "¿Bigmelo almacena los datos completos de mi tarjeta?"
           },
           "createPresence": {
-            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes como tu CV, crea el avatar y clona tu propia voz, revisa la calidad del contenido y publica tu enlace.",
+            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes con datos relevantes, crea el avatar y clona tu propia voz, revisa la calidad del contenido y publica tu enlace.",
             "question": "¿Cómo creo mi presencia digital?",
             "video": {
               "iframeTitle": "Tutorial para crear tu presencia digital en Bigmelo",
@@ -1624,9 +1624,9 @@
               "title": "Revisa la calidad del perfil"
             },
             "source": {
-              "description": "Una fuente es un archivo o texto con información del perfil, como CV, biografía, proyectos o servicios. Debes cargar y sincronizar al menos una fuente para publicar.",
+              "description": "Una fuente es un archivo o texto con información del perfil, como una biografía, proyectos, servicios u otros datos relevantes. Debes cargar y sincronizar al menos una fuente para publicar.",
               "eyebrow": "Fuentes",
-              "mobileDescription": "Sube una biografía, CV o texto y sincronízalo para que la IA tenga información confiable.",
+              "mobileDescription": "Sube un archivo o agrega texto y sincronízalo para que la IA tenga información confiable.",
               "title": "Carga y sincroniza una fuente"
             },
             "voice": {
@@ -1665,7 +1665,7 @@
           "addSource": "Agregar fuente",
           "approve": "Aprobar",
           "cancel": "Cancelar",
-          "importCv": "Importar CV",
+          "save": "Guardar",
           "previewFile": "Ver archivo",
           "selectFile": "Seleccionar archivo",
           "sync": "Sincronizar"
@@ -1677,14 +1677,14 @@
           "facts": "Datos",
           "name": "Nombre",
           "status": "Estado",
-          "text": "Texto del CV",
+          "text": "Texto de la fuente",
           "type": "Tipo",
           "updated": "Actualizado"
         },
         "listSubheader": "Las fuentes revisadas quedan disponibles para las conversaciones del perfil.",
         "listTitle": "Fuentes importadas",
         "intro": {
-          "description": "Puedes subir tu CV, una biografía, un texto sobre ti, proyectos, servicios, logros o cualquier documento que describa e informe algo importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
+          "description": "Puedes subir una biografía, documentos, textos sobre ti, proyectos, servicios, logros o cualquier archivo compatible con información importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
           "eyebrow": "Conocimiento del perfil",
           "formats": "Formatos aceptados",
           "title": "Carga fuentes que expliquen quién eres"
@@ -1699,23 +1699,23 @@
           "unknown": "Desconocida",
           "uploaded": "Subida"
         },
-        "textHelper": "Pega el texto del CV cuando un PDF no se pueda procesar automáticamente.",
+        "textHelper": "Pega o escribe la información de la fuente si el archivo no se puede procesar automáticamente o si deseas crearla solo con texto.",
         "textOnlySource": "Fuente creada desde texto, sin archivo cargado.",
         "toasts": {
           "approved": "Fuente aprobada",
-          "imported": "CV importado",
+          "imported": "Fuente guardada",
           "synced": "Fuente sincronizada con datos"
         },
         "types": {
-          "cv": "CV",
+          "cv": "Archivo o texto",
           "instagram": "Instagram",
           "manual": "Manual",
           "website": "Sitio web"
         },
-        "uploadSubheader": "Sube un archivo de CV y opcionalmente pega el texto extraído.",
-        "uploadTitle": "Importar CV",
+        "uploadSubheader": "Sube un archivo compatible o agrega información como texto. Puedes usar una o ambas opciones.",
+        "uploadTitle": "Agregar fuente",
         "validation": {
-          "fileOrText": "Selecciona un archivo o pega el texto del CV.",
+          "fileOrText": "Selecciona un archivo o agrega el texto de la fuente.",
           "nameMax": "El nombre debe tener máximo 150 caracteres",
           "textMax": "El texto debe tener máximo 50000 caracteres"
         }
