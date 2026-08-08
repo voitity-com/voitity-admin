@@ -234,7 +234,7 @@
             }
           },
           "avatarAndVoice": {
-            "answer": "Open Profiles and select the presence you want to configure. Under Avatar, upload a JPG, PNG, or WEBP image, adjust the crop, and save it; once processing finishes, select the generated avatar. Then open Voice, choose the language, and select Clone your voice. Find a quiet place, read the complete guided text naturally, review the recording, and save the sample. Finally, test the voice and enable it for the profile. Only use your own image and voice, or material you are expressly authorized to use.",
+            "answer": "Open Profiles and select the presence you want to configure. Under Avatar, upload a JPG, PNG, or WEBP image, adjust the crop, and save it; once processing finishes, select the generated avatar. Then open Voice, choose the language, and select Clone your voice. Find a quiet place, read the complete guided text naturally, review the recording, and save the sample. Finally, test the clone of your own voice and enable it for the profile. Only use your own image and voice, or material you are expressly authorized to use.",
             "question": "How do I create my avatar and clone my voice?",
             "video": {
               "iframeTitle": "Tutorial for creating your avatar and cloning your voice on Bigmelo",
@@ -257,7 +257,7 @@
             "question": "Does Bigmelo store my full card details?"
           },
           "createPresence": {
-            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources such as your resume, create the avatar and authorized voice, review content quality, and publish your link.",
+            "answer": "Create your account, select a plan or start the trial, configure the profile, add sources with relevant data, create the avatar and clone your own voice, review content quality, and publish your link.",
             "question": "How do I create my digital presence?",
             "video": {
               "iframeTitle": "Tutorial for creating your digital presence on Bigmelo",
@@ -295,7 +295,7 @@
             "question": "What currency is used for payments?"
           },
           "plans": {
-            "answer": "Monthly and annual Starter plans include one published presence, avatar, authorized voice, text and audio conversations, products, and social connections. Current prices and limits are shown in Billing & plans.",
+            "answer": "Monthly and annual Starter plans include one published presence, an avatar, a clone of your own voice, text and audio conversations, products, and social connections. Current prices and limits are shown in Billing & plans.",
             "question": "What is included in Bigmelo plans?"
           },
           "products": {
@@ -391,6 +391,8 @@
         "description": "Send us the details from your authenticated account. Your request will reach the team responsible for reviewing it.",
         "form": {
           "cancel": "Cancel",
+          "close": "Close",
+          "delete": "Delete",
           "descriptionCounter": "{{count}} / 3000 characters",
           "descriptionLabel": "How can we help?",
           "emailHelper": "This is the email from your signed-in account and cannot be changed here.",
@@ -947,8 +949,8 @@
             "monthly": "20,000 TTS characters included"
           },
           "ttsCharacters": "{{countLabel}} TTS characters included",
-          "voice_one": "{{countLabel}} authorized voice clone",
-          "voice_other": "{{countLabel}} authorized voice clones"
+          "voice_one": "{{countLabel}} clone of your own voice",
+          "voice_other": "{{countLabel}} clones of your own voice"
         },
         "sections": {
           "features": "Features",
@@ -1433,7 +1435,7 @@
         "data": "Data",
         "insights": "Insights",
         "integrations": "Integrations",
-        "messages": "Messages",
+        "messages": "Automatic messages",
         "products": "Products",
         "profile": "Profile",
         "profileData": "Profile data",
@@ -1499,7 +1501,7 @@
           "validation": {
             "tooLong": "{{count}}/{{max}} characters. Shorten the text."
           },
-          "voiceHint": "You can save the texts now. To generate audio you need a cloned voice; meanwhile you can also record and save manual audio."
+          "voiceHint": "You can save the texts now. To generate audio you need a clone of your own voice; meanwhile you can also record and save manual audio."
         },
         "profile": {
           "audio": {
@@ -1581,7 +1583,7 @@
             "description": "Description",
             "name": "Name",
             "source": "Approved synced source",
-            "voice": "Cloned voice"
+            "voice": "Your cloned voice"
           },
           "title": "Publication",
           "toasts": {
@@ -1624,16 +1626,16 @@
               "title": "Review profile quality"
             },
             "source": {
-              "description": "A source is a file or text with profile information, such as a CV, biography, projects, or services. Upload and sync at least one source before publishing.",
+              "description": "A source is a file or text with profile information, such as a biography, projects, services, or other relevant data. Upload and sync at least one source before publishing.",
               "eyebrow": "Sources",
-              "mobileDescription": "Upload a biography, CV, or text and sync it so the AI has reliable information.",
+              "mobileDescription": "Upload a file or add text and sync it so the AI has reliable information.",
               "title": "Upload and sync a source"
             },
             "voice": {
-              "description": "The cloned voice lets the profile answer with audio. Clone at least one voice before activating and publishing.",
+              "description": "The clone of your own voice lets the profile answer with audio. Clone your voice before activating and publishing.",
               "eyebrow": "Voice",
-              "mobileDescription": "Set up the voice so the profile can answer with audio before you publish it.",
-              "title": "Clone the voice"
+              "mobileDescription": "Set up a clone of your own voice so the profile can answer with audio before you publish it.",
+              "title": "Clone your voice"
             }
           }
         },
@@ -1665,10 +1667,13 @@
           "addSource": "Add source",
           "approve": "Approve",
           "cancel": "Cancel",
-          "importCv": "Import CV",
+          "close": "Close",
+          "delete": "Delete",
+          "save": "Save",
           "previewFile": "View file",
           "selectFile": "Select file",
-          "sync": "Sync"
+          "sync": "Sync",
+          "viewError": "View error details"
         },
         "approved": "Approved",
         "empty": "No sources imported yet.",
@@ -1677,14 +1682,14 @@
           "facts": "Facts",
           "name": "Name",
           "status": "Status",
-          "text": "CV text",
+          "text": "Source text",
           "type": "Type",
           "updated": "Updated"
         },
-        "listSubheader": "Reviewed sources become available to profile conversations.",
+        "listSubheader": "Sources are automatically approved, synchronized, and indexed for profile conversations.",
         "listTitle": "Imported sources",
         "intro": {
-          "description": "Upload a CV, biography, about-me text, projects, services, achievements, or any document that describes and informs something important about the profile you are creating. Approved information will be used to answer better in conversations.",
+          "description": "Upload a biography, documents, about-me text, projects, services, achievements, or any supported file with important information about the profile you are creating. Approved information will be used to answer better in conversations.",
           "eyebrow": "Profile knowledge",
           "formats": "Accepted formats",
           "title": "Add sources that explain who you are"
@@ -1692,30 +1697,47 @@
         "noFile": "No file selected",
         "status": {
           "approved": "Approved",
+          "duplicate": "Duplicate",
           "failed": "Failed",
+          "indexing": "Indexing",
           "indexed": "Indexed",
           "needs_review": "Needs review",
           "parsed": "Parsed",
+          "pending_sync": "Pending synchronization",
+          "syncing": "Synchronizing",
           "unknown": "Unknown",
           "uploaded": "Uploaded"
         },
-        "textHelper": "Paste the CV text when a PDF cannot be parsed automatically.",
+        "textHelper": "Paste or enter the source information if the file cannot be parsed automatically or if you want to create it using text only.",
         "textOnlySource": "Text-only source, no uploaded file.",
         "toasts": {
           "approved": "Source approved",
-          "imported": "CV source imported",
+          "deleted": "Source and its conversation knowledge deleted",
+          "imported": "Source saved",
+          "queued": "Source saved. It will synchronize automatically",
+          "retryQueued": "Synchronization retry queued",
           "synced": "Source synced to data"
         },
+        "failure": {
+          "attempts": "Attempts made: {{count}}",
+          "stage": "Stage: {{stage}}",
+          "title": "The source could not be synchronized",
+          "unknown": "No error details were returned. Try synchronizing again."
+        },
+        "delete": {
+          "description": "{{name}}, its file, derived data, and embeddings will be deleted. This information will no longer be used in new conversations.",
+          "title": "Delete source"
+        },
         "types": {
-          "cv": "CV",
+          "cv": "File or text",
           "instagram": "Instagram",
           "manual": "Manual",
           "website": "Website"
         },
-        "uploadSubheader": "Upload a CV file and optionally paste extracted text.",
-        "uploadTitle": "Import CV",
+        "uploadSubheader": "Upload a supported file or add information as text. You can use either or both options.",
+        "uploadTitle": "Add source",
         "validation": {
-          "fileOrText": "Select a file or paste CV text.",
+          "fileOrText": "Select a file or add the source text.",
           "nameMax": "Name must be at most 150 characters",
           "textMax": "Text must be at most 50000 characters"
         }
@@ -1886,12 +1908,12 @@
           "cloneIntroTitle": "Prepare your voice sample",
           "continueReading": "Keep reading",
           "countdownTitle": "Get ready, recording starts when the countdown ends.",
-          "createSubheader": "Create voice and upload a voice sample",
+          "createSubheader": "Clone your own voice and upload a voice sample",
           "duration": "Duration: {{duration}}s",
           "estimatedDuration": "Approximate read: 3 minutes",
           "errors": {
             "audioNotReturned": "The API did not return audio.",
-            "createBeforeUpload": "Create a voice before uploading a sample.",
+            "createBeforeUpload": "Create your voice clone before uploading a sample.",
             "encoderFailed": "MP3 encoder failed to load.",
             "enterText": "Enter text to generate audio.",
             "microphoneAccess": "Unable to access the microphone.",
@@ -1903,7 +1925,7 @@
 	            "description": "Description",
 	            "language": "Language",
 	            "languageCode": "Language code: {{code}}",
-	            "languageHelper": "Used for voice cloning and sample uploads.",
+	            "languageHelper": "Used when cloning your voice and uploading samples.",
 	            "text": "Text",
 	            "voiceAutoplayDisabledHelper": "Enable profile voice first to allow audio.",
 	            "voiceAutoplayEnabled": "Start with audio on",

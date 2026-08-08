@@ -234,7 +234,7 @@
             }
           },
           "avatarAndVoice": {
-            "answer": "Abre Perfiles y selecciona la presencia que quieres configurar. En Avatar, sube una imagen JPG, PNG o WEBP, ajusta el encuadre y guarda; cuando termine el procesamiento, selecciona el avatar generado. Después entra en Voz, elige el idioma y pulsa Clonar voz. Busca un lugar silencioso, lee de forma natural el texto guiado completo, revisa la grabación y guarda la muestra. Finalmente, prueba la voz y habilítala para el perfil. Utiliza únicamente tu propia imagen y voz, o material para el que tengas autorización expresa.",
+            "answer": "Abre Perfiles y selecciona la presencia que quieres configurar. En Avatar, sube una imagen JPG, PNG o WEBP, ajusta el encuadre y guarda; cuando termine el procesamiento, selecciona el avatar generado. Después entra en Voz, elige el idioma y pulsa Clonar tu voz. Busca un lugar silencioso, lee de forma natural el texto guiado completo, revisa la grabación y guarda la muestra. Finalmente, prueba el clon de tu propia voz y habilítalo para el perfil. Utiliza únicamente tu propia imagen y voz, o material para el que tengas autorización expresa.",
             "question": "¿Cómo crear mi avatar y clonar mi voz?",
             "video": {
               "iframeTitle": "Tutorial para crear tu avatar y clonar tu voz en Bigmelo",
@@ -257,7 +257,7 @@
             "question": "¿Bigmelo almacena los datos completos de mi tarjeta?"
           },
           "createPresence": {
-            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes como tu CV, crea el avatar y la voz autorizada, revisa la calidad del contenido y publica tu enlace.",
+            "answer": "Crea tu cuenta, selecciona un plan o inicia la prueba, configura la información del perfil, agrega fuentes con datos relevantes, crea el avatar y clona tu propia voz, revisa la calidad del contenido y publica tu enlace.",
             "question": "¿Cómo creo mi presencia digital?",
             "video": {
               "iframeTitle": "Tutorial para crear tu presencia digital en Bigmelo",
@@ -295,7 +295,7 @@
             "question": "¿En qué moneda se realizan los pagos?"
           },
           "plans": {
-            "answer": "Los planes Starter mensual y anual incluyen una presencia publicada, avatar, voz autorizada, conversaciones por texto y audio, productos y conexiones sociales. Los precios y límites vigentes se muestran en la sección Facturación y planes.",
+            "answer": "Los planes Starter mensual y anual incluyen una presencia publicada, avatar, un clon de tu propia voz, conversaciones por texto y audio, productos y conexiones sociales. Los precios y límites vigentes se muestran en la sección Facturación y planes.",
             "question": "¿Qué incluyen los planes de Bigmelo?"
           },
           "products": {
@@ -391,6 +391,8 @@
         "description": "Envíanos los detalles desde tu cuenta autenticada. Tu solicitud llegará al equipo encargado de revisarla.",
         "form": {
           "cancel": "Cancelar",
+          "close": "Cerrar",
+          "delete": "Eliminar",
           "descriptionCounter": "{{count}} / 3000 caracteres",
           "descriptionLabel": "¿Cómo podemos ayudarte?",
           "emailHelper": "Este es el correo de tu cuenta autenticada y no se puede modificar aquí.",
@@ -947,8 +949,8 @@
             "monthly": "20.000 caracteres TTS incluidos"
           },
           "ttsCharacters": "{{countLabel}} caracteres TTS incluidos",
-          "voice_one": "{{countLabel}} clon de voz autorizado",
-          "voice_other": "{{countLabel}} clones de voz autorizados"
+          "voice_one": "{{countLabel}} clon de tu propia voz",
+          "voice_other": "{{countLabel}} clones de tu propia voz"
         },
         "sections": {
           "features": "Características",
@@ -1433,7 +1435,7 @@
         "data": "Datos",
         "insights": "Insights",
         "integrations": "Integraciones",
-        "messages": "Mensajes",
+        "messages": "Mensajes automáticos",
         "products": "Productos",
         "profile": "Perfil",
         "profileData": "Datos del perfil",
@@ -1499,7 +1501,7 @@
           "validation": {
             "tooLong": "{{count}}/{{max}} caracteres. Reduce el texto."
           },
-          "voiceHint": "Puedes guardar los textos ahora. Para generar audio necesitas una voz clonada; mientras tanto también puedes grabar y guardar un audio manual."
+          "voiceHint": "Puedes guardar los textos ahora. Para generar audio necesitas un clon de tu propia voz; mientras tanto también puedes grabar y guardar un audio manual."
         },
         "profile": {
           "audio": {
@@ -1581,7 +1583,7 @@
             "description": "Descripción",
             "name": "Nombre",
             "source": "Fuente aprobada y sincronizada",
-            "voice": "Voz clonada"
+            "voice": "Tu voz clonada"
           },
           "title": "Publicación",
           "toasts": {
@@ -1624,16 +1626,16 @@
               "title": "Revisa la calidad del perfil"
             },
             "source": {
-              "description": "Una fuente es un archivo o texto con información del perfil, como CV, biografía, proyectos o servicios. Debes cargar y sincronizar al menos una fuente para publicar.",
+              "description": "Una fuente es un archivo o texto con información del perfil, como una biografía, proyectos, servicios u otros datos relevantes. Debes cargar y sincronizar al menos una fuente para publicar.",
               "eyebrow": "Fuentes",
-              "mobileDescription": "Sube una biografía, CV o texto y sincronízalo para que la IA tenga información confiable.",
+              "mobileDescription": "Sube un archivo o agrega texto y sincronízalo para que la IA tenga información confiable.",
               "title": "Carga y sincroniza una fuente"
             },
             "voice": {
-              "description": "La voz clonada permite que el perfil responda con audio. Clona al menos una voz antes de activar y publicar.",
+              "description": "El clon de tu propia voz permite que el perfil responda con audio. Clona tu voz antes de activar y publicar.",
               "eyebrow": "Voz",
-              "mobileDescription": "Configura la voz para que el perfil pueda responder con audio antes de publicarlo.",
-              "title": "Clona la voz"
+              "mobileDescription": "Configura un clon de tu propia voz para que el perfil pueda responder con audio antes de publicarlo.",
+              "title": "Clona tu voz"
             }
           }
         },
@@ -1665,10 +1667,13 @@
           "addSource": "Agregar fuente",
           "approve": "Aprobar",
           "cancel": "Cancelar",
-          "importCv": "Importar CV",
+          "close": "Cerrar",
+          "delete": "Eliminar",
+          "save": "Guardar",
           "previewFile": "Ver archivo",
           "selectFile": "Seleccionar archivo",
-          "sync": "Sincronizar"
+          "sync": "Sincronizar",
+          "viewError": "Ver detalle del error"
         },
         "approved": "Aprobada",
         "empty": "Aún no hay fuentes importadas.",
@@ -1677,14 +1682,14 @@
           "facts": "Datos",
           "name": "Nombre",
           "status": "Estado",
-          "text": "Texto del CV",
+          "text": "Texto de la fuente",
           "type": "Tipo",
           "updated": "Actualizado"
         },
-        "listSubheader": "Las fuentes revisadas quedan disponibles para las conversaciones del perfil.",
+        "listSubheader": "Las fuentes se aprueban, sincronizan e indexan automáticamente para las conversaciones del perfil.",
         "listTitle": "Fuentes importadas",
         "intro": {
-          "description": "Puedes subir tu CV, una biografía, un texto sobre ti, proyectos, servicios, logros o cualquier documento que describa e informe algo importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
+          "description": "Puedes subir una biografía, documentos, textos sobre ti, proyectos, servicios, logros o cualquier archivo compatible con información importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
           "eyebrow": "Conocimiento del perfil",
           "formats": "Formatos aceptados",
           "title": "Carga fuentes que expliquen quién eres"
@@ -1692,30 +1697,47 @@
         "noFile": "Ningún archivo seleccionado",
         "status": {
           "approved": "Aprobada",
+          "duplicate": "Duplicada",
           "failed": "Fallida",
+          "indexing": "Indexando",
           "indexed": "Indexada",
           "needs_review": "Requiere revisión",
           "parsed": "Procesada",
+          "pending_sync": "Pendiente de sincronización",
+          "syncing": "Sincronizando",
           "unknown": "Desconocida",
           "uploaded": "Subida"
         },
-        "textHelper": "Pega el texto del CV cuando un PDF no se pueda procesar automáticamente.",
+        "textHelper": "Pega o escribe la información de la fuente si el archivo no se puede procesar automáticamente o si deseas crearla solo con texto.",
         "textOnlySource": "Fuente creada desde texto, sin archivo cargado.",
         "toasts": {
           "approved": "Fuente aprobada",
-          "imported": "CV importado",
+          "deleted": "Fuente eliminada junto con su información para las conversaciones",
+          "imported": "Fuente guardada",
+          "queued": "Fuente guardada. Se sincronizará automáticamente",
+          "retryQueued": "Nuevo intento de sincronización en cola",
           "synced": "Fuente sincronizada con datos"
         },
+        "failure": {
+          "attempts": "Intentos realizados: {{count}}",
+          "stage": "Etapa: {{stage}}",
+          "title": "No se pudo sincronizar la fuente",
+          "unknown": "No se recibió el detalle del error. Intenta sincronizar nuevamente."
+        },
+        "delete": {
+          "description": "Se eliminará {{name}}, su archivo, los datos derivados y sus embeddings. Esta información dejará de usarse en conversaciones nuevas.",
+          "title": "Eliminar fuente"
+        },
         "types": {
-          "cv": "CV",
+          "cv": "Archivo o texto",
           "instagram": "Instagram",
           "manual": "Manual",
           "website": "Sitio web"
         },
-        "uploadSubheader": "Sube un archivo de CV y opcionalmente pega el texto extraído.",
-        "uploadTitle": "Importar CV",
+        "uploadSubheader": "Sube un archivo compatible o agrega información como texto. Puedes usar una o ambas opciones.",
+        "uploadTitle": "Agregar fuente",
         "validation": {
-          "fileOrText": "Selecciona un archivo o pega el texto del CV.",
+          "fileOrText": "Selecciona un archivo o agrega el texto de la fuente.",
           "nameMax": "El nombre debe tener máximo 150 caracteres",
           "textMax": "El texto debe tener máximo 50000 caracteres"
         }
@@ -1881,17 +1903,17 @@
       },
       "voice": {
           "audio": "Audio",
-          "cloneVoice": "Clonar voz",
+          "cloneVoice": "Clonar tu voz",
           "cloneIntroDescription": "Al iniciar la grabación aparecerá un texto para leer en voz alta. La lectura completa puede durar hasta 3 minutos.",
           "cloneIntroTitle": "Prepara tu muestra de voz",
           "continueReading": "Seguir leyendo",
           "countdownTitle": "Prepárate, la grabación empezará al terminar la cuenta.",
-          "createSubheader": "Crear voz y subir una muestra de voz",
+          "createSubheader": "Clona tu propia voz y sube una muestra de voz",
           "duration": "Duración: {{duration}}s",
           "estimatedDuration": "Lectura aproximada: 3 minutos",
           "errors": {
             "audioNotReturned": "La API no devolvió audio.",
-            "createBeforeUpload": "Crea una voz antes de subir una muestra.",
+            "createBeforeUpload": "Crea el clon de tu voz antes de subir una muestra.",
             "encoderFailed": "No se pudo cargar el codificador MP3.",
             "enterText": "Ingresa texto para generar audio.",
             "microphoneAccess": "No se pudo acceder al micrófono.",
@@ -1903,7 +1925,7 @@
 	            "description": "Descripción",
 	            "language": "Idioma",
 	            "languageCode": "Código de idioma: {{code}}",
-	            "languageHelper": "Se usará al clonar la voz y al subir muestras.",
+	            "languageHelper": "Se usará al clonar tu voz y al subir muestras.",
 	            "text": "Texto",
 	            "voiceAutoplayDisabledHelper": "Activa primero la voz del perfil para permitir audio.",
 	            "voiceAutoplayEnabled": "Iniciar con audio activado",

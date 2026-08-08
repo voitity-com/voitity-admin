@@ -17,13 +17,18 @@ import DialogTitle from '@mui/material/DialogTitle';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
 import InputLabel from '@mui/material/InputLabel';
+import IconButton from '@mui/material/IconButton';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
+import Tooltip from '@mui/material/Tooltip';
+import { ArrowClockwise as ArrowClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowClockwise';
 import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
+import { Trash as TrashIcon } from '@phosphor-icons/react/dist/ssr/Trash';
 import { UploadSimple as UploadSimpleIcon } from '@phosphor-icons/react/dist/ssr/UploadSimple';
+import { WarningCircle as WarningCircleIcon } from '@phosphor-icons/react/dist/ssr/WarningCircle';
 import { Helmet } from 'react-helmet-async';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -35,9 +40,10 @@ import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
 import type { ProfileKnowledgeSource, ProfileSourcesPage } from '@/lib/profiles/api-client';
 import {
-  approveProfileSource,
+  deleteProfileSource,
   downloadProfileSourceFile,
   listProfileSources,
+  retryProfileSource,
   uploadProfileCvSource,
 } from '@/lib/profiles/api-client';
 import { notifyProfileQualityChanged } from '@/lib/profiles/profile-quality-events';
@@ -80,7 +86,10 @@ export function Page(): React.JSX.Element {
   const [error, setError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState<boolean>(false);
-  const [approvingId, setApprovingId] = React.useState<null | string>(null);
+  const [retryingId, setRetryingId] = React.useState<null | string>(null);
+  const [deletingSource, setDeletingSource] = React.useState<null | ProfileKnowledgeSource>(null);
+  const [failureSource, setFailureSource] = React.useState<null | ProfileKnowledgeSource>(null);
+  const [isDeleting, setIsDeleting] = React.useState<boolean>(false);
   const [previewingId, setPreviewingId] = React.useState<null | string>(null);
   const schema = React.useMemo(() => createSchema(t, Boolean(file)), [file, t]);
   const {
@@ -90,9 +99,11 @@ export function Page(): React.JSX.Element {
     formState: { errors, isSubmitting },
   } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
 
-  const loadSources = React.useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    setError('');
+  const loadSources = React.useCallback(async (showLoading = true): Promise<void> => {
+    if (showLoading) {
+      setIsLoading(true);
+      setError('');
+    }
 
     try {
       setSourcesPage(await listProfileSources({ profileId }));
@@ -100,7 +111,9 @@ export function Page(): React.JSX.Element {
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+      }
     }
   }, [profileId, t]);
 
@@ -109,6 +122,22 @@ export function Page(): React.JSX.Element {
       logger.error(err);
     });
   }, [loadSources]);
+
+  React.useEffect(() => {
+    if (!sourcesPage.sources.some(sourceNeedsPolling)) {
+      return undefined;
+    }
+
+    const interval = window.setInterval(() => {
+      loadSources(false).catch((err) => {
+        logger.error(err);
+      });
+    }, 3000);
+
+    return () => {
+      window.clearInterval(interval);
+    };
+  }, [loadSources, sourcesPage.sources]);
 
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
@@ -119,7 +148,7 @@ export function Page(): React.JSX.Element {
           profileId,
           text: values.text.trim() || undefined,
         });
-        toast.success(t('dashboard.profiles.detail.sources.toasts.imported'));
+        toast.success(t('dashboard.profiles.detail.sources.toasts.queued'));
         setFile(null);
         setIsUploadDialogOpen(false);
         reset(defaultValues);
@@ -143,27 +172,40 @@ export function Page(): React.JSX.Element {
     setIsUploadDialogOpen(false);
   }, [isSubmitting, reset]);
 
-  const handleApprove = React.useCallback(
+  const handleRetry = React.useCallback(
     async (source: ProfileKnowledgeSource): Promise<void> => {
-      setApprovingId(String(source.id));
+      setRetryingId(String(source.id));
 
       try {
-        await approveProfileSource(profileId, source.id);
-        toast.success(
-          source.status === 'indexed'
-            ? t('dashboard.profiles.detail.sources.toasts.synced')
-            : t('dashboard.profiles.detail.sources.toasts.approved')
-        );
+        await retryProfileSource(profileId, source.id);
+        toast.success(t('dashboard.profiles.detail.sources.toasts.retryQueued'));
         await loadSources();
-        notifyProfileQualityChanged(profileId);
       } catch (err) {
         toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
       } finally {
-        setApprovingId(null);
+        setRetryingId(null);
       }
     },
     [loadSources, profileId, t]
   );
+
+  const handleDelete = React.useCallback(async (): Promise<void> => {
+    if (!deletingSource) return;
+
+    setIsDeleting(true);
+
+    try {
+      await deleteProfileSource(profileId, deletingSource.id);
+      toast.success(t('dashboard.profiles.detail.sources.toasts.deleted'));
+      setDeletingSource(null);
+      await loadSources();
+      notifyProfileQualityChanged(profileId);
+    } catch (err) {
+      toast.error(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deletingSource, loadSources, profileId, t]);
 
   const handlePreviewFile = React.useCallback(
     async (source: ProfileKnowledgeSource): Promise<void> => {
@@ -187,14 +229,16 @@ export function Page(): React.JSX.Element {
   const columns = React.useMemo(
     () =>
       getColumns({
-        approvingId,
         language,
-        onApprove: handleApprove,
+        onDelete: setDeletingSource,
+        onFailure: setFailureSource,
         onPreviewFile: handlePreviewFile,
+        onRetry: handleRetry,
         previewingId,
+        retryingId,
         t,
       }),
-    [approvingId, handleApprove, handlePreviewFile, language, previewingId, t]
+    [handlePreviewFile, handleRetry, language, previewingId, retryingId, t]
   );
 
   return (
@@ -346,28 +390,92 @@ export function Page(): React.JSX.Element {
               {t('dashboard.profiles.detail.sources.actions.cancel')}
             </Button>
             <Button disabled={isSubmitting} type="submit" variant="contained">
-              {t('dashboard.profiles.detail.sources.actions.importCv')}
+              {t('dashboard.profiles.detail.sources.actions.save')}
             </Button>
           </DialogActions>
         </form>
+      </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        onClose={() => {
+          setFailureSource(null);
+        }}
+        open={Boolean(failureSource)}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.sources.failure.title')}</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            <Alert color="error">{failureSource?.last_error ?? t('dashboard.profiles.detail.sources.failure.unknown')}</Alert>
+            <Typography variant="body2">
+              {t('dashboard.profiles.detail.sources.failure.stage', {
+                stage: failureSource?.processing_stage ?? t('dashboard.profiles.detail.sources.status.unknown'),
+              })}
+            </Typography>
+            <Typography color="text.secondary" variant="body2">
+              {t('dashboard.profiles.detail.sources.failure.attempts', { count: failureSource?.retry_count ?? 0 })}
+            </Typography>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setFailureSource(null);
+            }}
+          >
+            {t('dashboard.profiles.detail.sources.actions.close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth="sm"
+        onClose={() => {
+          if (!isDeleting) setDeletingSource(null);
+        }}
+        open={Boolean(deletingSource)}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.sources.delete.title')}</DialogTitle>
+        <DialogContent dividers>
+          <Typography>
+            {t('dashboard.profiles.detail.sources.delete.description', { name: deletingSource?.name ?? '' })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            disabled={isDeleting}
+            onClick={() => {
+              setDeletingSource(null);
+            }}
+          >
+            {t('dashboard.profiles.detail.sources.actions.cancel')}
+          </Button>
+          <Button color="error" disabled={isDeleting} onClick={() => void handleDelete()} variant="contained">
+            {t('dashboard.profiles.detail.sources.actions.delete')}
+          </Button>
+        </DialogActions>
       </Dialog>
     </React.Fragment>
   );
 }
 
 function getColumns({
-  approvingId,
   language,
-  onApprove,
+  onDelete,
+  onFailure,
   onPreviewFile,
+  onRetry,
   previewingId,
+  retryingId,
   t,
 }: {
-  approvingId: null | string;
   language: string;
-  onApprove: (source: ProfileKnowledgeSource) => Promise<void>;
+  onDelete: (source: ProfileKnowledgeSource) => void;
+  onFailure: (source: ProfileKnowledgeSource) => void;
   onPreviewFile: (source: ProfileKnowledgeSource) => Promise<void>;
+  onRetry: (source: ProfileKnowledgeSource) => Promise<void>;
   previewingId: null | string;
+  retryingId: null | string;
   t: (key: string, options?: Record<string, unknown>) => string;
 }): ColumnDef<ProfileKnowledgeSource>[] {
   return [
@@ -397,14 +505,30 @@ function getColumns({
     },
     {
       formatter: (source): React.ReactNode => (
-        <Chip
-          color={source.status === 'indexed' ? 'success' : source.status === 'failed' ? 'error' : 'default'}
-          label={t(`dashboard.profiles.detail.sources.status.${source.status ?? 'unknown'}`, {
-            defaultValue: source.status ?? t('dashboard.profiles.detail.sources.status.unknown'),
-          })}
-          size="small"
-          variant="outlined"
-        />
+        <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+          <Chip
+            color={sourceStatusColor(source.status)}
+            label={t(`dashboard.profiles.detail.sources.status.${source.status ?? 'unknown'}`, {
+              defaultValue: source.status ?? t('dashboard.profiles.detail.sources.status.unknown'),
+            })}
+            size="small"
+            variant="outlined"
+          />
+          {source.status === 'failed' ? (
+            <Tooltip title={t('dashboard.profiles.detail.sources.actions.viewError')}>
+              <IconButton
+                aria-label={t('dashboard.profiles.detail.sources.actions.viewError')}
+                color="error"
+                onClick={() => {
+                  onFailure(source);
+                }}
+                size="small"
+              >
+                <WarningCircleIcon />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+        </Stack>
       ),
       name: t('dashboard.profiles.detail.sources.fields.status'),
       width: '150px',
@@ -433,24 +557,46 @@ function getColumns({
           >
             {t('dashboard.profiles.detail.sources.actions.previewFile')}
           </Button>
-          <Button
-            disabled={approvingId === String(source.id)}
-            onClick={() => {
-              void onApprove(source);
-            }}
-            size="small"
-            variant={source.status === 'indexed' ? 'text' : 'outlined'}
-          >
-            {source.status === 'indexed'
-              ? t('dashboard.profiles.detail.sources.actions.sync')
-              : t('dashboard.profiles.detail.sources.actions.approve')}
-          </Button>
+          {source.status === 'failed' && source.retryable ? (
+            <Button
+              disabled={retryingId === String(source.id)}
+              onClick={() => void onRetry(source)}
+              size="small"
+              startIcon={<ArrowClockwiseIcon />}
+              variant="outlined"
+            >
+              {t('dashboard.profiles.detail.sources.actions.sync')}
+            </Button>
+          ) : null}
+          <Tooltip title={t('dashboard.profiles.detail.sources.actions.delete')}>
+            <IconButton
+              aria-label={t('dashboard.profiles.detail.sources.actions.delete')}
+              color="error"
+              onClick={() => {
+                onDelete(source);
+              }}
+              size="small"
+            >
+              <TrashIcon />
+            </IconButton>
+          </Tooltip>
         </Stack>
       ),
       name: t('dashboard.profiles.detail.sources.fields.actions'),
       width: '260px',
     },
   ];
+}
+
+function sourceNeedsPolling(source: ProfileKnowledgeSource): boolean {
+  return ['pending_sync', 'syncing', 'indexing'].includes(source.status ?? '');
+}
+
+function sourceStatusColor(status: null | string | undefined): 'default' | 'error' | 'success' | 'warning' {
+  if (status === 'indexed') return 'success';
+  if (status === 'failed') return 'error';
+  if (status === 'duplicate') return 'warning';
+  return 'default';
 }
 
 function getFactCount(source: ProfileKnowledgeSource): number {

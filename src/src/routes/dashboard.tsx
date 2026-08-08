@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import type { RouteObject } from 'react-router-dom';
 
 import { Layout as ChatLayout } from '@/components/dashboard/chat/layout';
@@ -414,10 +414,7 @@ export const route: RouteObject = {
             },
             {
               path: 'data',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/data');
-                return { Component: Page };
-              },
+              element: <Navigate replace to="../sources" />,
             },
             {
               path: 'social-networks',

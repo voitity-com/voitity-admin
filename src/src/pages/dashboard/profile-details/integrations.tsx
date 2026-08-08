@@ -94,6 +94,7 @@ interface DisconnectConfirmationCopy {
 }
 
 const INITIAL_VISIBLE_MEDIA_COUNT = 6;
+const UNLIMITED_SELECTION_LIMIT = 2_147_483_647;
 
 function OnlyFansIcon({ style, ...props }: React.SVGProps<SVGSVGElement>): React.JSX.Element {
   return (
@@ -164,6 +165,7 @@ const copy = {
       save: 'Save selection',
       select: 'Select',
       selected: '{{count}}/{{limit}} selected',
+      unlimited: 'Unlimited',
       showMoreItems: 'Show {{count}} more',
       showing: 'Showing {{count}} of {{total}}',
       sync: 'Sync',
@@ -280,6 +282,7 @@ const copy = {
       save: 'Guardar selección',
       select: 'Seleccionar',
       selected: '{{count}}/{{limit}} seleccionadas',
+      unlimited: 'Sin límite',
       showMoreItems: 'Mostrar {{count}} más',
       showing: 'Mostrando {{count}} de {{total}}',
       sync: 'Sincronizar',
@@ -499,6 +502,7 @@ export function Page(): React.JSX.Element {
   }, [searchParams, t.common.connected, t.providers]);
 
   const selectionLimit = page?.selection_limit ?? 10;
+  const selectionLimitLabel = selectionLimit >= UNLIMITED_SELECTION_LIMIT ? t.common.unlimited : selectionLimit;
   const selectedCount = media.filter((item) => item.selected).length;
   const activeProviderEnabled = enabledProviders.includes(activeTab);
 
@@ -701,7 +705,7 @@ export function Page(): React.JSX.Element {
   const handleToggleSelected = React.useCallback(
     (mediaId: number | string, checked: boolean): void => {
       if (checked && selectedCount >= selectionLimit) {
-        toast.error(interpolate(providerText.maxSelected, { limit: selectionLimit }));
+        toast.error(interpolate(providerText.maxSelected, { limit: selectionLimitLabel }));
         return;
       }
 
@@ -709,7 +713,7 @@ export function Page(): React.JSX.Element {
         current.map((item) => (String(item.id) === String(mediaId) ? { ...item, selected: checked } : item))
       );
     },
-    [providerText.maxSelected, selectedCount, selectionLimit]
+    [providerText.maxSelected, selectedCount, selectionLimit, selectionLimitLabel]
   );
 
   const handleObservationChange = React.useCallback((mediaId: number | string, observation: string): void => {
@@ -774,7 +778,7 @@ export function Page(): React.JSX.Element {
           <Card>
             <CardHeader
               avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
-              subheader={interpolate(providerText.hint, { limit: selectionLimit })}
+              subheader={interpolate(providerText.hint, { limit: selectionLimitLabel })}
               title={t.common.title}
             />
             <Divider />
@@ -1060,11 +1064,17 @@ function IntegrationPanel({
             <Icon fontSize="var(--icon-fontSize-lg)" />
             <Typography variant="h6">
               {page.integration.username
-                ? interpolate(common.username, { username: page.integration.username })
+                ? interpolate(common.username, { username: normalizeUsername(page.integration.username) })
                 : providerText.label}
             </Typography>
             <Chip color="success" label={common.connected} size="small" variant="outlined" />
-            <Chip label={interpolate(common.selected, { count: selectedCount, limit: selectionLimit })} size="small" />
+            <Chip
+              label={interpolate(common.selected, {
+                count: selectedCount,
+                limit: selectionLimit >= UNLIMITED_SELECTION_LIMIT ? common.unlimited : selectionLimit,
+              })}
+              size="small"
+            />
           </Stack>
           {page.integration.last_synced_at ? (
             <Typography color="text.secondary" variant="body2">
@@ -2383,6 +2393,10 @@ function isValidOnlyFansProfileUrl(username: string, value: string): boolean {
   } catch {
     return false;
   }
+}
+
+function normalizeUsername(value: string): string {
+  return value.trim().replace(/^@+/, '');
 }
 
 function interpolate(value: string, params: Record<string, number | string>): string {

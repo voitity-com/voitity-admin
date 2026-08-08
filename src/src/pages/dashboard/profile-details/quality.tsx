@@ -61,7 +61,7 @@ export function Page(): React.JSX.Element {
         {error ? <Alert color="error">{error}</Alert> : null}
         <Card>
           <CardHeader
-            subheader={quality?.profession.label ?? t('dashboard.profiles.detail.quality.subheader')}
+            subheader={t('dashboard.profiles.detail.quality.subheader')}
             title={t('dashboard.profiles.detail.quality.title')}
           />
           {isLoading ? (
