@@ -391,6 +391,8 @@
         "description": "Envíanos los detalles desde tu cuenta autenticada. Tu solicitud llegará al equipo encargado de revisarla.",
         "form": {
           "cancel": "Cancelar",
+          "close": "Cerrar",
+          "delete": "Eliminar",
           "descriptionCounter": "{{count}} / 3000 caracteres",
           "descriptionLabel": "¿Cómo podemos ayudarte?",
           "emailHelper": "Este es el correo de tu cuenta autenticada y no se puede modificar aquí.",
@@ -1665,10 +1667,13 @@
           "addSource": "Agregar fuente",
           "approve": "Aprobar",
           "cancel": "Cancelar",
+          "close": "Cerrar",
+          "delete": "Eliminar",
           "save": "Guardar",
           "previewFile": "Ver archivo",
           "selectFile": "Seleccionar archivo",
-          "sync": "Sincronizar"
+          "sync": "Sincronizar",
+          "viewError": "Ver detalle del error"
         },
         "approved": "Aprobada",
         "empty": "Aún no hay fuentes importadas.",
@@ -1681,7 +1686,7 @@
           "type": "Tipo",
           "updated": "Actualizado"
         },
-        "listSubheader": "Las fuentes revisadas quedan disponibles para las conversaciones del perfil.",
+        "listSubheader": "Las fuentes se aprueban, sincronizan e indexan automáticamente para las conversaciones del perfil.",
         "listTitle": "Fuentes importadas",
         "intro": {
           "description": "Puedes subir una biografía, documentos, textos sobre ti, proyectos, servicios, logros o cualquier archivo compatible con información importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
@@ -1692,10 +1697,14 @@
         "noFile": "Ningún archivo seleccionado",
         "status": {
           "approved": "Aprobada",
+          "duplicate": "Duplicada",
           "failed": "Fallida",
+          "indexing": "Indexando",
           "indexed": "Indexada",
           "needs_review": "Requiere revisión",
           "parsed": "Procesada",
+          "pending_sync": "Pendiente de sincronización",
+          "syncing": "Sincronizando",
           "unknown": "Desconocida",
           "uploaded": "Subida"
         },
@@ -1703,8 +1712,21 @@
         "textOnlySource": "Fuente creada desde texto, sin archivo cargado.",
         "toasts": {
           "approved": "Fuente aprobada",
+          "deleted": "Fuente eliminada junto con su información para las conversaciones",
           "imported": "Fuente guardada",
+          "queued": "Fuente guardada. Se sincronizará automáticamente",
+          "retryQueued": "Nuevo intento de sincronización en cola",
           "synced": "Fuente sincronizada con datos"
+        },
+        "failure": {
+          "attempts": "Intentos realizados: {{count}}",
+          "stage": "Etapa: {{stage}}",
+          "title": "No se pudo sincronizar la fuente",
+          "unknown": "No se recibió el detalle del error. Intenta sincronizar nuevamente."
+        },
+        "delete": {
+          "description": "Se eliminará {{name}}, su archivo, los datos derivados y sus embeddings. Esta información dejará de usarse en conversaciones nuevas.",
+          "title": "Eliminar fuente"
         },
         "types": {
           "cv": "Archivo o texto",

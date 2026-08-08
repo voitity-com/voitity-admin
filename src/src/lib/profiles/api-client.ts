@@ -223,7 +223,13 @@ export interface ProfileKnowledgeSource {
   name: string;
   original_filename?: null | string;
   parser_version?: null | string;
+  processing_completed_at?: null | string;
+  processing_stage?: null | string;
+  processing_started_at?: null | string;
   profile_id?: number | string;
+  last_error?: null | string;
+  retry_count?: number;
+  retryable?: boolean;
   status?: null | string;
   storage_path?: null | string;
   type: string;
@@ -696,6 +702,25 @@ export async function approveProfileSource(
   );
 
   return isApiEnvelope<ProfileKnowledgeSource>(response) ? response.data : response;
+}
+
+export async function retryProfileSource(
+  profileId: number | string,
+  sourceId: number | string
+): Promise<ProfileKnowledgeSource> {
+  const response = await requestJson<ApiEnvelope<ProfileKnowledgeSource> | ProfileKnowledgeSource>(
+    `/api/profile/${encodeURIComponent(String(profileId))}/sources/${encodeURIComponent(String(sourceId))}/retry`,
+    { method: 'POST' }
+  );
+
+  return isApiEnvelope<ProfileKnowledgeSource>(response) ? response.data : response;
+}
+
+export async function deleteProfileSource(profileId: number | string, sourceId: number | string): Promise<void> {
+  await requestJson(
+    `/api/profile/${encodeURIComponent(String(profileId))}/sources/${encodeURIComponent(String(sourceId))}`,
+    { method: 'DELETE' }
+  );
 }
 
 export async function downloadProfileSourceFile(params: {

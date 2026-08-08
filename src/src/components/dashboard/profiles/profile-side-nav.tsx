@@ -141,12 +141,6 @@ export function ProfileSideNav(): React.JSX.Element {
             icon: 'sources',
           },
           {
-            key: 'data',
-            title: t('dashboard.profiles.detail.nav.profileData'),
-            href: paths.dashboard.profileDetails.data(profileId),
-            icon: 'data',
-          },
-          {
             key: 'socialNetworks',
             title: t('dashboard.profiles.detail.nav.socialNetworks'),
             href: paths.dashboard.profileDetails.socialNetworks(profileId),

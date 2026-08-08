@@ -38,13 +38,8 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
 import { getSupportedLanguage, supportedLanguages } from '@/lib/i18n';
-import type {
-  Profile,
-  ProfileAudioTranscriptionField,
-  ProfilePayload,
-  ProfileProfession,
-} from '@/lib/profiles/api-client';
-import { getProfile, listProfileProfessions, updateProfile } from '@/lib/profiles/api-client';
+import type { Profile, ProfileAudioTranscriptionField, ProfilePayload } from '@/lib/profiles/api-client';
+import { getProfile, updateProfile } from '@/lib/profiles/api-client';
 import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
 import {
   isProfileGenre,
@@ -69,7 +64,6 @@ interface Values {
   locale: string;
   name: string;
   personality: string;
-  professionKey: string;
 }
 
 function createSchema(t: (key: string) => string): zod.ZodType<Values> {
@@ -100,7 +94,6 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
       .string()
       .min(defaultProfileTextFieldLimits.personality.min, t('dashboard.profiles.form.validation.personalityRequired'))
       .max(defaultProfileTextFieldLimits.personality.max),
-    professionKey: zod.string().min(1, t('dashboard.profiles.form.validation.professionRequired')).max(80),
   });
 }
 
@@ -111,10 +104,8 @@ const defaultValues = {
   locale: 'es',
   name: '',
   personality: '',
-  professionKey: 'custom',
 } satisfies Values;
 
-const fallbackProfessions = [{ key: 'custom', label: 'Custom profile' }] satisfies ProfileProfession[];
 const profileStatusValues = ['draft', 'ready', 'published', 'hidden'] as const;
 
 export function Page(): React.JSX.Element {
@@ -127,7 +118,6 @@ export function Page(): React.JSX.Element {
   const [isEditing, setIsEditing] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string>('');
   const [audioField, setAudioField] = React.useState<ProfileAudioTranscriptionField | null>(null);
-  const [professions, setProfessions] = React.useState<ProfileProfession[]>(fallbackProfessions);
 
   const {
     control,
@@ -140,11 +130,7 @@ export function Page(): React.JSX.Element {
   } = useForm<Values>({ defaultValues, mode: 'onChange', resolver: zodResolver(schema) });
   const descriptionValue = watch('description');
   const personalityValue = watch('personality');
-  const selectedProfessionKey = watch('professionKey');
-  const textFieldLimits = React.useMemo(
-    () => getProfileTextFieldLimits(selectedProfessionKey, professions),
-    [professions, selectedProfessionKey]
-  );
+  const textFieldLimits = defaultProfileTextFieldLimits;
   const activeAudioField = audioField ?? 'description';
   const activeAudioFieldLabel = t(`dashboard.profiles.fields.${activeAudioField}`);
   const activeAudioFieldValue = activeAudioField === 'description' ? descriptionValue : personalityValue;
@@ -155,15 +141,7 @@ export function Page(): React.JSX.Element {
     setError('');
 
     try {
-      const [nextProfile, catalog] = await Promise.all([
-        getProfile(profileId),
-        listProfileProfessions().catch((err) => {
-          logger.error(err);
-          return { default: 'custom', professions: fallbackProfessions };
-        }),
-      ]);
-
-      setProfessions(catalog.professions.length > 0 ? catalog.professions : fallbackProfessions);
+      const nextProfile = await getProfile(profileId);
       setProfile(nextProfile);
       reset(toValues(nextProfile));
       setIsEditing(false);
@@ -246,7 +224,6 @@ export function Page(): React.JSX.Element {
             onEdit={() => {
               setIsEditing(true);
             }}
-            professions={professions}
             profile={profile}
             t={t}
           />
@@ -363,29 +340,6 @@ export function Page(): React.JSX.Element {
                   />
                   <Controller
                     control={control}
-                    name="professionKey"
-                    render={({ field }) => (
-                      <FormControl error={Boolean(errors.professionKey)}>
-                        <InputLabel id="profile-profession-label">
-                          {t('dashboard.profiles.fields.profession')}
-                        </InputLabel>
-                        <Select
-                          {...field}
-                          label={t('dashboard.profiles.fields.profession')}
-                          labelId="profile-profession-label"
-                        >
-                          {professions.map((profession) => (
-                            <MenuItem key={profession.key} value={profession.key}>
-                              {profession.label}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                        {errors.professionKey ? <FormHelperText>{errors.professionKey.message}</FormHelperText> : null}
-                      </FormControl>
-                    )}
-                  />
-                  <Controller
-                    control={control}
                     name="personality"
                     render={({ field }) => {
                       const limitState = getProfileFieldLimitState(field.value, textFieldLimits.personality, t);
@@ -453,18 +407,15 @@ function ProfileOverview({
   language,
   onEdit,
   profile,
-  professions,
   t,
 }: {
   language: string;
   onEdit: () => void;
   profile: Profile;
-  professions: ProfileProfession[];
   t: (key: string, options?: Record<string, unknown>) => string;
 }): React.JSX.Element {
   const active = profile.active ?? false;
   const status = normalizeProfileStatus(profile.status);
-  const professionLabel = getProfessionLabel(profile.profession_key, professions);
   const notProvided = t('dashboard.profiles.detail.profile.emptyValue');
   const isPublic = active && status === 'published';
 
@@ -514,11 +465,6 @@ function ProfileOverview({
                     bgcolor: isPublic ? 'success.light' : 'rgba(255,255,255,0.16)',
                     color: isPublic ? 'success.contrastText' : 'common.white',
                   }}
-                />
-                <Chip
-                  label={professionLabel}
-                  size="small"
-                  sx={{ bgcolor: 'rgba(255,255,255,0.16)', color: 'common.white' }}
                 />
                 <Chip
                   label={t(`dashboard.profiles.genreOptions.${normalizeProfileGenre(profile.genre)}`)}
@@ -572,7 +518,6 @@ function ProfileOverview({
               label={t('dashboard.profiles.fields.alias')}
               value={profile.alias ? `@${profile.alias}` : notProvided}
             />
-            <ProfileAttribute label={t('dashboard.profiles.fields.profession')} value={professionLabel} />
             <ProfileAttribute
               label={t('dashboard.profiles.fields.genre')}
               value={t(`dashboard.profiles.genreOptions.${normalizeProfileGenre(profile.genre)}`)}
@@ -801,32 +746,6 @@ function getProfileFieldLimitState(
   };
 }
 
-function getProfileTextFieldLimits(
-  professionKey: null | string | undefined,
-  professions: ProfileProfession[]
-): Record<ProfileAudioTranscriptionField, { max: number; min: number }> {
-  const limits = {
-    description: { ...defaultProfileTextFieldLimits.description },
-    personality: { ...defaultProfileTextFieldLimits.personality },
-  };
-  const profession = professions.find((item) => item.key === (professionKey || 'custom'));
-
-  for (const rule of profession?.quality_rules ?? []) {
-    if (String(rule.type ?? '') !== 'profile_field') {
-      continue;
-    }
-
-    const field = String(rule.field ?? '');
-    const minLength = Number(rule.min_length ?? 0);
-
-    if (field === 'personality' && minLength > 0) {
-      limits[field].min = Math.max(limits[field].min, minLength);
-    }
-  }
-
-  return limits;
-}
-
 function toValues(profile: Profile): Values {
   return {
     alias: profile.alias ?? '',
@@ -835,7 +754,6 @@ function toValues(profile: Profile): Values {
     locale: getSupportedLanguage(profile.locale),
     name: profile.name ?? '',
     personality: profile.personality ?? '',
-    professionKey: profile.profession_key ?? 'custom',
   };
 }
 
@@ -847,7 +765,6 @@ function toPayload(values: Values): ProfilePayload {
     locale: getSupportedLanguage(values.locale),
     name: values.name,
     personality: values.personality,
-    profession_key: values.professionKey,
   };
 }
 
@@ -857,12 +774,6 @@ function isProfileStatus(value: string): boolean {
 
 function normalizeProfileStatus(status: null | string | undefined): string {
   return isProfileStatus(status ?? '') ? String(status) : 'draft';
-}
-
-function getProfessionLabel(professionKey: null | string | undefined, professions: ProfileProfession[]): string {
-  const key = professionKey || 'custom';
-
-  return professions.find((profession) => profession.key === key)?.label ?? key;
 }
 
 function getInitials(name: string): string {

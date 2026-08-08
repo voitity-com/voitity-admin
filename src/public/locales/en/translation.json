@@ -391,6 +391,8 @@
         "description": "Send us the details from your authenticated account. Your request will reach the team responsible for reviewing it.",
         "form": {
           "cancel": "Cancel",
+          "close": "Close",
+          "delete": "Delete",
           "descriptionCounter": "{{count}} / 3000 characters",
           "descriptionLabel": "How can we help?",
           "emailHelper": "This is the email from your signed-in account and cannot be changed here.",
@@ -1665,10 +1667,13 @@
           "addSource": "Add source",
           "approve": "Approve",
           "cancel": "Cancel",
+          "close": "Close",
+          "delete": "Delete",
           "save": "Save",
           "previewFile": "View file",
           "selectFile": "Select file",
-          "sync": "Sync"
+          "sync": "Sync",
+          "viewError": "View error details"
         },
         "approved": "Approved",
         "empty": "No sources imported yet.",
@@ -1681,7 +1686,7 @@
           "type": "Type",
           "updated": "Updated"
         },
-        "listSubheader": "Reviewed sources become available to profile conversations.",
+        "listSubheader": "Sources are automatically approved, synchronized, and indexed for profile conversations.",
         "listTitle": "Imported sources",
         "intro": {
           "description": "Upload a biography, documents, about-me text, projects, services, achievements, or any supported file with important information about the profile you are creating. Approved information will be used to answer better in conversations.",
@@ -1692,10 +1697,14 @@
         "noFile": "No file selected",
         "status": {
           "approved": "Approved",
+          "duplicate": "Duplicate",
           "failed": "Failed",
+          "indexing": "Indexing",
           "indexed": "Indexed",
           "needs_review": "Needs review",
           "parsed": "Parsed",
+          "pending_sync": "Pending synchronization",
+          "syncing": "Synchronizing",
           "unknown": "Unknown",
           "uploaded": "Uploaded"
         },
@@ -1703,8 +1712,21 @@
         "textOnlySource": "Text-only source, no uploaded file.",
         "toasts": {
           "approved": "Source approved",
+          "deleted": "Source and its conversation knowledge deleted",
           "imported": "Source saved",
+          "queued": "Source saved. It will synchronize automatically",
+          "retryQueued": "Synchronization retry queued",
           "synced": "Source synced to data"
+        },
+        "failure": {
+          "attempts": "Attempts made: {{count}}",
+          "stage": "Stage: {{stage}}",
+          "title": "The source could not be synchronized",
+          "unknown": "No error details were returned. Try synchronizing again."
+        },
+        "delete": {
+          "description": "{{name}}, its file, derived data, and embeddings will be deleted. This information will no longer be used in new conversations.",
+          "title": "Delete source"
         },
         "types": {
           "cv": "File or text",

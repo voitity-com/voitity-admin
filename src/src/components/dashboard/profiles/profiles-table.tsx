@@ -121,11 +121,6 @@ function getColumns({
       width: '180px',
     },
     {
-      formatter: (row): string => formatProfession(row.profession_key),
-      name: t('dashboard.profiles.fields.profession'),
-      width: '160px',
-    },
-    {
       formatter: (row): React.JSX.Element => renderStatusCell(row, t),
       name: t('dashboard.profiles.fields.status'),
       width: '180px',
@@ -260,18 +255,6 @@ function formatDate(value: null | string | undefined, language: string): string 
   }
 
   return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
-}
-
-function formatProfession(value: null | string | undefined): string {
-  if (!value) {
-    return '-';
-  }
-
-  return value
-    .split(/[_-]/)
-    .filter(Boolean)
-    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
-    .join(' ');
 }
 
 function getAvatarMedia(avatar: null | ProfileAvatar): null | { file: string; type: 'image' | 'video' } {
