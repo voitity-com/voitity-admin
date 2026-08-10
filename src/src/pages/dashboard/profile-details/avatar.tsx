@@ -34,13 +34,16 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import type { ProfileAvatar } from '@/lib/avatar/api-client';
 import { activateProfileAvatar, generateAvatar, listProfileAvatarHistory } from '@/lib/avatar/api-client';
+import type { AvatarFaceValidationReason } from '@/lib/avatar/face-detector';
+import { validateAvatarFace } from '@/lib/avatar/face-detector';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
 const metadata = { title: `Avatar | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
-const avatarSize = 400;
+const avatarPreviewSize = 400;
+const avatarOutputSize = 1024;
 const emptyAvatarSrc = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
   <rect width="400" height="400" fill="#f3f4f6"/>
@@ -69,6 +72,7 @@ export function Page(): React.JSX.Element {
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isActivating, setIsActivating] = React.useState<boolean>(false);
   const [isSaving, setIsSaving] = React.useState<boolean>(false);
+  const [isCheckingFace, setIsCheckingFace] = React.useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = React.useState<boolean>(false);
   const [dialogTab, setDialogTab] = React.useState<AvatarDialogTab>('history');
   const [previewUrl, setPreviewUrl] = React.useState<string>('');
@@ -223,6 +227,7 @@ export function Page(): React.JSX.Element {
     setDialogTab(avatars.length > 0 ? 'history' : 'upload');
     setDialogOpen(true);
     setFieldError('');
+    setIsCheckingFace(false);
   }, [avatars.length, isAvatarProcessing]);
 
   const handleCloseDialog = React.useCallback((): void => {
@@ -287,6 +292,22 @@ export function Page(): React.JSX.Element {
         zoom,
         t('dashboard.profiles.detail.avatar.errors.prepareImage')
       );
+      setIsCheckingFace(true);
+
+      try {
+        const faceValidation = await validateAvatarFace(croppedFile);
+
+        if (!faceValidation.valid) {
+          setFieldError(getFaceValidationMessage(faceValidation.reason, t));
+          return;
+        }
+      } catch (validationError) {
+        // The browser check is a convenience. The API performs the authoritative validation.
+        logger.warn(validationError);
+      } finally {
+        setIsCheckingFace(false);
+      }
+
       const generated = await generateAvatar(profileId, croppedFile);
       const generatedAvatar = generated.avatar ?? null;
 
@@ -396,7 +417,11 @@ export function Page(): React.JSX.Element {
                   </Alert>
                 ) : null}
                 <Box
-                  sx={{ height: { xs: 280, sm: avatarSize }, position: 'relative', width: { xs: 280, sm: avatarSize } }}
+                  sx={{
+                    height: { xs: 280, sm: avatarPreviewSize },
+                    position: 'relative',
+                    width: { xs: 280, sm: avatarPreviewSize },
+                  }}
                 >
                   <Box
                     sx={{
@@ -507,6 +532,9 @@ export function Page(): React.JSX.Element {
               />
             ) : (
               <React.Fragment>
+                <Alert color="info">
+                  <Typography variant="body2">{t('dashboard.profiles.detail.avatar.faceGuide')}</Typography>
+                </Alert>
                 <Button component="label" startIcon={<UploadSimpleIcon />} variant="outlined">
                   {t('dashboard.profiles.actions.uploadImage')}
                   <input accept="image/jpeg,image/png,image/webp" hidden onChange={handleFileChange} type="file" />
@@ -529,7 +557,7 @@ export function Page(): React.JSX.Element {
                         cursor: 'grab',
                         display: 'flex',
                         justifyContent: 'center',
-                        maxWidth: avatarSize,
+                        maxWidth: avatarPreviewSize,
                         mx: 'auto',
                         overflow: 'hidden',
                         position: 'relative',
@@ -565,6 +593,7 @@ export function Page(): React.JSX.Element {
                         min={1}
                         onChange={(_, value) => {
                           setZoom(value as number);
+                          setFieldError('');
                         }}
                         step={0.05}
                         value={zoom}
@@ -586,7 +615,11 @@ export function Page(): React.JSX.Element {
           </Button>
           {dialogTab === 'upload' ? (
             <Button disabled={isSaving || !previewUrl} onClick={handleSave} variant="contained">
-              {isSaving ? t('dashboard.profiles.detail.avatar.saving') : t('dashboard.profiles.actions.save')}
+              {isCheckingFace
+                ? t('dashboard.profiles.detail.avatar.validatingFace')
+                : isSaving
+                  ? t('dashboard.profiles.detail.avatar.saving')
+                  : t('dashboard.profiles.actions.save')}
             </Button>
           ) : null}
         </DialogActions>
@@ -849,8 +882,8 @@ async function createCroppedAvatarFile(
 ): Promise<File> {
   const image = await loadImage(imageUrl, errorMessage);
   const canvas = document.createElement('canvas');
-  canvas.height = avatarSize;
-  canvas.width = avatarSize;
+  canvas.height = avatarOutputSize;
+  canvas.width = avatarOutputSize;
 
   const context = canvas.getContext('2d');
 
@@ -858,14 +891,15 @@ async function createCroppedAvatarFile(
     throw new Error(errorMessage);
   }
 
-  const baseScale = Math.max(avatarSize / image.naturalWidth, avatarSize / image.naturalHeight);
+  const baseScale = Math.max(avatarOutputSize / image.naturalWidth, avatarOutputSize / image.naturalHeight);
+  const positionScale = avatarOutputSize / avatarPreviewSize;
   const drawWidth = image.naturalWidth * baseScale * zoom;
   const drawHeight = image.naturalHeight * baseScale * zoom;
-  const drawX = avatarSize / 2 + position.x - drawWidth / 2;
-  const drawY = avatarSize / 2 + position.y - drawHeight / 2;
+  const drawX = avatarOutputSize / 2 + position.x * positionScale - drawWidth / 2;
+  const drawY = avatarOutputSize / 2 + position.y * positionScale - drawHeight / 2;
 
   context.fillStyle = '#ffffff';
-  context.fillRect(0, 0, avatarSize, avatarSize);
+  context.fillRect(0, 0, avatarOutputSize, avatarOutputSize);
   context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
 
   const blob = await new Promise<Blob>((resolve, reject) => {
@@ -897,4 +931,13 @@ async function loadImage(src: string, errorMessage: string): Promise<HTMLImageEl
 
 function getErrorMessage(error: unknown, fallback: string): string {
   return error instanceof Error ? error.message : fallback;
+}
+
+function getFaceValidationMessage(
+  reason: AvatarFaceValidationReason | undefined,
+  t: ReturnType<typeof useTranslation>['t']
+): string {
+  const key = reason ?? 'lowConfidence';
+
+  return t(`dashboard.profiles.detail.avatar.faceValidation.${key}`);
 }

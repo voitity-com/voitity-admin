@@ -1221,6 +1221,15 @@
             "unsupportedFile": "Use a JPG, PNG, or WEBP image."
           },
           "failedMessage": "Avatar generation failed",
+          "faceGuide": "Use a sharp photo of one person facing the camera, with good lighting, visible eyes, and nothing covering the face.",
+          "faceValidation": {
+            "faceOffCenter": "Center the face inside the frame.",
+            "faceTooLarge": "Move back slightly so the full head is visible.",
+            "faceTooSmall": "Move closer so the face takes up more of the image.",
+            "lowConfidence": "The face is not clear enough to process.",
+            "multipleFaces": "More than one face was detected. Use a photo of one person.",
+            "noFace": "No face was detected. Use a clear photo of one person."
+          },
           "failureFallback": "The provider could not generate this avatar. Try a different image or crop.",
           "failureWithCode": "{{message}} ({{code}})",
           "historyEmpty": "No generated avatars yet.",
@@ -1248,6 +1257,7 @@
           },
           "unavailableHint": "Not available to select",
           "uploadHint": "Upload a JPG, PNG, or WEBP image to generate a new avatar.",
+          "validatingFace": "Validating face...",
           "zoom": "Zoom"
         },
         "data": {

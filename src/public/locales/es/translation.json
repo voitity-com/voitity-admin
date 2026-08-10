@@ -1221,6 +1221,15 @@
             "unsupportedFile": "Usa una imagen JPG, PNG o WEBP."
           },
           "failedMessage": "Falló la generación del avatar",
+          "faceGuide": "Usa una foto nítida de una sola persona, mirando de frente, con buena luz, ojos visibles y sin objetos que cubran el rostro.",
+          "faceValidation": {
+            "faceOffCenter": "Centra el rostro dentro del recuadro.",
+            "faceTooLarge": "Aleja un poco el rostro para incluir la cabeza completa.",
+            "faceTooSmall": "Acerca más el rostro para que ocupe una parte mayor de la imagen.",
+            "lowConfidence": "El rostro no se distingue con suficiente claridad.",
+            "multipleFaces": "Se detectó más de un rostro. Usa una foto de una sola persona.",
+            "noFace": "No se detectó un rostro. Usa una foto clara de una sola persona."
+          },
           "failureFallback": "El proveedor no pudo generar este avatar. Intenta con otra imagen o recorte.",
           "failureWithCode": "{{message}} ({{code}})",
           "historyEmpty": "Aún no hay avatares generados.",
@@ -1248,6 +1257,7 @@
           },
           "unavailableHint": "No disponible para seleccionar",
           "uploadHint": "Sube una imagen JPG, PNG o WEBP para generar un nuevo avatar.",
+          "validatingFace": "Validando rostro...",
           "zoom": "Zoom"
         },
         "data": {
