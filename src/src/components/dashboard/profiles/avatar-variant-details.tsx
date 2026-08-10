@@ -38,13 +38,16 @@ export function AvatarVariantDetails({
       onClick={onClose}
       sx={{
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.16)',
+        backdropFilter: { xs: 'blur(6px)', sm: 'none' },
+        backgroundColor: { xs: 'rgba(255, 255, 255, 0.82)', sm: 'rgba(255, 255, 255, 0.16)' },
+        borderRadius: { xs: 2, sm: 0 },
         display: 'flex',
-        inset: 0,
+        inset: { xs: 16, sm: 0 },
         justifyContent: 'center',
-        minHeight: 260,
+        minHeight: { xs: 0, sm: 260 },
+        overflowY: { xs: 'auto', sm: 'visible' },
         p: { xs: 2, sm: 4 },
-        position: 'absolute',
+        position: { xs: 'fixed', sm: 'absolute' },
         zIndex: 2,
       }}
     >
@@ -66,12 +69,12 @@ export function AvatarVariantDetails({
 
       <Stack
         direction="row"
-        flexWrap="wrap"
-        gap={{ xs: 2, sm: 3 }}
+        gap={{ xs: 1, sm: 3 }}
         justifyContent="center"
         onClick={(event) => {
           event.stopPropagation();
         }}
+        sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, width: '100%' }}
       >
         {variantOrder.map((variant) => {
           const asset = avatar.variants?.[variant] ?? legacyVariant(avatar, variant);
@@ -87,8 +90,20 @@ export function AvatarVariantDetails({
               : `${name}: ${status}`;
 
           return (
-            <Stack key={variant} spacing={0.75} sx={{ alignItems: 'center' }}>
-              <Typography noWrap variant="subtitle2">
+            <Stack
+              key={variant}
+              spacing={0.75}
+              sx={{ alignItems: 'center', minWidth: 0, width: { xs: 76, sm: 'auto' } }}
+            >
+              <Typography
+                sx={{
+                  fontSize: { xs: '0.72rem', sm: undefined },
+                  lineHeight: 1.2,
+                  minHeight: { xs: '2.4em', sm: 'auto' },
+                  textAlign: 'center',
+                }}
+                variant="subtitle2"
+              >
                 {name}
               </Typography>
               <Tooltip title={asset.failure_reason || status}>
@@ -111,7 +126,7 @@ export function AvatarVariantDetails({
                       display: 'block',
                       overflow: 'hidden',
                       position: 'relative',
-                      width: { xs: 92, sm: 112 },
+                      width: { xs: 76, sm: 112 },
                       '&.Mui-disabled': {
                         opacity: isSelected ? 1 : 0.72,
                       },
@@ -159,7 +174,11 @@ export function AvatarVariantDetails({
                 color={isSelected ? 'success' : variantStatusColor(asset.status)}
                 label={status}
                 size="small"
-                sx={{ fontSize: '0.68rem', '& .MuiChip-label': { px: 0.75 } }}
+                sx={{
+                  fontSize: { xs: '0.6rem', sm: '0.68rem' },
+                  maxWidth: '100%',
+                  '& .MuiChip-label': { overflow: 'hidden', px: { xs: 0.5, sm: 0.75 }, textOverflow: 'ellipsis' },
+                }}
               />
             </Stack>
           );
