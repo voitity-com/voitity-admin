@@ -1242,6 +1242,7 @@
             "active": "Activo",
             "failed": "Fallido",
             "inactive": "Anterior",
+            "partial": "Parcial",
             "processing": "Procesando",
             "unknown": "Desconocido"
           },
@@ -1258,6 +1259,44 @@
           "unavailableHint": "No disponible para seleccionar",
           "uploadHint": "Sube una imagen JPG, PNG o WEBP para generar un nuevo avatar.",
           "validatingFace": "Validando rostro...",
+          "variants": {
+            "back": "Volver a avatares",
+            "close": "Cerrar opciones de versión",
+            "empty": {
+              "available": "La versión está disponible.",
+              "failed": "No se pudo crear esta versión.",
+              "not_generated": "No se generó porque falló el paso anterior.",
+              "processing": "Esta versión se está generando.",
+              "unavailable": "Esta versión no está disponible para este avatar.",
+              "waiting": "En espera de que termine el paso anterior."
+            },
+            "failure": {
+              "animation": "No se pudo generar la animación. Puedes usar la imagen original o la mejorada.",
+              "enhanced": "No se pudo generar la imagen mejorada. Puedes usar la imagen original.",
+              "original": "La imagen original no está disponible."
+            },
+            "inUse": "En uso",
+            "names": {
+              "animation": "Animación",
+              "enhanced": "Imagen mejorada",
+              "original": "Original"
+            },
+            "pipeline": {
+              "image_failed": "La mejora de la imagen falló, pero la imagen original está disponible.",
+              "video_failed": "La animación falló, pero puedes usar la imagen original o la mejorada."
+            },
+            "status": {
+              "available": "Disponible",
+              "failed": "Falló",
+              "not_generated": "No generada",
+              "processing": "Procesando",
+              "unavailable": "No disponible",
+              "waiting": "En espera"
+            },
+            "subtitle": "Elige cuál de las versiones disponibles quieres usar en el perfil.",
+            "title": "Versiones del avatar",
+            "use": "Usar esta versión"
+          },
           "zoom": "Zoom"
         },
         "data": {

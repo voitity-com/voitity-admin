@@ -32,13 +32,14 @@ import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
-import type { ProfileAvatar } from '@/lib/avatar/api-client';
+import type { AvatarVariant, ProfileAvatar } from '@/lib/avatar/api-client';
 import { activateProfileAvatar, generateAvatar, listProfileAvatarHistory } from '@/lib/avatar/api-client';
 import type { AvatarFaceValidationReason } from '@/lib/avatar/face-detector';
 import { validateAvatarFace } from '@/lib/avatar/face-detector';
 import { logger } from '@/lib/default-logger';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
+import { AvatarVariantDetails } from '@/components/dashboard/profiles/avatar-variant-details';
 
 const metadata = { title: `Avatar | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -75,6 +76,7 @@ export function Page(): React.JSX.Element {
   const [isCheckingFace, setIsCheckingFace] = React.useState<boolean>(false);
   const [dialogOpen, setDialogOpen] = React.useState<boolean>(false);
   const [dialogTab, setDialogTab] = React.useState<AvatarDialogTab>('history');
+  const [selectedHistoryAvatarId, setSelectedHistoryAvatarId] = React.useState<string>('');
   const [previewUrl, setPreviewUrl] = React.useState<string>('');
   const [zoom, setZoom] = React.useState<number>(1);
   const [position, setPosition] = React.useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -88,6 +90,7 @@ export function Page(): React.JSX.Element {
   const isAvatarProcessing = Boolean(processingAvatar) || isPollingAvatar;
   const displayStatus = isAvatarProcessing ? 'processing' : status;
   const activeAvatarId = avatar?.status === 'active' ? String(avatar.id) : '';
+  const selectedHistoryAvatar = avatars.find((item) => String(item.id) === selectedHistoryAvatarId) ?? null;
   const latestFailedAvatar = React.useMemo(() => getLatestFailedAvatar(avatars), [avatars]);
   const shouldDisplayAvatarFailure = !isAvatarProcessing && shouldShowAvatarFailure(latestFailedAvatar, avatar);
   const avatarFailureMessage =
@@ -228,6 +231,7 @@ export function Page(): React.JSX.Element {
     setDialogOpen(true);
     setFieldError('');
     setIsCheckingFace(false);
+    setSelectedHistoryAvatarId('');
   }, [avatars.length, isAvatarProcessing]);
 
   const handleCloseDialog = React.useCallback((): void => {
@@ -237,6 +241,7 @@ export function Page(): React.JSX.Element {
 
     setDialogOpen(false);
     setFieldError('');
+    setSelectedHistoryAvatarId('');
     setPosition({ x: 0, y: 0 });
     setZoom(1);
 
@@ -332,8 +337,8 @@ export function Page(): React.JSX.Element {
   }, [handleCloseDialog, position, previewUrl, profileId, t, zoom]);
 
   const handleActivateAvatar = React.useCallback(
-    async (nextAvatar: ProfileAvatar): Promise<void> => {
-      if (isAvatarProcessing || !isAvatarSelectable(nextAvatar)) {
+    async (nextAvatar: ProfileAvatar, variant: AvatarVariant): Promise<void> => {
+      if (isAvatarProcessing || !isAvatarVariantAvailable(nextAvatar, variant)) {
         return;
       }
 
@@ -341,7 +346,7 @@ export function Page(): React.JSX.Element {
       setFieldError('');
 
       try {
-        const activatedAvatar = await activateProfileAvatar(profileId, nextAvatar.id);
+        const activatedAvatar = await activateProfileAvatar(profileId, nextAvatar.id, variant);
 
         setAvatar(activatedAvatar);
         setStatus(activatedAvatar.status ?? 'active');
@@ -485,7 +490,7 @@ export function Page(): React.JSX.Element {
       </Stack>
       <Dialog
         fullWidth
-        maxWidth="md"
+        maxWidth="lg"
         onClose={handleCloseDialog}
         open={dialogOpen}
         slotProps={{ backdrop: { sx: { bgcolor: 'rgba(15, 23, 42, 0.72)' } } }}
@@ -497,6 +502,7 @@ export function Page(): React.JSX.Element {
               onChange={(_, value: AvatarDialogTab) => {
                 setDialogTab(value);
                 setFieldError('');
+                setSelectedHistoryAvatarId('');
               }}
               value={dialogTab}
               variant="fullWidth"
@@ -519,17 +525,42 @@ export function Page(): React.JSX.Element {
             {fieldError ? <Alert color="error">{fieldError}</Alert> : null}
 
             {dialogTab === 'history' ? (
-              <AvatarHistoryGrid
-                activeAvatarId={activeAvatarId}
-                avatars={avatars}
-                disabled={isActivating || isSaving}
-                onSelect={(nextAvatar) => {
-                  handleActivateAvatar(nextAvatar).catch((err) => {
-                    logger.error(err);
-                  });
-                }}
-                t={t}
-              />
+              <Box sx={{ minHeight: 260, position: 'relative' }}>
+                <Box
+                  sx={{
+                    filter: selectedHistoryAvatar ? 'blur(6px)' : 'none',
+                    opacity: selectedHistoryAvatar ? 0.42 : 1,
+                    pointerEvents: selectedHistoryAvatar ? 'none' : 'auto',
+                    transition: 'filter 160ms ease, opacity 160ms ease',
+                  }}
+                >
+                  <AvatarHistoryGrid
+                    activeAvatarId={activeAvatarId}
+                    avatars={avatars}
+                    disabled={isActivating || isSaving || Boolean(selectedHistoryAvatar)}
+                    onOpen={(nextAvatar) => {
+                      setFieldError('');
+                      setSelectedHistoryAvatarId(String(nextAvatar.id));
+                    }}
+                    t={t}
+                  />
+                </Box>
+                {selectedHistoryAvatar ? (
+                  <AvatarVariantDetails
+                    avatar={selectedHistoryAvatar}
+                    disabled={isActivating || isSaving || isAvatarProcessing}
+                    onClose={() => {
+                      setFieldError('');
+                      setSelectedHistoryAvatarId('');
+                    }}
+                    onUse={(variant) => {
+                      handleActivateAvatar(selectedHistoryAvatar, variant).catch((err) => {
+                        logger.error(err);
+                      });
+                    }}
+                  />
+                ) : null}
+              </Box>
             ) : (
               <React.Fragment>
                 <Alert color="info">
@@ -632,13 +663,13 @@ function AvatarHistoryGrid({
   activeAvatarId,
   avatars,
   disabled,
-  onSelect,
+  onOpen,
   t,
 }: {
   activeAvatarId: string;
   avatars: ProfileAvatar[];
   disabled: boolean;
-  onSelect: (avatar: ProfileAvatar) => void;
+  onOpen: (avatar: ProfileAvatar) => void;
   t: ReturnType<typeof useTranslation>['t'];
 }): React.JSX.Element {
   if (!avatars.length) {
@@ -678,8 +709,9 @@ function AvatarHistoryGrid({
         const file = getAvatarFile(item);
         const isVideo = file ? isVideoFile(file) : false;
         const isActive = String(item.id) === activeAvatarId || item.status === 'active';
-        const canSelect = !disabled && !isActive && isAvatarSelectable(item);
-        const failureMessage = item.status === 'failed' ? getAvatarFailureMessage(item, t) : '';
+        const canOpen = !disabled;
+        const hasPartialFailure = ['image_failed', 'video_failed'].includes(item.generation_status ?? '');
+        const failureMessage = hasPartialFailure || item.status === 'failed' ? getAvatarFailureMessage(item, t) : '';
 
         return (
           <ButtonBase
@@ -688,10 +720,10 @@ function AvatarHistoryGrid({
                 ? String(t('dashboard.profiles.detail.avatar.currentAvatar'))
                 : String(t('dashboard.profiles.detail.avatar.previousAvatar'))
             }
-            disabled={!canSelect}
+            disabled={!canOpen}
             key={item.id}
             onClick={() => {
-              onSelect(item);
+              onOpen(item);
             }}
             sx={{
               aspectRatio: '1 / 1',
@@ -706,10 +738,10 @@ function AvatarHistoryGrid({
               position: 'relative',
               width: '100%',
               '&.Mui-disabled': {
-                opacity: isActive ? 1 : 0.42,
+                opacity: isActive ? 1 : 0.55,
               },
               '&:hover': {
-                borderColor: canSelect ? 'success.light' : undefined,
+                borderColor: canOpen ? 'success.light' : undefined,
               },
             }}
             title={failureMessage || undefined}
@@ -744,7 +776,7 @@ function AvatarHistoryGrid({
             {failureMessage ? (
               <Chip
                 color="error"
-                label={t('dashboard.profiles.detail.avatar.status.failed')}
+                label={t('dashboard.profiles.detail.avatar.status.partial')}
                 size="small"
                 sx={{
                   left: '50%',
@@ -763,11 +795,15 @@ function AvatarHistoryGrid({
 }
 
 function getAvatarFile(avatar: null | ProfileAvatar): string {
-  return avatar?.ai_video?.file || avatar?.file || avatar?.ai_image?.file || '';
+  return avatar?.file || avatar?.ai_video?.file || avatar?.ai_image?.file || avatar?.original_file || '';
 }
 
 function getLatestFailedAvatar(avatars: ProfileAvatar[]): null | ProfileAvatar {
-  return avatars.find((item) => item.status === 'failed') ?? null;
+  return (
+    avatars.find(
+      (item) => item.status === 'failed' || ['image_failed', 'video_failed'].includes(item.generation_status ?? '')
+    ) ?? null
+  );
 }
 
 function shouldShowAvatarFailure(failedAvatar: null | ProfileAvatar, currentAvatar: null | ProfileAvatar): boolean {
@@ -810,8 +846,22 @@ function getAvatarFailureMessage(avatar: ProfileAvatar, t: ReturnType<typeof use
   return t('dashboard.profiles.detail.avatar.failureWithCode', { code, message });
 }
 
-function isAvatarSelectable(avatar: ProfileAvatar): boolean {
-  return ['active', 'inactive'].includes(String(avatar.status ?? '').toLowerCase()) && Boolean(getAvatarFile(avatar));
+function isAvatarVariantAvailable(avatar: ProfileAvatar, variant: AvatarVariant): boolean {
+  const asset = avatar.variants?.[variant];
+
+  if (asset) {
+    return asset.status === 'available' && Boolean(asset.file);
+  }
+
+  if (variant === 'original') {
+    return Boolean(avatar.original_file);
+  }
+
+  if (variant === 'enhanced') {
+    return avatar.ai_image?.status === 'succeeded' && Boolean(avatar.ai_image.file);
+  }
+
+  return avatar.ai_video?.status === 'succeeded' && Boolean(avatar.ai_video.file);
 }
 
 function upsertAvatar(avatars: ProfileAvatar[], avatar: ProfileAvatar): ProfileAvatar[] {

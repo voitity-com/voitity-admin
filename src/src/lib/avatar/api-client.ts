@@ -13,6 +13,18 @@ interface RequestOptions {
 }
 
 export type ProfileAvatarStatus = 'active' | 'failed' | 'inactive' | 'processing';
+export type AvatarGenerationStatus = 'completed' | 'image_failed' | 'processing' | 'video_failed';
+export type AvatarVariant = 'animation' | 'enhanced' | 'original';
+export type AvatarVariantStatus = 'available' | 'failed' | 'not_generated' | 'processing' | 'unavailable' | 'waiting';
+
+export interface ProfileAvatarVariant {
+  failure_code?: null | string;
+  failure_reason?: null | string;
+  file?: null | string;
+  kind: 'image' | 'video';
+  selected?: boolean;
+  status: AvatarVariantStatus;
+}
 
 export interface ProfileAvatar {
   ai_video_id?: null | number | string;
@@ -34,11 +46,15 @@ export interface ProfileAvatar {
   failure_code?: null | string;
   failure_reason?: null | string;
   file?: null | string;
+  generation_status?: null | AvatarGenerationStatus;
   has_processing_avatar?: boolean;
   id: number | string;
+  original_file?: null | string;
   profile_id: number | string;
   processing_avatar?: null | ProfileAvatar;
+  selected_variant?: null | AvatarVariant;
   status?: null | ProfileAvatarStatus;
+  variants?: Partial<Record<AvatarVariant, ProfileAvatarVariant>>;
   created_at?: null | string;
   updated_at?: null | string;
 }
@@ -113,12 +129,13 @@ export async function listProfileAvatarHistory(profileId: number | string): Prom
 
 export async function activateProfileAvatar(
   profileId: number | string,
-  avatarId: number | string
+  avatarId: number | string,
+  variant: AvatarVariant
 ): Promise<ProfileAvatar> {
   const response = await requestJson<ApiEnvelope<ProfileAvatar> | ProfileAvatar>(
     `/api/avatar/${encodeURIComponent(String(profileId))}/activate`,
     {
-      body: { avatar_id: avatarId },
+      body: { avatar_id: avatarId, variant },
       method: 'POST',
     }
   );
