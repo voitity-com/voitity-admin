@@ -1478,6 +1478,102 @@
             }
           }
         },
+        "settings": {
+          "description": "Administra las funcionalidades disponibles y la forma de insertar este perfil en otros sitios web.",
+          "features": {
+            "disabled": "Desactivada",
+            "empty": "No hay funcionalidades disponibles. Primero publica los módulos desde Nuevas funcionalidades.",
+            "enabled": "Activada",
+            "error": "No fue posible cargar la configuración del perfil.",
+            "integrationsSubheader": "Elige qué integraciones publicadas puede configurar y usar este perfil en el chat.",
+            "integrationsTitle": "Integraciones",
+            "productsDescription": "Muestra el submenú Productos y permite administrar productos para este perfil.",
+            "productsTitle": "Productos",
+            "saved": "Configuración del perfil actualizada"
+          },
+          "tabs": {
+            "features": "Funcionalidades",
+            "label": "Secciones de configuración del perfil",
+            "widget": "Widget"
+          },
+          "title": "Configuración",
+          "widget": {
+            "actions": {
+              "copy": "Copiar código",
+              "preview": "Abrir vista previa"
+            },
+            "description": "Muestra el avatar en la esquina inferior derecha de otro sitio y abre este chat en formato móvil.",
+            "enableHelp": "Al desactivarlo, el código puede permanecer instalado, pero el widget dejará de mostrarse en la siguiente carga de la página.",
+            "enableLabel": "Activar widget público",
+            "errors": {
+              "copy": "No fue posible copiar el código.",
+              "load": "No fue posible cargar la configuración del widget.",
+              "save": "No fue posible actualizar el widget."
+            },
+            "install": {
+              "description": "El código es único para este perfil y seguirá funcionando aunque cambies su alias.",
+              "steps": {
+                "copy": {
+                  "description": "Usa el botón Copiar código para evitar cambiar accidentalmente el identificador del perfil.",
+                  "title": "Copia el código completo"
+                },
+                "paste": {
+                  "description": "Pégalo antes de </body> o en el área de código personalizado de WordPress, Shopify, Wix u otro constructor.",
+                  "title": "Agrégalo al sitio web"
+                },
+                "verify": {
+                  "description": "Publica los cambios y prueba el avatar, la apertura del chat, los enlaces y el micrófono desde una ventana privada.",
+                  "title": "Verifica la instalación"
+                }
+              },
+              "title": "Código de instalación"
+            },
+            "preview": {
+              "close": "Cerrar vista previa",
+              "iframeTitle": "Vista previa del chat móvil del perfil",
+              "title": "Vista previa del widget"
+            },
+            "profileUnavailable": "El código puede instalarse, pero el widget no aparecerá hasta que el perfil esté activo y publicado.",
+            "restrictions": {
+              "cspExample": "Si el sitio usa una política CSP, debe permitir script-src y frame-src desde el dominio público de Bigmelo, y connect-src e img-src desde la API de Bigmelo.",
+              "description": "La mayoría de sitios funciona sin configuración adicional. Estas políticas del sitio anfitrión pueden requerir cambios.",
+              "items": {
+                "builders": {
+                  "description": "Algunos editores eliminan etiquetas <script>. En ese caso debe usarse su sección de código personalizado, encabezado/pie de página o un gestor de etiquetas.",
+                  "title": "Constructores y CMS"
+                },
+                "csp": {
+                  "description": "Una política de seguridad de contenido restrictiva debe autorizar los dominios de Bigmelo para scripts, marcos, imágenes y conexiones.",
+                  "title": "Política CSP"
+                },
+                "javascript": {
+                  "description": "El navegador debe permitir JavaScript y marcos de terceros. El widget no modifica los estilos ni el contenido del sitio anfitrión.",
+                  "title": "JavaScript e iframe"
+                },
+                "microphone": {
+                  "description": "El chat de texto siempre estará disponible. Para enviar audios, el sitio y el navegador deben permitir el micrófono para Bigmelo.",
+                  "title": "Permiso de micrófono"
+                },
+                "publication": {
+                  "description": "El perfil debe estar activo y publicado, y este interruptor debe permanecer activado.",
+                  "title": "Publicación del perfil"
+                }
+              },
+              "title": "Compatibilidad y restricciones"
+            },
+            "status": {
+              "available": "Visible",
+              "disabled": "Desactivado",
+              "profileUnavailable": "Perfil no disponible"
+            },
+            "title": "Widget del perfil",
+            "toasts": {
+              "copied": "Código del widget copiado",
+              "disabled": "Widget desactivado",
+              "enabled": "Widget activado"
+            }
+          }
+        },
       "nav": {
         "avatar": "Avatar",
         "chats": "Chats",

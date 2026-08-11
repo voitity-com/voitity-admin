@@ -11,13 +11,15 @@ import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Typography from '@mui/material/Typography';
 import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
@@ -25,45 +27,17 @@ import { logger } from '@/lib/default-logger';
 import type { FeatureFlag, FeatureKey } from '@/lib/features/api-client';
 import { getProfileFeatures, updateProfileFeatures } from '@/lib/features/api-client';
 import { toast } from '@/components/core/toaster';
+import { ProfileWidgetSettingsPanel } from '@/components/dashboard/profiles/profile-widget-settings';
 
 const metadata = { title: `Settings | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const PROFILE_FEATURE_TOAST_ID = 'profile-feature-setting';
-type Language = 'en' | 'es';
-
-const copy = {
-  en: {
-    disabled: 'Disabled',
-    enabled: 'Enabled',
-    empty: 'No profile feature settings are available. Enable modules from New features first.',
-    error: 'Profile settings could not be loaded.',
-    integrationsSubheader: 'Choose which published integrations this profile can configure and use in chat.',
-    integrationsTitle: 'Integrations',
-    productsDescription: 'Shows the Products submenu and allows product management for this profile.',
-    productsTitle: 'Products',
-    saved: 'Profile setting updated',
-    subheader: 'Select which published modules are available in this profile.',
-    title: 'Settings',
-  },
-  es: {
-    disabled: 'Desactivada',
-    enabled: 'Activada',
-    empty: 'No hay settings de funcionalidades disponibles. Activa módulos desde Nuevas funcionalidades primero.',
-    error: 'No fue posible cargar la configuración del perfil.',
-    integrationsSubheader: 'Elige qué integraciones publicadas puede configurar y usar este perfil en el chat.',
-    integrationsTitle: 'Integraciones',
-    productsDescription: 'Muestra el submenu Productos y permite administrar productos para este perfil.',
-    productsTitle: 'Productos',
-    saved: 'Configuración del perfil actualizada',
-    subheader: 'Selecciona qué módulos publicados están disponibles en este perfil.',
-    title: 'Configuración',
-  },
-} satisfies Record<Language, Record<string, string>>;
+type SettingsTab = 'features' | 'widget';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
-  const { i18n } = useTranslation();
-  const language: Language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
-  const t = copy[language];
+  const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedTab: SettingsTab = searchParams.get('tab') === 'widget' ? 'widget' : 'features';
   const [error, setError] = React.useState('');
   const [features, setFeatures] = React.useState<FeatureFlag[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -77,11 +51,11 @@ export function Page(): React.JSX.Element {
       setFeatures(await getProfileFeatures(profileId));
     } catch (err) {
       logger.error(err);
-      setError(t.error);
+      setError(t('dashboard.profiles.detail.settings.features.error'));
     } finally {
       setIsLoading(false);
     }
-  }, [profileId, t.error]);
+  }, [profileId, t]);
 
   React.useEffect(() => {
     loadFeatures().catch((err) => {
@@ -96,15 +70,21 @@ export function Page(): React.JSX.Element {
       try {
         setFeatures(await updateProfileFeatures(profileId, { [key]: enabled }));
         window.dispatchEvent(new CustomEvent('profile-features-updated', { detail: { profileId } }));
-        toast.success(t.saved, { id: PROFILE_FEATURE_TOAST_ID, position: 'top-right' });
+        toast.success(t('dashboard.profiles.detail.settings.features.saved'), {
+          id: PROFILE_FEATURE_TOAST_ID,
+          position: 'top-right',
+        });
       } catch (err) {
         logger.error(err);
-        toast.error(t.error, { id: PROFILE_FEATURE_TOAST_ID, position: 'top-right' });
+        toast.error(t('dashboard.profiles.detail.settings.features.error'), {
+          id: PROFILE_FEATURE_TOAST_ID,
+          position: 'top-right',
+        });
       } finally {
         setSavingKey(null);
       }
     },
-    [profileId, t.error, t.saved]
+    [profileId, t]
   );
 
   const availableFeatures = features.filter((feature) => feature.available);
@@ -120,36 +100,58 @@ export function Page(): React.JSX.Element {
         <Stack spacing={0.5}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <GearIcon fontSize="var(--icon-fontSize-lg)" />
-            <Typography variant="h4">{t.title}</Typography>
+            <Typography variant="h4">{t('dashboard.profiles.detail.settings.title')}</Typography>
           </Stack>
           <Typography color="text.secondary" variant="body2">
-            {t.subheader}
+            {t('dashboard.profiles.detail.settings.description')}
           </Typography>
         </Stack>
 
-        {error ? <Alert color="error">{error}</Alert> : null}
+        <Tabs
+          aria-label={t('dashboard.profiles.detail.settings.tabs.label')}
+          onChange={(_, value: SettingsTab) => {
+            const nextParams = new URLSearchParams(searchParams);
+            if (value === 'features') {
+              nextParams.delete('tab');
+            } else {
+              nextParams.set('tab', value);
+            }
+            setSearchParams(nextParams, { replace: true });
+          }}
+          sx={{ minHeight: 44 }}
+          value={selectedTab}
+          variant="scrollable"
+        >
+          <Tab label={t('dashboard.profiles.detail.settings.tabs.features')} value="features" />
+          <Tab label={t('dashboard.profiles.detail.settings.tabs.widget')} value="widget" />
+        </Tabs>
 
-        {isLoading ? (
+        {selectedTab === 'widget' ? (
+          <ProfileWidgetSettingsPanel profileId={profileId} />
+        ) : (
+          <React.Fragment>
+            {error ? <Alert color="error">{error}</Alert> : null}
+            {isLoading ? (
           <Stack sx={{ alignItems: 'center', p: 5 }}>
             <CircularProgress />
           </Stack>
         ) : availableFeatures.length === 0 ? (
-          <Alert color="info">{t.empty}</Alert>
+          <Alert color="info">{t('dashboard.profiles.detail.settings.features.empty')}</Alert>
         ) : (
           <Stack spacing={3}>
             {productsFeature ? (
               <Card>
                 <CardHeader
                   avatar={<PackageIcon fontSize="var(--icon-fontSize-lg)" />}
-                  subheader={t.productsDescription}
-                  title={t.productsTitle}
+                  subheader={t('dashboard.profiles.detail.settings.features.productsDescription')}
+                  title={t('dashboard.profiles.detail.settings.features.productsTitle')}
                 />
                 <Divider />
                 <CardContent>
                   <ProfileFeatureSwitch
                     disabled={savingKey !== null}
-                    disabledLabel={t.disabled}
-                    enabledLabel={t.enabled}
+                    disabledLabel={t('dashboard.profiles.detail.settings.features.disabled')}
+                    enabledLabel={t('dashboard.profiles.detail.settings.features.enabled')}
                     feature={productsFeature}
                     onChange={handleToggle}
                   />
@@ -161,8 +163,8 @@ export function Page(): React.JSX.Element {
               <Card>
                 <CardHeader
                   avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
-                  subheader={t.integrationsSubheader}
-                  title={t.integrationsTitle}
+                  subheader={t('dashboard.profiles.detail.settings.features.integrationsSubheader')}
+                  title={t('dashboard.profiles.detail.settings.features.integrationsTitle')}
                 />
                 <Divider />
                 <CardContent>
@@ -170,8 +172,8 @@ export function Page(): React.JSX.Element {
                     {integrationFeatures.map((feature) => (
                       <ProfileFeatureSwitch
                         disabled={savingKey !== null}
-                        disabledLabel={t.disabled}
-                        enabledLabel={t.enabled}
+                        disabledLabel={t('dashboard.profiles.detail.settings.features.disabled')}
+                        enabledLabel={t('dashboard.profiles.detail.settings.features.enabled')}
                         feature={feature}
                         key={feature.key}
                         onChange={handleToggle}
@@ -182,6 +184,8 @@ export function Page(): React.JSX.Element {
               </Card>
             ) : null}
           </Stack>
+            )}
+          </React.Fragment>
         )}
       </Stack>
     </React.Fragment>
