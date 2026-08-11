@@ -1478,6 +1478,102 @@
             }
           }
         },
+        "settings": {
+          "description": "Manage the available features and how this profile is embedded on other websites.",
+          "features": {
+            "disabled": "Disabled",
+            "empty": "No features are available. Publish modules from New features first.",
+            "enabled": "Enabled",
+            "error": "Profile settings could not be loaded.",
+            "integrationsSubheader": "Choose which published integrations this profile can configure and use in chat.",
+            "integrationsTitle": "Integrations",
+            "productsDescription": "Shows the Products submenu and allows product management for this profile.",
+            "productsTitle": "Products",
+            "saved": "Profile setting updated"
+          },
+          "tabs": {
+            "features": "Features",
+            "label": "Profile settings sections",
+            "widget": "Widget"
+          },
+          "title": "Settings",
+          "widget": {
+            "actions": {
+              "copy": "Copy code",
+              "preview": "Open preview"
+            },
+            "description": "Shows the avatar in the bottom-right corner of another site and opens this chat in its mobile layout.",
+            "enableHelp": "When disabled, the code can remain installed, but the widget will stop appearing on the next page load.",
+            "enableLabel": "Enable public widget",
+            "errors": {
+              "copy": "The code could not be copied.",
+              "load": "The widget settings could not be loaded.",
+              "save": "The widget could not be updated."
+            },
+            "install": {
+              "description": "The code is unique to this profile and will continue working if you change its alias.",
+              "steps": {
+                "copy": {
+                  "description": "Use Copy code to avoid accidentally changing the profile identifier.",
+                  "title": "Copy the complete code"
+                },
+                "paste": {
+                  "description": "Paste it before </body> or in the custom code area of WordPress, Shopify, Wix, or another site builder.",
+                  "title": "Add it to the website"
+                },
+                "verify": {
+                  "description": "Publish the changes and test the avatar, chat opening, links, and microphone from a private window.",
+                  "title": "Verify the installation"
+                }
+              },
+              "title": "Installation code"
+            },
+            "preview": {
+              "close": "Close preview",
+              "iframeTitle": "Mobile profile chat preview",
+              "title": "Widget preview"
+            },
+            "profileUnavailable": "The code can be installed, but the widget will not appear until the profile is active and published.",
+            "restrictions": {
+              "cspExample": "If the site uses a CSP, it must allow script-src and frame-src from the public Bigmelo domain, and connect-src and img-src from the Bigmelo API.",
+              "description": "Most sites work without additional configuration. These host-site policies may require changes.",
+              "items": {
+                "builders": {
+                  "description": "Some editors remove <script> tags. In that case, use their custom code, header/footer, or tag manager section.",
+                  "title": "Site builders and CMS"
+                },
+                "csp": {
+                  "description": "A restrictive Content Security Policy must authorize Bigmelo domains for scripts, frames, images, and connections.",
+                  "title": "CSP policy"
+                },
+                "javascript": {
+                  "description": "The browser must allow JavaScript and third-party frames. The widget does not modify the host site's styles or content.",
+                  "title": "JavaScript and iframe"
+                },
+                "microphone": {
+                  "description": "Text chat is always available. To send audio, the site and browser must allow microphone access for Bigmelo.",
+                  "title": "Microphone permission"
+                },
+                "publication": {
+                  "description": "The profile must be active and published, and this switch must remain enabled.",
+                  "title": "Profile publication"
+                }
+              },
+              "title": "Compatibility and restrictions"
+            },
+            "status": {
+              "available": "Visible",
+              "disabled": "Disabled",
+              "profileUnavailable": "Profile unavailable"
+            },
+            "title": "Profile widget",
+            "toasts": {
+              "copied": "Widget code copied",
+              "disabled": "Widget disabled",
+              "enabled": "Widget enabled"
+            }
+          }
+        },
       "nav": {
         "avatar": "Avatar",
         "chats": "Chats",
