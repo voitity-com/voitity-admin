@@ -80,6 +80,7 @@ export function Page(): React.JSX.Element {
   const { i18n, t } = useTranslation();
   const language: ProductLanguage = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
   const copy = productCopy[language];
+  const [bulkDeleteProductIds, setBulkDeleteProductIds] = React.useState<number[]>([]);
   const [bulkDestinationOpen, setBulkDestinationOpen] = React.useState(false);
   const [deleteProduct, setDeleteProduct] = React.useState<null | ProfileProduct>(null);
   const [editingProduct, setEditingProduct] = React.useState<null | ProfileProduct>(null);
@@ -94,6 +95,7 @@ export function Page(): React.JSX.Element {
   const [settingsConfirmation, setSettingsConfirmation] = React.useState<null | boolean>(null);
   const productIds = React.useMemo(() => page.products.map((product) => product.id), [page.products]);
   const selection = useSelection<number>(productIds);
+  const { deselectAll: deselectAllProducts } = selection;
 
   const loadProducts = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -165,6 +167,48 @@ export function Page(): React.JSX.Element {
       setIsMutating(false);
     }
   }, [copy.errors.generic, copy.toasts.deleted, deleteProduct, loadProducts, profileId]);
+
+  const handleBulkDelete = React.useCallback(async (): Promise<void> => {
+    if (!bulkDeleteProductIds.length) {
+      return;
+    }
+
+    const productIdsToDelete = [...bulkDeleteProductIds];
+    setIsMutating(true);
+
+    try {
+      const results = await Promise.allSettled(
+        productIdsToDelete.map((productId) => deleteProfileProduct(profileId, productId))
+      );
+      const failures = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected');
+
+      for (const failure of failures) {
+        logger.error(failure.reason);
+      }
+
+      setBulkDeleteProductIds([]);
+      deselectAllProducts();
+      await loadProducts();
+
+      if (failures.length) {
+        toast.error(
+          failures.length === productIdsToDelete.length ? copy.errors.generic : copy.errors.bulkDeletePartial
+        );
+      } else {
+        toast.success(interpolate(copy.toasts.bulkDeleted, { count: productIdsToDelete.length }));
+      }
+    } finally {
+      setIsMutating(false);
+    }
+  }, [
+    bulkDeleteProductIds,
+    copy.errors.bulkDeletePartial,
+    copy.errors.generic,
+    copy.toasts.bulkDeleted,
+    deselectAllProducts,
+    loadProducts,
+    profileId,
+  ]);
 
   const handleBulkStatus = React.useCallback(
     async (status: ProfileProductStatus, productIdsOverride?: number[]): Promise<void> => {
@@ -373,7 +417,10 @@ export function Page(): React.JSX.Element {
                     size="small"
                   />
                   <Typography color="text.secondary" variant="body2">
-                    {interpolate(copy.intro.usage, { count: page.pagination.total, max: page.max_products })}
+                    {interpolate(copy.intro.usage, {
+                      count: page.products.length,
+                      total: page.pagination.total,
+                    })}
                   </Typography>
                 </Stack>
               }
@@ -437,6 +484,18 @@ export function Page(): React.JSX.Element {
                   variant="outlined"
                 >
                   {copy.actions.setDestination}
+                </Button>
+                <Button
+                  color="error"
+                  disabled={isMutating}
+                  onClick={() => {
+                    setBulkDeleteProductIds(Array.from(selection.selected));
+                  }}
+                  size="small"
+                  startIcon={<TrashIcon />}
+                  variant="outlined"
+                >
+                  {copy.actions.deleteSelected}
                 </Button>
               </Stack>
             ) : null}
@@ -518,6 +577,39 @@ export function Page(): React.JSX.Element {
         onSave={handleBulkDestination}
         open={bulkDestinationOpen}
       />
+
+      <Dialog
+        aria-describedby="bulk-delete-products-description"
+        aria-labelledby="bulk-delete-products-title"
+        onClose={
+          isMutating
+            ? undefined
+            : () => {
+                setBulkDeleteProductIds([]);
+              }
+        }
+        open={bulkDeleteProductIds.length > 0}
+      >
+        <DialogTitle id="bulk-delete-products-title">{copy.confirmBulkDelete.title}</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary" id="bulk-delete-products-description" variant="body2">
+            {interpolate(copy.confirmBulkDelete.body, { count: bulkDeleteProductIds.length })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            disabled={isMutating}
+            onClick={() => {
+              setBulkDeleteProductIds([]);
+            }}
+          >
+            {copy.actions.cancel}
+          </Button>
+          <Button color="error" disabled={isMutating} onClick={handleBulkDelete} variant="contained">
+            {copy.actions.delete}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog
         onClose={
