@@ -27,17 +27,19 @@ import { logger } from '@/lib/default-logger';
 import type { FeatureFlag, FeatureKey } from '@/lib/features/api-client';
 import { getProfileFeatures, updateProfileFeatures } from '@/lib/features/api-client';
 import { toast } from '@/components/core/toaster';
+import { ProfileDomainSettingsPanel } from '@/components/dashboard/profiles/profile-domain-settings';
 import { ProfileWidgetSettingsPanel } from '@/components/dashboard/profiles/profile-widget-settings';
 
 const metadata = { title: `Settings | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const PROFILE_FEATURE_TOAST_ID = 'profile-feature-setting';
-type SettingsTab = 'features' | 'widget';
+type SettingsTab = 'domain' | 'features' | 'widget';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const selectedTab: SettingsTab = searchParams.get('tab') === 'widget' ? 'widget' : 'features';
+  const tabParam = searchParams.get('tab');
+  const selectedTab: SettingsTab = tabParam === 'widget' || tabParam === 'domain' ? tabParam : 'features';
   const [error, setError] = React.useState('');
   const [features, setFeatures] = React.useState<FeatureFlag[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -124,66 +126,69 @@ export function Page(): React.JSX.Element {
         >
           <Tab label={t('dashboard.profiles.detail.settings.tabs.features')} value="features" />
           <Tab label={t('dashboard.profiles.detail.settings.tabs.widget')} value="widget" />
+          <Tab label={t('dashboard.profiles.detail.settings.tabs.domain')} value="domain" />
         </Tabs>
 
-        {selectedTab === 'widget' ? (
+        {selectedTab === 'domain' ? (
+          <ProfileDomainSettingsPanel profileId={profileId} />
+        ) : selectedTab === 'widget' ? (
           <ProfileWidgetSettingsPanel profileId={profileId} />
         ) : (
           <React.Fragment>
             {error ? <Alert color="error">{error}</Alert> : null}
             {isLoading ? (
-          <Stack sx={{ alignItems: 'center', p: 5 }}>
-            <CircularProgress />
-          </Stack>
-        ) : availableFeatures.length === 0 ? (
-          <Alert color="info">{t('dashboard.profiles.detail.settings.features.empty')}</Alert>
-        ) : (
-          <Stack spacing={3}>
-            {productsFeature ? (
-              <Card>
-                <CardHeader
-                  avatar={<PackageIcon fontSize="var(--icon-fontSize-lg)" />}
-                  subheader={t('dashboard.profiles.detail.settings.features.productsDescription')}
-                  title={t('dashboard.profiles.detail.settings.features.productsTitle')}
-                />
-                <Divider />
-                <CardContent>
-                  <ProfileFeatureSwitch
-                    disabled={savingKey !== null}
-                    disabledLabel={t('dashboard.profiles.detail.settings.features.disabled')}
-                    enabledLabel={t('dashboard.profiles.detail.settings.features.enabled')}
-                    feature={productsFeature}
-                    onChange={handleToggle}
-                  />
-                </CardContent>
-              </Card>
-            ) : null}
-
-            {integrationFeatures.length ? (
-              <Card>
-                <CardHeader
-                  avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
-                  subheader={t('dashboard.profiles.detail.settings.features.integrationsSubheader')}
-                  title={t('dashboard.profiles.detail.settings.features.integrationsTitle')}
-                />
-                <Divider />
-                <CardContent>
-                  <Stack divider={<Divider flexItem />} spacing={2}>
-                    {integrationFeatures.map((feature) => (
+              <Stack sx={{ alignItems: 'center', p: 5 }}>
+                <CircularProgress />
+              </Stack>
+            ) : availableFeatures.length === 0 ? (
+              <Alert color="info">{t('dashboard.profiles.detail.settings.features.empty')}</Alert>
+            ) : (
+              <Stack spacing={3}>
+                {productsFeature ? (
+                  <Card>
+                    <CardHeader
+                      avatar={<PackageIcon fontSize="var(--icon-fontSize-lg)" />}
+                      subheader={t('dashboard.profiles.detail.settings.features.productsDescription')}
+                      title={t('dashboard.profiles.detail.settings.features.productsTitle')}
+                    />
+                    <Divider />
+                    <CardContent>
                       <ProfileFeatureSwitch
                         disabled={savingKey !== null}
                         disabledLabel={t('dashboard.profiles.detail.settings.features.disabled')}
                         enabledLabel={t('dashboard.profiles.detail.settings.features.enabled')}
-                        feature={feature}
-                        key={feature.key}
+                        feature={productsFeature}
                         onChange={handleToggle}
                       />
-                    ))}
-                  </Stack>
-                </CardContent>
-              </Card>
-            ) : null}
-          </Stack>
+                    </CardContent>
+                  </Card>
+                ) : null}
+
+                {integrationFeatures.length ? (
+                  <Card>
+                    <CardHeader
+                      avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
+                      subheader={t('dashboard.profiles.detail.settings.features.integrationsSubheader')}
+                      title={t('dashboard.profiles.detail.settings.features.integrationsTitle')}
+                    />
+                    <Divider />
+                    <CardContent>
+                      <Stack divider={<Divider flexItem />} spacing={2}>
+                        {integrationFeatures.map((feature) => (
+                          <ProfileFeatureSwitch
+                            disabled={savingKey !== null}
+                            disabledLabel={t('dashboard.profiles.detail.settings.features.disabled')}
+                            enabledLabel={t('dashboard.profiles.detail.settings.features.enabled')}
+                            feature={feature}
+                            key={feature.key}
+                            onChange={handleToggle}
+                          />
+                        ))}
+                      </Stack>
+                    </CardContent>
+                  </Card>
+                ) : null}
+              </Stack>
             )}
           </React.Fragment>
         )}
