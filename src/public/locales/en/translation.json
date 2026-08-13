@@ -1478,8 +1478,68 @@
             }
           }
         },
-        "settings": {
-          "description": "Manage the available features and how this profile is embedded on other websites.",
+      "settings": {
+        "description": "Manage this profile's features, widget, and custom domain.",
+        "domain": {
+          "actions": {
+            "cancel": "Cancel",
+            "configure": "Configure domain",
+            "copy": "Copy target",
+            "disconnect": "Disconnect domain",
+            "open": "Open domain",
+            "verify": "Verify configuration"
+          },
+          "confirm": {
+            "description": "This profile will stop appearing at {{hostname}}. The process also removes Bigmelo's managed tenant and certificate. You can configure another domain afterward. Remove the DNS records directly from your DNS provider.",
+            "title": "Disconnect this domain?"
+          },
+          "description": "Publish this profile on your own domain or subdomain with HTTPS managed by Bigmelo.",
+          "dns": {
+            "description": "Create this record in your provider's DNS zone. Bigmelo verifies the target, issues the certificate, and activates the domain automatically.",
+            "name": "Name",
+            "propagation": "DNS propagation and certificate issuance can take from a few minutes to 24 hours. You can use Verify configuration again at any time.",
+            "rootWarning": "For an apex domain such as yourdomain.com, use ALIAS, ANAME, or CNAME flattening. A traditional CNAME can normally only be used on a subdomain such as profile.yourdomain.com.",
+            "title": "Required DNS record",
+            "type": "Type",
+            "value": "Target"
+          },
+          "errors": {
+            "configure": "The domain could not be configured. Confirm that it is valid and not assigned to another profile, then try again.",
+            "copy": "The target could not be copied.",
+            "disconnect": "The domain disconnection could not be started.",
+            "load": "The domain settings could not be loaded.",
+            "verify": "The domain could not be verified."
+          },
+          "hostnameHelp": "Enter only the domain, without https://, ports, or paths. Example: profile.yourdomain.com. International domains must use Punycode.",
+          "hostnameLabel": "Domain or subdomain",
+          "nameservers": "Do not change your domain's nameservers. Only add the DNS record shown below at your current provider.",
+          "requirements": {
+            "items": {
+              "dns": "You must be able to create DNS records with the domain provider.",
+              "email": "Email and other domain services are not changed when you keep their existing records.",
+              "exclusive": "The same domain can only be connected to one Bigmelo profile at a time.",
+              "https": "Bigmelo manages the HTTPS certificate. You do not upload a certificate manually.",
+              "ownership": "You must own the domain or be authorized to manage it."
+            },
+            "title": "Requirements and restrictions"
+          },
+          "status": {
+            "active": "Active",
+            "activating": "Activating",
+            "disconnecting": "Disconnecting",
+            "failed": "Needs attention",
+            "pending_certificate": "Issuing certificate",
+            "pending_dns": "Waiting for DNS",
+            "pending_provisioning": "Preparing domain"
+          },
+          "title": "Custom domain",
+          "toasts": {
+            "copied": "DNS target copied",
+            "disconnectQueued": "Domain disconnection started",
+            "queued": "Domain configuration started",
+            "verificationQueued": "Domain verification started"
+          }
+        },
           "features": {
             "disabled": "Disabled",
             "empty": "No features are available. Publish modules from New features first.",
@@ -1491,8 +1551,9 @@
             "productsTitle": "Products",
             "saved": "Profile setting updated"
           },
-          "tabs": {
-            "features": "Features",
+        "tabs": {
+          "domain": "Domain",
+          "features": "Features",
             "label": "Profile settings sections",
             "widget": "Widget"
           },

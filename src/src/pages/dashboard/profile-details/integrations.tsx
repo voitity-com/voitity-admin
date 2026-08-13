@@ -1582,7 +1582,6 @@ function YouTubeMediaDialog({
         <DialogContent dividers sx={{ p: { sm: 3, xs: 2 } }}>
           <Stack spacing={2}>
             <TextField
-              autoFocus
               error={Boolean(videoUrl.trim()) && !validUrl}
               fullWidth
               inputProps={{ 'data-testid': 'youtube-video-url-input' }}

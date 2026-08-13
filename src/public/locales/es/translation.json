@@ -1478,8 +1478,68 @@
             }
           }
         },
-        "settings": {
-          "description": "Administra las funcionalidades disponibles y la forma de insertar este perfil en otros sitios web.",
+      "settings": {
+        "description": "Administra las funcionalidades, el widget y el dominio personalizado de este perfil.",
+        "domain": {
+          "actions": {
+            "cancel": "Cancelar",
+            "configure": "Configurar dominio",
+            "copy": "Copiar destino",
+            "disconnect": "Desconectar dominio",
+            "open": "Abrir dominio",
+            "verify": "Verificar configuración"
+          },
+          "confirm": {
+            "description": "Se dejará de mostrar este perfil en {{hostname}}. El proceso también elimina el tenant y el certificado administrado de Bigmelo. Después podrás configurar otro dominio. Los registros DNS debes retirarlos directamente desde tu proveedor.",
+            "title": "¿Desconectar este dominio?"
+          },
+          "description": "Publica este perfil con tu propio dominio o subdominio mediante HTTPS administrado por Bigmelo.",
+          "dns": {
+            "description": "Crea este registro en la zona DNS de tu proveedor. Bigmelo verifica el destino, emite el certificado y activa el dominio automáticamente.",
+            "name": "Nombre",
+            "propagation": "La propagación DNS y la emisión del certificado pueden tardar desde unos minutos hasta 24 horas. Puedes volver a Verificar configuración en cualquier momento.",
+            "rootWarning": "Para un dominio raíz como tudominio.com, usa ALIAS, ANAME o CNAME flattening. Un CNAME tradicional normalmente solo puede usarse en un subdominio como perfil.tudominio.com.",
+            "title": "Registro DNS requerido",
+            "type": "Tipo",
+            "value": "Destino"
+          },
+          "errors": {
+            "configure": "No fue posible configurar el dominio. Verifica que sea válido, que no esté asignado a otro perfil y vuelve a intentarlo.",
+            "copy": "No fue posible copiar el destino.",
+            "disconnect": "No fue posible iniciar la desconexión del dominio.",
+            "load": "No fue posible cargar la configuración del dominio.",
+            "verify": "No fue posible verificar el dominio."
+          },
+          "hostnameHelp": "Escribe solo el dominio, sin https://, puertos ni rutas. Ejemplo: perfil.tudominio.com. Los dominios internacionales deben escribirse en formato Punycode.",
+          "hostnameLabel": "Dominio o subdominio",
+          "nameservers": "No cambies los servidores de nombres de tu dominio. Solo agrega el registro DNS indicado abajo en tu proveedor actual.",
+          "requirements": {
+            "items": {
+              "dns": "Debes poder crear registros DNS en el proveedor del dominio.",
+              "email": "El correo y los demás servicios del dominio no se modifican si conservas sus registros actuales.",
+              "exclusive": "El mismo dominio solo puede estar conectado a un perfil de Bigmelo a la vez.",
+              "https": "Bigmelo administra el certificado HTTPS. No debes subir un certificado manualmente.",
+              "ownership": "Debes ser propietario del dominio o tener autorización para administrarlo."
+            },
+            "title": "Requisitos y restricciones"
+          },
+          "status": {
+            "active": "Activo",
+            "activating": "Activando",
+            "disconnecting": "Desconectando",
+            "failed": "Requiere atención",
+            "pending_certificate": "Generando certificado",
+            "pending_dns": "Esperando DNS",
+            "pending_provisioning": "Preparando dominio"
+          },
+          "title": "Dominio personalizado",
+          "toasts": {
+            "copied": "Destino DNS copiado",
+            "disconnectQueued": "Desconexión del dominio iniciada",
+            "queued": "Configuración del dominio iniciada",
+            "verificationQueued": "Verificación del dominio iniciada"
+          }
+        },
           "features": {
             "disabled": "Desactivada",
             "empty": "No hay funcionalidades disponibles. Primero publica los módulos desde Nuevas funcionalidades.",
@@ -1491,8 +1551,9 @@
             "productsTitle": "Productos",
             "saved": "Configuración del perfil actualizada"
           },
-          "tabs": {
-            "features": "Funcionalidades",
+        "tabs": {
+          "domain": "Dominio",
+          "features": "Funcionalidades",
             "label": "Secciones de configuración del perfil",
             "widget": "Widget"
           },

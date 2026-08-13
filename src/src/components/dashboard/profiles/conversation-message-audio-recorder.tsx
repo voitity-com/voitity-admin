@@ -119,7 +119,7 @@ export function ConversationMessageAudioRecorder({
         <Typography color="text.secondary" sx={{ mt: 2 }} variant="body2">
           {t('dashboard.profiles.detail.messages.recording.countdownDescription')}
         </Typography>
-        <Button onClick={onDiscard} size="small" sx={{ mt: 1.5 }} startIcon={<XIcon />}>
+        <Button onClick={onDiscard} size="small" startIcon={<XIcon />} sx={{ mt: 1.5 }}>
           {t('dashboard.profiles.detail.messages.actions.cancelRecording')}
         </Button>
       </Box>
