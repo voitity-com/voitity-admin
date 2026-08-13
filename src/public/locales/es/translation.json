@@ -1590,16 +1590,20 @@
         "sources": "Fuentes",
         "voice": "Voz"
       },
-        "messages": {
+          "messages": {
           "actions": {
+            "cancelRecording": "Cancelar",
             "clearAudio": "Quitar audio",
+            "discardRecording": "Descartar grabación",
             "generateAudio": "Generar audio",
             "generating": "Generando...",
             "recordAudio": "Grabar audio",
             "removing": "Quitando...",
             "save": "Guardar texto",
+            "saveRecording": "Guardar grabación",
             "saving": "Guardando...",
-            "stopRecording": "Detener y guardar {{seconds}}s"
+            "savingRecording": "Guardando grabación...",
+            "stopRecording": "Detener grabación"
           },
           "audioEmpty": "Aún no hay audio guardado para este mensaje.",
           "audioSources": {
@@ -1625,11 +1629,21 @@
           "errors": {
             "generateAudio": "No se pudo generar el audio. Revisa que la voz ya esté clonada.",
             "microphoneAccess": "No se pudo acceder al micrófono.",
+            "recordingEmpty": "La grabación no contiene audio. Intenta nuevamente.",
+            "recordingStart": "No fue posible iniciar la grabación.",
             "recordingUnsupported": "Este navegador no soporta grabación de audio.",
             "uploadAudio": "No se pudo guardar el audio grabado."
           },
           "fields": {
             "text": "Texto del mensaje"
+          },
+          "recording": {
+            "countdownDescription": "La grabación comenzará al terminar la cuenta regresiva.",
+            "liveTitle": "Grabando audio",
+            "preparingDescription": "Autoriza el acceso al micrófono si el navegador lo solicita.",
+            "preparingTitle": "Preparando micrófono",
+            "previewDescription": "Escúchala antes de reemplazar el audio guardado. Si la descartas, se conservará el audio anterior.",
+            "previewTitle": "Revisa tu grabación"
           },
           "status": {
             "disabled": "Inactivo",

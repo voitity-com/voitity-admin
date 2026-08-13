@@ -1590,16 +1590,20 @@
         "sources": "Sources",
         "voice": "Voice"
       },
-        "messages": {
+          "messages": {
           "actions": {
+            "cancelRecording": "Cancel",
             "clearAudio": "Remove audio",
+            "discardRecording": "Discard recording",
             "generateAudio": "Generate audio",
             "generating": "Generating...",
             "recordAudio": "Record audio",
             "removing": "Removing...",
             "save": "Save text",
+            "saveRecording": "Save recording",
             "saving": "Saving...",
-            "stopRecording": "Stop and save {{seconds}}s"
+            "savingRecording": "Saving recording...",
+            "stopRecording": "Stop recording"
           },
           "audioEmpty": "No audio has been saved for this message yet.",
           "audioSources": {
@@ -1625,11 +1629,21 @@
           "errors": {
             "generateAudio": "Audio could not be generated. Check that the voice has already been cloned.",
             "microphoneAccess": "Unable to access the microphone.",
+            "recordingEmpty": "The recording does not contain audio. Please try again.",
+            "recordingStart": "The recording could not be started.",
             "recordingUnsupported": "Audio recording is not supported by this browser.",
             "uploadAudio": "Recorded audio could not be saved."
           },
           "fields": {
             "text": "Message text"
+          },
+          "recording": {
+            "countdownDescription": "Recording will begin when the countdown ends.",
+            "liveTitle": "Recording audio",
+            "preparingDescription": "Allow microphone access if your browser asks for permission.",
+            "preparingTitle": "Preparing microphone",
+            "previewDescription": "Listen before replacing the saved audio. If you discard it, the previous audio will be kept.",
+            "previewTitle": "Review your recording"
           },
           "status": {
             "disabled": "Inactive",
