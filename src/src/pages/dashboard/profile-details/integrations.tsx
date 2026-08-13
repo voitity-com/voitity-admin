@@ -25,8 +25,8 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowsClockwise';
-import { InstagramLogo as InstagramLogoIcon } from '@phosphor-icons/react/dist/ssr/InstagramLogo';
 import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
+import { InstagramLogo as InstagramLogoIcon } from '@phosphor-icons/react/dist/ssr/InstagramLogo';
 import { LinkSimple as LinkSimpleIcon } from '@phosphor-icons/react/dist/ssr/LinkSimple';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
@@ -51,8 +51,8 @@ import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import {
   addYouTubeMedia,
   createIntegrationConnectUrl,
-  deleteOtherMedia,
   deleteOnlyFansMedia,
+  deleteOtherMedia,
   deleteYouTubeMedia,
   disconnectIntegration,
   getIntegrationDestinations,
@@ -77,8 +77,8 @@ import {
   type YouTubeMediaInput,
 } from '@/lib/integrations/api-client';
 import { toast } from '@/components/core/toaster';
-import { OtherMediaForm } from '@/components/dashboard/profiles/integrations/other-media-form';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
+import { OtherMediaForm } from '@/components/dashboard/profiles/integrations/other-media-form';
 
 const metadata = { title: `Integrations | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 type MediaFilter = 'all' | 'selected';
@@ -426,14 +426,10 @@ export function Page(): React.JSX.Element {
       : t.providers[activeTab as LegacyIntegrationProvider];
   const disconnectConfirmation: DisconnectConfirmationCopy | null = isDisconnectableProvider(activeTab)
     ? {
-        body: translate(
-          `dashboard.profiles.detail.integrations.disconnectConfirmation.${activeTab}.body`
-        ),
+        body: translate(`dashboard.profiles.detail.integrations.disconnectConfirmation.${activeTab}.body`),
         cancel: translate('dashboard.profiles.detail.integrations.disconnectConfirmation.cancel'),
         confirm: translate('dashboard.profiles.detail.integrations.disconnectConfirmation.confirm'),
-        title: translate(
-          `dashboard.profiles.detail.integrations.disconnectConfirmation.${activeTab}.title`
-        ),
+        title: translate(`dashboard.profiles.detail.integrations.disconnectConfirmation.${activeTab}.title`),
       }
     : null;
 
@@ -629,9 +625,7 @@ export function Page(): React.JSX.Element {
       try {
         if (mediaId === undefined) {
           if (!input.file) {
-            throw new Error(
-              translate('dashboard.profiles.detail.integrations.other.validation.fileRequired')
-            );
+            throw new Error(translate('dashboard.profiles.detail.integrations.other.validation.fileRequired'));
           }
 
           const uploadInput: OtherMediaUploadInput = {
@@ -648,9 +642,7 @@ export function Page(): React.JSX.Element {
 
         await loadIntegration();
         toast.success(
-          translate(
-            `dashboard.profiles.detail.integrations.other.${mediaId === undefined ? 'uploaded' : 'updated'}`
-          )
+          translate(`dashboard.profiles.detail.integrations.other.${mediaId === undefined ? 'uploaded' : 'updated'}`)
         );
       } catch (err) {
         logger.error(err);
@@ -1195,9 +1187,9 @@ function IntegrationPanel({
       ) : null}
 
       {provider === 'youtube' && isAddingYouTubeMedia ? (
-        <YouTubeMediaForm
+        <YouTubeMediaDialog
           isSaving={isUploading}
-          onCancel={() => {
+          onClose={() => {
             setIsAddingYouTubeMedia(false);
           }}
           onSave={async (input) => {
@@ -1394,9 +1386,7 @@ function IntegrationPanel({
           }}
           open={isDisconnectConfirmationOpen}
         >
-          <DialogTitle id="integration-disconnect-confirmation-title">
-            {disconnectConfirmation.title}
-          </DialogTitle>
+          <DialogTitle id="integration-disconnect-confirmation-title">{disconnectConfirmation.title}</DialogTitle>
           <DialogContent>
             <Typography color="text.secondary" variant="body2">
               {disconnectConfirmation.body}
@@ -1532,15 +1522,15 @@ function YouTubeChannelForm({
   );
 }
 
-function YouTubeMediaForm({
+function YouTubeMediaDialog({
   isSaving,
-  onCancel,
+  onClose,
   onSave,
   providerText,
   selectionAvailable,
 }: {
   isSaving: boolean;
-  onCancel: () => void;
+  onClose: () => void;
   onSave: (input: YouTubeMediaInput) => Promise<void>;
   providerText: Record<string, string>;
   selectionAvailable: boolean;
@@ -1557,56 +1547,85 @@ function YouTubeMediaForm({
   }, [selectionAvailable]);
 
   return (
-    <Box
-      component="form"
-      data-testid="youtube-media-form"
-      onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
-        event.preventDefault();
-        onSave({ description: description.trim(), selected, videoUrl: videoUrl.trim() }).catch(() => undefined);
+    <Dialog
+      aria-labelledby="youtube-media-dialog-title"
+      fullWidth
+      maxWidth="sm"
+      onClose={() => {
+        if (!isSaving) {
+          onClose();
+        }
       }}
-      sx={{ border: '1px solid var(--mui-palette-divider)', borderRadius: 1, p: 3 }}
+      open
     >
-      <Stack spacing={2}>
-        <Typography variant="h6">{providerText.addVideo}</Typography>
-        <TextField
-          error={Boolean(videoUrl.trim()) && !validUrl}
-          fullWidth
-          inputProps={{ 'data-testid': 'youtube-video-url-input' }}
-          label={providerText.videoUrl}
-          onChange={(event) => {
-            setVideoUrl(event.target.value);
-          }}
-          placeholder="https://www.youtube.com/watch?v=..."
-          required
-          type="url"
-          value={videoUrl}
-        />
-        <TextField
-          fullWidth
-          inputProps={{ 'data-testid': 'youtube-video-description-input' }}
-          label={providerText.description}
-          multiline
-          onChange={(event) => {
-            setDescription(event.target.value);
-          }}
-          placeholder={providerText.observationPlaceholder}
-          required
-          rows={3}
-          value={description}
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={selected}
-              disabled={!selectionAvailable && !selected}
+      <Box
+        component="form"
+        data-testid="youtube-media-form"
+        onSubmit={(event: React.FormEvent<HTMLFormElement>) => {
+          event.preventDefault();
+          onSave({ description: description.trim(), selected, videoUrl: videoUrl.trim() }).catch(() => undefined);
+        }}
+        sx={{ position: 'relative' }}
+      >
+        <DialogTitle id="youtube-media-dialog-title" sx={{ pr: 7 }}>
+          {providerText.addVideo}
+        </DialogTitle>
+        <IconButton
+          aria-label={providerText.cancelUpload}
+          disabled={isSaving}
+          onClick={onClose}
+          size="small"
+          sx={{ position: 'absolute', right: 16, top: 16 }}
+        >
+          <XIcon />
+        </IconButton>
+        <DialogContent dividers sx={{ p: { sm: 3, xs: 2 } }}>
+          <Stack spacing={2}>
+            <TextField
+              autoFocus
+              error={Boolean(videoUrl.trim()) && !validUrl}
+              fullWidth
+              inputProps={{ 'data-testid': 'youtube-video-url-input' }}
+              label={providerText.videoUrl}
               onChange={(event) => {
-                setSelected(event.target.checked);
+                setVideoUrl(event.target.value);
               }}
+              placeholder="https://www.youtube.com/watch?v=..."
+              required
+              type="url"
+              value={videoUrl}
             />
-          }
-          label={providerText.selectForChat}
-        />
-        <Stack direction="row" spacing={1}>
+            <TextField
+              fullWidth
+              inputProps={{ 'data-testid': 'youtube-video-description-input' }}
+              label={providerText.description}
+              multiline
+              onChange={(event) => {
+                setDescription(event.target.value);
+              }}
+              placeholder={providerText.observationPlaceholder}
+              required
+              rows={3}
+              value={description}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={selected}
+                  disabled={!selectionAvailable && !selected}
+                  onChange={(event) => {
+                    setSelected(event.target.checked);
+                  }}
+                />
+              }
+              label={providerText.selectForChat}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: { sm: 3, xs: 2 }, py: 2 }}>
+          <Button disabled={isSaving} onClick={onClose} type="button">
+            {providerText.cancelUpload}
+          </Button>
           <Button
             data-testid="youtube-media-save-button"
             disabled={isSaving || !validUrl || !description.trim()}
@@ -1616,12 +1635,9 @@ function YouTubeMediaForm({
           >
             {isSaving ? `${providerText.addVideo}...` : providerText.addVideo}
           </Button>
-          <Button disabled={isSaving} onClick={onCancel} type="button" variant="outlined">
-            {providerText.cancelUpload}
-          </Button>
-        </Stack>
-      </Stack>
-    </Box>
+        </DialogActions>
+      </Box>
+    </Dialog>
   );
 }
 
@@ -2346,11 +2362,7 @@ function isDisconnectableProvider(value: IntegrationProvider): value is Disconne
 }
 
 function normalizeProvider(value: null | string): IntegrationProvider | null {
-  return value === 'instagram' ||
-    value === 'onlyfans' ||
-    value === 'other' ||
-    value === 'tiktok' ||
-    value === 'youtube'
+  return value === 'instagram' || value === 'onlyfans' || value === 'other' || value === 'tiktok' || value === 'youtube'
     ? value
     : null;
 }
