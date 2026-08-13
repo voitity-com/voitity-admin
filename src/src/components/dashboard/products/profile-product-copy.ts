@@ -7,6 +7,7 @@ export const productCopy = {
       apply: 'Apply import',
       cancel: 'Cancel',
       delete: 'Delete',
+      deleteSelected: 'Delete selected',
       downloadTemplate: 'Download template',
       draft: 'Move to draft',
       edit: 'Edit',
@@ -23,6 +24,10 @@ export const productCopy = {
       body: 'This removes the product and its uploaded image. This action cannot be undone.',
       title: 'Delete {{name}}?',
     },
+    confirmBulkDelete: {
+      body: 'Products selected for deletion: {{count}}. Their uploaded images will also be removed. This action cannot be undone.',
+      title: 'Delete selected products?',
+    },
     destination: {
       countryCode: 'Country code',
       external: 'Store link',
@@ -36,6 +41,8 @@ export const productCopy = {
       description: 'Enter a description of up to 2,000 characters.',
       destinationUrl: 'Enter a valid HTTP or HTTPS product URL.',
       generic: 'Could not complete the product operation.',
+      bulkDeletePartial:
+        'Some products could not be deleted. The list was refreshed; try again with the products that remain.',
       image: 'Choose a JPG, PNG, WEBP, or GIF image.',
       name: 'Enter a product name of up to 180 characters.',
       phone: 'Enter a valid country code and phone number.',
@@ -79,7 +86,7 @@ export const productCopy = {
       description:
         'Manage up to {{max}} products. Only published products can appear naturally in profile conversations when recommendations are enabled.',
       title: 'Products',
-      usage: '{{count}} of {{max}} products',
+      usage: '{{count}} of {{total}} products',
     },
     settings: {
       confirmDisable:
@@ -100,6 +107,7 @@ export const productCopy = {
     },
     toasts: {
       bulkDestination: 'Destination updated',
+      bulkDeleted: 'Products deleted: {{count}}',
       bulkStatus: 'Product status updated',
       created: 'Product created',
       deleted: 'Product deleted',
@@ -114,6 +122,7 @@ export const productCopy = {
       apply: 'Aplicar importación',
       cancel: 'Cancelar',
       delete: 'Eliminar',
+      deleteSelected: 'Eliminar seleccionados',
       downloadTemplate: 'Descargar plantilla',
       draft: 'Mover a borrador',
       edit: 'Editar',
@@ -130,6 +139,10 @@ export const productCopy = {
       body: 'Esto elimina el producto y su imagen cargada. Esta acción no se puede deshacer.',
       title: '¿Eliminar {{name}}?',
     },
+    confirmBulkDelete: {
+      body: 'Productos seleccionados que se eliminarán: {{count}}. También se eliminarán sus imágenes cargadas. Esta acción no se puede deshacer.',
+      title: '¿Eliminar los productos seleccionados?',
+    },
     destination: {
       countryCode: 'Indicativo',
       external: 'Link de tienda',
@@ -143,6 +156,8 @@ export const productCopy = {
       description: 'Ingresa una descripción de máximo 2.000 caracteres.',
       destinationUrl: 'Ingresa una URL de producto HTTP o HTTPS válida.',
       generic: 'No se pudo completar la operación de productos.',
+      bulkDeletePartial:
+        'Algunos productos no se pudieron eliminar. La lista se actualizó; intenta nuevamente con los productos restantes.',
       image: 'Selecciona una imagen JPG, PNG, WEBP o GIF.',
       name: 'Ingresa un nombre de máximo 180 caracteres.',
       phone: 'Ingresa un indicativo y número de teléfono válidos.',
@@ -187,7 +202,7 @@ export const productCopy = {
       description:
         'Administra hasta {{max}} productos. Solo los productos públicos pueden aparecer de forma natural en las conversaciones cuando habilitas las recomendaciones.',
       title: 'Productos',
-      usage: '{{count}} de {{max}} productos',
+      usage: '{{count}} de {{total}} productos',
     },
     settings: {
       confirmDisable:
@@ -208,6 +223,7 @@ export const productCopy = {
     },
     toasts: {
       bulkDestination: 'Destino actualizado',
+      bulkDeleted: 'Productos eliminados: {{count}}',
       bulkStatus: 'Estado de productos actualizado',
       created: 'Producto creado',
       deleted: 'Producto eliminado',
