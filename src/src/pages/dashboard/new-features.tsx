@@ -15,6 +15,7 @@ import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
+import { Globe as GlobeIcon } from '@phosphor-icons/react/dist/ssr/Globe';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
@@ -34,6 +35,9 @@ const copy = {
     disabled: 'Disabled',
     enabled: 'Enabled',
     error: 'Feature toggles could not be loaded.',
+    domainsDescription:
+      'Controls whether profiles can configure a custom domain. Turning it off blocks new configurations without interrupting domains that are already active.',
+    domainsTitle: 'Custom domains',
     integrationsSubheader: 'Publish integration modules before profiles can opt into them.',
     integrationsTitle: 'Integrations',
     productsDescription: 'Allows profiles to enable the Products section and product recommendations.',
@@ -46,6 +50,9 @@ const copy = {
     disabled: 'Desactivada',
     enabled: 'Activada',
     error: 'No fue posible cargar los feature toggles.',
+    domainsDescription:
+      'Controla si los perfiles pueden configurar un dominio propio. Al desactivarla se bloquean nuevas configuraciones sin interrumpir dominios que ya estén activos.',
+    domainsTitle: 'Dominios personalizados',
     integrationsSubheader: 'Publica módulos de integración antes de que los perfiles puedan activarlos.',
     integrationsTitle: 'Integraciones',
     productsDescription: 'Permite activar la sección Productos y las recomendaciones de productos por perfil.',
@@ -103,6 +110,7 @@ export function Page(): React.JSX.Element {
   );
 
   const productsFeature = features.find((feature) => feature.key === 'products') ?? null;
+  const customDomainsFeature = features.find((feature) => feature.key === 'domains.custom') ?? null;
   const integrationFeatures = features.filter((feature) => feature.group === 'integrations');
 
   return (
@@ -156,6 +164,26 @@ export function Page(): React.JSX.Element {
                 </Card>
               ) : null}
 
+              {customDomainsFeature ? (
+                <Card>
+                  <CardHeader
+                    avatar={<GlobeIcon fontSize="var(--icon-fontSize-lg)" />}
+                    subheader={t.domainsDescription}
+                    title={t.domainsTitle}
+                  />
+                  <Divider />
+                  <CardContent>
+                    <FeatureSwitch
+                      disabled={savingKey !== null}
+                      disabledLabel={t.disabled}
+                      enabledLabel={t.enabled}
+                      feature={customDomainsFeature}
+                      onChange={handleToggle}
+                    />
+                  </CardContent>
+                </Card>
+              ) : null}
+
               <Card>
                 <CardHeader
                   avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
@@ -201,7 +229,11 @@ function FeatureSwitch({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const featureName =
-    feature.provider === 'other' ? t('dashboard.profiles.detail.integrations.other.label') : feature.name;
+    feature.key === 'domains.custom'
+      ? t('dashboard.profiles.detail.settings.domain.title')
+      : feature.provider === 'other'
+        ? t('dashboard.profiles.detail.integrations.other.label')
+        : feature.name;
 
   return (
     <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>

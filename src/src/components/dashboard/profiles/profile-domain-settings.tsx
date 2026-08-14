@@ -244,7 +244,11 @@ export function ProfileDomainSettingsPanel({ profileId }: { profileId: string })
                       <Typography color="text.secondary" variant="caption">
                         {t('dashboard.profiles.detail.settings.domain.dns.type')}
                       </Typography>
-                      <Typography variant="body2">{record.type}</Typography>
+                      <Typography variant="body2">
+                        {record.type === 'CNAME_OR_ALIAS'
+                          ? t('dashboard.profiles.detail.settings.domain.dns.typeValue')
+                          : record.type}
+                      </Typography>
                     </Stack>
                     <Stack spacing={0.5} sx={{ flex: '1 1 48%', minWidth: 0 }}>
                       <Typography color="text.secondary" variant="caption">
@@ -282,6 +286,31 @@ export function ProfileDomainSettingsPanel({ profileId }: { profileId: string })
               </Button>
             ) : null}
           </CardActions>
+        </Card>
+      ) : null}
+
+      {domain ? (
+        <Card>
+          <CardHeader
+            subheader={t('dashboard.profiles.detail.settings.domain.godaddy.description')}
+            title={t('dashboard.profiles.detail.settings.domain.godaddy.title')}
+          />
+          <Divider />
+          <CardContent>
+            <Box component="ol" sx={{ m: 0, pl: 3 }}>
+              {(['open', 'add', 'name', 'target', 'ttl', 'conflicts', 'verify'] as const).map((step) => (
+                <Typography component="li" key={step} sx={{ mb: 1.25, pl: 0.5 }} variant="body2">
+                  {t(`dashboard.profiles.detail.settings.domain.godaddy.steps.${step}`, {
+                    hostname: domain.hostname,
+                    value: domain.dnsRecords[0]?.value ?? '',
+                  })}
+                </Typography>
+              ))}
+            </Box>
+            <Alert color="info" sx={{ mt: 2 }}>
+              {t('dashboard.profiles.detail.settings.domain.godaddy.note')}
+            </Alert>
+          </CardContent>
         </Card>
       ) : null}
 

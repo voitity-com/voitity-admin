@@ -11,8 +11,9 @@ interface RequestOptions {
   method?: 'GET' | 'PATCH';
 }
 
-export type FeatureGroup = 'integrations' | 'products';
+export type FeatureGroup = 'domains' | 'integrations' | 'products';
 export type FeatureKey =
+  | 'domains.custom'
   | 'integrations.instagram'
   | 'integrations.onlyfans'
   | 'integrations.other'
@@ -29,6 +30,7 @@ export interface FeatureFlag {
   group: FeatureGroup;
   key: FeatureKey;
   name: string;
+  profile_configurable?: boolean;
   provider?: IntegrationFeatureProvider;
 }
 
@@ -101,6 +103,7 @@ function normalizeFeatures(features: FeatureFlag[] | undefined): FeatureFlag[] {
 
 function toApiFeaturePayload(features: FeaturePatch): Record<string, unknown> {
   const payload: {
+    domains?: { custom?: boolean };
     integrations?: Partial<Record<IntegrationFeatureProvider, boolean>>;
     products?: boolean;
   } = {};
@@ -112,6 +115,11 @@ function toApiFeaturePayload(features: FeaturePatch): Record<string, unknown> {
 
     if (key === 'products') {
       payload.products = enabled;
+      return;
+    }
+
+    if (key === 'domains.custom') {
+      payload.domains = { custom: enabled };
       return;
     }
 

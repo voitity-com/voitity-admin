@@ -1501,6 +1501,7 @@
             "rootWarning": "Para un dominio raíz como tudominio.com, usa ALIAS, ANAME o CNAME flattening. Un CNAME tradicional normalmente solo puede usarse en un subdominio como perfil.tudominio.com.",
             "title": "Registro DNS requerido",
             "type": "Tipo",
+            "typeValue": "CNAME para subdominios / ALIAS o ANAME para dominio raíz",
             "value": "Destino"
           },
           "errors": {
@@ -1512,6 +1513,20 @@
           },
           "hostnameHelp": "Escribe solo el dominio, sin https://, puertos ni rutas. Ejemplo: perfil.tudominio.com. Los dominios internacionales deben escribirse en formato Punycode.",
           "hostnameLabel": "Dominio o subdominio",
+          "godaddy": {
+            "description": "Ejemplo práctico para dominios administrados en GoDaddy. Los nombres de los menús pueden variar ligeramente según el país o la versión del panel.",
+            "note": "No uses Reenvío de dominio ni enmascaramiento. Bigmelo necesita un registro DNS real para validar el dominio, emitir el certificado HTTPS y renovar ese certificado automáticamente.",
+            "steps": {
+              "add": "Selecciona Agregar nuevo registro y elige el tipo CNAME. Si estás conectando el dominio raíz, GoDaddy no admite un CNAME en @; usa un subdominio como perfil.tudominio.com o un proveedor con ALIAS/ANAME.",
+              "conflicts": "Antes de guardar, elimina únicamente otro registro A, AAAA o CNAME que tenga exactamente el mismo Nombre. No elimines registros MX, TXT ni los registros de correo.",
+              "name": "En Nombre escribe solo la parte del subdominio. Ejemplo: para bigmelo.abeldev.com dentro de la zona abeldev.com escribe bigmelo. El dominio configurado actualmente es {{hostname}}.",
+              "open": "En GoDaddy abre Mis productos, selecciona tu dominio, entra en DNS y luego en Administrar DNS.",
+              "target": "En Valor o Datos pega exactamente este destino, sin http://, https:// ni espacios: {{value}}",
+              "ttl": "Deja el TTL predeterminado o selecciona 1 hora.",
+              "verify": "Guarda el registro, espera la propagación y vuelve a Bigmelo. Selecciona Verificar configuración hasta que el estado sea Activo."
+            },
+            "title": "Cómo configurarlo en GoDaddy"
+          },
           "nameservers": "No cambies los servidores de nombres de tu dominio. Solo agrega el registro DNS indicado abajo en tu proveedor actual.",
           "requirements": {
             "items": {
