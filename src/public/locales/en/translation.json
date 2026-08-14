@@ -1501,6 +1501,7 @@
             "rootWarning": "For an apex domain such as yourdomain.com, use ALIAS, ANAME, or CNAME flattening. A traditional CNAME can normally only be used on a subdomain such as profile.yourdomain.com.",
             "title": "Required DNS record",
             "type": "Type",
+            "typeValue": "CNAME for subdomains / ALIAS or ANAME for an apex domain",
             "value": "Target"
           },
           "errors": {
@@ -1512,6 +1513,20 @@
           },
           "hostnameHelp": "Enter only the domain, without https://, ports, or paths. Example: profile.yourdomain.com. International domains must use Punycode.",
           "hostnameLabel": "Domain or subdomain",
+          "godaddy": {
+            "description": "A practical example for domains managed in GoDaddy. Menu names may vary slightly by country or panel version.",
+            "note": "Do not use domain forwarding or masking. Bigmelo needs a real DNS record to validate the domain, issue the HTTPS certificate, and renew that certificate automatically.",
+            "steps": {
+              "add": "Select Add New Record and choose CNAME. If you are connecting the apex domain, GoDaddy does not support a CNAME at @; use a subdomain such as profile.yourdomain.com or a provider that supports ALIAS/ANAME.",
+              "conflicts": "Before saving, remove only another A, AAAA, or CNAME record with the exact same Name. Do not remove MX, TXT, or email records.",
+              "name": "In Name, enter only the subdomain portion. Example: for bigmelo.abeldev.com inside the abeldev.com zone, enter bigmelo. The domain currently configured is {{hostname}}.",
+              "open": "In GoDaddy, open My Products, select your domain, open DNS, and then Manage DNS.",
+              "target": "In Value or Data, paste this exact target without http://, https://, or spaces: {{value}}",
+              "ttl": "Keep the default TTL or select 1 hour.",
+              "verify": "Save the record, wait for propagation, and return to Bigmelo. Select Verify configuration until the status is Active."
+            },
+            "title": "How to configure it in GoDaddy"
+          },
           "nameservers": "Do not change your domain's nameservers. Only add the DNS record shown below at your current provider.",
           "requirements": {
             "items": {

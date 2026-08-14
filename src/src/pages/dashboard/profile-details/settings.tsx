@@ -25,7 +25,7 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
 import type { FeatureFlag, FeatureKey } from '@/lib/features/api-client';
-import { getProfileFeatures, updateProfileFeatures } from '@/lib/features/api-client';
+import { getProfileFeatures, isFeatureEffective, updateProfileFeatures } from '@/lib/features/api-client';
 import { toast } from '@/components/core/toaster';
 import { ProfileDomainSettingsPanel } from '@/components/dashboard/profiles/profile-domain-settings';
 import { ProfileWidgetSettingsPanel } from '@/components/dashboard/profiles/profile-widget-settings';
@@ -39,7 +39,6 @@ export function Page(): React.JSX.Element {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab');
-  const selectedTab: SettingsTab = tabParam === 'widget' || tabParam === 'domain' ? tabParam : 'features';
   const [error, setError] = React.useState('');
   const [features, setFeatures] = React.useState<FeatureFlag[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -89,7 +88,13 @@ export function Page(): React.JSX.Element {
     [profileId, t]
   );
 
-  const availableFeatures = features.filter((feature) => feature.available);
+  const customDomainsAvailable = isLoading || isFeatureEffective(features, 'domains.custom');
+  const requestedTab: SettingsTab = tabParam === 'widget' || tabParam === 'domain' ? tabParam : 'features';
+  const selectedTab: SettingsTab =
+    requestedTab === 'domain' && !customDomainsAvailable ? 'features' : requestedTab;
+  const availableFeatures = features.filter(
+    (feature) => feature.available && feature.profile_configurable !== false
+  );
   const productsFeature = availableFeatures.find((feature) => feature.key === 'products') ?? null;
   const integrationFeatures = availableFeatures.filter((feature) => feature.group === 'integrations');
 
@@ -126,7 +131,9 @@ export function Page(): React.JSX.Element {
         >
           <Tab label={t('dashboard.profiles.detail.settings.tabs.features')} value="features" />
           <Tab label={t('dashboard.profiles.detail.settings.tabs.widget')} value="widget" />
-          <Tab label={t('dashboard.profiles.detail.settings.tabs.domain')} value="domain" />
+          {customDomainsAvailable ? (
+            <Tab label={t('dashboard.profiles.detail.settings.tabs.domain')} value="domain" />
+          ) : null}
         </Tabs>
 
         {selectedTab === 'domain' ? (
