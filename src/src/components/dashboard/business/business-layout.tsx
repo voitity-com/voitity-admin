@@ -62,19 +62,21 @@ export function BusinessLayout({ children }: { children: React.ReactNode }): Rea
       {business ? (
         <Stack spacing={3}>
           <Paper elevation={16} sx={{ border: '1px solid var(--mui-palette-divider)', borderRadius: 2, overflow: 'hidden', width: '100%' }}>
-            <Box sx={{ alignItems: { xs: 'stretch', md: 'center' }, display: 'grid', gap: { xs: 1.25, md: 2 }, gridTemplateColumns: { xs: '1fr', md: 'minmax(260px, 0.8fr) minmax(320px, 1.4fr) auto' }, p: { xs: 1.25, sm: 2 } }}>
-              <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', minWidth: 0 }}>
+            <Box sx={{ alignItems: { xs: 'stretch', md: 'center' }, display: 'grid', gap: { xs: 1.25, md: 2 }, gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) auto' }, p: { xs: 1.25, sm: 2 } }}>
+              <Stack direction="row" spacing={1.25} sx={{ alignItems: 'flex-start', minWidth: 0 }}>
                 <Box sx={{ alignItems: 'center', bgcolor: 'background.level1', borderRadius: 1, display: 'flex', flex: '0 0 auto', height: 36, justifyContent: 'center', width: 36 }}>
                   {business.status === 'active' ? <CheckCircleIcon color="var(--mui-palette-success-main)" fontSize="var(--icon-fontSize-md)" weight="fill" /> : <RocketLaunchIcon color="var(--mui-palette-primary-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />}
                 </Box>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography noWrap variant="subtitle2">{business.name}</Typography>
-                  <Typography color="text.secondary" noWrap variant="caption">{business.description}</Typography>
-                </Box>
-              </Stack>
-              <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
-                <Chip color={business.status === 'active' ? 'success' : 'default'} label={t(`dashboard.business.status.${business.status}`)} size="small" variant="outlined" />
-                <Typography color="text.secondary" variant="caption">{t('dashboard.business.layout.guidedFlow')}</Typography>
+                <Stack spacing={0.25} sx={{ flex: '1 1 auto', minWidth: 0, overflow: 'hidden' }}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.75, minWidth: 0 }}>
+                    <Typography noWrap sx={{ maxWidth: '100%' }} variant="subtitle2">{business.name}</Typography>
+                    <Chip color={business.status === 'active' ? 'success' : 'default'} label={t(`dashboard.business.status.${business.status}`)} size="small" variant="outlined" />
+                  </Stack>
+                  {business.description ? (
+                    <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="caption">{business.description}</Typography>
+                  ) : null}
+                  <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="caption">{t('dashboard.business.layout.guidedFlow')}</Typography>
+                </Stack>
               </Stack>
               <Button color={business.status === 'active' ? 'warning' : 'primary'} disabled={saving} onClick={toggleActive} startIcon={business.status === 'active' ? <PowerIcon /> : <RocketLaunchIcon />} sx={{ justifySelf: { xs: 'stretch', md: 'end' }, whiteSpace: 'nowrap' }} variant={business.status === 'active' ? 'outlined' : 'contained'}>
                 {t(business.status === 'active' ? 'dashboard.business.actions.pause' : 'dashboard.business.actions.activate')}
