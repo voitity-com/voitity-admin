@@ -5,6 +5,7 @@ import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/
 import { isSingleProfilePlan } from '@/lib/subscription/profile-limits';
 import { logger } from '@/lib/default-logger';
 import { filterNavItemsByRole } from '@/lib/filter-nav-items-by-role';
+import { getAdminFeatures } from '@/lib/features/api-client';
 import { useUser } from '@/hooks/use-user';
 
 import { layoutConfig } from './config';
@@ -12,6 +13,7 @@ import { layoutConfig } from './config';
 export function useLayoutNavItems(): NavItemConfig[] {
   const { user } = useUser();
   const [hasSingleProfilePlan, setHasSingleProfilePlan] = React.useState(false);
+  const [businessEnabled, setBusinessEnabled] = React.useState(false);
   const userId = typeof user?.id === 'string' ? user.id : undefined;
 
   React.useEffect(() => {
@@ -43,11 +45,45 @@ export function useLayoutNavItems(): NavItemConfig[] {
     };
   }, [userId]);
 
+  React.useEffect(() => {
+    let isMounted = true;
+    const load = (): void => {
+      if (user?.role !== 'admin') {
+        setBusinessEnabled(false);
+        return;
+      }
+      getAdminFeatures()
+        .then((features) => {
+          if (isMounted) setBusinessEnabled(Boolean(features.find((feature) => feature.key === 'business')?.enabled));
+        })
+        .catch((err) => {
+          logger.error(err);
+          if (isMounted) setBusinessEnabled(false);
+        });
+    };
+    load();
+    window.addEventListener('admin-features-updated', load);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('admin-features-updated', load);
+    };
+  }, [user?.role]);
+
   return React.useMemo(() => {
-    const items = filterNavItemsByRole(layoutConfig.navItems, user?.role);
+    const items = removeDisabledBusiness(filterNavItemsByRole(layoutConfig.navItems, user?.role), businessEnabled);
 
     return hasSingleProfilePlan ? withSingularProfileLabel(items) : items;
-  }, [hasSingleProfilePlan, user?.role]);
+  }, [businessEnabled, hasSingleProfilePlan, user?.role]);
+}
+
+function removeDisabledBusiness(items: NavItemConfig[], enabled: boolean): NavItemConfig[] {
+  return items.reduce<NavItemConfig[]>((result, item) => {
+    if (item.key === 'business' && !enabled) return result;
+    const childItems = item.items ? removeDisabledBusiness(item.items, enabled) : undefined;
+    result.push(childItems ? { ...item, items: childItems } : item);
+    return result;
+  }, []);
 }
 
 function withSingularProfileLabel(items: NavItemConfig[]): NavItemConfig[] {

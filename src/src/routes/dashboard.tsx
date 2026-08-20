@@ -7,6 +7,8 @@ import { Layout as JobCompanyLayout } from '@/components/dashboard/jobs/company-
 import { Layout as DashboardLayout } from '@/components/dashboard/layout/layout';
 import { Layout as MailLayout } from '@/components/dashboard/mail/layout';
 import { ProfileLayout } from '@/components/dashboard/profiles/profile-layout';
+import { BusinessLayout } from '@/components/dashboard/business/business-layout';
+import { BusinessFeatureGuard } from '@/components/auth/business-feature-guard';
 import { Layout as SettingsLayout } from '@/components/dashboard/settings/layout';
 import { Layout as SocialProfileLayout } from '@/components/dashboard/social/profile-layout';
 
@@ -377,6 +379,83 @@ export const route: RouteObject = {
             const { Page } = await import('@/pages/dashboard/products/details');
             return { Component: Page };
           },
+        },
+      ],
+    },
+    {
+      path: 'businesses',
+      element: (
+        <BusinessFeatureGuard>
+          <Outlet />
+        </BusinessFeatureGuard>
+      ),
+      children: [
+        {
+          index: true,
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/businesses');
+            return { Component: Page };
+          },
+        },
+        {
+          path: ':businessId',
+          element: (
+            <BusinessLayout>
+              <Outlet />
+            </BusinessLayout>
+          ),
+          children: [
+            { index: true, element: <Navigate replace to="general" /> },
+            {
+              path: 'general',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/general');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'sources',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/sources');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'flow',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/flow');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'leads',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/leads');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'usage',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/usage');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'configuration',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/configuration');
+                return { Component: Page };
+              },
+            },
+            {
+              path: 'docs',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/business-details/docs');
+                return { Component: Page };
+              },
+            },
+          ],
         },
       ],
     },

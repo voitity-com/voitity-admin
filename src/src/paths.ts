@@ -71,6 +71,16 @@ export const paths = {
     newFeatures: '/dashboard/new-features',
     notifications: '/dashboard/notifications',
     profiles: '/dashboard/profiles',
+    businesses: '/dashboard/businesses',
+    businessDetails: {
+      general: (businessId: string) => `/dashboard/businesses/${businessId}/general`,
+      sources: (businessId: string) => `/dashboard/businesses/${businessId}/sources`,
+      flow: (businessId: string) => `/dashboard/businesses/${businessId}/flow`,
+      leads: (businessId: string) => `/dashboard/businesses/${businessId}/leads`,
+      usage: (businessId: string) => `/dashboard/businesses/${businessId}/usage`,
+      configuration: (businessId: string) => `/dashboard/businesses/${businessId}/configuration`,
+      docs: (businessId: string) => `/dashboard/businesses/${businessId}/docs`,
+    },
     users: '/dashboard/users',
     profileDetails: {
       avatar: (profileId: string) => `/dashboard/profiles/${profileId}/avatar`,
