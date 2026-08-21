@@ -49,7 +49,8 @@ const endpoints: EndpointExample[] = [
     method: 'POST',
     path: '/api/business/conversations',
     request: `{
-  "visitor_id": "visitor-123"
+  "visitor_id": "visitor-123",
+  "locale": "es"
 }`,
     responseStatus: '201 Created',
     response: `{
@@ -57,14 +58,19 @@ const endpoints: EndpointExample[] = [
   "data": {
     "conversation_id": "${conversationId}",
     "status": "in_progress",
+    "locale": "es",
     "session": "encrypted-session-token",
     "messages": [
       {
         "id": 101,
         "role": "assistant",
         "content": "¡Hola! Soy el bot de BIGMELOlabs. ¿Cómo te llamas?",
+        "locale": "es",
         "created_at": "2026-08-20T15:30:00.000000Z",
-        "required_fields": ["full_name"]
+        "required_fields": ["full_name"],
+        "fields": [
+          { "key": "full_name", "label": "Nombre y apellido", "type": "text", "required": true }
+        ]
       }
     ]
   }
@@ -75,7 +81,10 @@ const endpoints: EndpointExample[] = [
     method: 'POST',
     path: '/api/business/conversations/{conversation_id}/messages',
     request: `{
-  "message": "Necesito automatizar el procesamiento de facturas con IA."
+  "locale": "es",
+  "fields": {
+    "project_summary": "Procesamos cientos de facturas manualmente y queremos extraer y validar sus datos con IA."
+  }
 }`,
     responseStatus: '200 OK',
     response: `{
@@ -83,21 +92,25 @@ const endpoints: EndpointExample[] = [
   "data": {
     "conversation_id": "${conversationId}",
     "status": "in_progress",
+    "locale": "es",
     "finished": false,
     "messages": [
       {
         "id": 104,
         "role": "assistant",
-        "content": "Entiendo el problema que quieres resolver.",
-        "created_at": "2026-08-20T15:32:01.000000Z"
-      },
-      {
-        "id": 105,
-        "role": "assistant",
-        "content": "Para continuar, indícanos tus datos de contacto.",
+        "content": "¡Perfecto! Para continuar indícanos: nombre y apellido, email válido, teléfono con indicativo de país y WhatsApp con indicativo de país. También puedes indicarnos empresa y sitio web; son opcionales.",
+        "locale": "es",
         "created_at": "2026-08-20T15:32:01.000000Z",
         "required_fields": ["full_name", "email", "phone", "whatsapp"],
-        "optional_fields": ["company", "website"]
+        "optional_fields": ["company", "website"],
+        "fields": [
+          { "key": "full_name", "label": "Nombre y apellido", "type": "text", "required": true },
+          { "key": "email", "label": "Email", "type": "email", "required": true },
+          { "key": "phone", "label": "Teléfono con indicativo", "type": "tel", "required": true },
+          { "key": "whatsapp", "label": "WhatsApp con indicativo", "type": "tel", "required": true },
+          { "key": "company", "label": "Empresa", "type": "text", "required": false },
+          { "key": "website", "label": "Sitio web", "type": "url", "required": false }
+        ]
       }
     ]
   }
@@ -114,6 +127,7 @@ const endpoints: EndpointExample[] = [
   "data": {
     "conversation_id": "${conversationId}",
     "status": "in_progress",
+    "locale": "es",
     "finished": false,
     "current_node": "request-contact-data",
     "started_at": "2026-08-20T15:30:00.000000Z",
@@ -127,17 +141,23 @@ const conversationTurns = [
   {
     key: 'name',
     request: `{
-  "message": "Soy Laura Gómez."
+  "locale": "es",
+  "fields": { "full_name": "Laura Gómez" }
 }`,
     response: `{
   "data": {
     "status": "in_progress",
+    "locale": "es",
     "finished": false,
     "messages": [
       {
         "role": "assistant",
         "content": "Cuéntanos qué problema quieres resolver o en qué podemos ayudarte.",
-        "required_fields": ["project_summary"]
+        "locale": "es",
+        "required_fields": ["project_summary"],
+        "fields": [
+          { "key": "project_summary", "label": "Proyecto o problema", "type": "textarea", "required": true }
+        ]
       }
     ]
   }
@@ -146,18 +166,30 @@ const conversationTurns = [
   {
     key: 'problem',
     request: `{
-  "message": "Procesamos cientos de facturas manualmente y queremos extraer y validar los datos con IA."
+  "locale": "es",
+  "fields": {
+    "project_summary": "Procesamos cientos de facturas manualmente y queremos extraer y validar los datos con IA."
+  }
 }`,
     response: `{
   "data": {
     "status": "in_progress",
+    "locale": "es",
     "finished": false,
     "messages": [
       {
         "role": "assistant",
-        "content": "Para continuar indícanos email, teléfono y WhatsApp con indicativo. Empresa y sitio web son opcionales.",
+        "content": "¡Perfecto! Para continuar indícanos: email válido, teléfono con indicativo de país y WhatsApp con indicativo de país. También puedes indicarnos empresa y sitio web; son opcionales.",
+        "locale": "es",
         "required_fields": ["email", "phone", "whatsapp"],
-        "optional_fields": ["company", "website"]
+        "optional_fields": ["company", "website"],
+        "fields": [
+          { "key": "email", "label": "Email", "type": "email", "required": true },
+          { "key": "phone", "label": "Teléfono con indicativo", "type": "tel", "required": true },
+          { "key": "whatsapp", "label": "WhatsApp con indicativo", "type": "tel", "required": true },
+          { "key": "company", "label": "Empresa", "type": "text", "required": false },
+          { "key": "website", "label": "Sitio web", "type": "url", "required": false }
+        ]
       }
     ]
   }
@@ -166,17 +198,27 @@ const conversationTurns = [
   {
     key: 'missing',
     request: `{
-  "message": "Email laura@acme.com, teléfono +57 300 111 2233. Empresa ACME."
+  "locale": "es",
+  "fields": {
+    "email": "laura@acme.com",
+    "phone": "+57 300 111 2233",
+    "company": "ACME"
+  }
 }`,
     response: `{
   "data": {
     "status": "in_progress",
+    "locale": "es",
     "finished": false,
     "messages": [
       {
         "role": "assistant",
-        "content": "Falta el número de WhatsApp con indicativo de país.",
-        "required_fields": ["whatsapp"]
+        "content": "Para continuar necesitamos: WhatsApp con indicativo de país. Recuerda incluir el indicativo de país en teléfono y WhatsApp.",
+        "locale": "es",
+        "required_fields": ["whatsapp"],
+        "fields": [
+          { "key": "whatsapp", "label": "WhatsApp con indicativo", "type": "tel", "required": true }
+        ]
       }
     ]
   }
@@ -185,22 +227,59 @@ const conversationTurns = [
   {
     key: 'complete',
     request: `{
-  "message": "Mi WhatsApp es +57 310 555 6677."
+  "locale": "es",
+  "fields": {
+    "whatsapp": "+57 310 555 6677",
+    "website": "https://acme.com"
+  }
 }`,
     response: `{
   "data": {
     "status": "completed",
+    "locale": "es",
     "finished": true,
     "messages": [
       {
         "role": "assistant",
-        "content": "Muchas gracias. Analizaremos la información y te contactaremos."
+        "content": "Muchas gracias. Analizaremos la información y te contactaremos. La idea es tener un prototipo rápido en máximo dos semanas y luego seguir mejorándolo y puliéndolo.",
+        "locale": "es"
       }
     ]
   }
 }`,
   },
 ] as const;
+
+const englishLanguageExample = {
+  request: `{
+  "locale": "en",
+  "message": "We need a chatbot that answers from our knowledge base and captures qualified leads."
+}`,
+  response: `{
+  "data": {
+    "status": "in_progress",
+    "locale": "en",
+    "finished": false,
+    "messages": [
+      {
+        "role": "assistant",
+        "content": "Great! To continue, please provide: full name, valid email, phone with country code and WhatsApp with country code. You may also provide company and website; these fields are optional.",
+        "locale": "en",
+        "required_fields": ["full_name", "email", "phone", "whatsapp"],
+        "optional_fields": ["company", "website"],
+        "fields": [
+          { "key": "full_name", "label": "Full name", "type": "text", "required": true },
+          { "key": "email", "label": "Email", "type": "email", "required": true },
+          { "key": "phone", "label": "Phone with country code", "type": "tel", "required": true },
+          { "key": "whatsapp", "label": "WhatsApp with country code", "type": "tel", "required": true },
+          { "key": "company", "label": "Company", "type": "text", "required": false },
+          { "key": "website", "label": "Website", "type": "url", "required": false }
+        ]
+      }
+    ]
+  }
+}`,
+};
 
 export function Page(): React.JSX.Element {
   const { t } = useTranslation();
@@ -239,7 +318,7 @@ Idempotency-Key: <uuid>`}</Code>
               <Typography color="text.secondary" variant="body2">{t('dashboard.business.docs.responseGuideHelp')}</Typography>
             </Box>
             <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: 'minmax(150px, 0.25fr) minmax(0, 1fr)' } }}>
-              {(['conversation_id', 'session', 'status', 'finished', 'messages', 'required_fields', 'optional_fields'] as const).map((field) => (
+              {(['conversation_id', 'session', 'status', 'locale', 'messages', 'fields', 'required_fields', 'optional_fields', 'finished'] as const).map((field) => (
                 <React.Fragment key={field}>
                   <Typography component="code" fontWeight={700}>{field}</Typography>
                   <Typography color="text.secondary" variant="body2">{t(`dashboard.business.docs.fields.${field}`)}</Typography>
@@ -247,6 +326,7 @@ Idempotency-Key: <uuid>`}</Code>
               ))}
             </Box>
             <Alert severity="warning">{t('dashboard.business.docs.multipleMessagesNote')}</Alert>
+            <Alert severity="info">{t('dashboard.business.docs.localeHelp')}</Alert>
           </Stack>
         </CardContent>
       </Card>
@@ -279,6 +359,18 @@ Idempotency-Key: <uuid>`}</Code>
                 </Stack>
               </Box>
             ))}
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <Stack spacing={2}>
+            <Box>
+              <Typography variant="h5">{t('dashboard.business.docs.languageExample')}</Typography>
+              <Typography color="text.secondary" variant="body2">{t('dashboard.business.docs.languageExampleHelp')}</Typography>
+            </Box>
+            <ExampleColumns request={englishLanguageExample.request} response={englishLanguageExample.response} />
           </Stack>
         </CardContent>
       </Card>
