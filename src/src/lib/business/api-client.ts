@@ -2,7 +2,7 @@ import { config } from '@/config';
 import { getStoredApiToken } from '@/lib/auth/custom/api-token';
 
 export type BusinessStatus = 'active' | 'draft' | 'paused';
-export type BusinessLeadStatus = 'contacted' | 'created' | 'no_response' | 'sale';
+export type BusinessLeadStatus = 'closed' | 'contacted' | 'created' | 'no_response' | 'sale';
 export type BusinessNodeType = 'action' | 'decision' | 'instruction';
 
 export interface Business {
@@ -65,16 +65,50 @@ export interface BusinessFlowResponse {
 
 export interface BusinessLead {
   ai_solution_summary?: null | string;
+  closed_at?: null | string;
   company?: null | string;
+  contacted_at?: null | string;
+  conversation?: null | { completed_at?: null | string; id: number; started_at?: null | string; uuid: string };
   created_at?: null | string;
+  data?: null | Record<string, unknown>;
   email?: null | string;
   full_name?: null | string;
+  histories?: BusinessLeadStatusHistory[];
   id: number;
+  no_response_at?: null | string;
   phone?: null | string;
   project_summary?: null | string;
+  sold_at?: null | string;
   status: BusinessLeadStatus;
+  updated_at?: null | string;
   website?: null | string;
   whatsapp?: null | string;
+}
+
+export interface BusinessLeadStatusHistory {
+  changed_by?: null | { email: string; id: number; name: string };
+  created_at?: null | string;
+  from_status?: BusinessLeadStatus | null;
+  id: number;
+  note?: null | string;
+  to_status: BusinessLeadStatus;
+}
+
+export interface BusinessLeadFilters {
+  dateField: 'created_at' | 'updated_at';
+  from: string;
+  page?: number;
+  statuses: BusinessLeadStatus[];
+  timezone: string;
+  to: string;
+}
+
+export interface BusinessLeadPage {
+  currentPage: number;
+  items: BusinessLead[];
+  lastPage: number;
+  perPage: number;
+  total: number;
 }
 
 export interface BusinessSettings {
@@ -121,7 +155,7 @@ export interface BusinessUsage {
 interface ApiEnvelope<T> {
   data: T;
   message?: string;
-  meta?: { current_page: number; last_page: number; total: number };
+  meta?: { current_page: number; last_page: number; per_page?: number; total: number };
 }
 
 interface RequestOptions {
@@ -197,12 +231,32 @@ export async function publishBusinessFlow(id: number | string): Promise<void> {
   await request(`/api/businesses/${encodeURIComponent(String(id))}/flow/publish`, { method: 'POST' });
 }
 
-export async function listBusinessLeads(id: number | string): Promise<BusinessLead[]> {
-  return (await request<ApiEnvelope<BusinessLead[]>>(`/api/businesses/${encodeURIComponent(String(id))}/leads`)).data;
+export async function listBusinessLeads(id: number | string, filters: BusinessLeadFilters): Promise<BusinessLeadPage> {
+  const query = new URLSearchParams({
+    date_field: filters.dateField,
+    from: filters.from,
+    page: String(filters.page ?? 1),
+    timezone: filters.timezone,
+    to: filters.to,
+  });
+  for (const status of filters.statuses) query.append('statuses[]', status);
+  const response = await request<ApiEnvelope<BusinessLead[]>>(`/api/businesses/${encodeURIComponent(String(id))}/leads?${query.toString()}`);
+
+  return {
+    currentPage: response.meta?.current_page ?? 1,
+    items: response.data,
+    lastPage: response.meta?.last_page ?? 1,
+    perPage: response.meta?.per_page ?? 25,
+    total: response.meta?.total ?? response.data.length,
+  };
 }
 
-export async function updateBusinessLeadStatus(id: number | string, leadId: number | string, status: BusinessLeadStatus): Promise<BusinessLead> {
-  return (await request<ApiEnvelope<BusinessLead>>(`/api/businesses/${encodeURIComponent(String(id))}/leads/${encodeURIComponent(String(leadId))}`, { body: { status }, method: 'PATCH' })).data;
+export async function updateBusinessLeadStatus(
+  id: number | string,
+  leadId: number | string,
+  payload: { note?: string; status: BusinessLeadStatus }
+): Promise<BusinessLead> {
+  return (await request<ApiEnvelope<BusinessLead>>(`/api/businesses/${encodeURIComponent(String(id))}/leads/${encodeURIComponent(String(leadId))}`, { body: payload, method: 'PATCH' })).data;
 }
 
 export async function getBusinessUsage(id: number | string, range?: { from: string; to: string }): Promise<BusinessUsage> {
