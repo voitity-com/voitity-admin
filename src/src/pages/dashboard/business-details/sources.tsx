@@ -64,8 +64,8 @@ export function Page(): React.JSX.Element {
   }), [file, t]);
   const { control, formState: { errors, isSubmitting }, handleSubmit, reset } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
 
-  const load = React.useCallback(async (): Promise<void> => {
-    setLoading(true);
+  const load = React.useCallback(async (silent = false): Promise<void> => {
+    if (!silent) setLoading(true);
     try {
       setSources(await listBusinessSources(businessId));
       setError('');
@@ -73,10 +73,16 @@ export function Page(): React.JSX.Element {
       logger.error(reason);
       setError(reason instanceof Error ? reason.message : t('dashboard.business.errors.generic'));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [businessId, t]);
   React.useEffect(() => { load().catch(logger.error); }, [load]);
+  React.useEffect(() => {
+    if (!sources.some((source) => source.status === 'processing')) return undefined;
+    const timeout = window.setTimeout(() => { load(true).catch(logger.error); }, 3000);
+
+    return () => { window.clearTimeout(timeout); };
+  }, [load, sources]);
 
   const closeUpload = (): void => {
     if (isSubmitting) return;
@@ -92,7 +98,7 @@ export function Page(): React.JSX.Element {
       const objectUrl = URL.createObjectURL(result.blob);
       const link = document.createElement('a');
       link.href = objectUrl;
-      link.download = result.filename ?? source.original_filename ?? source.name;
+      link.download = result.filename ?? source.download_filename ?? source.original_filename ?? source.name;
       document.body.append(link);
       link.click();
       link.remove();
@@ -203,7 +209,7 @@ function getColumns({
 }): ColumnDef<BusinessSource>[] {
   return [
     {
-      formatter: (source) => <Stack spacing={0.5}><Typography variant="subtitle2">{source.name}</Typography><Typography color="text.secondary" variant="body2">{source.original_filename ?? t('dashboard.business.sources.textOnly')}</Typography></Stack>,
+      formatter: (source) => <Stack spacing={0.5}><Typography variant="subtitle2">{source.name}</Typography><Typography color="text.secondary" variant="body2">{source.download_filename || source.original_filename || t('dashboard.business.sources.textOnly')}</Typography></Stack>,
       name: t('dashboard.business.sources.name'), width: '260px',
     },
     { formatter: (source) => t(`dashboard.business.sources.types.${source.type}`, { defaultValue: source.type }), name: t('dashboard.business.sources.fields.type'), width: '140px' },
@@ -212,7 +218,7 @@ function getColumns({
     { formatter: (source) => formatDate(source.updated_at ?? source.created_at, language), name: t('dashboard.business.sources.fields.updated'), width: '160px' },
     {
       formatter: (source) => <Stack direction="row" spacing={1}>
-        <Button disabled={!source.original_filename || downloadingId === source.id} onClick={() => { void onDownload(source); }} size="small" startIcon={<DownloadSimpleIcon />} variant="text">{t('dashboard.business.sources.actions.download')}</Button>
+        <Button disabled={!source.download_available || downloadingId === source.id} onClick={() => { void onDownload(source); }} size="small" startIcon={<DownloadSimpleIcon />} variant="text">{t('dashboard.business.sources.actions.download')}</Button>
         <Tooltip title={t('dashboard.business.actions.delete')}><IconButton aria-label={t('dashboard.business.actions.delete')} color="error" onClick={() => { onDelete(source); }} size="small"><TrashIcon /></IconButton></Tooltip>
       </Stack>,
       name: t('dashboard.business.sources.fields.actions'), width: '230px',

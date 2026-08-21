@@ -24,6 +24,8 @@ export interface BusinessPayload {
 
 export interface BusinessSource {
   created_at?: null | string;
+  download_available: boolean;
+  download_filename: string;
   id: number;
   indexed_at?: null | string;
   name: string;
