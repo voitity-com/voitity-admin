@@ -24,6 +24,8 @@ export interface BusinessPayload {
 
 export interface BusinessSource {
   created_at?: null | string;
+  download_available: boolean;
+  download_filename: string;
   id: number;
   indexed_at?: null | string;
   name: string;
@@ -57,8 +59,14 @@ export interface BusinessFlowGraph {
   nodes: BusinessFlowNode[];
 }
 
+export interface BusinessFlowDraft extends BusinessFlowGraph {
+  id: number;
+  revision: number;
+  version: number;
+}
+
 export interface BusinessFlowResponse {
-  draft_version: (BusinessFlowGraph & { id: number; revision: number; version: number }) | null;
+  draft_version: BusinessFlowDraft | null;
   id: number;
   published_version: null | { id: number; published_at?: null | string; version: number };
 }
@@ -219,8 +227,8 @@ export async function getBusinessFlow(id: number | string): Promise<BusinessFlow
   return (await request<ApiEnvelope<BusinessFlowResponse>>(`/api/businesses/${encodeURIComponent(String(id))}/flow`)).data;
 }
 
-export async function saveBusinessFlow(id: number | string, graph: BusinessFlowGraph): Promise<BusinessFlowGraph> {
-  return (await request<ApiEnvelope<BusinessFlowGraph>>(`/api/businesses/${encodeURIComponent(String(id))}/flow`, { body: graph, method: 'PUT' })).data;
+export async function saveBusinessFlow(id: number | string, graph: BusinessFlowGraph): Promise<BusinessFlowDraft> {
+  return (await request<ApiEnvelope<BusinessFlowDraft>>(`/api/businesses/${encodeURIComponent(String(id))}/flow`, { body: graph, method: 'PUT' })).data;
 }
 
 export async function validateBusinessFlow(id: number | string, graph: BusinessFlowGraph): Promise<{ errors: string[]; valid: boolean }> {
