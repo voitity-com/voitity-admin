@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography';
 import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { Globe as GlobeIcon } from '@phosphor-icons/react/dist/ssr/Globe';
+import { Briefcase as BriefcaseIcon } from '@phosphor-icons/react/dist/ssr/Briefcase';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 
@@ -33,6 +34,8 @@ type Language = 'en' | 'es';
 const copy = {
   en: {
     disabled: 'Disabled',
+    businessDescription: 'Enables the guided Business chatbot, flow editor, leads, usage and secure widget for administrators.',
+    businessTitle: 'Business',
     enabled: 'Enabled',
     error: 'Feature toggles could not be loaded.',
     domainsDescription:
@@ -48,6 +51,8 @@ const copy = {
   },
   es: {
     disabled: 'Desactivada',
+    businessDescription: 'Activa para administradores el chatbot guiado de Business, el editor de flow, leads, uso y widget seguro.',
+    businessTitle: 'Business',
     enabled: 'Activada',
     error: 'No fue posible cargar los feature toggles.',
     domainsDescription:
@@ -98,6 +103,7 @@ export function Page(): React.JSX.Element {
 
       try {
         setFeatures(await updateAdminFeatures({ [key]: enabled }));
+        window.dispatchEvent(new CustomEvent('admin-features-updated'));
         toast.success(t.saved, { id: FEATURE_TOGGLE_TOAST_ID, position: 'top-right' });
       } catch (err) {
         logger.error(err);
@@ -110,6 +116,7 @@ export function Page(): React.JSX.Element {
   );
 
   const productsFeature = features.find((feature) => feature.key === 'products') ?? null;
+  const businessFeature = features.find((feature) => feature.key === 'business') ?? null;
   const customDomainsFeature = features.find((feature) => feature.key === 'domains.custom') ?? null;
   const integrationFeatures = features.filter((feature) => feature.group === 'integrations');
 
@@ -144,6 +151,15 @@ export function Page(): React.JSX.Element {
             </Card>
           ) : (
             <Stack spacing={4}>
+              {businessFeature ? (
+                <Card>
+                  <CardHeader avatar={<BriefcaseIcon fontSize="var(--icon-fontSize-lg)" />} subheader={t.businessDescription} title={t.businessTitle} />
+                  <Divider />
+                  <CardContent>
+                    <FeatureSwitch disabled={savingKey !== null} disabledLabel={t.disabled} enabledLabel={t.enabled} feature={businessFeature} onChange={handleToggle} />
+                  </CardContent>
+                </Card>
+              ) : null}
               {productsFeature ? (
                 <Card>
                   <CardHeader

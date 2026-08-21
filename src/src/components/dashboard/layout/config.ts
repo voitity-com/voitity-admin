@@ -33,6 +33,15 @@ export const layoutConfig = {
           implemented: true,
         },
         {
+          key: 'business',
+          title: 'Business',
+          titleKey: 'dashboard.nav.items.business',
+          href: paths.dashboard.businesses,
+          icon: 'briefcase',
+          implemented: true,
+          roles: ['admin'],
+        },
+        {
           key: 'notifications',
           title: 'Notifications',
           titleKey: 'dashboard.nav.items.notifications',
