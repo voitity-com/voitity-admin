@@ -14,6 +14,7 @@ export interface Business {
   name: string;
   sources_count?: number;
   status: BusinessStatus;
+  unread_leads_count?: number;
   updated_at?: null | string;
 }
 
@@ -86,6 +87,7 @@ export interface BusinessLead {
   no_response_at?: null | string;
   phone?: null | string;
   project_summary?: null | string;
+  read_at?: null | string;
   sold_at?: null | string;
   status: BusinessLeadStatus;
   updated_at?: null | string;
@@ -109,6 +111,7 @@ export interface BusinessLeadFilters {
   statuses: BusinessLeadStatus[];
   timezone: string;
   to: string;
+  unreadOnly: boolean;
 }
 
 export interface BusinessLeadPage {
@@ -117,14 +120,12 @@ export interface BusinessLeadPage {
   lastPage: number;
   perPage: number;
   total: number;
+  unreadCount: number;
 }
 
 export interface BusinessSettings {
   lead_recipient_email?: null | string;
   locale: 'en' | 'es';
-  reply_to_email?: null | string;
-  sender_email?: null | string;
-  sender_name?: null | string;
   widget_button_label: string;
   widget_enabled: boolean;
   widget_position: 'bottom-left' | 'bottom-right';
@@ -163,7 +164,7 @@ export interface BusinessUsage {
 interface ApiEnvelope<T> {
   data: T;
   message?: string;
-  meta?: { current_page: number; last_page: number; per_page?: number; total: number };
+  meta?: { current_page: number; last_page: number; per_page?: number; total: number; unread_count?: number };
 }
 
 interface RequestOptions {
@@ -248,6 +249,7 @@ export async function listBusinessLeads(id: number | string, filters: BusinessLe
     to: filters.to,
   });
   for (const status of filters.statuses) query.append('statuses[]', status);
+  if (filters.unreadOnly) query.set('unread_only', '1');
   const response = await request<ApiEnvelope<BusinessLead[]>>(`/api/businesses/${encodeURIComponent(String(id))}/leads?${query.toString()}`);
 
   return {
@@ -256,7 +258,12 @@ export async function listBusinessLeads(id: number | string, filters: BusinessLe
     lastPage: response.meta?.last_page ?? 1,
     perPage: response.meta?.per_page ?? 25,
     total: response.meta?.total ?? response.data.length,
+    unreadCount: response.meta?.unread_count ?? 0,
   };
+}
+
+export async function markBusinessLeadRead(id: number | string, leadId: number | string): Promise<BusinessLead> {
+  return (await request<ApiEnvelope<BusinessLead>>(`/api/businesses/${encodeURIComponent(String(id))}/leads/${encodeURIComponent(String(leadId))}/read`, { method: 'POST' })).data;
 }
 
 export async function updateBusinessLeadStatus(

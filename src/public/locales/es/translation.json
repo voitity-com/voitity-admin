@@ -1208,7 +1208,7 @@
         "color": "Color principal",
         "createKey": "Crear API key",
         "description": "Configura el correo, la apariencia del widget y el acceso seguro al API.",
-        "emailSubtitle": "Configura quién recibe las notificaciones de leads y el remitente de los correos salientes.",
+        "emailSubtitle": "Configura el correo que recibirá las notificaciones de nuevos leads.",
         "emailTitle": "Correo",
         "embedCode": "Código para insertar el widget",
         "keyName": "Nombre de la key",
@@ -1217,12 +1217,9 @@
         "originsHelp": "Un origen http(s) completo por línea, incluyendo el puerto cuando aplique.",
         "position": "Posición",
         "recipientEmail": "Email que recibe los leads",
-        "replyTo": "Email de respuesta",
         "revokedKey": "Revocada",
         "securitySubtitle": "Las keys se almacenan como hash y solo funcionan desde sus orígenes exactos permitidos.",
         "securityTitle": "Acceso seguro al API",
-        "senderEmail": "Email remitente",
-        "senderName": "Nombre del remitente",
         "title": "Título del widget",
         "tabs": { "api": "API", "email": "Correo", "label": "Secciones de configuración", "widget": "Widget" },
         "welcome": "Mensaje de bienvenida opcional del widget",
@@ -1267,6 +1264,7 @@
         "responseGuideHelp": "Las propiedades no aparecen en todos los endpoints. Revisa especialmente session, locale, messages, fields, required_fields, optional_fields y finished.",
         "security": "El header Origin debe coincidir con un origen permitido. Conserva la session y envíala en cada mensaje y consulta de estado.",
         "subtitle": "Contrato del API runtime para tu chatbot o el widget incluido.",
+        "terminalInstruction": "Una indicación con Finalizar chat es terminal: su mensaje llega en data.messages y ese mismo response devuelve status completed y finished true. No necesita una flecha de salida.",
         "title": "API del chatbot Business",
         "turn": "Turno {{number}}",
         "turns": {
@@ -1295,6 +1293,9 @@
         "decisionQuestionHelp": "La pregunta se responde internamente con Sí o No usando el problema, la descripción del Business y sus fuentes relevantes.",
         "deleteNode": "Eliminar bloque",
         "fixedBranches": "Ramas automáticas:",
+        "finishChat": "Finalizar chat",
+        "finishChatConnectionHelp": "Este bloque es terminal y no necesita una conexión de salida.",
+        "finishChatHelp": "Esta indicación será el último mensaje. El API responderá status completed y finished true, sin esperar otra respuesta del visitante.",
         "inspector": "Editor del bloque",
         "instructionRequiredFieldsHelp": "Identificadores separados por coma. Se devolverán en messages[].required_fields mientras sigan pendientes.",
         "instructionOptionalFieldsHelp": "Identificadores separados por coma. Se mostrarán en el formulario, pero no impedirán continuar si quedan vacíos.",
@@ -1368,6 +1369,7 @@
           "from": "Desde",
           "status": "Estados",
           "to": "Hasta",
+          "unreadOnly": "No leídos",
           "updatedAt": "Fecha de actualización"
         },
         "noWebsite": "Sin sitio web",
@@ -1388,7 +1390,9 @@
           "select": "Cambiar estado de {{name}}",
           "title": "Confirmar cambio de estado"
         },
-        "subtitle": "Personas que completaron la recolección de datos del flow."
+        "subtitle": "Personas que completaron la recolección de datos del flow.",
+        "unread": "No leído",
+        "unreadCount": "{{count}} leads no leídos"
       },
       "layout": { "guidedFlow": "Chatbot guiado mediante un flow de indicaciones, decisiones y acciones." },
       "nav": { "configuration": "Configuración", "docs": "Docs", "flow": "Flow", "general": "General", "leads": "Leads", "sources": "Fuentes", "usage": "Uso" },

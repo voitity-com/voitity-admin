@@ -31,9 +31,10 @@ interface BusinessNavItem {
   icon: Icon;
   key: string;
   title: string;
+  unreadCount?: number;
 }
 
-export function BusinessSideNav(): React.JSX.Element {
+export function BusinessSideNav({ unreadLeadsCount = 0 }: { unreadLeadsCount?: number }): React.JSX.Element {
   const { businessId = '' } = useParams();
   const pathname = usePathname();
   const { t } = useTranslation();
@@ -42,11 +43,11 @@ export function BusinessSideNav(): React.JSX.Element {
     { href: paths.dashboard.businessDetails.general(businessId), icon: IdentificationCardIcon, key: 'general', title: t('dashboard.business.nav.general') },
     { href: paths.dashboard.businessDetails.sources(businessId), icon: DatabaseIcon, key: 'sources', title: t('dashboard.business.nav.sources') },
     { href: paths.dashboard.businessDetails.flow(businessId), icon: FlowArrowIcon, key: 'flow', title: t('dashboard.business.nav.flow') },
-    { href: paths.dashboard.businessDetails.leads(businessId), icon: FileTextIcon, key: 'leads', title: t('dashboard.business.nav.leads') },
+    { href: paths.dashboard.businessDetails.leads(businessId), icon: FileTextIcon, key: 'leads', title: t('dashboard.business.nav.leads'), unreadCount: unreadLeadsCount },
     { href: paths.dashboard.businessDetails.usage(businessId), icon: GaugeIcon, key: 'usage', title: t('dashboard.business.nav.usage') },
     { href: paths.dashboard.businessDetails.configuration(businessId), icon: GearIcon, key: 'configuration', title: t('dashboard.business.nav.configuration') },
     { href: paths.dashboard.businessDetails.docs(businessId), icon: BookOpenIcon, key: 'docs', title: t('dashboard.business.nav.docs') },
-  ], [businessId, t]);
+  ], [businessId, t, unreadLeadsCount]);
   const activeItem = items.find((item) => isNavItemActive({ href: item.href, pathname })) ?? items[0];
   const ActiveIcon = activeItem.icon;
 
@@ -84,9 +85,10 @@ export function BusinessSideNav(): React.JSX.Element {
           }}
           variant="outlined"
         >
-          <Box component="span" sx={{ flex: 1, minWidth: 0, overflow: 'hidden', textAlign: 'left', textOverflow: 'ellipsis' }}>
-            {activeItem.title}
-          </Box>
+          <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center', flex: 1, minWidth: 0, overflow: 'hidden', textAlign: 'left' }}>
+            <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{activeItem.title}</Box>
+            <UnreadBadge count={activeItem.unreadCount ?? 0} label={t('dashboard.business.leads.unreadCount', { count: activeItem.unreadCount ?? 0 })} />
+          </Stack>
         </Button>
         <Menu
           PaperProps={{ sx: { maxHeight: 'min(380px, 68vh)', mt: 0.75, width: anchorEl?.clientWidth ?? '100%' } }}
@@ -116,6 +118,7 @@ export function BusinessSideNav(): React.JSX.Element {
                   />
                 </ListItemIcon>
                 <ListItemText primary={item.title} primaryTypographyProps={{ noWrap: true }} />
+                <UnreadBadge count={item.unreadCount ?? 0} label={t('dashboard.business.leads.unreadCount', { count: item.unreadCount ?? 0 })} />
               </MenuItem>
             );
           })}
@@ -156,11 +159,40 @@ export function BusinessSideNav(): React.JSX.Element {
                 <Typography component="span" sx={{ color: 'inherit', fontSize: '0.875rem', fontWeight: 500, lineHeight: '28px' }}>
                   {item.title}
                 </Typography>
+                <UnreadBadge count={item.unreadCount ?? 0} label={t('dashboard.business.leads.unreadCount', { count: item.unreadCount ?? 0 })} />
               </Box>
             </Box>
           );
         })}
       </Stack>
     </Stack>
+  );
+}
+
+function UnreadBadge({ count, label }: { count: number; label: string }): React.JSX.Element | null {
+  if (count <= 0) return null;
+
+  return (
+    <Box
+      aria-label={label}
+      component="span"
+      sx={{
+        alignItems: 'center',
+        bgcolor: 'error.main',
+        borderRadius: 999,
+        color: 'error.contrastText',
+        display: 'inline-flex',
+        flex: '0 0 auto',
+        fontSize: '0.6875rem',
+        fontWeight: 700,
+        height: 20,
+        justifyContent: 'center',
+        lineHeight: 1,
+        minWidth: 20,
+        px: count > 9 ? 0.625 : 0,
+      }}
+    >
+      {count > 99 ? '99+' : count}
+    </Box>
   );
 }

@@ -5,8 +5,10 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Checkbox from '@mui/material/Checkbox';
+import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import FormControl from '@mui/material/FormControl';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
 import ListItemText from '@mui/material/ListItemText';
@@ -21,7 +23,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { BusinessLead, BusinessLeadFilters, BusinessLeadPage, BusinessLeadStatus } from '@/lib/business/api-client';
-import { listBusinessLeads, updateBusinessLeadStatus } from '@/lib/business/api-client';
+import { listBusinessLeads, markBusinessLeadRead, updateBusinessLeadStatus } from '@/lib/business/api-client';
 import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -30,7 +32,7 @@ import { BusinessLeadDetailDialog } from '@/components/dashboard/business/busine
 import { BusinessLeadStatusDialog } from '@/components/dashboard/business/business-lead-status-dialog';
 
 const statuses: BusinessLeadStatus[] = ['created', 'contacted', 'sale', 'no_response', 'closed'];
-const emptyPage: BusinessLeadPage = { currentPage: 1, items: [], lastPage: 1, perPage: 25, total: 0 };
+const emptyPage: BusinessLeadPage = { currentPage: 1, items: [], lastPage: 1, perPage: 25, total: 0, unreadCount: 0 };
 
 interface PendingStatusChange {
   lead: BusinessLead;
@@ -82,6 +84,32 @@ export function Page(): React.JSX.Element {
   const changePage = (page: number): void => {
     setSearchParams(toSearchParams({ ...filters, page }));
   };
+
+  const openLead = React.useCallback((lead: BusinessLead): void => {
+    setSelectedLead(lead);
+    if (lead.read_at) return;
+
+    markBusinessLeadRead(businessId, lead.id).then((updated) => {
+      setSelectedLead((current) => current?.id === updated.id ? updated : current);
+      setLeadPage((current) => {
+        const total = filters.unreadOnly ? Math.max(0, current.total - 1) : current.total;
+
+        return {
+          ...current,
+          items: filters.unreadOnly
+            ? current.items.filter((item) => item.id !== updated.id)
+            : current.items.map((item) => item.id === updated.id ? updated : item),
+          lastPage: Math.max(1, Math.ceil(total / current.perPage)),
+          total,
+          unreadCount: Math.max(0, current.unreadCount - 1),
+        };
+      });
+      window.dispatchEvent(new Event('business-updated'));
+    }).catch((reason: unknown) => {
+      logger.error(reason);
+      toast.error(reason instanceof Error ? reason.message : t('dashboard.business.errors.generic'));
+    });
+  }, [businessId, filters.unreadOnly, t]);
 
   const confirmStatusChange = async (note: string): Promise<void> => {
     if (!pendingStatus) return;
@@ -157,6 +185,11 @@ export function Page(): React.JSX.Element {
                 ))}
               </Select>
             </FormControl>
+            <FormControlLabel
+              control={<Checkbox checked={draftFilters.unreadOnly} onChange={(_event, checked) => { setDraftFilters((current) => ({ ...current, unreadOnly: checked })); }} />}
+              label={t('dashboard.business.leads.filters.unreadOnly')}
+              sx={{ flex: '0 0 auto', mb: { lg: 0.75 }, whiteSpace: 'nowrap' }}
+            />
             <Button disabled={!draftFilters.from || !draftFilters.to || draftFilters.from > draftFilters.to} onClick={applyFilters} sx={{ minWidth: 120 }} variant="contained">
               {t('dashboard.business.leads.filters.apply')}
             </Button>
@@ -172,8 +205,14 @@ export function Page(): React.JSX.Element {
             <DataTable
               columns={columns}
               getRowAriaLabel={(lead) => t('dashboard.business.leads.detail.open', { name: lead.full_name || lead.email || lead.id })}
+              getRowDataAttributes={(lead) => ({ 'data-read-state': lead.read_at ? 'read' : 'unread' })}
+              getRowSx={(lead) => lead.read_at ? undefined : {
+                bgcolor: 'action.hover',
+                '& > td:first-of-type': { borderLeft: '4px solid', borderLeftColor: 'error.main' },
+                '&:hover': { bgcolor: 'action.selected' },
+              }}
               hover
-              onClick={(_event, lead) => { setSelectedLead(lead); }}
+              onClick={(_event, lead) => { openLead(lead); }}
               rows={leadPage.items}
               sx={{ minWidth: 980 }}
             />
@@ -214,7 +253,10 @@ function getColumns({ language, onStatusChange, t }: {
     {
       formatter: (lead) => (
         <Stack spacing={0.5}>
-          <Typography variant="subtitle2">{lead.full_name || '-'}</Typography>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
+            <Typography sx={{ fontWeight: lead.read_at ? 600 : 700 }} variant="subtitle2">{lead.full_name || '-'}</Typography>
+            {!lead.read_at ? <Chip color="error" label={t('dashboard.business.leads.unread')} size="small" /> : null}
+          </Stack>
           <Typography color="text.secondary" variant="caption">{lead.email || '-'}</Typography>
           <Typography color="text.secondary" variant="caption">{t('dashboard.business.leads.phone')}: {lead.phone || '-'}</Typography>
           <Typography color="text.secondary" variant="caption">WhatsApp: {lead.whatsapp || '-'}</Typography>
@@ -283,12 +325,14 @@ function getFilters(searchParams: URLSearchParams, initialRange: { from: string;
     statuses: requestedStatuses,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     to: searchParams.get('to') ?? initialRange.to,
+    unreadOnly: searchParams.get('unread_only') === '1',
   };
 }
 
 function toSearchParams(filters: BusinessLeadFilters): URLSearchParams {
   const params = new URLSearchParams({ date_field: filters.dateField, from: filters.from, page: String(filters.page ?? 1), to: filters.to });
   if (filters.statuses.length) params.set('statuses', filters.statuses.join(','));
+  if (filters.unreadOnly) params.set('unread_only', '1');
 
   return params;
 }
