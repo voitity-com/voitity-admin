@@ -59,6 +59,7 @@ const endpoints: EndpointExample[] = [
     "conversation_id": "${conversationId}",
     "status": "in_progress",
     "locale": "es",
+    "finished": false,
     "session": "encrypted-session-token",
     "messages": [
       {
@@ -327,6 +328,7 @@ Idempotency-Key: <uuid>`}</Code>
             </Box>
             <Alert severity="warning">{t('dashboard.business.docs.multipleMessagesNote')}</Alert>
             <Alert severity="info">{t('dashboard.business.docs.localeHelp')}</Alert>
+            <Alert severity="success">{t('dashboard.business.docs.terminalInstruction')}</Alert>
           </Stack>
         </CardContent>
       </Card>

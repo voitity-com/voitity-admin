@@ -1208,7 +1208,7 @@
         "color": "Primary color",
         "createKey": "Create API key",
         "description": "Configure email, widget appearance, and secure API access.",
-        "emailSubtitle": "Configure who receives lead notifications and the sender used for outgoing email.",
+        "emailSubtitle": "Configure the email address that will receive new lead notifications.",
         "emailTitle": "Email",
         "embedCode": "Widget embed code",
         "keyName": "Key name",
@@ -1217,12 +1217,9 @@
         "originsHelp": "One complete http(s) origin per line, including the port when applicable.",
         "position": "Position",
         "recipientEmail": "Lead recipient email",
-        "replyTo": "Reply-to email",
         "revokedKey": "Revoked",
         "securitySubtitle": "Keys are stored as a hash and only work from their exact allowed origins.",
         "securityTitle": "Secure API access",
-        "senderEmail": "Sender email",
-        "senderName": "Sender name",
         "title": "Widget title",
         "tabs": { "api": "API", "email": "Email", "label": "Configuration sections", "widget": "Widget" },
         "welcome": "Optional widget welcome message",
@@ -1267,6 +1264,7 @@
         "responseGuideHelp": "Not every property appears in every endpoint. Pay particular attention to session, locale, messages, fields, required_fields, optional_fields, and finished.",
         "security": "The Origin header must match an allowed origin. Keep the conversation session and send it on every message and status request.",
         "subtitle": "Runtime API contract for your own chatbot or the included widget.",
+        "terminalInstruction": "An instruction with Finish chat is terminal: its message is returned in data.messages and that same response returns status completed and finished true. It does not need an outgoing arrow.",
         "title": "Business chatbot API",
         "turn": "Turn {{number}}",
         "turns": {
@@ -1295,6 +1293,9 @@
         "decisionQuestionHelp": "The question is answered internally with Yes or No using the problem, the Business description and its relevant sources.",
         "deleteNode": "Delete block",
         "fixedBranches": "Automatic branches:",
+        "finishChat": "Finish chat",
+        "finishChatConnectionHelp": "This is a terminal block and does not need an outgoing connection.",
+        "finishChatHelp": "This instruction will be the final message. The API responds with status completed and finished true without waiting for another visitor reply.",
         "inspector": "Block editor",
         "instructionRequiredFieldsHelp": "Comma-separated identifiers. They are returned in messages[].required_fields while still missing.",
         "instructionOptionalFieldsHelp": "Comma-separated identifiers. They are shown in the form but do not block progress when left blank.",
@@ -1368,6 +1369,7 @@
           "from": "From",
           "status": "Statuses",
           "to": "To",
+          "unreadOnly": "Unread",
           "updatedAt": "Update date"
         },
         "noWebsite": "No website",
@@ -1388,7 +1390,9 @@
           "select": "Change status for {{name}}",
           "title": "Confirm status change"
         },
-        "subtitle": "People who completed the data collection portion of the flow."
+        "subtitle": "People who completed the data collection portion of the flow.",
+        "unread": "Unread",
+        "unreadCount": "{{count}} unread leads"
       },
       "layout": { "guidedFlow": "Chatbot guided by a flow of instructions, decisions, and actions." },
       "nav": { "configuration": "Configuration", "docs": "Docs", "flow": "Flow", "general": "General", "leads": "Leads", "sources": "Sources", "usage": "Usage" },

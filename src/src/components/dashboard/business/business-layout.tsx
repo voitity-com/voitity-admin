@@ -84,7 +84,7 @@ export function BusinessLayout({ children }: { children: React.ReactNode }): Rea
             </Box>
           </Paper>
           <Stack direction={{ md: 'row', xs: 'column' }} spacing={{ xs: 2, md: 4 }} sx={{ position: 'relative' }}>
-            <BusinessSideNav />
+            <BusinessSideNav unreadLeadsCount={business.unread_leads_count ?? 0} />
             <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>{children}</Box>
           </Stack>
         </Stack>

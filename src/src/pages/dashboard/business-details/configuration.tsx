@@ -41,9 +41,6 @@ import { toast } from '@/components/core/toaster';
 
 interface SettingsValues {
   lead_recipient_email: string;
-  reply_to_email: string;
-  sender_email: string;
-  sender_name: string;
   widget_button_label: string;
   widget_enabled: boolean;
   widget_position: 'bottom-left' | 'bottom-right';
@@ -54,7 +51,7 @@ interface SettingsValues {
 interface ClientValues { name: string; origins: string }
 type ConfigurationTab = 'api' | 'email' | 'widget';
 
-const defaults: SettingsValues = { lead_recipient_email: '', reply_to_email: '', sender_email: '', sender_name: '', widget_button_label: 'Hablar con nosotros', widget_enabled: false, widget_position: 'bottom-right', widget_primary_color: '#6366F1', widget_title: '¿Cómo podemos ayudarte?', widget_welcome_message: '' };
+const defaults: SettingsValues = { lead_recipient_email: '', widget_button_label: 'Hablar con nosotros', widget_enabled: false, widget_position: 'bottom-right', widget_primary_color: '#6366F1', widget_title: '¿Cómo podemos ayudarte?', widget_welcome_message: '' };
 
 export function Page(): React.JSX.Element {
   const { businessId = '' } = useParams();
@@ -68,9 +65,6 @@ export function Page(): React.JSX.Element {
   const [error, setError] = React.useState('');
   const settingsSchema = React.useMemo(() => zod.object({
     lead_recipient_email: zod.string().email(t('dashboard.business.validation.email')).or(zod.literal('')),
-    sender_email: zod.string().email(t('dashboard.business.validation.email')).or(zod.literal('')),
-    sender_name: zod.string().max(255),
-    reply_to_email: zod.string().email(t('dashboard.business.validation.email')).or(zod.literal('')),
     widget_enabled: zod.boolean(), widget_title: zod.string().min(1), widget_button_label: zod.string().min(1), widget_welcome_message: zod.string(),
     widget_primary_color: zod.string().regex(/^#[0-9A-Fa-f]{6}$/), widget_position: zod.enum(['bottom-left', 'bottom-right']),
   }), [t]);
@@ -130,9 +124,6 @@ export function Page(): React.JSX.Element {
         {selectedTab === 'email' ? (
           <Card><CardHeader avatar={<EnvelopeSimpleIcon fontSize="var(--icon-fontSize-lg)" />} subheader={t('dashboard.business.configuration.emailSubtitle')} title={t('dashboard.business.configuration.emailTitle')} /><CardContent><form onSubmit={saveSettings}><Stack spacing={2}>
             <Controller control={settingsForm.control} name="lead_recipient_email" render={({ field }) => <FormControl error={Boolean(settingsForm.formState.errors.lead_recipient_email)}><InputLabel>{t('dashboard.business.configuration.recipientEmail')}</InputLabel><OutlinedInput {...field} label={t('dashboard.business.configuration.recipientEmail')} /><FormHelperText>{settingsForm.formState.errors.lead_recipient_email?.message}</FormHelperText></FormControl>} />
-            <Controller control={settingsForm.control} name="sender_email" render={({ field }) => <FormControl error={Boolean(settingsForm.formState.errors.sender_email)}><InputLabel>{t('dashboard.business.configuration.senderEmail')}</InputLabel><OutlinedInput {...field} label={t('dashboard.business.configuration.senderEmail')} /><FormHelperText>{settingsForm.formState.errors.sender_email?.message}</FormHelperText></FormControl>} />
-            <Controller control={settingsForm.control} name="sender_name" render={({ field }) => <FormControl><InputLabel>{t('dashboard.business.configuration.senderName')}</InputLabel><OutlinedInput {...field} label={t('dashboard.business.configuration.senderName')} /></FormControl>} />
-            <Controller control={settingsForm.control} name="reply_to_email" render={({ field }) => <FormControl error={Boolean(settingsForm.formState.errors.reply_to_email)}><InputLabel>{t('dashboard.business.configuration.replyTo')}</InputLabel><OutlinedInput {...field} label={t('dashboard.business.configuration.replyTo')} /><FormHelperText>{settingsForm.formState.errors.reply_to_email?.message}</FormHelperText></FormControl>} />
             <Button disabled={settingsForm.formState.isSubmitting} sx={{ alignSelf: 'flex-start' }} type="submit" variant="contained">{t('dashboard.business.actions.save')}</Button>
           </Stack></form></CardContent></Card>
         ) : null}
