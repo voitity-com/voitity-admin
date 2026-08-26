@@ -471,18 +471,28 @@ function buildSteps({
   missingRequirements: ProfilePublicationRequirement[];
   profile: Profile | null;
 }): OnboardingStep[] {
-  if (!profile || profile.publication?.can_activate || missingRequirements.length === 0) {
+  if (!profile) {
     return [];
   }
 
   const missingKeys = new Set(missingRequirements.map((requirement) => requirement.key));
-  const steps: OnboardingStep[] = [{ key: 'publication', targetId: stepTargets.publication }];
+  const needsVoice = profile.voice !== true;
+
+  if (missingRequirements.length === 0 && !needsVoice) {
+    return [];
+  }
+
+  const steps: OnboardingStep[] = [];
+
+  if (missingRequirements.length > 0) {
+    steps.push({ key: 'publication', targetId: stepTargets.publication });
+  }
 
   if (missingKeys.has('avatar')) {
     steps.push({ key: 'avatar', targetId: stepTargets.avatar });
   }
 
-  if (missingKeys.has('voice')) {
+  if (needsVoice) {
     steps.push({ key: 'voice', targetId: stepTargets.voice });
   }
 

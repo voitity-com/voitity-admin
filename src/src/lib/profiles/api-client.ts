@@ -19,6 +19,7 @@ export interface Profile {
   status?: null | string;
   voice?: boolean;
   voice_autoplay_enabled?: boolean;
+  voice_clone_status?: null | VoiceCloneStatus;
   voice_enabled?: boolean;
   voice_id?: null | number | string;
   voice_description?: null | string;
@@ -31,6 +32,8 @@ export interface Profile {
   created_at?: null | string;
   updated_at?: null | string;
 }
+
+export type VoiceCloneStatus = 'completed' | 'failed' | 'pending' | 'processing';
 
 export type ProfileNetworks = Record<string, string>;
 

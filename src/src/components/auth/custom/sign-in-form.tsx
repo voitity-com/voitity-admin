@@ -38,6 +38,7 @@ interface OAuthProvider {
 }
 
 const oAuthProviders = [{ id: 'google', name: 'Google', logo: '/assets/logo-google.svg' }] satisfies OAuthProvider[];
+const backHref = import.meta.env.DEV ? 'http://localhost:3001' : 'https://bigmelo.com';
 
 interface Values {
   email: string;
@@ -265,6 +266,9 @@ export function SignInForm(): React.JSX.Element {
               </Button>
             </Stack>
           </form>
+          <Link href={backHref} sx={{ alignSelf: 'flex-start' }} variant="subtitle2">
+            {t('auth.signIn.actions.back')}
+          </Link>
         </Stack>
       </Stack>
     </Stack>

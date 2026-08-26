@@ -15,6 +15,7 @@
     "language": "Idioma",
     "signIn": {
       "actions": {
+        "back": "← Volver",
         "submit": "Iniciar sesión"
       },
       "continueWith": "Continuar con {{provider}}",
@@ -484,12 +485,27 @@
     },
     "notificationCenter": {
       "actions": {
+        "actions": "Acciones",
         "close": "Cerrar",
         "markAllRead": "Marcar pendientes como leídas",
         "markRead": "Marcar como leído"
       },
       "cardSubheader": "Se muestran primero los eventos más recientes.",
       "cardTitle": "Historial",
+      "chatGroup": {
+        "chatCount_one": "{{count}} chat",
+        "chatCount_other": "{{count}} chats",
+        "hideChats": "Ocultar chats",
+        "showChats_one": "Ver {{count}} chat",
+        "showChats_other": "Ver {{count}} chats",
+        "summary_one": "{{profile}} recibió {{count}} chat.",
+        "summary_other": "{{profile}} recibió {{count}} chats.",
+        "title": "Nuevos chats recibidos",
+        "unknownProfile": "Perfil",
+        "unreadCount_one": "{{count}} sin leer",
+        "unreadCount_other": "{{count}} sin leer",
+        "viewAll": "Ver todos los chats"
+      },
       "empty": {
         "description": "Cambia los filtros o vuelve más tarde cuando haya actividad.",
         "title": "No hay elementos para mostrar"
@@ -521,14 +537,25 @@
         "displayedRows": "{{from}}-{{to}} de {{count}}",
         "rowsPerPage": "Filas por página:"
       },
+      "selection": {
+        "selectAll": "Seleccionar todas",
+        "selectChatGroup": "Seleccionar los chats de {{profile}}",
+        "selectedCount_one": "{{count}} seleccionada",
+        "selectedCount_other": "{{count}} seleccionadas",
+        "selectOne": "Seleccionar {{title}}"
+      },
       "status": {
         "read": "Leído",
         "unread": "Pendiente"
       },
       "subtitle": "Revisa avisos importantes y el historial de actividad de tu cuenta.",
+      "unreadTotal_one": "{{count}} sin leer",
+      "unreadTotal_other": "{{count}} sin leer",
       "toasts": {
         "markedOneRead": "Notificación marcada como leída.",
-        "markedRead": "Pendientes marcadas como leídas."
+        "markedRead": "Pendientes marcadas como leídas.",
+        "markedSelectedRead_one": "{{count}} notificación seleccionada marcada como leída.",
+        "markedSelectedRead_other": "{{count}} notificaciones seleccionadas marcadas como leídas."
       }
     },
     "settings": {
@@ -2123,9 +2150,9 @@
               "title": "Carga y sincroniza una fuente"
             },
             "voice": {
-              "description": "El clon de tu propia voz permite que el perfil responda con audio. Clona tu voz antes de activar y publicar.",
+              "description": "El clon de tu propia voz permite que el perfil responda con audio. Es opcional para publicar, pero recomendado para ofrecer una experiencia más completa.",
               "eyebrow": "Voz",
-              "mobileDescription": "Configura un clon de tu propia voz para que el perfil pueda responder con audio antes de publicarlo.",
+              "mobileDescription": "Configura opcionalmente un clon de tu propia voz para que el perfil pueda responder con audio.",
               "title": "Clona tu voz"
             }
           }
@@ -2394,7 +2421,10 @@
       },
       "voice": {
           "audio": "Audio",
+          "cloneFailed": "No se pudo clonar la voz. Puedes intentarlo de nuevo.",
+          "cloneProcessing": "La clonación está en proceso. Esta pantalla se actualizará automáticamente cuando termine.",
           "cloneVoice": "Clonar tu voz",
+          "cloningVoice": "Clonando voz...",
           "cloneIntroDescription": "Al iniciar la grabación aparecerá un texto para leer en voz alta. La lectura completa puede durar hasta 3 minutos.",
           "cloneIntroTitle": "Prepara tu muestra de voz",
           "continueReading": "Seguir leyendo",
@@ -2430,10 +2460,12 @@
             "es": "Español"
           },
           "naturalVoice": "Lee con tu voz normal",
+          "noClonedVoice": "Este perfil todavía no tiene una voz clonada. Clona tu voz para habilitar las respuestas de audio.",
           "pauseRecording": "Pausar",
           "playRecording": "Reproducir",
           "preview": "Vista previa",
           "quietPlace": "Busca un lugar silencioso",
+          "recloneVoice": "Clonar tu voz nuevamente",
           "readText": "Lee este texto",
           "recordAgain": "Grabar de nuevo",
           "recordingLive": "Grabando",
@@ -2455,6 +2487,7 @@
           "title": "Voz",
           "toasts": {
             "audioGenerated": "Audio generado",
+            "cloneStarted": "La clonación de voz ha comenzado",
             "sampleUploaded": "Muestra de voz subida",
             "voiceCreated": "Voz creada",
             "voiceSaved": "Voz guardada"

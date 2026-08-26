@@ -15,6 +15,7 @@
     "language": "Language",
     "signIn": {
       "actions": {
+        "back": "← Back",
         "submit": "Sign in"
       },
       "continueWith": "Continue with {{provider}}",
@@ -484,12 +485,27 @@
     },
     "notificationCenter": {
       "actions": {
+        "actions": "Actions",
         "close": "Close",
         "markAllRead": "Mark pending as read",
         "markRead": "Mark as read"
       },
       "cardSubheader": "The most recent events are shown first.",
       "cardTitle": "History",
+      "chatGroup": {
+        "chatCount_one": "{{count}} chat",
+        "chatCount_other": "{{count}} chats",
+        "hideChats": "Hide chats",
+        "showChats_one": "View {{count}} chat",
+        "showChats_other": "View {{count}} chats",
+        "summary_one": "{{profile}} received {{count}} chat.",
+        "summary_other": "{{profile}} received {{count}} chats.",
+        "title": "New chats received",
+        "unknownProfile": "Profile",
+        "unreadCount_one": "{{count}} unread",
+        "unreadCount_other": "{{count}} unread",
+        "viewAll": "View all chats"
+      },
       "empty": {
         "description": "Change the filters or check back later when there is activity.",
         "title": "No items to show"
@@ -521,14 +537,25 @@
         "displayedRows": "{{from}}-{{to}} of {{count}}",
         "rowsPerPage": "Rows per page:"
       },
+      "selection": {
+        "selectAll": "Select all",
+        "selectChatGroup": "Select chats for {{profile}}",
+        "selectedCount_one": "{{count}} selected",
+        "selectedCount_other": "{{count}} selected",
+        "selectOne": "Select {{title}}"
+      },
       "status": {
         "read": "Read",
         "unread": "Pending"
       },
       "subtitle": "Review important updates and your account activity history.",
+      "unreadTotal_one": "{{count}} unread",
+      "unreadTotal_other": "{{count}} unread",
       "toasts": {
         "markedOneRead": "Notification marked as read.",
-        "markedRead": "Pending items marked as read."
+        "markedRead": "Pending items marked as read.",
+        "markedSelectedRead_one": "{{count}} selected notification marked as read.",
+        "markedSelectedRead_other": "{{count}} selected notifications marked as read."
       }
     },
     "settings": {
@@ -2123,9 +2150,9 @@
               "title": "Upload and sync a source"
             },
             "voice": {
-              "description": "The clone of your own voice lets the profile answer with audio. Clone your voice before activating and publishing.",
+              "description": "A clone of your own voice lets the profile answer with audio. It is optional for publishing, but recommended for a more complete experience.",
               "eyebrow": "Voice",
-              "mobileDescription": "Set up a clone of your own voice so the profile can answer with audio before you publish it.",
+              "mobileDescription": "Optionally set up a clone of your own voice so the profile can answer with audio.",
               "title": "Clone your voice"
             }
           }
@@ -2394,7 +2421,10 @@
       },
       "voice": {
           "audio": "Audio",
+          "cloneFailed": "The voice could not be cloned. You can try again.",
+          "cloneProcessing": "Voice cloning is in progress. This page will update automatically when it finishes.",
           "cloneVoice": "Clone your voice",
+          "cloningVoice": "Cloning voice...",
           "cloneIntroDescription": "When recording starts, a text will appear for you to read out loud. The full reading can take up to 3 minutes.",
           "cloneIntroTitle": "Prepare your voice sample",
           "continueReading": "Keep reading",
@@ -2430,10 +2460,12 @@
             "es": "Spanish"
           },
           "naturalVoice": "Use your normal voice",
+          "noClonedVoice": "This profile does not have a cloned voice yet. Clone your voice to enable audio responses.",
           "pauseRecording": "Pause",
           "playRecording": "Play",
           "preview": "Preview",
           "quietPlace": "Find a quiet place",
+          "recloneVoice": "Clone your voice again",
           "readText": "Read this text",
           "recordAgain": "Record again",
           "recordingLive": "Recording",
@@ -2455,6 +2487,7 @@
           "title": "Voice",
           "toasts": {
             "audioGenerated": "Audio generated",
+            "cloneStarted": "Voice cloning has started",
             "sampleUploaded": "Voice sample uploaded",
             "voiceCreated": "Voice created",
             "voiceSaved": "Voice saved"

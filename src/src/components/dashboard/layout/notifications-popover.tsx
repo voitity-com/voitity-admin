@@ -55,7 +55,11 @@ export function NotificationsPopover({
     try {
       const page = await getAppNotifications({ locale: language, perPage: 20, scope: 'bell' });
 
-      setNotifications(page.notifications);
+      setNotifications(
+        page.notifications.flatMap((notification) =>
+          notification.type === 'group' ? notification.notifications : [notification]
+        )
+      );
       setUnreadCount(page.unread_count);
       onChanged?.(page.unread_count);
     } catch (err) {
