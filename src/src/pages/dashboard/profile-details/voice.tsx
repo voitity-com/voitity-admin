@@ -67,8 +67,8 @@ export function Page(): React.JSX.Element {
   const [voiceName, setVoiceName] = React.useState<string>('');
   const [voiceDescription, setVoiceDescription] = React.useState<string>('');
   const [voiceLanguageCode, setVoiceLanguageCode] = React.useState<VoiceLanguageCode>(DEFAULT_VOICE_LANGUAGE_CODE);
-  const [voiceResponsesEnabled, setVoiceResponsesEnabled] = React.useState<boolean>(true);
-  const [voiceAutoplayEnabled, setVoiceAutoplayEnabled] = React.useState<boolean>(true);
+  const [voiceResponsesEnabled, setVoiceResponsesEnabled] = React.useState<boolean>(false);
+  const [voiceAutoplayEnabled, setVoiceAutoplayEnabled] = React.useState<boolean>(false);
   const [audioBlob, setAudioBlob] = React.useState<null | Blob>(null);
   const [audioUrl, setAudioUrl] = React.useState<string>('');
   const [error, setError] = React.useState<string>('');
@@ -195,12 +195,8 @@ export function Page(): React.JSX.Element {
     };
   }, [isRecording]);
 
-  const loadProfile = React.useCallback(async (): Promise<void> => {
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const nextProfile = await getProfile(profileId);
+  const applyProfile = React.useCallback(
+    (nextProfile: Profile): void => {
       const nextVoiceId = getProfileVoiceId(nextProfile);
 
       setProfile(nextProfile);
@@ -218,13 +214,23 @@ export function Page(): React.JSX.Element {
       } else {
         clearStoredVoiceId(profileId);
       }
+    },
+    [profileId, t]
+  );
+
+  const loadProfile = React.useCallback(async (): Promise<void> => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      applyProfile(await getProfile(profileId));
     } catch (err) {
       logger.error(err);
       setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
     } finally {
       setIsLoading(false);
     }
-  }, [profileId, t]);
+  }, [applyProfile, profileId, t]);
 
   React.useEffect(() => {
     setVoiceId(getStoredVoiceId(profileId));
@@ -232,6 +238,28 @@ export function Page(): React.JSX.Element {
       logger.error(err);
     });
   }, [loadProfile, profileId]);
+
+  const isCloneProcessing = isVoiceCloneProcessing(profile?.voice_clone_status);
+
+  React.useEffect(() => {
+    if (!isCloneProcessing) {
+      return undefined;
+    }
+
+    const intervalId = window.setInterval(() => {
+      getProfile(profileId)
+        .then((nextProfile) => {
+          applyProfile(nextProfile);
+        })
+        .catch((err: unknown) => {
+          logger.error(err);
+        });
+    }, 2500);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [applyProfile, isCloneProcessing, profileId]);
 
   const saveVoiceDetails = React.useCallback(async (): Promise<Voice> => {
     const currentVoiceId = voiceId.trim();
@@ -431,18 +459,18 @@ export function Page(): React.JSX.Element {
         t('dashboard.profiles.detail.voice.errors.encoderFailed')
       );
       const voiceSample = await uploadVoiceSample({ file, language_code: voiceLanguageCode, voiceId: nextVoiceId });
-      await processVoiceSample({ sampleId: voiceSample.id, voiceId: nextVoiceId });
+      const providerRequest = await processVoiceSample({ sampleId: voiceSample.id, voiceId: nextVoiceId });
       setProfile((current) =>
         current
           ? {
               ...current,
-              data: { ...(current.data ?? {}), voice: true, voice_id: nextVoiceId },
-              voice: true,
+              data: { ...(current.data ?? {}), voice_id: nextVoiceId },
+              voice_clone_status: normalizeVoiceCloneStatus(providerRequest.status) ?? 'pending',
               voice_id: nextVoiceId,
             }
           : current
       );
-      toast.success(t('dashboard.profiles.detail.voice.toasts.sampleUploaded'));
+      toast.success(t('dashboard.profiles.detail.voice.toasts.cloneStarted'));
       sampleAudioRef.current?.pause();
       setAudioBlob(null);
       setAudioUrl('');
@@ -504,6 +532,9 @@ export function Page(): React.JSX.Element {
   }, [profileId, t, testAudioUrl, testText]);
 
   const hasConfiguredVoice = hasProfileVoiceEnabled(profile);
+  const cloneActionLabel = hasConfiguredVoice
+    ? t('dashboard.profiles.detail.voice.recloneVoice')
+    : t('dashboard.profiles.detail.voice.cloneVoice');
   const isLastScriptPart = scriptPartIndex >= sampleScriptParts.length - 1;
   const playbackProgress = playbackDuration > 0 ? Math.min(100, (playbackSeconds / playbackDuration) * 100) : 0;
   const scriptProgress = ((scriptPartIndex + 1) / sampleScriptParts.length) * 100;
@@ -530,6 +561,13 @@ export function Page(): React.JSX.Element {
               <CardContent>
                 <Stack spacing={3}>
                   <Stack spacing={2}>
+                    {isCloneProcessing ? (
+                      <Alert color="info">{t('dashboard.profiles.detail.voice.cloneProcessing')}</Alert>
+                    ) : profile?.voice_clone_status === 'failed' ? (
+                      <Alert color="error">{t('dashboard.profiles.detail.voice.cloneFailed')}</Alert>
+                    ) : !hasConfiguredVoice ? (
+                      <Alert color="warning">{t('dashboard.profiles.detail.voice.noClonedVoice')}</Alert>
+                    ) : null}
                     <FormControl>
                       <InputLabel id="voice-language-label">
                         {t('dashboard.profiles.detail.voice.fields.language')}
@@ -550,61 +588,67 @@ export function Page(): React.JSX.Element {
                       </Select>
                       <FormHelperText>{t('dashboard.profiles.detail.voice.fields.languageHelper')}</FormHelperText>
                     </FormControl>
-                    <Box>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={voiceResponsesEnabled}
-                            onChange={(event) => {
-                              const checked = event.target.checked;
-                              setVoiceResponsesEnabled(checked);
+                    {hasConfiguredVoice ? (
+                      <React.Fragment>
+                        <Box>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={voiceResponsesEnabled}
+                                onChange={(event) => {
+                                  const checked = event.target.checked;
+                                  setVoiceResponsesEnabled(checked);
 
-                              if (!checked) {
-                                setVoiceAutoplayEnabled(false);
-                              }
-                            }}
+                                  if (!checked) {
+                                    setVoiceAutoplayEnabled(false);
+                                  }
+                                }}
+                              />
+                            }
+                            label={t('dashboard.profiles.detail.voice.fields.voiceEnabled')}
                           />
-                        }
-                        label={t('dashboard.profiles.detail.voice.fields.voiceEnabled')}
-                      />
-                      <FormHelperText sx={{ ml: 4 }}>
-                        {t('dashboard.profiles.detail.voice.fields.voiceEnabledHelper')}
-                      </FormHelperText>
-                    </Box>
-                    <Box>
-                      <FormControlLabel
-                        control={
-                          <Checkbox
-                            checked={Boolean(voiceResponsesEnabled && voiceAutoplayEnabled)}
-                            disabled={!voiceResponsesEnabled}
-                            onChange={(event) => {
-                              setVoiceAutoplayEnabled(event.target.checked);
-                            }}
+                          <FormHelperText sx={{ ml: 4 }}>
+                            {t('dashboard.profiles.detail.voice.fields.voiceEnabledHelper')}
+                          </FormHelperText>
+                        </Box>
+                        <Box>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={Boolean(voiceResponsesEnabled && voiceAutoplayEnabled)}
+                                disabled={!voiceResponsesEnabled}
+                                onChange={(event) => {
+                                  setVoiceAutoplayEnabled(event.target.checked);
+                                }}
+                              />
+                            }
+                            label={t('dashboard.profiles.detail.voice.fields.voiceAutoplayEnabled')}
                           />
-                        }
-                        label={t('dashboard.profiles.detail.voice.fields.voiceAutoplayEnabled')}
-                      />
-                      <FormHelperText sx={{ ml: 4 }}>
-                        {voiceResponsesEnabled
-                          ? t('dashboard.profiles.detail.voice.fields.voiceAutoplayHelper')
-                          : t('dashboard.profiles.detail.voice.fields.voiceAutoplayDisabledHelper')}
-                      </FormHelperText>
-                    </Box>
+                          <FormHelperText sx={{ ml: 4 }}>
+                            {voiceResponsesEnabled
+                              ? t('dashboard.profiles.detail.voice.fields.voiceAutoplayHelper')
+                              : t('dashboard.profiles.detail.voice.fields.voiceAutoplayDisabledHelper')}
+                          </FormHelperText>
+                        </Box>
+                      </React.Fragment>
+                    ) : null}
                   </Stack>
                 </Stack>
               </CardContent>
-              <CardActions sx={{ justifyContent: 'space-between', p: 3, pt: 0 }}>
-                <Button disabled={isCreating || isUploading} onClick={handleSaveVoice} variant="outlined">
-                  {t('dashboard.profiles.actions.save')}
-                </Button>
+              <CardActions sx={{ justifyContent: hasConfiguredVoice ? 'space-between' : 'flex-end', p: 3, pt: 0 }}>
+                {hasConfiguredVoice ? (
+                  <Button disabled={isCreating || isUploading} onClick={handleSaveVoice} variant="outlined">
+                    {t('dashboard.profiles.actions.save')}
+                  </Button>
+                ) : null}
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
                   <Button
-                    disabled={isCreating || isUploading}
+                    disabled={isCloneProcessing || isCreating || isUploading}
                     onClick={handleOpenSampleDialog}
                     startIcon={<MicrophoneIcon />}
                     variant="contained"
                   >
-                    {t('dashboard.profiles.detail.voice.cloneVoice')}
+                    {isCloneProcessing ? t('dashboard.profiles.detail.voice.cloningVoice') : cloneActionLabel}
                   </Button>
                   {hasConfiguredVoice ? (
                     <Button
@@ -631,7 +675,7 @@ export function Page(): React.JSX.Element {
         }}
         open={sampleDialogOpen}
       >
-        <DialogTitle>{t('dashboard.profiles.detail.voice.cloneVoice')}</DialogTitle>
+        <DialogTitle>{cloneActionLabel}</DialogTitle>
         <DialogContent sx={{ pb: sampleStep === 'intro' ? 0 : 3 }}>
           <Stack spacing={2.5}>
             {error ? <Alert color="error">{error}</Alert> : null}
@@ -1028,18 +1072,14 @@ async function convertAudioBlobToMp3File(blob: Blob, encoderErrorMessage: string
 }
 
 function hasProfileVoiceEnabled(profile: null | Profile): boolean {
-  if (!profile) {
-    return false;
-  }
-
-  if (profile.voice === true) {
-    return true;
-  }
-
-  return profile.data?.voice === true;
+  return profile?.voice === true;
 }
 
 function getProfileVoiceResponsesEnabled(profile: Profile): boolean {
+  if (!hasProfileVoiceEnabled(profile)) {
+    return false;
+  }
+
   if (typeof profile.voice_enabled === 'boolean') {
     return profile.voice_enabled;
   }
@@ -1065,6 +1105,18 @@ function getProfileVoiceAutoplayEnabled(profile: Profile): boolean {
   }
 
   return true;
+}
+
+function isVoiceCloneProcessing(status: Profile['voice_clone_status']): boolean {
+  return status === 'pending' || status === 'processing';
+}
+
+function normalizeVoiceCloneStatus(status: null | string | undefined): Profile['voice_clone_status'] {
+  if (status === 'completed' || status === 'failed' || status === 'pending' || status === 'processing') {
+    return status;
+  }
+
+  return null;
 }
 
 function getProfileVoiceId(profile: Profile): string {

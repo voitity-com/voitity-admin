@@ -2150,9 +2150,9 @@
               "title": "Upload and sync a source"
             },
             "voice": {
-              "description": "The clone of your own voice lets the profile answer with audio. Clone your voice before activating and publishing.",
+              "description": "A clone of your own voice lets the profile answer with audio. It is optional for publishing, but recommended for a more complete experience.",
               "eyebrow": "Voice",
-              "mobileDescription": "Set up a clone of your own voice so the profile can answer with audio before you publish it.",
+              "mobileDescription": "Optionally set up a clone of your own voice so the profile can answer with audio.",
               "title": "Clone your voice"
             }
           }
@@ -2421,7 +2421,10 @@
       },
       "voice": {
           "audio": "Audio",
+          "cloneFailed": "The voice could not be cloned. You can try again.",
+          "cloneProcessing": "Voice cloning is in progress. This page will update automatically when it finishes.",
           "cloneVoice": "Clone your voice",
+          "cloningVoice": "Cloning voice...",
           "cloneIntroDescription": "When recording starts, a text will appear for you to read out loud. The full reading can take up to 3 minutes.",
           "cloneIntroTitle": "Prepare your voice sample",
           "continueReading": "Keep reading",
@@ -2457,10 +2460,12 @@
             "es": "Spanish"
           },
           "naturalVoice": "Use your normal voice",
+          "noClonedVoice": "This profile does not have a cloned voice yet. Clone your voice to enable audio responses.",
           "pauseRecording": "Pause",
           "playRecording": "Play",
           "preview": "Preview",
           "quietPlace": "Find a quiet place",
+          "recloneVoice": "Clone your voice again",
           "readText": "Read this text",
           "recordAgain": "Record again",
           "recordingLive": "Recording",
@@ -2482,6 +2487,7 @@
           "title": "Voice",
           "toasts": {
             "audioGenerated": "Audio generated",
+            "cloneStarted": "Voice cloning has started",
             "sampleUploaded": "Voice sample uploaded",
             "voiceCreated": "Voice created",
             "voiceSaved": "Voice saved"

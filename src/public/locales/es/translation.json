@@ -2150,9 +2150,9 @@
               "title": "Carga y sincroniza una fuente"
             },
             "voice": {
-              "description": "El clon de tu propia voz permite que el perfil responda con audio. Clona tu voz antes de activar y publicar.",
+              "description": "El clon de tu propia voz permite que el perfil responda con audio. Es opcional para publicar, pero recomendado para ofrecer una experiencia más completa.",
               "eyebrow": "Voz",
-              "mobileDescription": "Configura un clon de tu propia voz para que el perfil pueda responder con audio antes de publicarlo.",
+              "mobileDescription": "Configura opcionalmente un clon de tu propia voz para que el perfil pueda responder con audio.",
               "title": "Clona tu voz"
             }
           }
@@ -2421,7 +2421,10 @@
       },
       "voice": {
           "audio": "Audio",
+          "cloneFailed": "No se pudo clonar la voz. Puedes intentarlo de nuevo.",
+          "cloneProcessing": "La clonación está en proceso. Esta pantalla se actualizará automáticamente cuando termine.",
           "cloneVoice": "Clonar tu voz",
+          "cloningVoice": "Clonando voz...",
           "cloneIntroDescription": "Al iniciar la grabación aparecerá un texto para leer en voz alta. La lectura completa puede durar hasta 3 minutos.",
           "cloneIntroTitle": "Prepara tu muestra de voz",
           "continueReading": "Seguir leyendo",
@@ -2457,10 +2460,12 @@
             "es": "Español"
           },
           "naturalVoice": "Lee con tu voz normal",
+          "noClonedVoice": "Este perfil todavía no tiene una voz clonada. Clona tu voz para habilitar las respuestas de audio.",
           "pauseRecording": "Pausar",
           "playRecording": "Reproducir",
           "preview": "Vista previa",
           "quietPlace": "Busca un lugar silencioso",
+          "recloneVoice": "Clonar tu voz nuevamente",
           "readText": "Lee este texto",
           "recordAgain": "Grabar de nuevo",
           "recordingLive": "Grabando",
@@ -2482,6 +2487,7 @@
           "title": "Voz",
           "toasts": {
             "audioGenerated": "Audio generado",
+            "cloneStarted": "La clonación de voz ha comenzado",
             "sampleUploaded": "Muestra de voz subida",
             "voiceCreated": "Voz creada",
             "voiceSaved": "Voz guardada"
