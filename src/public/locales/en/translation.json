@@ -484,12 +484,27 @@
     },
     "notificationCenter": {
       "actions": {
+        "actions": "Actions",
         "close": "Close",
         "markAllRead": "Mark pending as read",
         "markRead": "Mark as read"
       },
       "cardSubheader": "The most recent events are shown first.",
       "cardTitle": "History",
+      "chatGroup": {
+        "chatCount_one": "{{count}} chat",
+        "chatCount_other": "{{count}} chats",
+        "hideChats": "Hide chats",
+        "showChats_one": "View {{count}} chat",
+        "showChats_other": "View {{count}} chats",
+        "summary_one": "{{profile}} received {{count}} chat.",
+        "summary_other": "{{profile}} received {{count}} chats.",
+        "title": "New chats received",
+        "unknownProfile": "Profile",
+        "unreadCount_one": "{{count}} unread",
+        "unreadCount_other": "{{count}} unread",
+        "viewAll": "View all chats"
+      },
       "empty": {
         "description": "Change the filters or check back later when there is activity.",
         "title": "No items to show"
@@ -521,14 +536,25 @@
         "displayedRows": "{{from}}-{{to}} of {{count}}",
         "rowsPerPage": "Rows per page:"
       },
+      "selection": {
+        "selectAll": "Select all",
+        "selectChatGroup": "Select chats for {{profile}}",
+        "selectedCount_one": "{{count}} selected",
+        "selectedCount_other": "{{count}} selected",
+        "selectOne": "Select {{title}}"
+      },
       "status": {
         "read": "Read",
         "unread": "Pending"
       },
       "subtitle": "Review important updates and your account activity history.",
+      "unreadTotal_one": "{{count}} unread",
+      "unreadTotal_other": "{{count}} unread",
       "toasts": {
         "markedOneRead": "Notification marked as read.",
-        "markedRead": "Pending items marked as read."
+        "markedRead": "Pending items marked as read.",
+        "markedSelectedRead_one": "{{count}} selected notification marked as read.",
+        "markedSelectedRead_other": "{{count}} selected notifications marked as read."
       }
     },
     "settings": {

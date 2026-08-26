@@ -26,8 +26,28 @@ export interface AppNotification {
   kind: 'log' | 'notification';
   read_at?: null | string;
   title: string;
+  type: 'notification';
   visible_in_bell: boolean;
 }
+
+export interface AppNotificationGroup {
+  action_url?: null | string;
+  category?: null | string;
+  count: number;
+  created_at?: null | string;
+  id: string;
+  key: 'new_chat_received';
+  kind: 'notification';
+  notification_ids: (number | string)[];
+  notifications: AppNotification[];
+  profile_id?: null | number | string;
+  profile_name?: null | string;
+  type: 'group';
+  unread_count: number;
+  visible_in_bell: boolean;
+}
+
+export type AppNotificationFeedItem = AppNotification | AppNotificationGroup;
 
 export interface AppNotificationPagination {
   current_page: number;
@@ -37,7 +57,7 @@ export interface AppNotificationPagination {
 }
 
 export interface AppNotificationPage {
-  notifications: AppNotification[];
+  notifications: AppNotificationFeedItem[];
   pagination: AppNotificationPagination;
   unread_count: number;
 }
@@ -73,12 +93,14 @@ export async function updateNotificationPreferences(
 
 export async function getAppNotifications(
   params: {
+    groupChats?: boolean;
     kind?: 'all' | 'log' | 'notification';
     locale?: string;
     page?: number;
     perPage?: number;
     read?: 'all' | 'read' | 'unread';
     scope?: 'all' | 'bell';
+    timezone?: string;
   } = {}
 ): Promise<AppNotificationPage> {
   const query = new URLSearchParams({
@@ -88,6 +110,10 @@ export async function getAppNotifications(
 
   if (params.locale) {
     query.set('locale', params.locale);
+  }
+
+  if (params.groupChats) {
+    query.set('group_chats', '1');
   }
 
   if (params.scope && params.scope !== 'all') {
@@ -100,6 +126,10 @@ export async function getAppNotifications(
 
   if (params.read && params.read !== 'all') {
     query.set('read', params.read);
+  }
+
+  if (params.timezone) {
+    query.set('timezone', params.timezone);
   }
 
   const response = await requestJson<unknown>(`/api/notifications?${query.toString()}`, {
@@ -158,6 +188,40 @@ export async function markAppNotificationAsRead(id: number | string, locale?: st
   return notification;
 }
 
+export async function markSelectedAppNotificationsAsRead(
+  notificationIds: (number | string)[],
+  locale?: string
+): Promise<number> {
+  if (notificationIds.length === 0) {
+    return 0;
+  }
+
+  const chunks = Array.from({ length: Math.ceil(notificationIds.length / 50) }, (_value, index) =>
+    notificationIds.slice(index * 50, index * 50 + 50)
+  );
+
+  try {
+    const responses = await Promise.all(
+      chunks.map((chunk) =>
+        requestJson<unknown>('/api/notifications/read', {
+          body: { notification_ids: chunk },
+          locale,
+          method: 'PATCH',
+        })
+      )
+    );
+
+    return responses.reduce<number>((markedReadCount, response) => {
+      const data = getResponseData(response);
+      const responseCount = isRecord(data) ? getNumber(data.marked_read_count, 0) : 0;
+
+      return markedReadCount + responseCount;
+    }, 0);
+  } finally {
+    dispatchAppNotificationsChanged();
+  }
+}
+
 export async function dismissAppNotification(id: number | string, locale?: string): Promise<void> {
   await requestJson<unknown>(`/api/notifications/${id}`, { locale, method: 'DELETE' });
   dispatchAppNotificationsChanged();
@@ -187,7 +251,7 @@ function normalizeAppNotificationPage(response: unknown): AppNotificationPage {
   }
 
   const notifications = Array.isArray(data.notifications)
-    ? data.notifications.map(normalizeAppNotification).filter(isAppNotification)
+    ? data.notifications.map(normalizeAppNotificationFeedItem).filter(isAppNotificationFeedItem)
     : [];
 
   return {
@@ -236,12 +300,64 @@ function normalizeAppNotification(value: unknown): AppNotification | null {
     kind: value.kind === 'log' ? 'log' : 'notification',
     read_at: getNullableString(value.read_at),
     title,
+    type: 'notification',
+    visible_in_bell: typeof value.visible_in_bell === 'boolean' ? value.visible_in_bell : true,
+  };
+}
+
+function normalizeAppNotificationFeedItem(value: unknown): AppNotificationFeedItem | null {
+  if (isRecord(value) && value.type === 'group') {
+    return normalizeAppNotificationGroup(value);
+  }
+
+  return normalizeAppNotification(value);
+}
+
+function normalizeAppNotificationGroup(value: Record<string, unknown>): AppNotificationGroup | null {
+  const id = getString(value.id);
+  const notifications = Array.isArray(value.notifications)
+    ? value.notifications.map(normalizeAppNotification).filter(isAppNotification)
+    : [];
+  const notificationIds = Array.isArray(value.notification_ids)
+    ? value.notification_ids.filter(isNotificationId)
+    : notifications.map((notification) => notification.id);
+
+  if (!id || value.key !== 'new_chat_received' || notifications.length === 0 || notificationIds.length === 0) {
+    return null;
+  }
+
+  return {
+    action_url: getNullableString(value.action_url),
+    category: getNullableString(value.category),
+    count: getNumber(value.count, notifications.length),
+    created_at: getNullableString(value.created_at),
+    id,
+    key: 'new_chat_received',
+    kind: 'notification',
+    notification_ids: notificationIds,
+    notifications,
+    profile_id:
+      typeof value.profile_id === 'number' || typeof value.profile_id === 'string' ? value.profile_id : null,
+    profile_name: getNullableString(value.profile_name),
+    type: 'group',
+    unread_count: getNumber(
+      value.unread_count,
+      notifications.filter((notification) => !notification.read_at).length
+    ),
     visible_in_bell: typeof value.visible_in_bell === 'boolean' ? value.visible_in_bell : true,
   };
 }
 
 function isAppNotification(value: AppNotification | null): value is AppNotification {
   return value !== null;
+}
+
+function isAppNotificationFeedItem(value: AppNotificationFeedItem | null): value is AppNotificationFeedItem {
+  return value !== null;
+}
+
+function isNotificationId(value: unknown): value is number | string {
+  return typeof value === 'number' || (typeof value === 'string' && Boolean(value.trim()));
 }
 
 function normalizePreference(value: unknown): NotificationPreference | null {
@@ -341,6 +457,7 @@ function normalizeEmptyNotification(id: number | string): AppNotification {
     key: '',
     kind: 'notification',
     title: '',
+    type: 'notification',
     visible_in_bell: false,
   };
 }

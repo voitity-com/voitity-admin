@@ -484,12 +484,27 @@
     },
     "notificationCenter": {
       "actions": {
+        "actions": "Acciones",
         "close": "Cerrar",
         "markAllRead": "Marcar pendientes como leídas",
         "markRead": "Marcar como leído"
       },
       "cardSubheader": "Se muestran primero los eventos más recientes.",
       "cardTitle": "Historial",
+      "chatGroup": {
+        "chatCount_one": "{{count}} chat",
+        "chatCount_other": "{{count}} chats",
+        "hideChats": "Ocultar chats",
+        "showChats_one": "Ver {{count}} chat",
+        "showChats_other": "Ver {{count}} chats",
+        "summary_one": "{{profile}} recibió {{count}} chat.",
+        "summary_other": "{{profile}} recibió {{count}} chats.",
+        "title": "Nuevos chats recibidos",
+        "unknownProfile": "Perfil",
+        "unreadCount_one": "{{count}} sin leer",
+        "unreadCount_other": "{{count}} sin leer",
+        "viewAll": "Ver todos los chats"
+      },
       "empty": {
         "description": "Cambia los filtros o vuelve más tarde cuando haya actividad.",
         "title": "No hay elementos para mostrar"
@@ -521,14 +536,25 @@
         "displayedRows": "{{from}}-{{to}} de {{count}}",
         "rowsPerPage": "Filas por página:"
       },
+      "selection": {
+        "selectAll": "Seleccionar todas",
+        "selectChatGroup": "Seleccionar los chats de {{profile}}",
+        "selectedCount_one": "{{count}} seleccionada",
+        "selectedCount_other": "{{count}} seleccionadas",
+        "selectOne": "Seleccionar {{title}}"
+      },
       "status": {
         "read": "Leído",
         "unread": "Pendiente"
       },
       "subtitle": "Revisa avisos importantes y el historial de actividad de tu cuenta.",
+      "unreadTotal_one": "{{count}} sin leer",
+      "unreadTotal_other": "{{count}} sin leer",
       "toasts": {
         "markedOneRead": "Notificación marcada como leída.",
-        "markedRead": "Pendientes marcadas como leídas."
+        "markedRead": "Pendientes marcadas como leídas.",
+        "markedSelectedRead_one": "{{count}} notificación seleccionada marcada como leída.",
+        "markedSelectedRead_other": "{{count}} notificaciones seleccionadas marcadas como leídas."
       }
     },
     "settings": {
