@@ -15,6 +15,7 @@
     "language": "Idioma",
     "signIn": {
       "actions": {
+        "back": "← Volver",
         "submit": "Iniciar sesión"
       },
       "continueWith": "Continuar con {{provider}}",

@@ -15,6 +15,7 @@
     "language": "Language",
     "signIn": {
       "actions": {
+        "back": "← Back",
         "submit": "Sign in"
       },
       "continueWith": "Continue with {{provider}}",
