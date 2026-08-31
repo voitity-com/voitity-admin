@@ -120,27 +120,24 @@ export function ProfileQualityDock(): React.JSX.Element | null {
         border: '1px solid var(--mui-palette-divider)',
         borderRadius: 2,
         bottom: 'calc(16px + env(safe-area-inset-bottom))',
-        left: { xs: 12, lg: 'calc(var(--SideNav-width, 0px) + 24px)' },
+        left: { lg: 'calc(var(--SideNav-width, 0px) + 24px)', sm: 24, xs: 12 },
         overflow: 'hidden',
         position: 'fixed',
-        right: { xs: 12, sm: 24 },
+        right: { sm: 'auto', xs: 92 },
+        width: { sm: 'min(620px, calc(100vw - 160px))' },
         zIndex: (theme) => theme.zIndex.drawer + 2,
       }}
     >
       <Box
         sx={{
-          alignItems: { xs: 'stretch', md: 'center' },
+          alignItems: 'center',
           display: 'grid',
-          gap: { xs: 1.25, md: 2 },
-          gridTemplateColumns: {
-            xs: 'minmax(0, 1fr) 40px',
-            sm: '1fr',
-            md: 'minmax(220px, 0.9fr) minmax(280px, 1.4fr) auto',
-          },
-          p: { xs: 1.25, sm: 2 },
+          gap: 1.25,
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
+          p: 1.25,
         }}
       >
-        <Stack spacing={1} sx={{ minWidth: 0 }}>
+        <Stack spacing={0.75} sx={{ minWidth: 0 }}>
           <Stack direction="row" spacing={1.25} sx={{ alignItems: 'center', minWidth: 0 }}>
             <Box
               sx={{
@@ -169,21 +166,6 @@ export function ProfileQualityDock(): React.JSX.Element | null {
               <Typography color={error ? 'error.main' : 'text.secondary'} component="div" noWrap variant="caption">
                 {getStatusLabel({ error, isLoading, pendingChecks, t })}
               </Typography>
-              {!isLoading && !error ? (
-                <Typography
-                  color="text.secondary"
-                  component="div"
-                  noWrap
-                  sx={{ display: { sm: 'none' }, mt: 0.25 }}
-                  variant="caption"
-                >
-                  {t('dashboard.profiles.detail.quality.dock.compactMetrics', {
-                    approved: quality?.counts.approved_facts ?? 0,
-                    indexed: quality?.counts.indexed_facts ?? 0,
-                    sources: quality?.counts.sources ?? 0,
-                  })}
-                </Typography>
-              ) : null}
             </Box>
             {!isLoading && !error ? (
               <Chip
@@ -202,24 +184,6 @@ export function ProfileQualityDock(): React.JSX.Element | null {
             variant={isLoading ? 'indeterminate' : 'determinate'}
           />
         </Stack>
-
-        <Box
-          sx={{
-            display: { xs: 'none', sm: 'grid' },
-            gap: 1,
-            gridTemplateColumns: 'repeat(3, minmax(120px, 1fr))',
-          }}
-        >
-          <DockMetric label={t('dashboard.profiles.detail.quality.metrics.sources')} value={quality?.counts.sources ?? 0} />
-          <DockMetric
-            label={t('dashboard.profiles.detail.quality.metrics.approvedFacts')}
-            value={quality?.counts.approved_facts ?? 0}
-          />
-          <DockMetric
-            label={t('dashboard.profiles.detail.quality.metrics.indexedFacts')}
-            value={quality?.counts.indexed_facts ?? 0}
-          />
-        </Box>
 
         <IconButton
           aria-label={t('dashboard.profiles.detail.quality.dock.viewDetails')}
@@ -252,27 +216,6 @@ function getRefreshEventProfileId(event?: Event): null | string {
   const detail = event.detail as { profileId?: null | string } | null;
 
   return detail?.profileId ?? null;
-}
-
-function DockMetric({ label, value }: { label: string; value: number }): React.JSX.Element {
-  return (
-    <Box
-      sx={{
-        bgcolor: 'background.level1',
-        borderRadius: 1,
-        minWidth: 0,
-        px: { xs: 1, sm: 1.5 },
-        py: 1,
-      }}
-    >
-      <Typography noWrap sx={{ fontWeight: 700 }} variant="body2">
-        {value}
-      </Typography>
-      <Typography color="text.secondary" noWrap variant="caption">
-        {label}
-      </Typography>
-    </Box>
-  );
 }
 
 function getScoreColor(score: number): 'error' | 'success' | 'warning' {

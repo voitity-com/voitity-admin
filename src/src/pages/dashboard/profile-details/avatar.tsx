@@ -155,6 +155,11 @@ export function Page(): React.JSX.Element {
         if (!nextProcessingAvatar) {
           setStatus(nextActiveAvatar?.status ?? nextFailedAvatar?.status ?? '');
           setIsPollingAvatar(false);
+
+          if (nextActiveAvatar) {
+            window.dispatchEvent(new Event('profile-publication:refresh'));
+          }
+
           return;
         }
 
@@ -363,6 +368,7 @@ export function Page(): React.JSX.Element {
             return item;
           })
         );
+        window.dispatchEvent(new Event('profile-publication:refresh'));
         toast.success(t('dashboard.profiles.detail.avatar.toasts.avatarActivated'));
         handleCloseDialog();
       } catch (err) {

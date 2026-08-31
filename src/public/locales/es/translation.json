@@ -2281,6 +2281,83 @@
         "subheader": "Calidad del conocimiento del perfil",
         "title": "Calidad"
       },
+      "widgetLauncher": {
+        "actions": {
+          "addAvatar": "Agregar avatar",
+          "addSource": "Agregar fuente",
+          "configure": "Configurar widget",
+          "retry": "Reintentar"
+        },
+        "close": "Cerrar widget del perfil",
+        "emptyAvatar": "Avatar vacío",
+        "error": "No se pudo cargar el widget del perfil.",
+        "incomplete": {
+          "description": "Agrega un avatar y sincroniza al menos una fuente para poder probar el chat de este perfil.",
+          "title": "Completa el perfil para abrir el widget"
+        },
+        "open": "Abrir widget del perfil",
+        "preview": {
+          "iframeTitle": "Chat del widget del perfil",
+          "subtitle": "Editar template",
+          "title": "Widget del perfil"
+        },
+        "requirements": {
+          "avatar": "Avatar del perfil",
+          "source": "Al menos una fuente sincronizada"
+        },
+        "templateEditor": {
+          "actions": {
+            "close": "Cerrar editor",
+            "save": "Guardar cambios",
+            "saving": "Guardando..."
+          },
+          "background": {
+            "css": "Color",
+            "description": "Usa el fondo definido en el CSS o una imagen personalizada.",
+            "formats": "JPG, PNG o WebP · máximo 10 MB",
+            "image": "Imagen",
+            "imageHelp": "Usa una imagen que cubra todo el perfil.",
+            "previewAlt": "Vista previa de la imagen de fondo",
+            "replace": "Arrastra otra imagen o haz clic para reemplazarla",
+            "title": "Fondo del perfil",
+            "upload": "Arrastra una imagen o haz clic para buscarla"
+          },
+          "errors": {
+            "file": "Selecciona una imagen JPG, PNG o WebP de máximo 10 MB.",
+            "load": "No fue posible cargar la apariencia del perfil.",
+            "read": "No fue posible leer la imagen seleccionada.",
+            "save": "No fue posible guardar la apariencia del perfil."
+          },
+          "preview": {
+            "desktop": "Escritorio",
+            "iframeTitle": "Vista previa completa del perfil",
+            "mobile": "Móvil"
+          },
+          "replaceConfirm": {
+            "cancel": "Cancelar",
+            "confirm": "Reemplazar imagen",
+            "description": "La imagen de fondo anterior será reemplazada cuando guardes los cambios.",
+            "title": "¿Reemplazar la imagen actual?"
+          },
+          "tabs": {
+            "background": "Fondo",
+            "label": "Opciones de apariencia del perfil",
+            "templates": "Templates"
+          },
+          "templates": {
+            "description": "Selecciona el estilo visual que usará este perfil.",
+            "title": "Template del perfil"
+          },
+          "title": "Editar template",
+          "toasts": {
+            "saved": "Apariencia del perfil actualizada"
+          }
+        },
+        "unavailable": {
+          "description": "El avatar y la fuente están listos. Publica el perfil y habilita el widget desde Configuración para abrir el chat.",
+          "title": "El contenido del widget está listo"
+        }
+      },
       "insights": {
         "title": "Insights del perfil",
         "description": "Rendimiento del perfil, objetivos de conversación y resultados de productos dentro del rango seleccionado.",

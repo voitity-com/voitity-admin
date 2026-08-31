@@ -6,6 +6,7 @@ import { ProfilePublicationOnboarding } from './profile-publication-onboarding';
 import { ProfilePublicationDock } from './profile-publication-dock';
 import { ProfileQualityDock } from './profile-quality-dock';
 import { ProfileSideNav } from './profile-side-nav';
+import { ProfileWidgetLauncher } from './profile-widget-launcher';
 
 interface ProfileLayoutProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
         maxWidth: 'var(--Content-maxWidth)',
         m: 'var(--Content-margin)',
         p: 'var(--Content-padding)',
-        pb: { xs: '156px', sm: '132px', md: '120px' },
+        pb: { xs: '116px', sm: '104px' },
         pt: { xs: 1.5, md: 2 },
         width: 'var(--Content-width)',
       }}
@@ -29,6 +30,7 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
         <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>{children}</Box>
       </Stack>
       <ProfileQualityDock />
+      <ProfileWidgetLauncher />
       <ProfilePublicationOnboarding />
     </Box>
   );

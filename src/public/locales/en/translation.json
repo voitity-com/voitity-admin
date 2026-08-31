@@ -2281,6 +2281,83 @@
         "subheader": "Profile knowledge quality",
         "title": "Quality"
       },
+      "widgetLauncher": {
+        "actions": {
+          "addAvatar": "Add avatar",
+          "addSource": "Add source",
+          "configure": "Configure widget",
+          "retry": "Retry"
+        },
+        "close": "Close profile widget",
+        "emptyAvatar": "Empty avatar",
+        "error": "The profile widget could not be loaded.",
+        "incomplete": {
+          "description": "Add an avatar and synchronize at least one source before previewing this profile chat.",
+          "title": "Complete the profile to open the widget"
+        },
+        "open": "Open profile widget",
+        "preview": {
+          "iframeTitle": "Profile widget chat",
+          "subtitle": "Edit template",
+          "title": "Profile widget"
+        },
+        "requirements": {
+          "avatar": "Profile avatar",
+          "source": "At least one synchronized source"
+        },
+        "templateEditor": {
+          "actions": {
+            "close": "Close editor",
+            "save": "Save changes",
+            "saving": "Saving..."
+          },
+          "background": {
+            "css": "Color",
+            "description": "Use the CSS-defined background or a custom image.",
+            "formats": "JPG, PNG or WebP · maximum 10 MB",
+            "image": "Image",
+            "imageHelp": "Use an image that covers the complete profile.",
+            "previewAlt": "Background image preview",
+            "replace": "Drag another image or click to replace it",
+            "title": "Profile background",
+            "upload": "Drag an image or click to browse"
+          },
+          "errors": {
+            "file": "Select a JPG, PNG or WebP image up to 10 MB.",
+            "load": "The profile appearance could not be loaded.",
+            "read": "The selected image could not be read.",
+            "save": "The profile appearance could not be saved."
+          },
+          "preview": {
+            "desktop": "Desktop",
+            "iframeTitle": "Full profile preview",
+            "mobile": "Mobile"
+          },
+          "replaceConfirm": {
+            "cancel": "Cancel",
+            "confirm": "Replace image",
+            "description": "The previous background image will be replaced when you save the changes.",
+            "title": "Replace the current image?"
+          },
+          "tabs": {
+            "background": "Background",
+            "label": "Profile appearance options",
+            "templates": "Templates"
+          },
+          "templates": {
+            "description": "Select the visual style used by this profile.",
+            "title": "Profile template"
+          },
+          "title": "Edit template",
+          "toasts": {
+            "saved": "Profile appearance updated"
+          }
+        },
+        "unavailable": {
+          "description": "The avatar and source are ready. Publish the profile and enable the widget from Settings to open the chat.",
+          "title": "The widget content is ready"
+        }
+      },
       "insights": {
         "title": "Profile insights",
         "description": "Profile performance, conversation goals, and product outcomes for the selected range.",
