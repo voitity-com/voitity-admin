@@ -111,20 +111,9 @@
       }
     },
     "split": {
-      "description": "Create and maintain public profiles where an avatar can chat, answer with audio, and use verified information from the profile.",
-      "eyebrow": "Interactive profile admin",
-      "highlights": {
-        "avatar": "Authorized avatars",
-        "chat": "Public chat",
-        "context": "Verified context",
-        "voice": "Voice responses"
-      },
-      "title": "Manage conversational profiles with image, voice, and context.",
-      "workflow": {
-        "conversations": "Review conversations",
-        "media": "Manage avatar and voice",
-        "profiles": "Build profiles"
-      }
+      "description": "Turn your experience, voice, and content into an intelligent profile that talks and connects for you.",
+      "title": "Power your personal brand.",
+      "videoTitle": "Discover how Bigmelo powers your personal brand"
     }
   },
   "dashboard": {
