@@ -1166,7 +1166,6 @@
       "events": {
         "avatar_added": "Avatar added",
         "conversation_started": "First conversation",
-        "link_copied": "Link copied",
         "product_created": "First product created",
         "profile_created": "Profile created",
         "profile_published": "Profile published",
@@ -2190,7 +2189,7 @@
               "title": "Create an avatar"
             },
             "publication": {
-              "description": "This bar shows whether the profile is ready to be activated and published. Complete the missing requirements before publishing.",
+              "description": "This summary shows whether the profile is ready to be activated and published. Complete the missing requirements before publishing.",
               "eyebrow": "Publishing",
               "mobileDescription": "This summary shows what is missing before publishing. Move step by step and complete the pending requirements.",
               "title": "Complete what is needed to publish"
@@ -2715,7 +2714,7 @@
         "onboarding": {
           "action": "Create profile",
           "close": "Close guide",
-          "descriptionWithPlan": "Use the highlighted Add button to open the form and create the first profile with name, alias, description, profession, and conversational style.",
+          "descriptionWithPlan": "Use the highlighted Add button to open the form and create the first profile with name, alias, description, and conversational style.",
           "descriptionWithoutPlan": "Use the highlighted Add button to continue with plan selection. Profile creation will be enabled when you have an active subscription.",
           "eyebrow": "First profile",
           "mobileDescriptionWithPlan": "Start by creating the profile with name, alias, description, and style. Then you can complete avatar, voice, and sources.",
@@ -2726,7 +2725,7 @@
           "description": "This profile is not ready to publish yet. Open it and complete the missing requirements before activating it.",
           "eyebrow": "Profile pending",
           "missingItems": "Missing: {{items}}",
-          "mobileDescription": "Open the profile and complete avatar, voice, and source. Then you can activate it and publish its link.",
+          "mobileDescription": "Open the profile and complete the avatar and source. Then you can activate it and publish its link.",
           "openProfile": "Open profile",
           "title": "Complete this profile"
         },

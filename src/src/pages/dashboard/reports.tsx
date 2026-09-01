@@ -334,7 +334,7 @@ function UsersPanel({
     },
     {
       name: t('dashboard.reports.columns.progress'),
-      formatter: (row) => `${row.completed_events.length}/9`,
+      formatter: (row) => `${row.completed_events.length}/8`,
       align: 'right',
     },
     {
