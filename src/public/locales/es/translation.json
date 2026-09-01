@@ -2323,10 +2323,15 @@
             "upload": "Arrastra una imagen o haz clic para buscarla"
           },
           "errors": {
+            "blocked": "La carga de la imagen fue bloqueada por la protección del sitio. Inténtalo nuevamente o usa otra imagen.",
             "file": "Selecciona una imagen JPG, PNG o WebP de máximo 10 MB.",
+            "invalid": "La imagen no cumple con el formato o tamaño permitido.",
             "load": "No fue posible cargar la apariencia del perfil.",
+            "network": "No fue posible conectarse para guardar la apariencia del perfil.",
             "read": "No fue posible leer la imagen seleccionada.",
-            "save": "No fue posible guardar la apariencia del perfil."
+            "save": "No fue posible guardar la apariencia del perfil.",
+            "server": "El servidor no pudo almacenar la imagen de fondo.",
+            "tooLarge": "La imagen supera el tamaño permitido de 10 MB."
           },
           "preview": {
             "desktop": "Escritorio",

@@ -2323,10 +2323,15 @@
             "upload": "Drag an image or click to browse"
           },
           "errors": {
+            "blocked": "The site protection blocked the image upload. Try again or use a different image.",
             "file": "Select a JPG, PNG or WebP image up to 10 MB.",
+            "invalid": "The image does not meet the allowed format or size requirements.",
             "load": "The profile appearance could not be loaded.",
+            "network": "The profile appearance could not be saved because the server could not be reached.",
             "read": "The selected image could not be read.",
-            "save": "The profile appearance could not be saved."
+            "save": "The profile appearance could not be saved.",
+            "server": "The server could not store the background image.",
+            "tooLarge": "The image exceeds the 10 MB size limit."
           },
           "preview": {
             "desktop": "Desktop",

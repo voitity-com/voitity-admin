@@ -35,6 +35,7 @@ import { logger } from '@/lib/default-logger';
 import type { ProfileAppearanceConfiguration } from '@/lib/profile-appearance/api-client';
 import {
   getProfileAppearance,
+  ProfileAppearanceApiError,
   updateProfileAppearance,
   uploadProfileBackgroundImage,
 } from '@/lib/profile-appearance/api-client';
@@ -218,8 +219,9 @@ export function ProfileTemplateEditor({
       toast.success(t('dashboard.profiles.detail.widgetLauncher.templateEditor.toasts.saved'));
     } catch (saveError) {
       logger.error(saveError);
-      setError(t('dashboard.profiles.detail.widgetLauncher.templateEditor.errors.save'));
-      toast.error(t('dashboard.profiles.detail.widgetLauncher.templateEditor.errors.save'));
+      const message = t(profileAppearanceSaveErrorKey(saveError));
+      setError(message);
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
@@ -564,6 +566,32 @@ export function ProfileTemplateEditor({
       </Dialog>
     </React.Fragment>
   );
+}
+
+function profileAppearanceSaveErrorKey(error: unknown): string {
+  const prefix = 'dashboard.profiles.detail.widgetLauncher.templateEditor.errors';
+
+  if (!(error instanceof ProfileAppearanceApiError)) {
+    return `${prefix}.network`;
+  }
+
+  if (error.status === 403) {
+    return `${prefix}.blocked`;
+  }
+
+  if (error.status === 413) {
+    return `${prefix}.tooLarge`;
+  }
+
+  if (error.status === 422) {
+    return `${prefix}.invalid`;
+  }
+
+  if (error.status >= 500) {
+    return `${prefix}.server`;
+  }
+
+  return `${prefix}.save`;
 }
 
 function TemplateMobileThumbnail({
