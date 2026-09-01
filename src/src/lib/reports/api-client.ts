@@ -9,8 +9,7 @@ export type ActivationEventName =
   | 'profile_published'
   | 'whatsapp_added'
   | 'product_created'
-  | 'conversation_started'
-  | 'link_copied';
+  | 'conversation_started';
 
 export interface ActivationOverview {
   activation_rate: number;
