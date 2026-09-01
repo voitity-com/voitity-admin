@@ -147,35 +147,47 @@ export function Page(): React.JSX.Element {
                 <TextField
                   InputLabelProps={{ shrink: true }}
                   label={t('dashboard.reports.filters.from')}
-                  onChange={(event) => setFilter('from', event.target.value)}
+                  onChange={(event) => {
+                    setFilter('from', event.target.value);
+                  }}
                   type="date"
                   value={filters.from}
                 />
                 <TextField
                   InputLabelProps={{ shrink: true }}
                   label={t('dashboard.reports.filters.to')}
-                  onChange={(event) => setFilter('to', event.target.value)}
+                  onChange={(event) => {
+                    setFilter('to', event.target.value);
+                  }}
                   type="date"
                   value={filters.to}
                 />
                 <TextField
                   label={t('dashboard.reports.filters.campaign')}
-                  onChange={(event) => setFilter('campaign', event.target.value)}
+                  onChange={(event) => {
+                    setFilter('campaign', event.target.value);
+                  }}
                   value={filters.campaign}
                 />
                 <TextField
                   label={t('dashboard.reports.filters.source')}
-                  onChange={(event) => setFilter('source', event.target.value)}
+                  onChange={(event) => {
+                    setFilter('source', event.target.value);
+                  }}
                   value={filters.source}
                 />
                 <TextField
                   label={t('dashboard.reports.filters.medium')}
-                  onChange={(event) => setFilter('medium', event.target.value)}
+                  onChange={(event) => {
+                    setFilter('medium', event.target.value);
+                  }}
                   value={filters.medium}
                 />
                 <TextField
                   label={t('dashboard.reports.filters.search')}
-                  onChange={(event) => setFilter('search', event.target.value)}
+                  onChange={(event) => {
+                    setFilter('search', event.target.value);
+                  }}
                   value={filters.search}
                 />
               </Box>
@@ -199,7 +211,9 @@ export function Page(): React.JSX.Element {
               <Card>
                 <Tabs
                   aria-label={t('dashboard.reports.tabs.ariaLabel')}
-                  onChange={(_event, value: number) => setTab(value)}
+                  onChange={(_event, value: number) => {
+                    setTab(value);
+                  }}
                   sx={{ px: 2 }}
                   value={tab}
                   variant="scrollable"
@@ -250,7 +264,9 @@ function OverviewCards({ report, t }: { report: ActivationReport; t: Translation
   ] as const;
 
   return (
-    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { lg: 'repeat(4, 1fr)', sm: 'repeat(2, 1fr)', xs: '1fr' } }}>
+    <Box
+      sx={{ display: 'grid', gap: 2, gridTemplateColumns: { lg: 'repeat(4, 1fr)', sm: 'repeat(2, 1fr)', xs: '1fr' } }}
+    >
       {cards.map(([key, value]) => (
         <Card key={key}>
           <CardContent>
@@ -278,12 +294,7 @@ function FunnelPanel({ rows, t }: { rows: ActivationFunnelStage[]; t: Translatio
     },
     {
       name: t('dashboard.reports.columns.totalConversion'),
-      formatter: (row) => (
-        <Stack spacing={0.5} sx={{ minWidth: 150 }}>
-          <Typography variant="body2">{formatNumber(row.conversion_total)}%</Typography>
-          <LinearProgress value={Math.min(100, row.conversion_total)} variant="determinate" />
-        </Stack>
-      ),
+      formatter: formatFunnelTotalConversion,
     },
     { name: t('dashboard.reports.columns.dropOff'), field: 'drop_off', align: 'right' },
   ];
@@ -319,14 +330,7 @@ function UsersPanel({
   const columns: ColumnDef<ActivationReportUser>[] = [
     {
       name: t('dashboard.reports.columns.user'),
-      formatter: (row) => (
-        <Stack spacing={0.25}>
-          <Typography variant="subtitle2">{row.name}</Typography>
-          <Typography color="text.secondary" variant="caption">
-            {row.email}
-          </Typography>
-        </Stack>
-      ),
+      formatter: formatUserSummary,
     },
     {
       name: t('dashboard.reports.columns.trialStarted'),
@@ -347,30 +351,11 @@ function UsersPanel({
     },
     {
       name: t('dashboard.reports.columns.status'),
-      formatter: (row) => (
-        <Chip
-          color={row.activated ? 'success' : 'warning'}
-          label={row.activated ? t('dashboard.reports.status.activated') : t('dashboard.reports.status.inProgress')}
-          size="small"
-          variant="soft"
-        />
-      ),
+      formatter: formatUserStatus,
     },
     {
       name: t('dashboard.reports.columns.profile'),
-      formatter: (row) =>
-        row.profile ? (
-          <Button
-            component={RouterLink}
-            href={paths.dashboard.profileDetails.profile(String(row.profile.id))}
-            size="small"
-            variant="text"
-          >
-            {row.profile.name}
-          </Button>
-        ) : (
-          t('dashboard.reports.noProfile')
-        ),
+      formatter: formatUserProfile,
     },
   ];
 
@@ -386,8 +371,12 @@ function UsersPanel({
       <TablePagination
         component="div"
         count={total}
-        onPageChange={(_event, nextPage) => onPageChange(nextPage + 1)}
-        onRowsPerPageChange={(event) => onPerPageChange(Number(event.target.value))}
+        onPageChange={(_event, nextPage) => {
+          onPageChange(nextPage + 1);
+        }}
+        onRowsPerPageChange={(event) => {
+          onPerPageChange(Number(event.target.value));
+        }}
         page={Math.max(0, page - 1)}
         rowsPerPage={perPage}
         rowsPerPageOptions={[10, 20, 50, 100]}
@@ -396,9 +385,70 @@ function UsersPanel({
   );
 }
 
+function formatFunnelTotalConversion(row: ActivationFunnelStage): React.ReactNode {
+  return (
+    <Stack spacing={0.5} sx={{ minWidth: 150 }}>
+      <Typography variant="body2">{formatNumber(row.conversion_total)}%</Typography>
+      <LinearProgress value={Math.min(100, row.conversion_total)} variant="determinate" />
+    </Stack>
+  );
+}
+
+function formatUserSummary(row: ActivationReportUser): React.ReactNode {
+  return (
+    <Stack spacing={0.25}>
+      <Typography variant="subtitle2">{row.name}</Typography>
+      <Typography color="text.secondary" variant="caption">
+        {row.email}
+      </Typography>
+    </Stack>
+  );
+}
+
+function formatUserStatus(row: ActivationReportUser): React.ReactNode {
+  return <UserStatusCell row={row} />;
+}
+
+function UserStatusCell({ row }: { row: ActivationReportUser }): React.JSX.Element {
+  const { t } = useTranslation();
+
+  return (
+    <Chip
+      color={row.activated ? 'success' : 'warning'}
+      label={row.activated ? t('dashboard.reports.status.activated') : t('dashboard.reports.status.inProgress')}
+      size="small"
+      variant="soft"
+    />
+  );
+}
+
+function formatUserProfile(row: ActivationReportUser): React.ReactNode {
+  return <UserProfileCell row={row} />;
+}
+
+function UserProfileCell({ row }: { row: ActivationReportUser }): React.JSX.Element {
+  const { t } = useTranslation();
+
+  return row.profile ? (
+    <Button
+      component={RouterLink}
+      href={paths.dashboard.profileDetails.profile(String(row.profile.id))}
+      size="small"
+      variant="text"
+    >
+      {row.profile.name}
+    </Button>
+  ) : (
+    <React.Fragment>{t('dashboard.reports.noProfile')}</React.Fragment>
+  );
+}
+
 function CampaignsPanel({ rows, t }: { rows: ActivationCampaign[]; t: Translation }): React.JSX.Element {
   const columns: ColumnDef<ActivationCampaign>[] = [
-    { name: t('dashboard.reports.columns.campaign'), formatter: (row) => row.campaign || t('dashboard.reports.direct') },
+    {
+      name: t('dashboard.reports.columns.campaign'),
+      formatter: (row) => row.campaign || t('dashboard.reports.direct'),
+    },
     { name: t('dashboard.reports.columns.source'), formatter: (row) => row.source || t('dashboard.reports.direct') },
     { name: t('dashboard.reports.columns.medium'), formatter: (row) => row.medium || '—' },
     { name: t('dashboard.reports.overview.trialsStarted'), field: 'trials_started', align: 'right' },
@@ -428,7 +478,9 @@ function ConversionPanel({ report, t }: { report: ActivationReport; t: Translati
   ] as const;
 
   return (
-    <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { md: 'repeat(4, 1fr)', sm: 'repeat(2, 1fr)', xs: '1fr' } }}>
+    <Box
+      sx={{ display: 'grid', gap: 2, gridTemplateColumns: { md: 'repeat(4, 1fr)', sm: 'repeat(2, 1fr)', xs: '1fr' } }}
+    >
       {metrics.map(([key, value]) => (
         <Card key={key} variant="outlined">
           <CardContent>

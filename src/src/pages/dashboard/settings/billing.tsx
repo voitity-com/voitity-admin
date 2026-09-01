@@ -119,9 +119,19 @@ export function Page(): React.JSX.Element {
 
     clearCheckoutIntent();
     const nextSearchParams = new URLSearchParams(searchParams);
-    ['intent', 'plan', 'cycle', 'locale', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(
-      (key) => nextSearchParams.delete(key)
-    );
+    [
+      'intent',
+      'plan',
+      'cycle',
+      'locale',
+      'utm_source',
+      'utm_medium',
+      'utm_campaign',
+      'utm_term',
+      'utm_content',
+    ].forEach((key) => {
+      nextSearchParams.delete(key);
+    });
     setSearchParams(nextSearchParams, { replace: true });
   }, [billing, checkoutIntent, searchParams, setSearchParams]);
 
@@ -353,20 +363,20 @@ export function Page(): React.JSX.Element {
           clearCheckoutIntent();
           navigate(`${paths.dashboard.profiles}?create=1`, { replace: true });
           return;
-        } else {
-          const result = await startSubscriptionWithPaymentSource({
-            ...paymentMethodSelection,
-            plan: plan.id,
-            terms_accepted: true,
-          });
+        }
 
-          if (result.payment_order?.status === 'approved') {
-            toast.success(t('dashboard.settings.billing.toasts.subscriptionStarted'));
-          } else if (result.payment_order?.status === 'pending') {
-            toast(t('dashboard.settings.billing.toasts.paymentPending'));
-          } else {
-            throw new Error(t('dashboard.settings.billing.errors.paymentDeclined'));
-          }
+        const result = await startSubscriptionWithPaymentSource({
+          ...paymentMethodSelection,
+          plan: plan.id,
+          terms_accepted: true,
+        });
+
+        if (result.payment_order?.status === 'approved') {
+          toast.success(t('dashboard.settings.billing.toasts.subscriptionStarted'));
+        } else if (result.payment_order?.status === 'pending') {
+          toast(t('dashboard.settings.billing.toasts.paymentPending'));
+        } else {
+          throw new Error(t('dashboard.settings.billing.errors.paymentDeclined'));
         }
 
         await loadBilling();
