@@ -734,7 +734,7 @@
       "question": "No se realizarán más cobros automáticos. ¿Estás seguro de que quieres cancelar la renovación?",
       "title": "Cancelar renovación automática"
     },
-    "cancelTrialHelper": "Mantendrás el acceso hasta que termine la prueba y no se hará el primer cobro.",
+    "cancelTrialHelper": "Si cancelas ahora, mantendrás el acceso hasta que termine la prueba y no se realizará el primer cobro.",
     "eyebrow": "Plan adquirido",
     "fallbackName": "Starter",
     "reactivateHelper": "Puedes reactivar la renovación antes de la fecha final para conservar el acceso sin interrupciones.",
@@ -1574,7 +1574,7 @@
           "historyEmpty": "Aún no hay avatares generados.",
           "noAvatar": "No hay avatar cargado.",
           "previousAvatar": "Avatar anterior",
-          "processingMessage": "Hay un nuevo avatar en procesamiento. La página actualizará el estado automáticamente.",
+          "processingMessage": "Estamos creando tu avatar. Puede tardar entre 2 y 5 minutos. Puedes continuar configurando tu perfil mientras termina.",
           "saving": "Guardando...",
           "selectHint": "Seleccionar este avatar",
           "status": {

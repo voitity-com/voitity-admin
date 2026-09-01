@@ -26,6 +26,7 @@ export interface CheckoutAttribution {
 
 const validIntentTypes = new Set<CheckoutIntentType>(['checkout', 'trial']);
 const validCycles = new Set<CheckoutCycle>(['month', 'year']);
+const attributionKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
 
 export function getCheckoutIntentFromSearch(search: URLSearchParams | string): CheckoutIntent | null {
   const searchParams = typeof search === 'string' ? new URLSearchParams(search) : search;
@@ -143,8 +144,12 @@ export function checkoutIntentToSearchParams(intent: CheckoutIntent): URLSearchP
     searchParams.set('locale', intent.locale);
   }
 
-  Object.entries(intent.attribution ?? {}).forEach(([key, value]) => {
-    if (value) searchParams.set(key, value);
+  attributionKeys.forEach((key) => {
+    const value = intent.attribution?.[key];
+
+    if (value) {
+      searchParams.set(key, value);
+    }
   });
 
   return searchParams;
@@ -189,16 +194,13 @@ function isCheckoutLocale(value: unknown): value is CheckoutLocale {
 }
 
 function getAttribution(searchParams: URLSearchParams): CheckoutAttribution {
-  return ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].reduce<CheckoutAttribution>(
-    (result, key) => {
-      const value = searchParams.get(key)?.trim().slice(0, 255);
+  return attributionKeys.reduce<CheckoutAttribution>((result, key) => {
+    const value = searchParams.get(key)?.trim().slice(0, 255);
 
-      if (value) result[key as keyof CheckoutAttribution] = value;
+    if (value) result[key as keyof CheckoutAttribution] = value;
 
-      return result;
-    },
-    {}
-  );
+    return result;
+  }, {});
 }
 
 function isCheckoutAttribution(value: unknown): value is CheckoutAttribution {

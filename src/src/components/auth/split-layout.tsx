@@ -57,7 +57,7 @@ export function SplitLayout({ children }: SplitLayoutProps): React.JSX.Element {
               loading="lazy"
               src="https://www.youtube-nocookie.com/embed/pBxiwqnSBqo?rel=0"
               sx={{ border: 0, height: '100%', width: '100%' }}
-              title={t('auth.split.videoTitle')}
+              title={String(t('auth.split.videoTitle'))}
             />
           </Box>
         </Stack>

@@ -734,7 +734,7 @@
       "question": "No further automatic charges will be made. Are you sure you want to cancel renewal?",
       "title": "Cancel automatic renewal"
     },
-    "cancelTrialHelper": "You keep access until the trial ends and the first plan charge will not be made.",
+    "cancelTrialHelper": "If you cancel now, you will keep access until the trial ends and the first plan charge will not be made.",
     "eyebrow": "Purchased plan",
     "fallbackName": "Starter",
     "reactivateHelper": "You can reactivate renewal before the final date to keep access without interruption.",
@@ -1574,7 +1574,7 @@
           "historyEmpty": "No generated avatars yet.",
           "noAvatar": "No avatar loaded.",
           "previousAvatar": "Previous avatar",
-          "processingMessage": "A new avatar is processing. The page will refresh the status automatically.",
+          "processingMessage": "We are creating your avatar. It may take 2 to 5 minutes. You can continue configuring your profile while it finishes.",
           "saving": "Saving...",
           "selectHint": "Select this avatar",
           "status": {
