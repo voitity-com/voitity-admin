@@ -41,6 +41,7 @@ import { useDelayedOpen } from '@/hooks/use-delayed-open';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
+import { useNoPlanTutorial } from '@/components/dashboard/layout/no-plan-tutorial-context';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 import { ProfilesFilters } from '@/components/dashboard/profiles/profiles-filters';
 import type { Filters, SortDir } from '@/components/dashboard/profiles/profiles-filters';
@@ -57,8 +58,10 @@ type ProfileCreateBlockReason = 'limit-reached' | 'missing-plan';
 
 export function Page(): React.JSX.Element {
   const { genre, name, sortDir, status } = useExtractSearchParams();
+  const [pageSearchParams, setPageSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { status: noPlanTutorialStatus } = useNoPlanTutorial();
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
@@ -75,6 +78,7 @@ export function Page(): React.JSX.Element {
   const [singleProfilePlan, setSingleProfilePlan] = React.useState<boolean>(false);
   const [subscriptionStatus, setSubscriptionStatus] = React.useState<SubscriptionStatus>('loading');
   const addButtonRef = React.useRef<HTMLButtonElement | null>(null);
+  const createIntentHandledRef = React.useRef(false);
 
   const loadProfiles = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -176,6 +180,31 @@ export function Page(): React.JSX.Element {
     handleCreateOpen();
   }, [handleCreateOpen]);
 
+  React.useEffect(() => {
+    if (
+      createIntentHandledRef.current ||
+      pageSearchParams.get('create') !== '1' ||
+      isLoading ||
+      !isProfileLimitLoaded ||
+      subscriptionStatus === 'loading'
+    ) {
+      return;
+    }
+
+    createIntentHandledRef.current = true;
+    handleCreateOpen();
+    const nextSearchParams = new URLSearchParams(pageSearchParams);
+    nextSearchParams.delete('create');
+    setPageSearchParams(nextSearchParams, { replace: true });
+  }, [
+    handleCreateOpen,
+    isLoading,
+    isProfileLimitLoaded,
+    pageSearchParams,
+    setPageSearchParams,
+    subscriptionStatus,
+  ]);
+
   const handleFormClose = React.useCallback((): void => {
     setFormOpen(false);
   }, []);
@@ -239,6 +268,8 @@ export function Page(): React.JSX.Element {
 
     return isProfileIncompleteForPublication(profile) ? profile : null;
   }, [profiles]);
+  const noPlanTutorialBlocksOnboarding =
+    noPlanTutorialStatus === 'checking' || noPlanTutorialStatus === 'open';
   const profileOnboardingReady =
     !profileOnboardingDismissed &&
     !isLoading &&
@@ -246,7 +277,8 @@ export function Page(): React.JSX.Element {
     !error &&
     profiles.length === 0 &&
     !formOpen &&
-    !profileLimitDialogOpen;
+    !profileLimitDialogOpen &&
+    !noPlanTutorialBlocksOnboarding;
   const profileCompletionOnboardingReady =
     !profileCompletionOnboardingDismissed &&
     !profileOnboardingReady &&
@@ -254,7 +286,8 @@ export function Page(): React.JSX.Element {
     !error &&
     Boolean(singleIncompleteProfile) &&
     !formOpen &&
-    !profileLimitDialogOpen;
+    !profileLimitDialogOpen &&
+    !noPlanTutorialBlocksOnboarding;
   const profileOnboardingOpen = useDelayedOpen(profileOnboardingReady, onboardingDelayMs);
   const profileCompletionOnboardingOpen = useDelayedOpen(profileCompletionOnboardingReady, onboardingDelayMs);
   const profileCompletionPopoverOpen = profileCompletionOnboardingOpen && Boolean(profileCompletionAnchorEl);

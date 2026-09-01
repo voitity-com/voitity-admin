@@ -16,12 +16,15 @@ import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/
 import { useUser } from '@/hooks/use-user';
 import { profileGuideStepKeys, profileGuideTutorials } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
+import { useNoPlanTutorial } from './no-plan-tutorial-context';
+
 const tutorialStep = 'createProfile';
 
 export function NoPlanTutorialDialog(): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useUser();
-  const [open, setOpen] = React.useState(false);
+  const { setStatus, status } = useNoPlanTutorial();
+  const open = status === 'open';
   const tutorial = profileGuideTutorials[tutorialStep];
   const stepNumber = profileGuideStepKeys.indexOf(tutorialStep) + 1;
   const embedUrl = `https://www.youtube-nocookie.com/embed/${tutorial.id}?autoplay=1&playsinline=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
@@ -29,31 +32,40 @@ export function NoPlanTutorialDialog(): React.JSX.Element {
   React.useEffect(() => {
     let isMounted = true;
 
-    setOpen(false);
+    setStatus('checking');
 
     if (!user?.id) {
+      setStatus('not-required');
+
       return () => {
         isMounted = false;
       };
     }
 
-    getSubscriptionLimits().catch((err: unknown) => {
-      if (!isMounted) {
-        return;
-      }
+    getSubscriptionLimits()
+      .then(() => {
+        if (isMounted) {
+          setStatus('not-required');
+        }
+      })
+      .catch((err: unknown) => {
+        if (!isMounted) {
+          return;
+        }
 
-      if (err instanceof SubscriptionApiError && err.status === 404) {
-        setOpen(true);
-        return;
-      }
+        if (err instanceof SubscriptionApiError && err.status === 404) {
+          setStatus('open');
+          return;
+        }
 
-      logger.error(err);
-    });
+        logger.error(err);
+        setStatus('not-required');
+      });
 
     return () => {
       isMounted = false;
     };
-  }, [user?.id]);
+  }, [setStatus, user?.id]);
 
   return (
     <Dialog aria-labelledby="no-plan-tutorial-dialog-title" disableEscapeKeyDown fullWidth maxWidth="md" open={open}>
@@ -69,7 +81,7 @@ export function NoPlanTutorialDialog(): React.JSX.Element {
         <IconButton
           aria-label={String(t('dashboard.help.guide.close'))}
           onClick={() => {
-            setOpen(false);
+            setStatus('closed');
           }}
           sx={{ position: 'absolute', right: 16, top: 16 }}
         >

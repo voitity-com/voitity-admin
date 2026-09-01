@@ -92,6 +92,15 @@ export const layoutConfig = {
           roles: ['admin'],
         },
         {
+          key: 'reports',
+          title: 'Reports',
+          titleKey: 'dashboard.nav.items.reports',
+          href: paths.dashboard.reports,
+          icon: 'chart-pie',
+          implemented: true,
+          roles: ['admin'],
+        },
+        {
           key: 'newFeatures',
           title: 'New features',
           titleKey: 'dashboard.nav.items.newFeatures',

@@ -8,11 +8,12 @@ import Typography from '@mui/material/Typography';
 import { Coins as CoinsIcon } from '@phosphor-icons/react/dist/ssr/Coins';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { paths } from '@/paths';
 import {
   clearCheckoutIntent,
   getCheckoutIntentFromSearch,
@@ -78,9 +79,10 @@ interface BillingState {
 type PaymentMethodDialogOrigin = 'billing' | 'credits';
 
 export function Page(): React.JSX.Element {
+  const navigate = useNavigate();
   const { i18n, t } = useTranslation();
   const translationRef = React.useRef(t);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [billing, setBilling] = React.useState<BillingState | null>(null);
   const [error, setError] = React.useState<string>('');
@@ -111,6 +113,17 @@ export function Page(): React.JSX.Element {
     () => getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent(),
     [searchParams]
   );
+
+  React.useEffect(() => {
+    if (!billing || !checkoutIntent || !hasActiveSubscriptionData(billing.limits)) return;
+
+    clearCheckoutIntent();
+    const nextSearchParams = new URLSearchParams(searchParams);
+    ['intent', 'plan', 'cycle', 'locale', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(
+      (key) => nextSearchParams.delete(key)
+    );
+    setSearchParams(nextSearchParams, { replace: true });
+  }, [billing, checkoutIntent, searchParams, setSearchParams]);
 
   React.useEffect(() => {
     translationRef.current = t;
@@ -331,11 +344,15 @@ export function Page(): React.JSX.Element {
         if (billing?.plans.trial?.available) {
           await startSubscriptionTrial({
             ...paymentMethodSelection,
+            ...(checkoutIntent?.attribution ? { attribution: checkoutIntent.attribution } : {}),
             plan: plan.id,
             terms_accepted: true,
           });
 
           toast.success(t('dashboard.settings.billing.toasts.trialStarted'));
+          clearCheckoutIntent();
+          navigate(`${paths.dashboard.profiles}?create=1`, { replace: true });
+          return;
         } else {
           const result = await startSubscriptionWithPaymentSource({
             ...paymentMethodSelection,
@@ -362,7 +379,7 @@ export function Page(): React.JSX.Element {
         setIsCheckoutPending(false);
       }
     },
-    [billing?.plans.trial?.available, loadBilling, t, trialPaymentSourceSetup]
+    [billing?.plans.trial?.available, checkoutIntent?.attribution, loadBilling, navigate, t, trialPaymentSourceSetup]
   );
 
   const handleCheckoutErrorClear = React.useCallback((): void => {

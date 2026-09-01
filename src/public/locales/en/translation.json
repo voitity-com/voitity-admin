@@ -148,6 +148,7 @@
         "paymentMethods": "Payment methods",
         "profile": "Profile",
         "profiles": "Profiles",
+        "reports": "Reports",
         "security": "Security",
         "settings": "Settings",
         "team": "Team",
@@ -1133,6 +1134,73 @@
         }
       }
     },
+    "reports": {
+      "columns": {
+        "campaign": "Campaign",
+        "dropOff": "Drop-off",
+        "medium": "Medium",
+        "nextStep": "Next step",
+        "previousConversion": "Previous conversion",
+        "profile": "Profile",
+        "progress": "Progress",
+        "published": "Published",
+        "source": "Source",
+        "stage": "Stage",
+        "status": "Status",
+        "totalConversion": "Total conversion",
+        "trialStarted": "Trial started",
+        "user": "User",
+        "users": "Users"
+      },
+      "complete": "Complete",
+      "conversion": {
+        "averageHoursToPublish": "Average hours to publish",
+        "paidConversionRate": "Paid conversion",
+        "paymentFailed": "Failed payments",
+        "trialCancelled": "Cancelled trials"
+      },
+      "description": "Review the activation funnel, user follow-up, campaigns and trial conversion.",
+      "direct": "Direct / no campaign",
+      "empty": "There is no data for the selected filters.",
+      "errors": { "generic": "Reports could not be loaded." },
+      "events": {
+        "avatar_added": "Avatar added",
+        "conversation_started": "First conversation",
+        "link_copied": "Link copied",
+        "product_created": "First product created",
+        "profile_created": "Profile created",
+        "profile_published": "Profile published",
+        "source_synchronized": "Source synchronized",
+        "trial_started": "Trial started",
+        "whatsapp_added": "WhatsApp added"
+      },
+      "filters": {
+        "apply": "Apply filters",
+        "campaign": "UTM campaign",
+        "from": "From",
+        "medium": "UTM medium",
+        "search": "User or email",
+        "source": "UTM source",
+        "title": "Report filters",
+        "to": "To"
+      },
+      "noProfile": "No profile",
+      "overview": {
+        "activationRate": "Activation rate",
+        "convertedToPaid": "Converted to paid",
+        "trialsStarted": "Trials started",
+        "usersActivated": "Activated users"
+      },
+      "status": { "activated": "Activated", "inProgress": "In progress" },
+      "tabs": {
+        "ariaLabel": "Activation report section",
+        "campaigns": "Campaigns",
+        "conversion": "Conversion",
+        "funnel": "Activation funnel",
+        "users": "User follow-up"
+      },
+      "title": "Reports"
+    },
     "users": {
       "actions": {
         "cancel": "Cancel",
@@ -2084,6 +2152,7 @@
           "published": "Published and active",
           "ready": "Ready to publish",
           "readyCount": "{{passed}}/{{total}} ready",
+          "showGuide": "View guide",
           "requirements": {
             "alias": "Alias",
             "avatar": "Avatar",
@@ -2215,7 +2284,7 @@
           "unknown": "Unknown",
           "uploaded": "Uploaded"
         },
-        "textHelper": "Paste or enter the source information if the file cannot be parsed automatically or if you want to create it using text only.",
+        "textHelper": "Add your services, prices, method, target audience, frequently asked questions and contact details. You can also attach a file.",
         "textOnlySource": "Text-only source, no uploaded file.",
         "toasts": {
           "approved": "Source approved",

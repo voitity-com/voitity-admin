@@ -71,6 +71,7 @@ export const paths = {
     newFeatures: '/dashboard/new-features',
     notifications: '/dashboard/notifications',
     profiles: '/dashboard/profiles',
+    reports: '/dashboard/reports',
     businesses: '/dashboard/businesses',
     businessDetails: {
       general: (businessId: string) => `/dashboard/businesses/${businessId}/general`,

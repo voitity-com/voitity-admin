@@ -28,7 +28,12 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import { paths } from '@/paths';
 import type { Profile, ProfilePublication, ProfilePublicationRequirement } from '@/lib/profiles/api-client';
-import { activateProfile, deactivateProfile, getProfile, ProfileApiError } from '@/lib/profiles/api-client';
+import {
+  activateProfile,
+  deactivateProfile,
+  getProfile,
+  ProfileApiError,
+} from '@/lib/profiles/api-client';
 import { getPublicProfileUrl } from '@/lib/profiles/public-profile-url';
 import { logger } from '@/lib/default-logger';
 import { usePathname } from '@/hooks/use-pathname';
@@ -63,7 +68,8 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
     setError('');
 
     try {
-      setProfile(await getProfile(profileId));
+      const nextProfile = await getProfile(profileId);
+      setProfile(nextProfile);
     } catch (err) {
       logger.error(err);
       setError(t('dashboard.profiles.detail.publicationDock.error'));
@@ -290,22 +296,33 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
             ))}
           </Stack>
 
-          <Button
-            color={isPublished ? 'warning' : publication.can_activate ? 'primary' : 'inherit'}
-            disabled={isLoading || isSubmitting || Boolean(error)}
-            onClick={handlePrimaryAction}
-            startIcon={isPublished ? <PowerIcon /> : <RocketLaunchIcon />}
-            sx={{ justifySelf: { xs: 'stretch', md: 'end' }, whiteSpace: 'nowrap' }}
-            variant={isPublished ? 'outlined' : 'contained'}
-          >
-            {isSubmitting ? (
-              <CircularProgress color="inherit" size={18} />
-            ) : isPublished ? (
-              t('dashboard.profiles.detail.publicationDock.deactivate')
-            ) : (
-              t('dashboard.profiles.detail.publicationDock.activate')
-            )}
-          </Button>
+          <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1} sx={{ justifySelf: { xs: 'stretch', md: 'end' } }}>
+            {!isPublished ? (
+              <Button
+                onClick={() => window.dispatchEvent(new Event('profile-publication:onboarding-restart'))}
+                size="small"
+                variant="text"
+              >
+                {t('dashboard.profiles.detail.publicationDock.showGuide')}
+              </Button>
+            ) : null}
+            <Button
+              color={isPublished ? 'warning' : publication.can_activate ? 'primary' : 'inherit'}
+              disabled={isLoading || isSubmitting || Boolean(error)}
+              onClick={handlePrimaryAction}
+              startIcon={isPublished ? <PowerIcon /> : <RocketLaunchIcon />}
+              sx={{ whiteSpace: 'nowrap' }}
+              variant={isPublished ? 'outlined' : 'contained'}
+            >
+              {isSubmitting ? (
+                <CircularProgress color="inherit" size={18} />
+              ) : isPublished ? (
+                t('dashboard.profiles.detail.publicationDock.deactivate')
+              ) : (
+                t('dashboard.profiles.detail.publicationDock.activate')
+              )}
+            </Button>
+          </Stack>
         </Box>
       </Paper>
 

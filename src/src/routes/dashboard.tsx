@@ -9,6 +9,7 @@ import { Layout as MailLayout } from '@/components/dashboard/mail/layout';
 import { ProfileLayout } from '@/components/dashboard/profiles/profile-layout';
 import { BusinessLayout } from '@/components/dashboard/business/business-layout';
 import { BusinessFeatureGuard } from '@/components/auth/business-feature-guard';
+import { AdminRoleGuard } from '@/components/auth/admin-role-guard';
 import { Layout as SettingsLayout } from '@/components/dashboard/settings/layout';
 import { Layout as SocialProfileLayout } from '@/components/dashboard/social/profile-layout';
 
@@ -52,6 +53,23 @@ export const route: RouteObject = {
         const { Page } = await import('@/pages/dashboard/analytics');
         return { Component: Page };
       },
+    },
+    {
+      path: 'reports',
+      element: (
+        <AdminRoleGuard>
+          <Outlet />
+        </AdminRoleGuard>
+      ),
+      children: [
+        {
+          index: true,
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/reports');
+            return { Component: Page };
+          },
+        },
+      ],
     },
     {
       path: 'notifications',
