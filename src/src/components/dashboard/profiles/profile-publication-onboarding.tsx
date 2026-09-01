@@ -14,9 +14,7 @@ import Typography from '@mui/material/Typography';
 import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 import { CheckCircle as CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle';
 import { File as FileIcon } from '@phosphor-icons/react/dist/ssr/File';
-import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
-import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { RocketLaunch as RocketLaunchIcon } from '@phosphor-icons/react/dist/ssr/RocketLaunch';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { useTranslation } from 'react-i18next';
@@ -30,7 +28,7 @@ import { useDelayedOpen } from '@/hooks/use-delayed-open';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { usePathname } from '@/hooks/use-pathname';
 
-type StepKey = 'avatar' | 'publication' | 'quality' | 'source' | 'voice';
+type StepKey = 'avatar' | 'publication' | 'source';
 
 interface OnboardingStep {
   key: StepKey;
@@ -38,16 +36,14 @@ interface OnboardingStep {
 }
 
 const publicationTargetId = 'profile-publication-dock';
-const qualityTargetId = 'profile-quality-dock';
 const onboardingDelayMs = 500;
 const onboardingTransitionMs = 260;
+const onboardingStoragePrefix = 'bigmelo.profilePublicationOnboarding';
 
 const stepTargets = {
   avatar: 'profile-detail-nav-avatar',
   publication: publicationTargetId,
-  quality: qualityTargetId,
   source: 'profile-detail-nav-sources',
-  voice: 'profile-detail-nav-voice',
 } satisfies Record<StepKey, string>;
 
 export function ProfilePublicationOnboarding(): React.JSX.Element | null {
@@ -79,9 +75,10 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
   }, [profileId]);
 
   React.useEffect(() => {
-    setActiveIndex(0);
+    const stored = readOnboardingState(profileId);
+    setActiveIndex(stored.activeIndex);
     setAnchorEl(null);
-    setDismissed(false);
+    setDismissed(stored.dismissed);
   }, [profileId]);
 
   React.useEffect(() => {
@@ -96,15 +93,22 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
         logger.error(err);
       });
     };
+    const handleRestart = (): void => {
+      writeOnboardingState(profileId, { activeIndex: 0, dismissed: false });
+      setActiveIndex(0);
+      setDismissed(false);
+    };
 
     window.addEventListener('profile-publication:changed', handleRefresh);
     window.addEventListener('profile-publication:refresh', handleRefresh);
+    window.addEventListener('profile-publication:onboarding-restart', handleRestart);
 
     return () => {
       window.removeEventListener('profile-publication:changed', handleRefresh);
       window.removeEventListener('profile-publication:refresh', handleRefresh);
+      window.removeEventListener('profile-publication:onboarding-restart', handleRestart);
     };
-  }, [loadProfile]);
+  }, [loadProfile, profileId]);
 
   const requirements = React.useMemo(() => profile?.publication?.requirements ?? [], [profile]);
   const missingRequirements = React.useMemo(
@@ -144,7 +148,7 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
 
       nextAnchorEl.scrollIntoView({
         behavior: 'smooth',
-        block: activeStep.key === 'quality' ? 'nearest' : 'center',
+        block: 'center',
         inline: 'nearest',
       });
       setAnchorEl(nextAnchorEl);
@@ -165,14 +169,20 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
   const handleNext = (): void => {
     if (isLastStep) {
       setDismissed(true);
+      writeOnboardingState(profileId, { activeIndex: 0, dismissed: true });
       return;
     }
 
-    setActiveIndex((current) => current + 1);
+    setActiveIndex((current) => {
+      const nextIndex = current + 1;
+      writeOnboardingState(profileId, { activeIndex: nextIndex, dismissed: false });
+      return nextIndex;
+    });
   };
 
   const handleClose = (): void => {
     setDismissed(true);
+    writeOnboardingState(profileId, { activeIndex, dismissed: true });
   };
 
   const handleStepAction = (step: OnboardingStep): void => {
@@ -184,6 +194,7 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
     }
 
     setDismissed(true);
+    writeOnboardingState(profileId, { activeIndex, dismissed: true });
     navigate(href);
   };
 
@@ -304,12 +315,20 @@ function OnboardingPopover({
           >
             {renderStepIcon(step.key)}
           </Box>
-          <Stack spacing={0.5}>
+          <Stack spacing={0.5} sx={{ flex: '1 1 auto', minWidth: 0 }}>
             <Typography color="primary.main" sx={{ fontWeight: 700, textTransform: 'uppercase' }} variant="caption">
               {t(`dashboard.profiles.detail.onboarding.steps.${step.key}.eyebrow`)}
             </Typography>
             <Typography variant="h6">{t(`dashboard.profiles.detail.onboarding.steps.${step.key}.title`)}</Typography>
           </Stack>
+          <IconButton
+            aria-label={t('dashboard.profiles.detail.onboarding.actions.close')}
+            edge="end"
+            onClick={onClose}
+            size="small"
+          >
+            <XIcon />
+          </IconButton>
         </Stack>
         <Stack spacing={1}>
           <Typography color="text.secondary" variant="body2">
@@ -359,8 +378,7 @@ function MobileOnboardingPanel({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const hasStepAction = step.key !== 'publication';
-  const bottomOffset =
-    step.key === 'quality' ? 'calc(116px + env(safe-area-inset-bottom))' : 'calc(16px + env(safe-area-inset-bottom))';
+  const bottomOffset = 'calc(16px + env(safe-area-inset-bottom))';
 
   return (
     <Fade in={open} mountOnEnter timeout={onboardingTransitionMs} unmountOnExit>
@@ -476,31 +494,23 @@ function buildSteps({
   }
 
   const missingKeys = new Set(missingRequirements.map((requirement) => requirement.key));
-  const needsVoice = profile.voice !== true;
-
-  if (missingRequirements.length === 0 && !needsVoice) {
+  if (missingRequirements.length === 0) {
     return [];
   }
 
   const steps: OnboardingStep[] = [];
 
-  if (missingRequirements.length > 0) {
-    steps.push({ key: 'publication', targetId: stepTargets.publication });
-  }
-
   if (missingKeys.has('avatar')) {
     steps.push({ key: 'avatar', targetId: stepTargets.avatar });
-  }
-
-  if (needsVoice) {
-    steps.push({ key: 'voice', targetId: stepTargets.voice });
   }
 
   if (missingKeys.has('source')) {
     steps.push({ key: 'source', targetId: stepTargets.source });
   }
 
-  steps.push({ key: 'quality', targetId: stepTargets.quality });
+  if (missingRequirements.length > 0) {
+    steps.push({ key: 'publication', targetId: stepTargets.publication });
+  }
 
   return steps;
 }
@@ -527,30 +537,15 @@ function getStepHref(key: StepKey, profileId: string): null | string {
     return paths.dashboard.profileDetails.avatar(profileId);
   }
 
-  if (key === 'voice') {
-    return paths.dashboard.profileDetails.voice(profileId);
-  }
-
   if (key === 'source') {
     return paths.dashboard.profileDetails.sources(profileId);
-  }
-
-  if (key === 'quality') {
-    return paths.dashboard.profileDetails.quality(profileId);
   }
 
   return null;
 }
 
 function getPopoverOrigins(key: StepKey): { anchorOrigin: PopoverOrigin; transformOrigin: PopoverOrigin } {
-  if (key === 'quality') {
-    return {
-      anchorOrigin: { horizontal: 'right', vertical: 'top' },
-      transformOrigin: { horizontal: 'right', vertical: 'bottom' },
-    };
-  }
-
-  if (key === 'avatar' || key === 'source' || key === 'voice') {
+  if (key === 'avatar' || key === 'source') {
     return {
       anchorOrigin: { horizontal: 'right', vertical: 'center' },
       transformOrigin: { horizontal: 'left', vertical: 'center' },
@@ -565,9 +560,7 @@ function getPopoverOrigins(key: StepKey): { anchorOrigin: PopoverOrigin; transfo
 
 function getSpotlightStyles(targetId: string, zIndex: number): Record<string, unknown> {
   const selector = `#${targetId}`;
-  const isQualityDock = targetId === qualityTargetId;
-  const isNavItem =
-    targetId === stepTargets.avatar || targetId === stepTargets.source || targetId === stepTargets.voice;
+  const isNavItem = targetId === stepTargets.avatar || targetId === stepTargets.source;
 
   return {
     ...(isNavItem
@@ -592,8 +585,8 @@ function getSpotlightStyles(targetId: string, zIndex: number): Record<string, un
       outline: '2px solid rgba(255, 255, 255, 0.75)',
       outlineOffset: '4px',
       opacity: isNavItem ? 1 : undefined,
-      pointerEvents: isQualityDock ? 'auto' : 'none',
-      position: isQualityDock ? undefined : 'relative',
+      pointerEvents: 'none',
+      position: 'relative',
       zIndex: zIndex + 1,
     },
     [`${selector} > a`]: {
@@ -617,17 +610,36 @@ function renderStepIcon(key: StepKey): React.JSX.Element {
     return <ImageIcon {...iconProps} />;
   }
 
-  if (key === 'voice') {
-    return <MicrophoneIcon {...iconProps} />;
-  }
-
   if (key === 'source') {
     return <FileIcon {...iconProps} />;
   }
 
-  if (key === 'quality') {
-    return <GaugeIcon {...iconProps} />;
-  }
-
   return <RocketLaunchIcon {...iconProps} />;
+}
+
+interface StoredOnboardingState {
+  activeIndex: number;
+  dismissed: boolean;
+}
+
+function readOnboardingState(profileId: string): StoredOnboardingState {
+  if (!profileId || typeof window === 'undefined') return { activeIndex: 0, dismissed: false };
+
+  try {
+    const raw = window.localStorage.getItem(`${onboardingStoragePrefix}.${profileId}`);
+    if (!raw) return { activeIndex: 0, dismissed: false };
+    const parsed = JSON.parse(raw) as Partial<StoredOnboardingState>;
+
+    return {
+      activeIndex: Number.isInteger(parsed.activeIndex) && Number(parsed.activeIndex) >= 0 ? Number(parsed.activeIndex) : 0,
+      dismissed: parsed.dismissed === true,
+    };
+  } catch {
+    return { activeIndex: 0, dismissed: false };
+  }
+}
+
+function writeOnboardingState(profileId: string, state: StoredOnboardingState): void {
+  if (!profileId || typeof window === 'undefined') return;
+  window.localStorage.setItem(`${onboardingStoragePrefix}.${profileId}`, JSON.stringify(state));
 }

@@ -281,6 +281,13 @@ export async function removePaymentMethod(paymentMethodId: number | string): Pro
 }
 
 export async function startSubscriptionTrial(payload: {
+  attribution?: {
+    utm_campaign?: string;
+    utm_content?: string;
+    utm_medium?: string;
+    utm_source?: string;
+    utm_term?: string;
+  };
   payment_source?: PaymentMethodPayload;
   payment_source_id?: number | string;
   plan: string;

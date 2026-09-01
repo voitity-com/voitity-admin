@@ -148,6 +148,7 @@
         "paymentMethods": "Métodos de pago",
         "profile": "Perfil",
         "profiles": "Perfiles",
+        "reports": "Reportes",
         "security": "Seguridad",
         "settings": "Configuración",
         "team": "Equipo",
@@ -1133,6 +1134,73 @@
         }
       }
     },
+    "reports": {
+      "columns": {
+        "campaign": "Campaña",
+        "dropOff": "Abandonos",
+        "medium": "Medio",
+        "nextStep": "Próximo paso",
+        "previousConversion": "Conversión anterior",
+        "profile": "Perfil",
+        "progress": "Progreso",
+        "published": "Publicados",
+        "source": "Fuente",
+        "stage": "Etapa",
+        "status": "Estado",
+        "totalConversion": "Conversión total",
+        "trialStarted": "Inicio de prueba",
+        "user": "Usuario",
+        "users": "Usuarios"
+      },
+      "complete": "Completado",
+      "conversion": {
+        "averageHoursToPublish": "Horas promedio para publicar",
+        "paidConversionRate": "Conversión a pago",
+        "paymentFailed": "Pagos fallidos",
+        "trialCancelled": "Pruebas canceladas"
+      },
+      "description": "Consulta el embudo de activación, seguimiento de usuarios, campañas y conversión de las pruebas.",
+      "direct": "Directo / sin campaña",
+      "empty": "No hay datos para los filtros seleccionados.",
+      "errors": { "generic": "No se pudieron cargar los reportes." },
+      "events": {
+        "avatar_added": "Avatar agregado",
+        "conversation_started": "Primera conversación",
+        "link_copied": "Enlace copiado",
+        "product_created": "Primer producto creado",
+        "profile_created": "Perfil creado",
+        "profile_published": "Perfil publicado",
+        "source_synchronized": "Fuente sincronizada",
+        "trial_started": "Prueba iniciada",
+        "whatsapp_added": "WhatsApp agregado"
+      },
+      "filters": {
+        "apply": "Aplicar filtros",
+        "campaign": "Campaña UTM",
+        "from": "Desde",
+        "medium": "Medio UTM",
+        "search": "Usuario o correo",
+        "source": "Fuente UTM",
+        "title": "Filtros del reporte",
+        "to": "Hasta"
+      },
+      "noProfile": "Sin perfil",
+      "overview": {
+        "activationRate": "Tasa de activación",
+        "convertedToPaid": "Convertidos a pago",
+        "trialsStarted": "Pruebas iniciadas",
+        "usersActivated": "Usuarios activados"
+      },
+      "status": { "activated": "Activado", "inProgress": "En progreso" },
+      "tabs": {
+        "ariaLabel": "Sección del reporte de activación",
+        "campaigns": "Campañas",
+        "conversion": "Conversión",
+        "funnel": "Embudo de activación",
+        "users": "Seguimiento de usuarios"
+      },
+      "title": "Reportes"
+    },
     "users": {
       "actions": {
         "cancel": "Cancelar",
@@ -2084,6 +2152,7 @@
           "published": "Publicado y activo",
           "ready": "Listo para publicar",
           "readyCount": "{{passed}}/{{total}} listos",
+          "showGuide": "Ver guía",
           "requirements": {
             "alias": "Alias",
             "avatar": "Avatar",
@@ -2215,7 +2284,7 @@
           "unknown": "Desconocida",
           "uploaded": "Subida"
         },
-        "textHelper": "Pega o escribe la información de la fuente si el archivo no se puede procesar automáticamente o si deseas crearla solo con texto.",
+        "textHelper": "Agrega tus servicios, precios, metodología, público objetivo, preguntas frecuentes y forma de contacto. También puedes adjuntar un archivo.",
         "textOnlySource": "Fuente creada desde texto, sin archivo cargado.",
         "toasts": {
           "approved": "Fuente aprobada",
