@@ -190,7 +190,7 @@ const copy = {
           'Connect an Instagram Business or Creator account to sync public media and make selected posts available to profile conversations.',
         observationPlaceholder: 'Example: This was from a recent trip to Medellin.',
         oauthLocalWarning:
-          'Instagram OAuth is using {{redirectUri}}. This exact URI must be registered in Meta under Instagram > API setup with Instagram login. If Meta only has the production API URL, this local flow will end on an Instagram unavailable page.',
+          'Instagram needs additional connection setup in this environment. If the connection does not open, contact support.',
         reconnect: 'Reconnect',
         synced: 'Instagram media synced',
       },
@@ -207,7 +207,7 @@ const copy = {
           'Connect a TikTok account to sync public posts and make selected content available to profile conversations.',
         observationPlaceholder: 'Example: This post shows a recent event in Medellin.',
         oauthLocalWarning:
-          'TikTok OAuth is using {{redirectUri}}. This exact URI must be registered in TikTok Login Kit redirect settings.',
+          'TikTok needs additional connection setup in this environment. If the connection does not open, contact support.',
         reconnect: 'Reconnect',
         synced: 'TikTok videos synced',
       },
@@ -307,7 +307,7 @@ const copy = {
           'Conecta una cuenta de Instagram Business o Creator para sincronizar contenido público y usar publicaciones seleccionadas en las conversaciones del perfil.',
         observationPlaceholder: 'Ejemplo: Esta fue de un viaje reciente a Medellín.',
         oauthLocalWarning:
-          'OAuth de Instagram está usando {{redirectUri}}. Esta URI exacta debe estar registrada en Meta en Instagram > API setup with Instagram login. Si Meta solo tiene la URL del API de producción, este flujo local terminará en la página no disponible de Instagram.',
+          'Instagram necesita una configuración adicional de conexión en este entorno. Si la conexión no abre, contacta a soporte.',
         reconnect: 'Reconectar',
         synced: 'Instagram sincronizado',
       },
@@ -324,7 +324,7 @@ const copy = {
           'Conecta una cuenta de TikTok para sincronizar publicaciones públicas y usar el contenido seleccionado en las conversaciones del perfil.',
         observationPlaceholder: 'Ejemplo: Esta publicación muestra un evento reciente en Medellín.',
         oauthLocalWarning:
-          'OAuth de TikTok está usando {{redirectUri}}. Esta URI exacta debe estar registrada en los redirect settings de TikTok Login Kit.',
+          'TikTok necesita una configuración adicional de conexión en este entorno. Si la conexión no abre, contacta a soporte.',
         reconnect: 'Reconectar',
         synced: 'TikTok sincronizado',
       },
@@ -775,11 +775,14 @@ export function Page(): React.JSX.Element {
             />
             <Divider />
             <Tabs
+              allowScrollButtonsMobile
               onChange={(_, value: IntegrationProvider) => {
                 setActiveTab(value);
               }}
-              sx={{ px: 3 }}
+              scrollButtons="auto"
+              sx={{ px: { sm: 3, xs: 0 }, '& .MuiTab-root': { minWidth: { xs: 108, sm: 120 } } }}
               value={activeTab}
+              variant="scrollable"
             >
               {Object.entries(providerConfigs)
                 .filter(([provider]) => enabledProviders.includes(provider as IntegrationProvider))
@@ -814,6 +817,7 @@ export function Page(): React.JSX.Element {
                 isSaving={isSaving}
                 isSyncing={isSyncing}
                 isUploading={isUploading}
+                language={language}
                 media={media}
                 onConnect={handleConnect}
                 onDeleteMedia={handleDeleteMedia}
@@ -852,6 +856,7 @@ interface IntegrationPanelProps {
   isSaving: boolean;
   isSyncing: boolean;
   isUploading: boolean;
+  language: Language;
   media: IntegrationMedia[];
   page: IntegrationMediaPage | null;
   provider: IntegrationProvider;
@@ -883,6 +888,7 @@ function IntegrationPanel({
   isSaving,
   isSyncing,
   isUploading,
+  language,
   media,
   page,
   provider,
@@ -1070,7 +1076,7 @@ function IntegrationPanel({
           </Stack>
           {page.integration.last_synced_at ? (
             <Typography color="text.secondary" variant="body2">
-              {common.lastSync}: {formatDate(page.integration.last_synced_at)}
+              {common.lastSync}: {formatDate(page.integration.last_synced_at, language)}
             </Typography>
           ) : null}
         </Stack>
@@ -2417,14 +2423,14 @@ function interpolate(value: string, params: Record<string, number | string>): st
   );
 }
 
-function formatDate(value: string): string {
+function formatDate(value: string, language: string): string {
   const date = new Date(value);
 
   if (!Number.isFinite(date.getTime())) {
     return value;
   }
 
-  return date.toLocaleString();
+  return new Intl.DateTimeFormat(language, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {

@@ -7,6 +7,7 @@ import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
+import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
@@ -53,6 +54,7 @@ import {
   updateProfileProduct,
   updateProfileProductSettings,
 } from '@/lib/products/api-client';
+import type { Selection } from '@/hooks/use-selection';
 import { useSelection } from '@/hooks/use-selection';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
@@ -507,23 +509,43 @@ export function Page(): React.JSX.Element {
             ) : (
               <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
                 {page.products.length ? (
-                  <Box sx={{ overflowX: 'auto' }}>
-                    <DataTable<ProfileProduct>
-                      columns={columns}
-                      hover
-                      onDeselectAll={selection.deselectAll}
-                      onDeselectOne={(_, product) => {
-                        selection.deselectOne(product.id);
+                  <React.Fragment>
+                    <ProfileProductMobileList
+                      copy={copy}
+                      language={language}
+                      onDelete={setDeleteProduct}
+                      onEdit={(product) => {
+                        setEditingProduct(product);
+                        setProductDialogOpen(true);
                       }}
-                      onSelectAll={selection.selectAll}
-                      onSelectOne={(_, product) => {
-                        selection.selectOne(product.id);
+                      onStatus={(product) => {
+                        handleBulkStatus(product.status === 'published' ? 'draft' : 'published', [product.id]).catch(
+                          (err) => {
+                            logger.error(err);
+                          }
+                        );
                       }}
-                      rows={page.products}
-                      selectable
-                      selected={selection.selected}
+                      products={page.products}
+                      selection={selection}
                     />
-                  </Box>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' }, overflowX: 'auto' }}>
+                      <DataTable<ProfileProduct>
+                        columns={columns}
+                        hover
+                        onDeselectAll={selection.deselectAll}
+                        onDeselectOne={(_, product) => {
+                          selection.deselectOne(product.id);
+                        }}
+                        onSelectAll={selection.selectAll}
+                        onSelectOne={(_, product) => {
+                          selection.selectOne(product.id);
+                        }}
+                        rows={page.products}
+                        selectable
+                        selected={selection.selected}
+                      />
+                    </Box>
+                  </React.Fragment>
                 ) : (
                   <Stack sx={{ alignItems: 'center', p: 5 }}>
                     <StorefrontIcon size={36} />
@@ -675,6 +697,113 @@ export function Page(): React.JSX.Element {
         </DialogActions>
       </Dialog>
     </React.Fragment>
+  );
+}
+
+function ProfileProductMobileList({
+  copy,
+  language,
+  onDelete,
+  onEdit,
+  onStatus,
+  products,
+  selection,
+}: {
+  copy: (typeof productCopy)[ProductLanguage];
+  language: ProductLanguage;
+  onDelete: (product: ProfileProduct) => void;
+  onEdit: (product: ProfileProduct) => void;
+  onStatus: (product: ProfileProduct) => void;
+  products: ProfileProduct[];
+  selection: Selection<number>;
+}): React.JSX.Element {
+  return (
+    <Stack
+      divider={<Box sx={{ borderTop: '1px solid var(--mui-palette-divider)' }} />}
+      sx={{ display: { xs: 'flex', sm: 'none' } }}
+    >
+      {products.map((product) => (
+        <Stack key={product.id} spacing={1.5} sx={{ p: 2 }}>
+          <Stack direction="row" spacing={1.25} sx={{ alignItems: 'flex-start' }}>
+            <Checkbox
+              checked={selection.selected.has(product.id)}
+              onChange={(event) => {
+                if (event.target.checked) {
+                  selection.selectOne(product.id);
+                } else {
+                  selection.deselectOne(product.id);
+                }
+              }}
+              sx={{ m: -1 }}
+            />
+            <Box
+              alt=""
+              component="img"
+              src={product.image_url}
+              sx={{ aspectRatio: '1', borderRadius: 1, flex: '0 0 auto', objectFit: 'cover', width: 72 }}
+            />
+            <Stack spacing={0.5} sx={{ flex: '1 1 auto', minWidth: 0 }}>
+              <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }} variant="subtitle2">
+                {product.name}
+              </Typography>
+              <Typography color="text.secondary" variant="caption">
+                {copy.fields.updated}: {formatDate(product.updated_at, language)}
+              </Typography>
+            </Stack>
+          </Stack>
+          <Typography
+            color="text.secondary"
+            sx={{
+              display: '-webkit-box',
+              overflow: 'hidden',
+              overflowWrap: 'anywhere',
+              WebkitBoxOrient: 'vertical',
+              WebkitLineClamp: 4,
+            }}
+            variant="body2"
+          >
+            {product.description}
+          </Typography>
+          <Link href={product.public_url} rel="noreferrer" target="_blank" variant="caption">
+            {copy.actions.viewPublic}
+          </Link>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <DestinationCell copy={copy} product={product} />
+            <Button
+              color={product.status === 'published' ? 'success' : 'inherit'}
+              onClick={() => {
+                onStatus(product);
+              }}
+              size="small"
+              variant="outlined"
+            >
+              {product.status === 'published' ? copy.status.published : copy.status.draft}
+            </Button>
+          </Stack>
+          <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+            <Button
+              onClick={() => {
+                onEdit(product);
+              }}
+              size="small"
+              startIcon={<PencilSimpleIcon />}
+            >
+              {copy.actions.edit}
+            </Button>
+            <Button
+              color="error"
+              onClick={() => {
+                onDelete(product);
+              }}
+              size="small"
+              startIcon={<TrashIcon />}
+            >
+              {copy.actions.delete}
+            </Button>
+          </Stack>
+        </Stack>
+      ))}
+    </Stack>
   );
 }
 

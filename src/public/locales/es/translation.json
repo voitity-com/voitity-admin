@@ -1765,6 +1765,7 @@
         "errors": {
           "generic": "Algo salió mal"
         },
+        "mobileTableHint": "Desliza horizontalmente para ver todos los datos.",
         "integrations": {
           "disconnectConfirmation": {
             "cancel": "Cancelar",
@@ -2143,6 +2144,9 @@
             "viewProfiles": "Ver perfiles"
           },
           "blocked": "{{count}} requisitos pendientes",
+          "blocked_one": "{{count}} requisito pendiente",
+          "blocked_other": "{{count}} requisitos pendientes",
+          "completeRequirement": "Completar: {{requirement}}",
           "confirmDialog": {
             "activateConfirm": "Activar",
             "activateDescription": "El perfil quedará disponible en su página pública y podrá responder a visitantes.",
@@ -2326,6 +2330,21 @@
         }
       },
       "quality": {
+        "checks": {
+          "about": "Información sobre el perfil",
+          "campaigns": "Campañas o trabajos",
+          "cv": "Hoja de vida revisada",
+          "description": "Descripción del perfil",
+          "experience": "Experiencia",
+          "instagram": "Enlace de Instagram",
+          "personality": "Personalidad",
+          "portfolio": "Portafolio",
+          "projects": "Proyectos",
+          "skills": "Habilidades",
+          "social": "Al menos una red social",
+          "source": "Fuente revisada",
+          "topics": "Temas"
+        },
         "fields": {
           "actual": "Actual",
           "check": "Revisión",
@@ -2344,6 +2363,8 @@
           "error": "No se pudo cargar la calidad",
           "loading": "Revisando calidad del perfil",
           "pending": "{{count}} revisiones pendientes",
+          "pending_one": "{{count}} revisión pendiente",
+          "pending_other": "{{count}} revisiones pendientes",
           "title": "Calidad del perfil",
           "viewDetails": "Ver calidad"
         },
@@ -2599,7 +2620,7 @@
 	            "voiceAutoplayEnabled": "Iniciar con audio activado",
 	            "voiceAutoplayHelper": "Los visitantes entran con el audio activo; si lo silencian, no se generará audio hasta que lo reactiven.",
 	            "voiceEnabled": "Habilitar voz del perfil",
-	            "voiceEnabledHelper": "Si está desactivado, el perfil responde solo por texto y no genera audio con ElevenLabs.",
+            "voiceEnabledHelper": "Si está desactivado, el perfil responde solo por texto y no genera audio.",
 	            "voiceName": "Nombre de la voz"
 	          },
           "languages": {
@@ -2727,7 +2748,8 @@
           "eyebrow": "Primer perfil",
           "mobileDescriptionWithPlan": "Empieza creando el perfil con nombre, alias, descripción y estilo. Luego podrás completar avatar, voz y fuentes.",
           "mobileDescriptionWithoutPlan": "Primero elige un plan. Después podrás crear el perfil y completar avatar, voz y fuentes.",
-          "title": "Crea tu primer perfil"
+          "title": "Crea tu primer perfil",
+          "viewPlans": "Ver planes"
         },
         "completionOnboarding": {
           "description": "Este perfil aún no está listo para publicarse. Ingresa y completa los requisitos pendientes antes de activarlo.",

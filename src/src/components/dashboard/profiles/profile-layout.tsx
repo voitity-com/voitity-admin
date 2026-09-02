@@ -1,9 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
 
-import { ProfilePublicationOnboarding } from './profile-publication-onboarding';
 import { ProfilePublicationDock } from './profile-publication-dock';
+import { ProfilePublicationOnboarding } from './profile-publication-onboarding';
 import { ProfileQualityDock } from './profile-quality-dock';
 import { ProfileSideNav } from './profile-side-nav';
 import { ProfileWidgetLauncher } from './profile-widget-launcher';
@@ -24,11 +23,25 @@ export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Eleme
         width: 'var(--Content-width)',
       }}
     >
-      <ProfilePublicationDock />
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={{ xs: 2, md: 4 }} sx={{ position: 'relative' }}>
-        <ProfileSideNav />
-        <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>{children}</Box>
-      </Stack>
+      <Box
+        sx={{
+          columnGap: { md: 4 },
+          display: 'grid',
+          gridTemplateAreas: {
+            md: '"publication publication" "navigation content"',
+            xs: '"navigation" "publication" "content"',
+          },
+          gridTemplateColumns: { md: '240px minmax(0, 1fr)', xs: 'minmax(0, 1fr)' },
+        }}
+      >
+        <Box sx={{ gridArea: 'publication' }}>
+          <ProfilePublicationDock />
+        </Box>
+        <Box sx={{ gridArea: 'navigation', height: { md: 'auto', xs: 52 } }}>
+          <ProfileSideNav />
+        </Box>
+        <Box sx={{ gridArea: 'content', minWidth: 0 }}>{children}</Box>
+      </Box>
       <ProfileQualityDock />
       <ProfileWidgetLauncher />
       <ProfilePublicationOnboarding />

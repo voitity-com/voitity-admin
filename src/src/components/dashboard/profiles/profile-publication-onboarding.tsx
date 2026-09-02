@@ -51,6 +51,7 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
   const navigate = useNavigate();
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
+  const isMobile = useMediaQuery('down', 'sm');
   const [activeIndex, setActiveIndex] = React.useState<number>(0);
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null);
   const [dismissed, setDismissed] = React.useState<boolean>(false);
@@ -138,6 +139,14 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
 
       if (!nextAnchorEl) {
         setAnchorEl(null);
+
+        // The compact navigation only renders the active item, so the Avatar and
+        // Sources anchors are intentionally absent on phones. The mobile guide is
+        // a fixed panel and does not need an anchor to show those steps.
+        if (isMobile) {
+          return;
+        }
+
         if (activeIndex < steps.length - 1) {
           setActiveIndex((current) => current + 1);
         } else {
@@ -157,7 +166,7 @@ export function ProfilePublicationOnboarding(): React.JSX.Element | null {
     return () => {
       window.cancelAnimationFrame(animationFrame);
     };
-  }, [activeIndex, activeStep, steps.length]);
+  }, [activeIndex, activeStep, isMobile, steps.length]);
 
   if (!activeStep) {
     return null;
@@ -378,7 +387,7 @@ function MobileOnboardingPanel({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const hasStepAction = step.key !== 'publication';
-  const bottomOffset = 'calc(16px + env(safe-area-inset-bottom))';
+  const bottomOffset = 'calc(88px + env(safe-area-inset-bottom))';
 
   return (
     <Fade in={open} mountOnEnter timeout={onboardingTransitionMs} unmountOnExit>
@@ -391,7 +400,7 @@ function MobileOnboardingPanel({
           bottom: bottomOffset,
           boxShadow: '0 24px 80px rgba(15, 23, 42, 0.42)',
           left: 16,
-          maxHeight: 'calc(100dvh - 112px)',
+          maxHeight: 'calc(100dvh - 176px)',
           overflowY: 'auto',
           p: 2.5,
           position: 'fixed',
@@ -631,7 +640,8 @@ function readOnboardingState(profileId: string): StoredOnboardingState {
     const parsed = JSON.parse(raw) as Partial<StoredOnboardingState>;
 
     return {
-      activeIndex: Number.isInteger(parsed.activeIndex) && Number(parsed.activeIndex) >= 0 ? Number(parsed.activeIndex) : 0,
+      activeIndex:
+        Number.isInteger(parsed.activeIndex) && Number(parsed.activeIndex) >= 0 ? Number(parsed.activeIndex) : 0,
       dismissed: parsed.dismissed === true,
     };
   } catch {

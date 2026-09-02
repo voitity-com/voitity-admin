@@ -12,6 +12,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import GlobalStyles from '@mui/material/GlobalStyles';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Radio from '@mui/material/Radio';
@@ -54,6 +55,8 @@ interface AppearanceDraft {
 }
 
 const MAX_BACKGROUND_IMAGE_SIZE = 10 * 1024 * 1024;
+const DESKTOP_PREVIEW_HEIGHT = 800;
+const DESKTOP_PREVIEW_WIDTH = 1280;
 
 export function ProfileTemplateEditor({
   profileAvatarUrl,
@@ -71,6 +74,7 @@ export function ProfileTemplateEditor({
   const [iframeVersion, setIframeVersion] = React.useState(0);
   const [isDesktopPreviewOpen, setIsDesktopPreviewOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isMobileAppearanceEditorOpen, setIsMobileAppearanceEditorOpen] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [pendingReplacement, setPendingReplacement] = React.useState<null | File>(null);
   const [selectedFile, setSelectedFile] = React.useState<null | File>(null);
@@ -207,6 +211,7 @@ export function ProfileTemplateEditor({
       });
       setSelectedFile(null);
       setSelectedFilePreview(null);
+      setIsMobileAppearanceEditorOpen(false);
       toast.success(t('dashboard.profiles.detail.widgetLauncher.templateEditor.toasts.saved'));
     } catch (saveError) {
       logger.error(saveError);
@@ -218,8 +223,60 @@ export function ProfileTemplateEditor({
     }
   }, [canSave, configuration, draft, profileId, selectedFile, t]);
 
+  const handleCloseMobileAppearanceEditor = React.useCallback((): void => {
+    if (isSaving) {
+      return;
+    }
+
+    if (configuration) {
+      setDraft({
+        backgroundType: configuration.appearance.backgroundType,
+        templateKey: configuration.appearance.templateKey,
+      });
+    }
+
+    setActiveTab('templates');
+    setError('');
+    setPendingReplacement(null);
+    setSelectedFile(null);
+    setSelectedFilePreview(null);
+    setIsMobileAppearanceEditorOpen(false);
+  }, [configuration, isSaving]);
+
+  React.useEffect(() => {
+    if (!isMobileAppearanceEditorOpen) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        handleCloseMobileAppearanceEditor();
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handleCloseMobileAppearanceEditor, isMobileAppearanceEditorOpen]);
+
   return (
     <React.Fragment>
+      <GlobalStyles
+        styles={
+          isMobileAppearanceEditorOpen
+            ? {
+                '[data-sonner-toaster]': {
+                  display: 'none !important',
+                },
+              }
+            : {}
+        }
+      />
       <Paper
         elevation={0}
         sx={{
@@ -242,10 +299,21 @@ export function ProfileTemplateEditor({
               </Typography>
             </Box>
             <Button
+              onClick={() => {
+                toast.dismiss();
+                setIsMobileAppearanceEditorOpen(true);
+              }}
+              size="small"
+              sx={{ display: { md: 'none', xs: 'inline-flex' }, flex: '0 0 auto', whiteSpace: 'nowrap' }}
+              variant="contained"
+            >
+              {t('dashboard.profiles.actions.edit')}
+            </Button>
+            <Button
               disabled={!canSave}
               onClick={handleSave}
               size="small"
-              sx={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
+              sx={{ display: { md: 'inline-flex', xs: 'none' }, flex: '0 0 auto', whiteSpace: 'nowrap' }}
               variant="contained"
             >
               {isSaving
@@ -259,7 +327,7 @@ export function ProfileTemplateEditor({
         <Box sx={{ display: 'flex', flex: '1 1 auto', flexDirection: { md: 'row', xs: 'column' }, minHeight: 0 }}>
           <Stack
             spacing={1.5}
-            sx={{ bgcolor: 'grey.100', flex: '1 1 auto', minHeight: { md: 0, xs: '50dvh' }, overflow: 'hidden', p: 2 }}
+            sx={{ bgcolor: 'grey.100', flex: '1 1 auto', minHeight: { md: 0, xs: '68dvh' }, overflow: 'hidden', p: 2 }}
           >
             <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
               <Button
@@ -272,19 +340,24 @@ export function ProfileTemplateEditor({
               >
                 {t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.desktop')}
               </Button>
-              <Button
-                size="small"
-                startIcon={<DeviceMobileIcon />}
-                variant="contained"
-              >
+              <Button size="small" startIcon={<DeviceMobileIcon />} variant="contained">
                 {t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.mobile')}
               </Button>
             </Stack>
-            <Box sx={{ display: 'flex', flex: '1 1 auto', justifyContent: 'center', minHeight: 0, overflow: 'auto' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flex: '1 1 auto',
+                height: { md: 'auto', xs: 'calc(68dvh - 52px)' },
+                justifyContent: 'center',
+                minHeight: 0,
+                overflow: 'auto',
+              }}
+            >
               <Paper
                 elevation={8}
                 sx={{
-                  height: '100%',
+                  height: { md: '100%', xs: 'calc(68dvh - 52px)' },
                   maxWidth: '100%',
                   overflow: 'hidden',
                   width: 390,
@@ -307,20 +380,47 @@ export function ProfileTemplateEditor({
           </Stack>
 
           <Paper
+            aria-modal={isMobileAppearanceEditorOpen ? true : undefined}
             elevation={0}
+            role={isMobileAppearanceEditorOpen ? 'dialog' : undefined}
             square
-            sx={{
+            sx={(theme) => ({
+              bgcolor: 'background.paper',
               borderLeft: { md: '1px solid', xs: 0 },
               borderTop: { md: 0, xs: '1px solid' },
               borderColor: 'divider',
-              display: 'flex',
+              display: { md: 'flex', xs: isMobileAppearanceEditorOpen ? 'flex' : 'none' },
               flex: { md: '0 0 390px', xs: '0 0 auto' },
               flexDirection: 'column',
-              maxHeight: { md: 'none', xs: '46dvh' },
+              inset: { md: 'auto', xs: 0 },
+              maxHeight: { md: 'none', xs: '100dvh' },
               minHeight: 0,
+              position: { md: 'static', xs: 'fixed' },
               width: { md: 390, xs: '100%' },
-            }}
+              zIndex: { md: 'auto', xs: theme.zIndex.modal },
+            })}
           >
+            <AppBar color="inherit" elevation={0} position="static" sx={{ display: { md: 'none', xs: 'block' } }}>
+              <Toolbar sx={{ gap: 1.5, px: 2 }}>
+                <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
+                  <Typography noWrap variant="h6">
+                    {t('dashboard.profiles.detail.widgetLauncher.templateEditor.title')}
+                  </Typography>
+                  <Typography color="text.secondary" noWrap variant="body2">
+                    {profileName}
+                  </Typography>
+                </Box>
+                <IconButton
+                  aria-label={t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.close')}
+                  disabled={isSaving}
+                  edge="end"
+                  onClick={handleCloseMobileAppearanceEditor}
+                >
+                  <XIcon />
+                </IconButton>
+              </Toolbar>
+            </AppBar>
+            <Divider sx={{ display: { md: 'none', xs: 'block' } }} />
             <Tabs
               aria-label={t('dashboard.profiles.detail.widgetLauncher.templateEditor.tabs.label')}
               onChange={(_event, value: 'background' | 'templates') => {
@@ -517,6 +617,25 @@ export function ProfileTemplateEditor({
                 </Stack>
               )}
             </Box>
+            <DialogActions
+              sx={{
+                bgcolor: 'background.paper',
+                borderTop: '1px solid var(--mui-palette-divider)',
+                display: { md: 'none', xs: 'flex' },
+                flex: '0 0 auto',
+                px: 2,
+                py: 1.5,
+              }}
+            >
+              <Button disabled={isSaving} onClick={handleCloseMobileAppearanceEditor}>
+                {t('dashboard.profiles.actions.cancel')}
+              </Button>
+              <Button disabled={!canSave} onClick={handleSave} variant="contained">
+                {isSaving
+                  ? t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.saving')
+                  : t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.save')}
+              </Button>
+            </DialogActions>
           </Paper>
         </Box>
       </Paper>
@@ -551,22 +670,14 @@ export function ProfileTemplateEditor({
             </Toolbar>
           </AppBar>
           <Divider />
-          <Box sx={{ bgcolor: 'grey.100', flex: '1 1 auto', minHeight: 0, p: { sm: 2, xs: 0 } }}>
-            <Paper elevation={8} sx={{ height: '100%', overflow: 'hidden' }}>
-              <Box
-                allow="microphone"
-                component="iframe"
-                onLoad={() => {
-                  setIframeVersion((current) => current + 1);
-                }}
-                ref={desktopIframeRef}
-                sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                src={editorPreviewUrl}
-                sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
-                title={String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.iframeTitle'))}
-              />
-            </Paper>
-          </Box>
+          <ScaledDesktopPreview
+            iframeRef={desktopIframeRef}
+            onLoad={() => {
+              setIframeVersion((current) => current + 1);
+            }}
+            src={editorPreviewUrl}
+            title={String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.iframeTitle'))}
+          />
         </Stack>
       </Dialog>
 
@@ -609,6 +720,91 @@ export function ProfileTemplateEditor({
         </DialogActions>
       </Dialog>
     </React.Fragment>
+  );
+}
+
+function ScaledDesktopPreview({
+  iframeRef,
+  onLoad,
+  src,
+  title,
+}: {
+  iframeRef: React.RefObject<HTMLIFrameElement | null>;
+  onLoad: () => void;
+  src: string;
+  title: string;
+}): React.JSX.Element {
+  const [container, setContainer] = React.useState<HTMLDivElement | null>(null);
+  const [scale, setScale] = React.useState(1);
+
+  React.useEffect(() => {
+    if (!container) {
+      return undefined;
+    }
+
+    const updateScale = (): void => {
+      const availableWidth = Math.max(container.clientWidth - 16, 1);
+      const availableHeight = Math.max(container.clientHeight - 16, 1);
+      setScale(Math.min(1, availableWidth / DESKTOP_PREVIEW_WIDTH, availableHeight / DESKTOP_PREVIEW_HEIGHT));
+    };
+    const observer = new ResizeObserver(updateScale);
+
+    observer.observe(container);
+    updateScale();
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [container]);
+
+  return (
+    <Box
+      ref={setContainer}
+      sx={{
+        alignItems: 'center',
+        bgcolor: 'grey.100',
+        display: 'flex',
+        flex: '1 1 auto',
+        justifyContent: 'center',
+        minHeight: 0,
+        overflow: 'auto',
+        p: 1,
+      }}
+    >
+      <Box
+        sx={{
+          flex: '0 0 auto',
+          height: DESKTOP_PREVIEW_HEIGHT * scale,
+          position: 'relative',
+          width: DESKTOP_PREVIEW_WIDTH * scale,
+        }}
+      >
+        <Paper
+          elevation={8}
+          sx={{
+            height: DESKTOP_PREVIEW_HEIGHT,
+            left: 0,
+            overflow: 'hidden',
+            position: 'absolute',
+            top: 0,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: DESKTOP_PREVIEW_WIDTH,
+          }}
+        >
+          <Box
+            allow="microphone"
+            component="iframe"
+            onLoad={onLoad}
+            ref={iframeRef}
+            sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+            src={src}
+            sx={{ border: 0, display: 'block', height: DESKTOP_PREVIEW_HEIGHT, width: DESKTOP_PREVIEW_WIDTH }}
+            title={title}
+          />
+        </Paper>
+      </Box>
+    </Box>
   );
 }
 

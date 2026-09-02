@@ -90,11 +90,8 @@ export function Page(): React.JSX.Element {
 
   const customDomainsAvailable = isLoading || isFeatureEffective(features, 'domains.custom');
   const requestedTab: SettingsTab = tabParam === 'widget' || tabParam === 'domain' ? tabParam : 'features';
-  const selectedTab: SettingsTab =
-    requestedTab === 'domain' && !customDomainsAvailable ? 'features' : requestedTab;
-  const availableFeatures = features.filter(
-    (feature) => feature.available && feature.profile_configurable !== false
-  );
+  const selectedTab: SettingsTab = requestedTab === 'domain' && !customDomainsAvailable ? 'features' : requestedTab;
+  const availableFeatures = features.filter((feature) => feature.available && feature.profile_configurable !== false);
   const productsFeature = availableFeatures.find((feature) => feature.key === 'products') ?? null;
   const integrationFeatures = availableFeatures.filter((feature) => feature.group === 'integrations');
 
@@ -115,6 +112,7 @@ export function Page(): React.JSX.Element {
         </Stack>
 
         <Tabs
+          allowScrollButtonsMobile
           aria-label={t('dashboard.profiles.detail.settings.tabs.label')}
           onChange={(_, value: SettingsTab) => {
             const nextParams = new URLSearchParams(searchParams);
@@ -125,6 +123,7 @@ export function Page(): React.JSX.Element {
             }
             setSearchParams(nextParams, { replace: true });
           }}
+          scrollButtons="auto"
           sx={{ minHeight: 44 }}
           value={selectedTab}
           variant="scrollable"
@@ -219,7 +218,11 @@ function ProfileFeatureSwitch({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const featureName =
-    feature.provider === 'other' ? t('dashboard.profiles.detail.integrations.other.label') : feature.name;
+    feature.key === 'products'
+      ? t('dashboard.profiles.detail.settings.features.productsTitle')
+      : feature.provider === 'other'
+        ? t('dashboard.profiles.detail.integrations.other.label')
+        : feature.name;
 
   return (
     <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2} sx={{ alignItems: { sm: 'center' } }}>

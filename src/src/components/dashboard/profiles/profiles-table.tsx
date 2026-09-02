@@ -2,7 +2,9 @@
 
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import Checkbox from '@mui/material/Checkbox';
 import Chip from '@mui/material/Chip';
+import Divider from '@mui/material/Divider';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
@@ -31,61 +33,131 @@ export function ProfilesTable({ onOpen, rows = [], spotlightProfileId }: Profile
 
   return (
     <React.Fragment>
-      <DataTable<Profile>
-        columns={columns}
-        getRowAriaLabel={(row) => t('dashboard.profiles.actions.openProfile', { name: row.name })}
-        getRowDataAttributes={(row) =>
-          isSpotlightProfile(row, spotlightProfileId) ? { 'data-profile-onboarding-anchor': String(row.id) } : {}
-        }
-        getRowSx={(row) =>
-          isSpotlightProfile(row, spotlightProfileId)
-            ? (theme) => ({
-                outline: '8px solid rgba(255, 255, 255, 0.22)',
-                outlineOffset: -4,
+      <Stack divider={<Divider flexItem />} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+        {rows.map((row) => {
+          const rowId = String(row.id);
+          const spotlight = isSpotlightProfile(row, spotlightProfileId);
+
+          return (
+            <Box
+              aria-label={String(t('dashboard.profiles.actions.openProfile', { name: row.name }))}
+              data-profile-onboarding-anchor={spotlight ? rowId : undefined}
+              key={rowId}
+              onClick={() => {
+                onOpen?.(row);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  onOpen?.(row);
+                }
+              }}
+              role="button"
+              sx={(theme) => ({
+                alignItems: 'flex-start',
+                bgcolor: 'background.paper',
+                cursor: 'pointer',
+                display: 'grid',
+                gap: 1.25,
+                gridTemplateColumns: 'auto auto minmax(0, 1fr)',
+                p: 2,
                 position: 'relative',
-                transform: 'translateZ(0)',
-                transition: theme.transitions.create(['box-shadow', 'outline-color', 'transform'], {
-                  duration: theme.transitions.duration.shorter,
+                ...(spotlight && {
+                  outline: '6px solid rgba(255, 255, 255, 0.22)',
+                  outlineOffset: -3,
+                  zIndex: theme.zIndex.modal + 2,
                 }),
-                zIndex: theme.zIndex.modal + 2,
-                '& > td': {
-                  bgcolor: 'background.paper',
-                  borderBottomColor: 'rgba(255, 255, 255, 0.5)',
-                  borderTop: '1px solid rgba(255, 255, 255, 0.5)',
-                },
-                '& > td:first-of-type': {
-                  borderBottomLeftRadius: 8,
-                  borderLeft: '1px solid rgba(255, 255, 255, 0.5)',
-                  borderTopLeftRadius: 8,
-                },
-                '& > td:last-of-type': {
-                  borderBottomRightRadius: 8,
-                  borderRight: '1px solid rgba(255, 255, 255, 0.5)',
-                  borderTopRightRadius: 8,
-                },
-                '&:hover': {
-                  transform: 'translateY(-1px)',
-                },
-              })
-            : undefined
-        }
-        hover
-        onClick={(_, row) => {
-          onOpen?.(row);
-        }}
-        onDeselectAll={deselectAll}
-        onDeselectOne={(_, row) => {
-          deselectOne(String(row.id));
-        }}
-        onSelectAll={selectAll}
-        onSelectOne={(_, row) => {
-          selectOne(String(row.id));
-        }}
-        rows={rows}
-        selectable
-        selected={selected}
-        uniqueRowId={(row) => String(row.id)}
-      />
+              })}
+              tabIndex={0}
+            >
+              <Checkbox
+                checked={selected.has(rowId)}
+                onChange={(event) => {
+                  if (event.target.checked) {
+                    selectOne(rowId);
+                  } else {
+                    deselectOne(rowId);
+                  }
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+                sx={{ m: -1 }}
+              />
+              {renderAvatarCell(row, t)}
+              <Stack spacing={0.75} sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 700, overflowWrap: 'anywhere' }} variant="subtitle2">
+                  {row.name}
+                </Typography>
+                <Typography color="text.secondary" variant="body2">
+                  @{row.alias || '-'}
+                </Typography>
+                {renderStatusCell(row, t)}
+                <Typography color="text.secondary" variant="caption">
+                  {t('dashboard.profiles.fields.updated')}: {formatDate(row.updated_at, language)}
+                </Typography>
+              </Stack>
+            </Box>
+          );
+        })}
+      </Stack>
+      <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
+        <DataTable<Profile>
+          columns={columns}
+          getRowAriaLabel={(row) => t('dashboard.profiles.actions.openProfile', { name: row.name })}
+          getRowDataAttributes={(row) =>
+            isSpotlightProfile(row, spotlightProfileId) ? { 'data-profile-onboarding-anchor': String(row.id) } : {}
+          }
+          getRowSx={(row) =>
+            isSpotlightProfile(row, spotlightProfileId)
+              ? (theme) => ({
+                  outline: '8px solid rgba(255, 255, 255, 0.22)',
+                  outlineOffset: -4,
+                  position: 'relative',
+                  transform: 'translateZ(0)',
+                  transition: theme.transitions.create(['box-shadow', 'outline-color', 'transform'], {
+                    duration: theme.transitions.duration.shorter,
+                  }),
+                  zIndex: theme.zIndex.modal + 2,
+                  '& > td': {
+                    bgcolor: 'background.paper',
+                    borderBottomColor: 'rgba(255, 255, 255, 0.5)',
+                    borderTop: '1px solid rgba(255, 255, 255, 0.5)',
+                  },
+                  '& > td:first-of-type': {
+                    borderBottomLeftRadius: 8,
+                    borderLeft: '1px solid rgba(255, 255, 255, 0.5)',
+                    borderTopLeftRadius: 8,
+                  },
+                  '& > td:last-of-type': {
+                    borderBottomRightRadius: 8,
+                    borderRight: '1px solid rgba(255, 255, 255, 0.5)',
+                    borderTopRightRadius: 8,
+                  },
+                  '&:hover': {
+                    transform: 'translateY(-1px)',
+                  },
+                })
+              : undefined
+          }
+          hover
+          onClick={(_, row) => {
+            onOpen?.(row);
+          }}
+          onDeselectAll={deselectAll}
+          onDeselectOne={(_, row) => {
+            deselectOne(String(row.id));
+          }}
+          onSelectAll={selectAll}
+          onSelectOne={(_, row) => {
+            selectOne(String(row.id));
+          }}
+          rows={rows}
+          selectable
+          selected={selected}
+          uniqueRowId={(row) => String(row.id)}
+        />
+      </Box>
       {!rows.length ? (
         <Box sx={{ p: 3 }}>
           <Typography color="text.secondary" sx={{ textAlign: 'center' }} variant="body2">
@@ -97,13 +169,7 @@ export function ProfilesTable({ onOpen, rows = [], spotlightProfileId }: Profile
   );
 }
 
-function getColumns({
-  language,
-  t,
-}: {
-  language: string;
-  t: (key: string) => string;
-}): ColumnDef<Profile>[] {
+function getColumns({ language, t }: { language: string; t: (key: string) => string }): ColumnDef<Profile>[] {
   return [
     {
       formatter: (row): React.JSX.Element => renderAvatarCell(row, t),
@@ -225,7 +291,11 @@ function renderStatusCell(row: Profile, t: (key: string) => string): React.JSX.E
 
   return (
     <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
-      <Chip color={status === 'published' ? 'success' : 'default'} label={t(`dashboard.profiles.status.${status}`)} size="small" />
+      <Chip
+        color={status === 'published' ? 'success' : 'default'}
+        label={t(`dashboard.profiles.status.${status}`)}
+        size="small"
+      />
       <Chip
         color={row.active ? 'success' : 'default'}
         label={row.active ? t('dashboard.profiles.status.active') : t('dashboard.profiles.status.inactive')}

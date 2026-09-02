@@ -16,13 +16,13 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
-import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
+import InputLabel from '@mui/material/InputLabel';
 import OutlinedInput from '@mui/material/OutlinedInput';
 import Stack from '@mui/material/Stack';
 import { alpha } from '@mui/material/styles';
-import Typography from '@mui/material/Typography';
 import Tooltip from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
 import { ArrowClockwise as ArrowClockwiseIcon } from '@phosphor-icons/react/dist/ssr/ArrowClockwise';
 import { Eye as EyeIcon } from '@phosphor-icons/react/dist/ssr/Eye';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
@@ -99,23 +99,26 @@ export function Page(): React.JSX.Element {
     formState: { errors, isSubmitting },
   } = useForm<Values>({ defaultValues, resolver: zodResolver(schema) });
 
-  const loadSources = React.useCallback(async (showLoading = true): Promise<void> => {
-    if (showLoading) {
-      setIsLoading(true);
-      setError('');
-    }
-
-    try {
-      setSourcesPage(await listProfileSources({ profileId }));
-    } catch (err) {
-      logger.error(err);
-      setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
-    } finally {
+  const loadSources = React.useCallback(
+    async (showLoading = true): Promise<void> => {
       if (showLoading) {
-        setIsLoading(false);
+        setIsLoading(true);
+        setError('');
       }
-    }
-  }, [profileId, t]);
+
+      try {
+        setSourcesPage(await listProfileSources({ profileId }));
+      } catch (err) {
+        logger.error(err);
+        setError(getErrorMessage(err, t('dashboard.profiles.detail.errors.generic')));
+      } finally {
+        if (showLoading) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [profileId, t]
+  );
 
   React.useEffect(() => {
     loadSources().catch((err) => {
@@ -309,6 +312,13 @@ export function Page(): React.JSX.Element {
               </Button>
             }
             subheader={t('dashboard.profiles.detail.sources.listSubheader')}
+            sx={{
+              alignItems: { sm: 'center', xs: 'flex-start' },
+              flexDirection: { sm: 'row', xs: 'column' },
+              gap: { sm: 2, xs: 1.5 },
+              '& .MuiCardHeader-action': { alignSelf: { sm: 'center', xs: 'stretch' }, m: 0 },
+              '& .MuiCardHeader-content': { minWidth: 0 },
+            }}
             title={t('dashboard.profiles.detail.sources.listTitle')}
           />
           {isLoading ? (
@@ -318,9 +328,106 @@ export function Page(): React.JSX.Element {
           ) : (
             <CardContent>
               {sourcesPage.sources.length ? (
-                <Box sx={{ overflowX: 'auto' }}>
-                  <DataTable<ProfileKnowledgeSource> columns={columns} rows={sourcesPage.sources} />
-                </Box>
+                <React.Fragment>
+                  <Stack spacing={1.5} sx={{ display: { sm: 'none', xs: 'flex' } }}>
+                    {sourcesPage.sources.map((source) => (
+                      <Box
+                        key={source.id}
+                        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 2 }}
+                      >
+                        <Stack spacing={1.5}>
+                          <Stack
+                            direction="row"
+                            spacing={1}
+                            sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}
+                          >
+                            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                              <Typography sx={{ overflowWrap: 'anywhere' }} variant="subtitle2">
+                                {source.name}
+                              </Typography>
+                              <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="body2">
+                                {getSourceFileName(source) || t('dashboard.profiles.detail.sources.textOnlySource')}
+                              </Typography>
+                            </Stack>
+                            <Chip
+                              color={sourceStatusColor(source.status)}
+                              label={t(`dashboard.profiles.detail.sources.status.${source.status ?? 'unknown'}`, {
+                                defaultValue: source.status ?? t('dashboard.profiles.detail.sources.status.unknown'),
+                              })}
+                              size="small"
+                              variant="outlined"
+                            />
+                          </Stack>
+                          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+                            <Typography color="text.secondary" variant="caption">
+                              {t('dashboard.profiles.detail.sources.fields.type')}:{' '}
+                              {t(`dashboard.profiles.detail.sources.types.${source.type}`, {
+                                defaultValue: source.type,
+                              })}
+                            </Typography>
+                            <Typography color="text.secondary" variant="caption">
+                              {t('dashboard.profiles.detail.sources.fields.facts')}: {getFactCount(source)}
+                            </Typography>
+                            <Typography color="text.secondary" variant="caption">
+                              {formatDate(source.updated_at ?? source.created_at, language)}
+                            </Typography>
+                          </Stack>
+                          <Stack
+                            direction="row"
+                            spacing={0.5}
+                            sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}
+                          >
+                            <Button
+                              disabled={!hasSourceFile(source) || previewingId === String(source.id)}
+                              onClick={() => {
+                                void handlePreviewFile(source);
+                              }}
+                              size="small"
+                              startIcon={<EyeIcon />}
+                            >
+                              {t('dashboard.profiles.detail.sources.actions.previewFile')}
+                            </Button>
+                            {source.status === 'failed' && source.retryable ? (
+                              <Button
+                                disabled={retryingId === String(source.id)}
+                                onClick={() => void handleRetry(source)}
+                                size="small"
+                                startIcon={<ArrowClockwiseIcon />}
+                              >
+                                {t('dashboard.profiles.detail.sources.actions.sync')}
+                              </Button>
+                            ) : null}
+                            {source.status === 'failed' ? (
+                              <IconButton
+                                aria-label={t('dashboard.profiles.detail.sources.actions.viewError')}
+                                color="error"
+                                onClick={() => {
+                                  setFailureSource(source);
+                                }}
+                                size="small"
+                              >
+                                <WarningCircleIcon />
+                              </IconButton>
+                            ) : null}
+                            <IconButton
+                              aria-label={t('dashboard.profiles.detail.sources.actions.delete')}
+                              color="error"
+                              onClick={() => {
+                                setDeletingSource(source);
+                              }}
+                              size="small"
+                            >
+                              <TrashIcon />
+                            </IconButton>
+                          </Stack>
+                        </Stack>
+                      </Box>
+                    ))}
+                  </Stack>
+                  <Box sx={{ display: { sm: 'block', xs: 'none' }, overflowX: 'auto' }}>
+                    <DataTable<ProfileKnowledgeSource> columns={columns} rows={sourcesPage.sources} />
+                  </Box>
+                </React.Fragment>
               ) : (
                 <Typography color="text.secondary" variant="body2">
                   {t('dashboard.profiles.detail.sources.empty')}
@@ -330,10 +437,20 @@ export function Page(): React.JSX.Element {
           )}
         </Card>
       </Stack>
-      <Dialog fullWidth maxWidth="md" onClose={handleCloseUploadDialog} open={isUploadDialogOpen}>
-        <form onSubmit={handleSubmit(onSubmit)}>
+      <Dialog
+        PaperProps={{ sx: { maxHeight: { sm: 'calc(100% - 64px)', xs: 'calc(100dvh - 32px)' }, overflow: 'hidden' } }}
+        fullWidth
+        maxWidth="md"
+        onClose={handleCloseUploadDialog}
+        open={isUploadDialogOpen}
+      >
+        <Box
+          component="form"
+          onSubmit={handleSubmit(onSubmit)}
+          sx={{ display: 'flex', flex: '1 1 auto', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}
+        >
           <DialogTitle>{t('dashboard.profiles.detail.sources.uploadTitle')}</DialogTitle>
-          <DialogContent dividers>
+          <DialogContent dividers sx={{ flex: '1 1 auto', minHeight: 0 }}>
             <Stack spacing={2}>
               <Typography color="text.secondary" variant="body2">
                 {t('dashboard.profiles.detail.sources.uploadSubheader')}
@@ -385,7 +502,15 @@ export function Page(): React.JSX.Element {
               />
             </Stack>
           </DialogContent>
-          <DialogActions>
+          <DialogActions
+            sx={{
+              bgcolor: 'background.paper',
+              borderTop: '1px solid var(--mui-palette-divider)',
+              flex: '0 0 auto',
+              px: { sm: 3, xs: 2 },
+              py: 2,
+            }}
+          >
             <Button disabled={isSubmitting} onClick={handleCloseUploadDialog}>
               {t('dashboard.profiles.detail.sources.actions.cancel')}
             </Button>
@@ -393,7 +518,7 @@ export function Page(): React.JSX.Element {
               {t('dashboard.profiles.detail.sources.actions.save')}
             </Button>
           </DialogActions>
-        </form>
+        </Box>
       </Dialog>
       <Dialog
         fullWidth
@@ -406,7 +531,9 @@ export function Page(): React.JSX.Element {
         <DialogTitle>{t('dashboard.profiles.detail.sources.failure.title')}</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={2}>
-            <Alert color="error">{failureSource?.last_error ?? t('dashboard.profiles.detail.sources.failure.unknown')}</Alert>
+            <Alert color="error">
+              {failureSource?.last_error ?? t('dashboard.profiles.detail.sources.failure.unknown')}
+            </Alert>
             <Typography variant="body2">
               {t('dashboard.profiles.detail.sources.failure.stage', {
                 stage: failureSource?.processing_stage ?? t('dashboard.profiles.detail.sources.status.unknown'),

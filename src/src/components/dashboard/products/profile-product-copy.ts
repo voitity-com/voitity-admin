@@ -15,6 +15,7 @@ export const productCopy = {
       publish: 'Publish',
       save: 'Save product',
       setDestination: 'Set destination',
+      viewPublic: 'View public product',
     },
     bulk: {
       destinationTitle: 'Update destination for {{count}} products',
@@ -130,6 +131,7 @@ export const productCopy = {
       publish: 'Publicar',
       save: 'Guardar producto',
       setDestination: 'Cambiar destino',
+      viewPublic: 'Ver producto público',
     },
     bulk: {
       destinationTitle: 'Actualizar destino de {{count}} productos',

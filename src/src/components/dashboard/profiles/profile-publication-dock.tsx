@@ -27,16 +27,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { paths } from '@/paths';
-import type { Profile, ProfilePublication, ProfilePublicationRequirement } from '@/lib/profiles/api-client';
-import {
-  activateProfile,
-  deactivateProfile,
-  getProfile,
-  ProfileApiError,
-} from '@/lib/profiles/api-client';
-import { getPublicProfileUrl } from '@/lib/profiles/public-profile-url';
 import { logger } from '@/lib/default-logger';
 import { trackAnalyticsEvent } from '@/lib/google-analytics';
+import type { Profile, ProfilePublication, ProfilePublicationRequirement } from '@/lib/profiles/api-client';
+import { activateProfile, deactivateProfile, getProfile, ProfileApiError } from '@/lib/profiles/api-client';
+import { getPublicProfileUrl } from '@/lib/profiles/public-profile-url';
 import { usePathname } from '@/hooks/use-pathname';
 import { toast } from '@/components/core/toaster';
 
@@ -103,6 +98,7 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
   const requirements = publication.requirements ?? [];
   const completedRequirements = requirements.filter((requirement) => requirement.passed).length;
   const missingRequirements = requirements.filter((requirement) => !requirement.passed);
+  const nextMissingRequirement = missingRequirements[0] ?? null;
   const isPublished = Boolean(publication.is_published);
   const publicProfileUrl = isPublished && profile ? getPublicProfileUrl(profile) : null;
 
@@ -217,7 +213,14 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
   }
 
   const statusColor = error ? 'error' : isPublished ? 'success' : publication.can_activate ? 'warning' : 'error';
-  const statusLabel = getStatusLabel({ error, isLoading, isPublished, missingCount: missingRequirements.length, publication, t });
+  const statusLabel = getStatusLabel({
+    error,
+    isLoading,
+    isPublished,
+    missingCount: missingRequirements.length,
+    publication,
+    t,
+  });
 
   return (
     <React.Fragment>
@@ -257,11 +260,23 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
               {isLoading ? (
                 <CircularProgress size={18} />
               ) : error ? (
-                <WarningCircleIcon color="var(--mui-palette-error-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />
+                <WarningCircleIcon
+                  color="var(--mui-palette-error-main)"
+                  fontSize="var(--icon-fontSize-md)"
+                  weight="fill"
+                />
               ) : isPublished ? (
-                <CheckCircleIcon color="var(--mui-palette-success-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />
+                <CheckCircleIcon
+                  color="var(--mui-palette-success-main)"
+                  fontSize="var(--icon-fontSize-md)"
+                  weight="fill"
+                />
               ) : (
-                <RocketLaunchIcon color={`var(--mui-palette-${statusColor}-main)`} fontSize="var(--icon-fontSize-md)" weight="fill" />
+                <RocketLaunchIcon
+                  color={`var(--mui-palette-${statusColor}-main)`}
+                  fontSize="var(--icon-fontSize-md)"
+                  weight="fill"
+                />
               )}
             </Box>
             <Box sx={{ minWidth: 0 }}>
@@ -284,7 +299,13 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
                 </Link>
               ) : null}
               {!isLoading && !error && requirements.length > 0 ? (
-                <Typography color="text.secondary" component="div" noWrap sx={{ display: { sm: 'none' }, mt: 0.25 }} variant="caption">
+                <Typography
+                  color="text.secondary"
+                  component="div"
+                  noWrap
+                  sx={{ display: { sm: 'none' }, mt: 0.25 }}
+                  variant="caption"
+                >
                   {t('dashboard.profiles.detail.publicationDock.readyCount', {
                     passed: completedRequirements,
                     total: requirements.length,
@@ -294,7 +315,11 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
             </Box>
           </Stack>
 
-          <Stack direction="row" spacing={1} sx={{ display: { xs: 'none', sm: 'flex' }, flexWrap: 'wrap', gap: 1, minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ display: { xs: 'none', sm: 'flex' }, flexWrap: 'wrap', gap: 1, minWidth: 0 }}
+          >
             {requirements.map((requirement) => (
               <RequirementChip key={requirement.key} requirement={requirement} t={t} />
             ))}
@@ -346,7 +371,11 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
               {missingRequirements.map((requirement) => (
                 <ListItem disableGutters key={requirement.key}>
                   <ListItemIcon sx={{ minWidth: 34 }}>
-                    <XCircleIcon color="var(--mui-palette-error-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />
+                    <XCircleIcon
+                      color="var(--mui-palette-error-main)"
+                      fontSize="var(--icon-fontSize-md)"
+                      weight="fill"
+                    />
                   </ListItemIcon>
                   <ListItemText primary={getRequirementLabel(requirement.key, t)} />
                 </ListItem>
@@ -362,6 +391,19 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
           >
             {t('dashboard.profiles.actions.cancel')}
           </Button>
+          {nextMissingRequirement ? (
+            <Button
+              onClick={() => {
+                setMissingDialogOpen(false);
+                navigate(getRequirementHref(nextMissingRequirement.key, profileId));
+              }}
+              variant="contained"
+            >
+              {t('dashboard.profiles.detail.publicationDock.completeRequirement', {
+                requirement: getRequirementLabel(nextMissingRequirement.key, t),
+              })}
+            </Button>
+          ) : null}
         </DialogActions>
       </Dialog>
 
@@ -468,6 +510,22 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
       </Dialog>
     </React.Fragment>
   );
+}
+
+function getRequirementHref(key: string, profileId: string): string {
+  if (key === 'avatar') {
+    return paths.dashboard.profileDetails.avatar(profileId);
+  }
+
+  if (key === 'source') {
+    return paths.dashboard.profileDetails.sources(profileId);
+  }
+
+  if (key === 'voice') {
+    return paths.dashboard.profileDetails.voice(profileId);
+  }
+
+  return paths.dashboard.profileDetails.profile(profileId);
 }
 
 function RequirementChip({

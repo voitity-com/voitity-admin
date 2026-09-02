@@ -187,8 +187,14 @@ export function Page(): React.JSX.Element {
 
   const handleCreateOpenFromOnboarding = React.useCallback((): void => {
     setProfileOnboardingDismissed(true);
+
+    if (subscriptionStatus === 'missing') {
+      navigate(paths.dashboard.settings.billing);
+      return;
+    }
+
     handleCreateOpen();
-  }, [handleCreateOpen]);
+  }, [handleCreateOpen, navigate, subscriptionStatus]);
 
   React.useEffect(() => {
     if (
@@ -399,7 +405,7 @@ export function Page(): React.JSX.Element {
                   <CircularProgress />
                 </Stack>
               ) : (
-                <Box sx={{ overflowX: 'auto' }}>
+                <Box sx={{ overflowX: { sm: 'auto', xs: 'visible' } }}>
                   <ProfilesTable
                     onOpen={handleProfileOpen}
                     rows={filteredProfiles}
@@ -494,8 +500,18 @@ function ProfileCreationOnboarding({
     return (
       <MobileProfileOnboardingPanel
         action={
-          <Button fullWidth onClick={onCreateProfile} startIcon={<PlusIcon />} variant="contained">
-            {t('dashboard.profiles.list.onboarding.action')}
+          <Button
+            endIcon={isMissingPlan ? <ArrowRightIcon /> : undefined}
+            fullWidth
+            onClick={onCreateProfile}
+            startIcon={isMissingPlan ? undefined : <PlusIcon />}
+            variant="contained"
+          >
+            {t(
+              isMissingPlan
+                ? 'dashboard.profiles.list.onboarding.viewPlans'
+                : 'dashboard.profiles.list.onboarding.action'
+            )}
           </Button>
         }
         color="primary.main"
@@ -733,10 +749,10 @@ function MobileProfileOnboardingPanel({
         sx={(theme) => ({
           border: '1px solid rgba(255, 255, 255, 0.32)',
           borderRadius: 2,
-          bottom: 'calc(16px + env(safe-area-inset-bottom))',
+          bottom: 'calc(88px + env(safe-area-inset-bottom))',
           boxShadow: '0 24px 80px rgba(15, 23, 42, 0.42)',
           left: 16,
-          maxHeight: 'calc(100dvh - 96px)',
+          maxHeight: 'calc(100dvh - 176px)',
           overflowY: 'auto',
           p: 2.5,
           position: 'fixed',
