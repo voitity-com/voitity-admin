@@ -503,6 +503,13 @@ export const route: RouteObject = {
               },
             },
             {
+              path: 'template',
+              lazy: async () => {
+                const { Page } = await import('@/pages/dashboard/profile-details/template');
+                return { Component: Page };
+              },
+            },
+            {
               path: 'profile',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/profile');

@@ -17,9 +17,9 @@ import { useParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { logger } from '@/lib/default-logger';
 import type { ProfileQuality, ProfileQualityCheck } from '@/lib/profiles/api-client';
 import { getProfileQuality } from '@/lib/profiles/api-client';
-import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
 
@@ -80,7 +80,7 @@ export function Page(): React.JSX.Element {
                       <Typography variant="body2">
                         {quality.checks
                           .filter((check) => !check.passed)
-                          .map((check) => check.label)
+                          .map((check) => getQualityCheckLabel(check, t))
                           .join(', ')}
                       </Typography>
                     </Stack>
@@ -90,7 +90,9 @@ export function Page(): React.JSX.Element {
                 )}
                 <Stack spacing={1}>
                   <Stack direction="row" spacing={2} sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Typography variant="h5">{t('dashboard.profiles.detail.quality.score', { score: quality.score })}</Typography>
+                    <Typography variant="h5">
+                      {t('dashboard.profiles.detail.quality.score', { score: quality.score })}
+                    </Typography>
                     <Chip
                       color={quality.score >= 80 ? 'success' : quality.score >= 50 ? 'warning' : 'error'}
                       label={t('dashboard.profiles.detail.quality.scoreLabel', { score: quality.score })}
@@ -105,7 +107,10 @@ export function Page(): React.JSX.Element {
                     gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' },
                   }}
                 >
-                  <Metric label={t('dashboard.profiles.detail.quality.metrics.sources')} value={quality.counts.sources ?? 0} />
+                  <Metric
+                    label={t('dashboard.profiles.detail.quality.metrics.sources')}
+                    value={quality.counts.sources ?? 0}
+                  />
                   <Metric
                     label={t('dashboard.profiles.detail.quality.metrics.approvedFacts')}
                     value={quality.counts.approved_facts ?? 0}
@@ -115,7 +120,16 @@ export function Page(): React.JSX.Element {
                     value={quality.counts.indexed_facts ?? 0}
                   />
                 </Box>
-                <DataTable<ProfileQualityCheck> columns={getColumns(t)} rows={quality.checks} uniqueRowId={(row) => row.key} />
+                <Typography color="text.secondary" sx={{ display: { xs: 'block', sm: 'none' } }} variant="caption">
+                  {t('dashboard.profiles.detail.mobileTableHint')}
+                </Typography>
+                <Box sx={{ overflowX: 'auto' }}>
+                  <DataTable<ProfileQualityCheck>
+                    columns={getColumns(t)}
+                    rows={quality.checks}
+                    uniqueRowId={(row) => row.key}
+                  />
+                </Box>
               </Stack>
             </CardContent>
           ) : null}
@@ -155,7 +169,7 @@ function getColumns(t: (key: string, options?: Record<string, unknown>) => strin
       width: '130px',
     },
     {
-      field: 'label',
+      formatter: (check): string => getQualityCheckLabel(check, t),
       name: t('dashboard.profiles.detail.quality.fields.check'),
       width: '260px',
     },
@@ -175,6 +189,13 @@ function getColumns(t: (key: string, options?: Record<string, unknown>) => strin
       width: '100px',
     },
   ];
+}
+
+function getQualityCheckLabel(
+  check: ProfileQualityCheck,
+  t: (key: string, options?: Record<string, unknown>) => string
+): string {
+  return t(`dashboard.profiles.detail.quality.checks.${check.key}`, { defaultValue: check.label });
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {

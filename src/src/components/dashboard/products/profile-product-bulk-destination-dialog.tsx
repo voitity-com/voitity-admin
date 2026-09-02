@@ -94,6 +94,7 @@ export function ProfileProductBulkDestinationDialog({
                 setDestinationType(value);
               }
             }}
+            sx={{ flexDirection: { xs: 'column', sm: 'row' }, '& .MuiToggleButton-root': { width: '100%' } }}
             value={destinationType}
           >
             <ToggleButton value="whatsapp">
@@ -105,7 +106,7 @@ export function ProfileProductBulkDestinationDialog({
               {copy.destination.telegram}
             </ToggleButton>
           </ToggleButtonGroup>
-          <Stack direction="row" spacing={2}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <FormControl sx={{ flex: '0 0 130px' }}>
               <InputLabel>{copy.destination.countryCode}</InputLabel>
               <Select

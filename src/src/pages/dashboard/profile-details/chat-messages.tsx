@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
+import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
@@ -17,9 +18,9 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { paths } from '@/paths';
+import { logger } from '@/lib/default-logger';
 import type { ProfileChatMessage, ProfileChatMessagesPage } from '@/lib/profiles/api-client';
 import { listProfileChatMessages } from '@/lib/profiles/api-client';
-import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
 import { RouterLink } from '@/components/core/link';
@@ -145,12 +146,40 @@ export function Page(): React.JSX.Element {
             <React.Fragment>
               <CardContent sx={{ overflowX: 'auto' }}>
                 {messages.length ? (
-                  <DataTable<ProfileChatMessage>
-                    columns={getColumns({ language, t })}
-                    rows={messages}
-                    sx={{ minWidth: 760 }}
-                    uniqueRowId={(message) => getMessageId(message)}
-                  />
+                  <React.Fragment>
+                    <Stack spacing={1.5} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+                      {messages.map((message) => (
+                        <Box
+                          key={getMessageId(message)}
+                          sx={{ border: '1px solid var(--mui-palette-divider)', borderRadius: 1.5, p: 2 }}
+                        >
+                          <Stack spacing={1}>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+                            >
+                              <Typography sx={{ fontWeight: 700 }} variant="subtitle2">
+                                {formatRole(message, t)}
+                              </Typography>
+                              <Typography color="text.secondary" variant="caption">
+                                {formatDateTime(getFirstDisplayValue(message, MESSAGE_DATE_FIELDS), language)}
+                              </Typography>
+                            </Stack>
+                            <Typography sx={{ overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }} variant="body2">
+                              {getMessageContent(message)}
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      ))}
+                    </Stack>
+                    <DataTable<ProfileChatMessage>
+                      columns={getColumns({ language, t })}
+                      rows={messages}
+                      sx={{ display: { xs: 'none', sm: 'table' }, minWidth: 760 }}
+                      uniqueRowId={(message) => getMessageId(message)}
+                    />
+                  </React.Fragment>
                 ) : (
                   <Typography color="text.secondary" variant="body2">
                     {t('dashboard.profiles.detail.chats.messages.empty')}

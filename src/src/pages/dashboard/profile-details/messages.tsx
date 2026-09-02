@@ -603,7 +603,11 @@ function ConversationMessageCard({
     <Card>
       <CardHeader
         action={
-          <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ flexWrap: 'wrap', justifyContent: { sm: 'flex-end', xs: 'flex-start' } }}
+          >
             <Chip
               color={message.enabled ? 'success' : 'default'}
               label={
@@ -629,6 +633,13 @@ function ConversationMessageCard({
           </Stack>
         }
         subheader={description}
+        sx={{
+          alignItems: { sm: 'flex-start', xs: 'stretch' },
+          flexDirection: { sm: 'row', xs: 'column' },
+          gap: { sm: 2, xs: 1.5 },
+          '& .MuiCardHeader-action': { alignSelf: { sm: 'flex-start', xs: 'stretch' }, m: 0 },
+          '& .MuiCardHeader-content': { minWidth: 0 },
+        }}
         title={title}
       />
       <CardContent>

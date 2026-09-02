@@ -17,10 +17,10 @@ import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 
 import { paths } from '@/paths';
+import { logger } from '@/lib/default-logger';
 import type { ProfileQuality } from '@/lib/profiles/api-client';
 import { getProfileQuality } from '@/lib/profiles/api-client';
 import { profileQualityRefreshEvent } from '@/lib/profiles/profile-quality-events';
-import { logger } from '@/lib/default-logger';
 import { usePathname } from '@/hooks/use-pathname';
 import { RouterLink } from '@/components/core/link';
 
@@ -120,6 +120,7 @@ export function ProfileQualityDock(): React.JSX.Element | null {
         border: '1px solid var(--mui-palette-divider)',
         borderRadius: 2,
         bottom: 'calc(16px + env(safe-area-inset-bottom))',
+        display: { xs: 'none', sm: 'block' },
         left: { lg: 'calc(var(--SideNav-width, 0px) + 24px)', sm: 24, xs: 12 },
         overflow: 'hidden',
         position: 'fixed',
@@ -154,9 +155,17 @@ export function ProfileQualityDock(): React.JSX.Element | null {
               {isLoading ? (
                 <CircularProgress size={18} />
               ) : error ? (
-                <WarningCircleIcon color="var(--mui-palette-error-main)" fontSize="var(--icon-fontSize-md)" weight="fill" />
+                <WarningCircleIcon
+                  color="var(--mui-palette-error-main)"
+                  fontSize="var(--icon-fontSize-md)"
+                  weight="fill"
+                />
               ) : (
-                <GaugeIcon color={`var(--mui-palette-${statusColor}-main)`} fontSize="var(--icon-fontSize-md)" weight="fill" />
+                <GaugeIcon
+                  color={`var(--mui-palette-${statusColor}-main)`}
+                  fontSize="var(--icon-fontSize-md)"
+                  weight="fill"
+                />
               )}
             </Box>
             <Box sx={{ minWidth: 0 }}>
@@ -189,7 +198,13 @@ export function ProfileQualityDock(): React.JSX.Element | null {
           aria-label={t('dashboard.profiles.detail.quality.dock.viewDetails')}
           component={RouterLink}
           href={qualityHref}
-          sx={{ alignSelf: 'center', display: { xs: 'inline-flex', sm: 'none' }, height: 40, justifySelf: 'end', width: 40 }}
+          sx={{
+            alignSelf: 'center',
+            display: { xs: 'inline-flex', sm: 'none' },
+            height: 40,
+            justifySelf: 'end',
+            width: 40,
+          }}
         >
           <ArrowRightIcon />
         </IconButton>
@@ -198,7 +213,11 @@ export function ProfileQualityDock(): React.JSX.Element | null {
           endIcon={<ArrowRightIcon />}
           href={qualityHref}
           size="small"
-          sx={{ display: { xs: 'none', sm: 'inline-flex' }, justifySelf: { sm: 'stretch', md: 'end' }, whiteSpace: 'nowrap' }}
+          sx={{
+            display: { xs: 'none', sm: 'inline-flex' },
+            justifySelf: { sm: 'stretch', md: 'end' },
+            whiteSpace: 'nowrap',
+          }}
           variant="outlined"
         >
           {t('dashboard.profiles.detail.quality.dock.viewDetails')}

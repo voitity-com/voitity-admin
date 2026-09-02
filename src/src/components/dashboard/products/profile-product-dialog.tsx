@@ -203,10 +203,20 @@ export function ProfileProductDialog({
   );
 
   return (
-    <Dialog fullWidth maxWidth="sm" onClose={isSubmitting ? undefined : onClose} open={open}>
-      <form onSubmit={handleSubmit(submit)}>
+    <Dialog
+      PaperProps={{ sx: { maxHeight: { xs: 'calc(100dvh - 32px)', sm: 'calc(100% - 64px)' }, overflow: 'hidden' } }}
+      fullWidth
+      maxWidth="sm"
+      onClose={isSubmitting ? undefined : onClose}
+      open={open}
+    >
+      <Box
+        component="form"
+        onSubmit={handleSubmit(submit)}
+        sx={{ display: 'flex', flex: '1 1 auto', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}
+      >
         <DialogTitle>{product ? copy.form.editTitle : copy.form.addTitle}</DialogTitle>
-        <DialogContent dividers>
+        <DialogContent dividers sx={{ flex: '1 1 auto', minHeight: 0 }}>
           <Stack spacing={2.5}>
             <Stack direction={{ sm: 'row', xs: 'column' }} spacing={2}>
               <Box
@@ -284,6 +294,7 @@ export function ProfileProductDialog({
                       field.onChange(value);
                     }
                   }}
+                  sx={{ flexDirection: { xs: 'column', sm: 'row' }, '& .MuiToggleButton-root': { width: '100%' } }}
                   value={field.value}
                 >
                   <ToggleButton value="external_url">
@@ -385,7 +396,15 @@ export function ProfileProductDialog({
             ) : null}
           </Stack>
         </DialogContent>
-        <DialogActions>
+        <DialogActions
+          sx={{
+            bgcolor: 'background.paper',
+            borderTop: '1px solid var(--mui-palette-divider)',
+            flex: '0 0 auto',
+            px: { sm: 3, xs: 2 },
+            py: 2,
+          }}
+        >
           <Button disabled={isSubmitting} onClick={onClose}>
             {copy.actions.cancel}
           </Button>
@@ -393,7 +412,7 @@ export function ProfileProductDialog({
             {copy.actions.save}
           </Button>
         </DialogActions>
-      </form>
+      </Box>
     </Dialog>
   );
 }

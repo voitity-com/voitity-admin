@@ -19,10 +19,15 @@ import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { z as zod } from 'zod';
 
-import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 import { getBrowserLanguage, getSupportedLanguage, supportedLanguages } from '@/lib/i18n';
+import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 import { applyProfileFormApiErrors } from '@/lib/profiles/profile-form-errors';
-import { isProfileGenre, normalizeProfileGenre, profileGenreValues, toProfileGenre } from '@/lib/profiles/profile-genre';
+import {
+  isProfileGenre,
+  normalizeProfileGenre,
+  profileGenreValues,
+  toProfileGenre,
+} from '@/lib/profiles/profile-genre';
 
 interface Values {
   alias: string;
@@ -48,7 +53,10 @@ function createSchema(t: (key: string) => string): zod.ZodType<Values> {
     locale: zod
       .string()
       .min(1, t('dashboard.profiles.form.validation.localeRequired'))
-      .refine((value) => supportedLanguages.includes(value as (typeof supportedLanguages)[number]), t('dashboard.profiles.form.validation.localeInvalid')),
+      .refine(
+        (value) => supportedLanguages.includes(value as (typeof supportedLanguages)[number]),
+        t('dashboard.profiles.form.validation.localeInvalid')
+      ),
     name: zod.string().min(1, t('dashboard.profiles.form.validation.nameRequired')).max(100),
     personality: zod.string().min(1, t('dashboard.profiles.form.validation.personalityRequired')).max(200),
   });
@@ -106,14 +114,24 @@ export function ProfileFormDialog({
   );
 
   return (
-    <Dialog fullWidth maxWidth="sm" onClose={onClose} open={open}>
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
-        <Box sx={{ p: 3 }}>
+    <Dialog
+      PaperProps={{ sx: { maxHeight: { xs: 'calc(100dvh - 32px)', sm: 'calc(100% - 64px)' }, overflow: 'hidden' } }}
+      fullWidth
+      maxWidth="sm"
+      onClose={onClose}
+      open={open}
+    >
+      <Box
+        component="form"
+        onSubmit={handleSubmit(handleFormSubmit)}
+        sx={{ display: 'flex', flex: '1 1 auto', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}
+      >
+        <Box sx={{ flex: '0 0 auto', p: { sm: 3, xs: 2.5 } }}>
           <Typography variant="h5">
             {profile ? t('dashboard.profiles.form.editTitle') : t('dashboard.profiles.form.createTitle')}
           </Typography>
         </Box>
-        <DialogContent>
+        <DialogContent sx={{ flex: '1 1 auto', minHeight: 0 }}>
           <Stack spacing={2}>
             <Controller
               control={control}
@@ -205,7 +223,14 @@ export function ProfileFormDialog({
             />
           </Stack>
         </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
+        <DialogActions
+          sx={{
+            bgcolor: 'background.paper',
+            borderTop: '1px solid var(--mui-palette-divider)',
+            flex: '0 0 auto',
+            p: { sm: 3, xs: 2 },
+          }}
+        >
           <Button color="secondary" disabled={isSubmitting} onClick={onClose} type="button">
             {t('dashboard.profiles.actions.cancel')}
           </Button>
@@ -213,7 +238,7 @@ export function ProfileFormDialog({
             {profile ? t('dashboard.profiles.actions.saveChanges') : t('dashboard.profiles.actions.createProfile')}
           </Button>
         </DialogActions>
-      </form>
+      </Box>
     </Dialog>
   );
 }

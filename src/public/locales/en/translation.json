@@ -1765,6 +1765,7 @@
         "errors": {
           "generic": "Something went wrong"
         },
+        "mobileTableHint": "Swipe horizontally to see all data.",
         "integrations": {
           "disconnectConfirmation": {
             "cancel": "Cancel",
@@ -2010,6 +2011,7 @@
         "settings": "Settings",
         "socialNetworks": "Social Networks",
         "sources": "Sources",
+        "template": "Template",
         "voice": "Voice"
       },
           "messages": {
@@ -2142,6 +2144,9 @@
             "viewProfiles": "View profiles"
           },
           "blocked": "{{count}} missing requirements",
+          "blocked_one": "{{count}} missing requirement",
+          "blocked_other": "{{count}} missing requirements",
+          "completeRequirement": "Complete: {{requirement}}",
           "confirmDialog": {
             "activateConfirm": "Activate",
             "activateDescription": "The profile will be available on its public page and able to answer visitors.",
@@ -2325,6 +2330,21 @@
         }
       },
       "quality": {
+        "checks": {
+          "about": "About information",
+          "campaigns": "Campaigns or work",
+          "cv": "Reviewed resume",
+          "description": "Profile description",
+          "experience": "Experience",
+          "instagram": "Instagram link",
+          "personality": "Personality",
+          "portfolio": "Portfolio",
+          "projects": "Projects",
+          "skills": "Skills",
+          "social": "At least one social network",
+          "source": "Reviewed source",
+          "topics": "Topics"
+        },
         "fields": {
           "actual": "Actual",
           "check": "Check",
@@ -2343,6 +2363,8 @@
           "error": "Could not load quality",
           "loading": "Checking profile quality",
           "pending": "{{count}} pending checks",
+          "pending_one": "{{count}} pending check",
+          "pending_other": "{{count}} pending checks",
           "title": "Profile quality",
           "viewDetails": "View quality"
         },
@@ -2598,7 +2620,7 @@
 	            "voiceAutoplayEnabled": "Start with audio on",
 	            "voiceAutoplayHelper": "Visitors enter with audio enabled; if they mute it, audio is not generated until they turn it back on.",
 	            "voiceEnabled": "Enable profile voice",
-	            "voiceEnabledHelper": "When off, the profile replies only by text and does not generate ElevenLabs audio.",
+            "voiceEnabledHelper": "When off, the profile replies only by text and does not generate audio.",
 	            "voiceName": "Voice name"
 	          },
           "languages": {
@@ -2726,7 +2748,8 @@
           "eyebrow": "First profile",
           "mobileDescriptionWithPlan": "Start by creating the profile with name, alias, description, and style. Then you can complete avatar, voice, and sources.",
           "mobileDescriptionWithoutPlan": "Choose a plan first. Then you can create the profile and complete avatar, voice, and sources.",
-          "title": "Create your first profile"
+          "title": "Create your first profile",
+          "viewPlans": "View plans"
         },
         "completionOnboarding": {
           "description": "This profile is not ready to publish yet. Open it and complete the missing requirements before activating it.",

@@ -25,6 +25,7 @@ import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
+import { Palette as PaletteIcon } from '@phosphor-icons/react/dist/ssr/Palette';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr/ShareNetwork';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
@@ -52,6 +53,7 @@ const icons = {
   settings: GearIcon,
   socialNetworks: ShareNetworkIcon,
   sources: FileIcon,
+  template: PaletteIcon,
   voice: MicrophoneIcon,
 } as Record<string, Icon>;
 
@@ -111,6 +113,12 @@ export function ProfileSideNav(): React.JSX.Element {
 
   const items = React.useMemo<NavEntry[]>(
     () => [
+      {
+        key: 'template',
+        title: t('dashboard.profiles.detail.nav.template'),
+        href: paths.dashboard.profileDetails.template(profileId),
+        icon: 'template',
+      },
       {
         key: 'profile',
         title: t('dashboard.profiles.detail.nav.profile'),
@@ -209,11 +217,13 @@ export function ProfileSideNav(): React.JSX.Element {
       id="profile-detail-side-nav"
       spacing={1}
       sx={{
+        left: { xs: 'var(--Content-paddingX)', md: 'auto' },
         flex: '0 0 auto',
-        position: { xs: 'sticky', md: 'sticky' },
-        top: { xs: '64px', md: '64px' },
-        zIndex: { xs: 10, md: 'auto' },
-        width: { xs: '100%', md: '240px' },
+        position: { xs: 'fixed', md: 'sticky' },
+        right: { xs: 'var(--Content-paddingX)', md: 'auto' },
+        top: { xs: 'var(--MainNav-height)', md: '64px' },
+        zIndex: { xs: 'calc(var(--MainNav-zIndex) - 1)', md: 'auto' },
+        width: { xs: 'auto', md: '240px' },
       }}
     >
       <MobileProfileNav
@@ -277,7 +287,7 @@ function isNavGroup(item: NavEntry): item is NavGroupConfig {
 function getActiveNavContext(items: NavEntry[], pathname: string): { item: NavItemConfig; parentTitle?: string } {
   for (const entry of items) {
     if (isNavGroup(entry)) {
-      const activeChild = entry.children.find((item) => isNavItemActive({ href: item.href, pathname }));
+      const activeChild = entry.children.find((item) => isProfileNavItemActive(item, pathname));
 
       if (activeChild) {
         return { item: activeChild, parentTitle: entry.title };
@@ -286,12 +296,35 @@ function getActiveNavContext(items: NavEntry[], pathname: string): { item: NavIt
       continue;
     }
 
-    if (isNavItemActive({ href: entry.href, pathname })) {
+    if (isProfileNavItemActive(entry, pathname)) {
       return { item: entry };
     }
   }
 
-  return { item: flattenNavItems(items)[0] };
+  const flatItems = flattenNavItems(items);
+  const profileItem = flatItems.find((item) => item.key === 'profile');
+
+  return { item: profileItem ?? flatItems[0] };
+}
+
+function isProfileNavItemActive(item: NavItemConfig, pathname: string): boolean {
+  if (isNavItemActive({ href: item.href, pathname })) {
+    return true;
+  }
+
+  if (item.key === 'profile') {
+    return pathname === item.href.replace(/\/profile$/, '');
+  }
+
+  if (item.key === 'chats') {
+    return pathname.startsWith(`${item.href}/`);
+  }
+
+  if (item.key === 'insights') {
+    return pathname.startsWith(`${item.href.replace(/\/dashboard$/, '')}/`);
+  }
+
+  return false;
 }
 
 function flattenNavItems(items: NavEntry[]): NavItemConfig[] {
@@ -402,7 +435,7 @@ function MobileProfileNav({
 }
 
 function MobileNavGroupHeader({ item, pathname }: { item: NavGroupConfig; pathname: string }): React.JSX.Element {
-  const active = item.children.some((child) => isNavItemActive({ href: child.href, pathname }));
+  const active = item.children.some((child) => isProfileNavItemActive(child, pathname));
   const Icon = icons[item.icon];
 
   return (
@@ -444,7 +477,7 @@ function MobileNavItem({
   onClose: () => void;
   pathname: string;
 }): React.JSX.Element {
-  const active = isNavItemActive({ href: item.href, pathname });
+  const active = isProfileNavItemActive(item, pathname);
   const Icon = icons[item.icon];
 
   return (
@@ -475,7 +508,7 @@ function MobileNavItem({
 }
 
 function NavGroup({ children, icon, includeItemIds = true, pathname, title }: NavGroupProps): React.JSX.Element {
-  const active = children.some((item) => isNavItemActive({ href: item.href, pathname }));
+  const active = children.some((item) => isProfileNavItemActive(item, pathname));
   const Icon = icons[icon];
 
   return (
@@ -533,7 +566,7 @@ function NavItem({
   pathname,
   title,
 }: NavItemProps): React.JSX.Element {
-  const active = isNavItemActive({ href, pathname });
+  const active = isProfileNavItemActive({ href, icon, key: itemKey ?? '', title }, pathname);
   const Icon = icons[icon];
   const navItemId = includeId && itemKey ? `profile-detail-nav-${itemKey}` : undefined;
 

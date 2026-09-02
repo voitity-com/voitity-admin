@@ -2,12 +2,14 @@
 
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
+import ButtonBase from '@mui/material/ButtonBase';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 import CircularProgress from '@mui/material/CircularProgress';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { ArrowRight as ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -15,9 +17,9 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { paths } from '@/paths';
+import { logger } from '@/lib/default-logger';
 import type { ProfileChat, ProfileChatsPage } from '@/lib/profiles/api-client';
 import { listProfileChats } from '@/lib/profiles/api-client';
-import { logger } from '@/lib/default-logger';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
 import { ProfileChatPagination } from '@/components/dashboard/profiles/profile-chat-pagination';
@@ -101,19 +103,79 @@ export function Page(): React.JSX.Element {
             <React.Fragment>
               <CardContent>
                 {chatsPage.chats.length ? (
-                  <DataTable<ProfileChat>
-                    columns={getColumns({ language, t })}
-                    hover
-                    onClick={(_, chat) => {
-                      const chatId = getChatId(chat);
+                  <React.Fragment>
+                    <Stack spacing={1.5} sx={{ display: { xs: 'flex', sm: 'none' } }}>
+                      {chatsPage.chats.map((chat) => {
+                        const chatId = getChatId(chat);
 
-                      if (chatId) {
-                        navigate(paths.dashboard.profileDetails.chat(profileId, chatId));
-                      }
-                    }}
-                    rows={chatsPage.chats}
-                    uniqueRowId={getChatRowId}
-                  />
+                        return (
+                          <ButtonBase
+                            disabled={!chatId}
+                            key={getChatRowId(chat)}
+                            onClick={() => {
+                              if (chatId) {
+                                navigate(paths.dashboard.profileDetails.chat(profileId, chatId));
+                              }
+                            }}
+                            sx={{
+                              alignItems: 'stretch',
+                              border: '1px solid var(--mui-palette-divider)',
+                              borderRadius: 1.5,
+                              display: 'flex',
+                              p: 2,
+                              textAlign: 'left',
+                              width: '100%',
+                            }}
+                          >
+                            <Stack spacing={1} sx={{ flex: '1 1 auto', minWidth: 0 }}>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{ alignItems: 'center', justifyContent: 'space-between' }}
+                              >
+                                <Typography sx={{ fontWeight: 700 }} variant="subtitle2">
+                                  {t('dashboard.profiles.detail.chats.messages.title', { chatId: chatId ?? '-' })}
+                                </Typography>
+                                <ArrowRightIcon />
+                              </Stack>
+                              <Typography color="text.secondary" variant="body2">
+                                {t('dashboard.profiles.detail.chats.fields.createdAt')}:{' '}
+                                {formatDate(chat.created_at, language)}
+                              </Typography>
+                              <Typography color="text.secondary" variant="body2">
+                                {t('dashboard.profiles.detail.chats.fields.lastMessage')}:{' '}
+                                {formatDate(chat.last_message_at, language)}
+                              </Typography>
+                              <Stack direction="row" spacing={2}>
+                                <Typography color="text.secondary" variant="caption">
+                                  {t('dashboard.profiles.detail.chats.fields.api')}:{' '}
+                                  {formatNumber(chat.api_messages_count)}
+                                </Typography>
+                                <Typography color="text.secondary" variant="caption">
+                                  {t('dashboard.profiles.detail.chats.fields.ai')}:{' '}
+                                  {formatNumber(chat.openai_messages_count)}
+                                </Typography>
+                              </Stack>
+                            </Stack>
+                          </ButtonBase>
+                        );
+                      })}
+                    </Stack>
+                    <DataTable<ProfileChat>
+                      columns={getColumns({ language, t })}
+                      hover
+                      onClick={(_, chat) => {
+                        const chatId = getChatId(chat);
+
+                        if (chatId) {
+                          navigate(paths.dashboard.profileDetails.chat(profileId, chatId));
+                        }
+                      }}
+                      rows={chatsPage.chats}
+                      sx={{ display: { xs: 'none', sm: 'table' } }}
+                      uniqueRowId={getChatRowId}
+                    />
+                  </React.Fragment>
                 ) : (
                   <Typography color="text.secondary" variant="body2">
                     {t('dashboard.profiles.detail.chats.empty')}
