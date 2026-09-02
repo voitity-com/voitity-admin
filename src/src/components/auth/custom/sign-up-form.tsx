@@ -22,7 +22,14 @@ import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
-import { buildAuthPathWithCheckoutIntent, persistCheckoutIntentFromSearch } from '@/lib/billing/checkout-intent';
+import {
+  buildAuthPathWithCheckoutIntent,
+  getCheckoutAnalyticsParameters,
+  getCheckoutIntentFromSearch,
+  getStoredCheckoutIntent,
+  persistCheckoutIntentFromSearch,
+} from '@/lib/billing/checkout-intent';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import { getSupportedLanguage } from '@/lib/i18n';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
@@ -54,6 +61,7 @@ export function SignUpForm(): React.JSX.Element {
   const [searchParams] = useSearchParams();
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
   const previousLanguageRef = React.useRef(currentLanguage);
+  const signupStartedRef = React.useRef(false);
 
   const [isPending, setIsPending] = React.useState<boolean>(false);
   const [showPassword, setShowPassword] = React.useState<boolean>(false);
@@ -61,6 +69,22 @@ export function SignUpForm(): React.JSX.Element {
   const signInHref = React.useMemo(
     () => buildAuthPathWithCheckoutIntent(paths.auth.custom.signIn, searchParams),
     [searchParams]
+  );
+  const analyticsParameters = React.useMemo(
+    () => getCheckoutAnalyticsParameters(getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent()),
+    [searchParams]
+  );
+
+  const markSignupStarted = React.useCallback(
+    (method: 'email' | 'google'): void => {
+      if (signupStartedRef.current) {
+        return;
+      }
+
+      signupStartedRef.current = true;
+      trackAnalyticsEvent('signup_started', { ...analyticsParameters, method });
+    },
+    [analyticsParameters]
   );
 
   const schema = React.useMemo(
@@ -113,6 +137,7 @@ export function SignUpForm(): React.JSX.Element {
   }, [searchParams]);
 
   const handleGoogleAuth = React.useCallback(async (): Promise<void> => {
+    markSignupStarted('google');
     setIsPending(true);
 
     try {
@@ -128,6 +153,7 @@ export function SignUpForm(): React.JSX.Element {
         throw new Error(error);
       }
 
+      trackAnalyticsEvent('sign_up', { ...analyticsParameters, method: 'google' });
       await checkSession?.();
     } catch (err) {
       const message = err instanceof Error ? err.message : t('auth.signUp.errors.googleAuth');
@@ -136,10 +162,11 @@ export function SignUpForm(): React.JSX.Element {
     } finally {
       setIsPending(false);
     }
-  }, [checkSession, currentLanguage, setError, t]);
+  }, [analyticsParameters, checkSession, currentLanguage, markSignupStarted, setError, t]);
 
   const onSubmit = React.useCallback(
     async (values: Values): Promise<void> => {
+      markSignupStarted('email');
       setIsPending(true);
       setSuccessMessage(null);
       clearErrors('root');
@@ -158,13 +185,14 @@ export function SignUpForm(): React.JSX.Element {
         return;
       }
 
+      trackAnalyticsEvent('sign_up', { ...analyticsParameters, method: 'email' });
       const feedback = t('auth.signUp.verificationSent');
       setSuccessMessage(feedback);
       reset(defaultValues);
       toast.success(t('auth.signUp.verificationSentToast'));
       setIsPending(false);
     },
-    [clearErrors, currentLanguage, reset, setError, t]
+    [analyticsParameters, clearErrors, currentLanguage, markSignupStarted, reset, setError, t]
   );
 
   return (
@@ -201,7 +229,12 @@ export function SignUpForm(): React.JSX.Element {
           )}
         </Stack>
         <Divider>{t('auth.signUp.divider')}</Divider>
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form
+          onFocusCapture={() => {
+            markSignupStarted('email');
+          }}
+          onSubmit={handleSubmit(onSubmit)}
+        >
           <Stack spacing={2}>
             <Controller
               control={control}

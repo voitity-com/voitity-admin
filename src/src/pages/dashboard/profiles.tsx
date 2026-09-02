@@ -29,6 +29,7 @@ import { config } from '@/config';
 import { paths } from '@/paths';
 import { getProfileAvatar } from '@/lib/avatar/api-client';
 import { logger } from '@/lib/default-logger';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 import { createProfile, listProfiles, ProfileApiError } from '@/lib/profiles/api-client';
 import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
@@ -226,6 +227,7 @@ export function Page(): React.JSX.Element {
     async (payload: ProfilePayload): Promise<void> => {
       try {
         await createProfile(payload);
+        trackAnalyticsEvent('profile_created', { creation_surface: 'profiles_dashboard' });
         toast.success(t('dashboard.profiles.list.toasts.created'));
 
         handleFormClose();

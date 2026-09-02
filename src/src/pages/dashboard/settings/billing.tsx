@@ -16,10 +16,12 @@ import { config } from '@/config';
 import { paths } from '@/paths';
 import {
   clearCheckoutIntent,
+  getCheckoutAnalyticsParameters,
   getCheckoutIntentFromSearch,
   getStoredCheckoutIntent,
 } from '@/lib/billing/checkout-intent';
 import { logger } from '@/lib/default-logger';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import { getSupportedLanguage } from '@/lib/i18n';
 import {
   addPaymentMethod,
@@ -34,6 +36,7 @@ import {
   tokenizeWompiCard,
   type PaymentMethod,
   type PaymentMethodPayload,
+  type PaymentOrder,
   type WompiPaymentSourceSetup,
 } from '@/lib/payments/api-client';
 import type {
@@ -113,6 +116,10 @@ export function Page(): React.JSX.Element {
     () => getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent(),
     [searchParams]
   );
+  const checkoutAnalyticsParameters = React.useMemo(
+    () => getCheckoutAnalyticsParameters(checkoutIntent),
+    [checkoutIntent]
+  );
 
   React.useEffect(() => {
     if (!billing || !checkoutIntent || !hasActiveSubscriptionData(billing.limits)) return;
@@ -129,6 +136,10 @@ export function Page(): React.JSX.Element {
       'utm_campaign',
       'utm_term',
       'utm_content',
+      'gclid',
+      'gbraid',
+      'wbraid',
+      'landing_variant',
     ].forEach((key) => {
       nextSearchParams.delete(key);
     });
@@ -352,11 +363,30 @@ export function Page(): React.JSX.Element {
           : { payment_source: paymentSourcePayload };
 
         if (billing?.plans.trial?.available) {
-          await startSubscriptionTrial({
+          const result = await startSubscriptionTrial({
             ...paymentMethodSelection,
             ...(checkoutIntent?.attribution ? { attribution: checkoutIntent.attribution } : {}),
             plan: plan.id,
             terms_accepted: true,
+          });
+
+          const paymentType = trialPaymentMethod.paymentSourceId ? 'saved_card' : 'new_card';
+          const conversionParameters = {
+            ...checkoutAnalyticsParameters,
+            billing_cycle: normalizeBillingInterval(plan.interval),
+            currency: plan.currency,
+            payment_type: paymentType,
+            plan: plan.id,
+            trial_days: billing.plans.trial.days,
+            value: plan.price_usd ?? undefined,
+          };
+
+          trackAnalyticsEvent('add_payment_info', conversionParameters);
+          trackAnalyticsEvent('trial_started', {
+            ...conversionParameters,
+            plan_value: plan.price_usd ?? undefined,
+            transaction_id: getPaymentTransactionId(result.payment_order),
+            value: 0,
           });
 
           toast.success(t('dashboard.settings.billing.toasts.trialStarted'));
@@ -371,7 +401,22 @@ export function Page(): React.JSX.Element {
           terms_accepted: true,
         });
 
+        const conversionParameters = {
+          ...checkoutAnalyticsParameters,
+          billing_cycle: normalizeBillingInterval(plan.interval),
+          currency: plan.currency,
+          payment_type: trialPaymentMethod.paymentSourceId ? 'saved_card' : 'new_card',
+          plan: plan.id,
+          value: plan.price_usd ?? undefined,
+        };
+
+        trackAnalyticsEvent('add_payment_info', conversionParameters);
+
         if (result.payment_order?.status === 'approved') {
+          trackAnalyticsEvent('purchase', {
+            ...conversionParameters,
+            transaction_id: getPaymentTransactionId(result.payment_order),
+          });
           toast.success(t('dashboard.settings.billing.toasts.subscriptionStarted'));
         } else if (result.payment_order?.status === 'pending') {
           toast(t('dashboard.settings.billing.toasts.paymentPending'));
@@ -389,7 +434,7 @@ export function Page(): React.JSX.Element {
         setIsCheckoutPending(false);
       }
     },
-    [billing?.plans.trial?.available, checkoutIntent?.attribution, loadBilling, navigate, t, trialPaymentSourceSetup]
+    [billing?.plans.trial, checkoutAnalyticsParameters, checkoutIntent?.attribution, loadBilling, navigate, t, trialPaymentSourceSetup]
   );
 
   const handleCheckoutErrorClear = React.useCallback((): void => {
@@ -401,7 +446,7 @@ export function Page(): React.JSX.Element {
       action: 'cancel-renewal' | 'cancel-trial' | 'reactivate-renewal',
       request: () => Promise<unknown>,
       successMessage: string
-    ): Promise<void> => {
+    ): Promise<boolean> => {
       setError('');
       setPendingAction(action);
 
@@ -409,11 +454,13 @@ export function Page(): React.JSX.Element {
         await request();
         toast.success(successMessage);
         await loadBilling();
+        return true;
       } catch (err) {
         logger.error(err);
         const message = getErrorMessage(err, t('dashboard.settings.billing.errors.action'));
         setError(message);
         toast.error(message);
+        return false;
       } finally {
         setPendingAction(null);
       }
@@ -472,12 +519,16 @@ export function Page(): React.JSX.Element {
   }, [paymentMethodDialogOrigin]);
 
   const handleCancelTrial = React.useCallback(async (): Promise<void> => {
-    await runSubscriptionAction(
+    const cancelled = await runSubscriptionAction(
       'cancel-trial',
       cancelSubscriptionTrial,
       t('dashboard.settings.billing.toasts.trialCancelled')
     );
-  }, [runSubscriptionAction, t]);
+
+    if (cancelled) {
+      trackAnalyticsEvent('trial_cancelled', checkoutAnalyticsParameters);
+    }
+  }, [checkoutAnalyticsParameters, runSubscriptionAction, t]);
 
   const handleCancelRenewal = React.useCallback(async (): Promise<void> => {
     await runSubscriptionAction(
@@ -706,6 +757,20 @@ function normalizeCardYear(value: string): number {
   const year = Number(value);
 
   return year < 100 ? 2000 + year : year;
+}
+
+function normalizeBillingInterval(value: string): 'annual' | 'monthly' {
+  const normalized = value.toLowerCase();
+
+  return ['annual', 'annually', 'year', 'yearly'].includes(normalized) ? 'annual' : 'monthly';
+}
+
+function getPaymentTransactionId(paymentOrder?: PaymentOrder): string | undefined {
+  if (!paymentOrder) {
+    return undefined;
+  }
+
+  return String(paymentOrder.reference ?? paymentOrder.provider_transaction_id ?? paymentOrder.id);
 }
 
 function formatCreditBalance(value: number, language: string): string {

@@ -48,8 +48,9 @@ import { getSupportedLanguage } from '@/lib/i18n';
 import { NoSsr } from '@/components/core/no-ssr';
 import { RouterLink } from '@/components/core/link';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
+import { getCheckoutAnalyticsParameters, type CheckoutIntent } from '@/lib/billing/checkout-intent';
 import { logger } from '@/lib/default-logger';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import { getUsdCopRate } from '@/lib/payments/api-client';
 import type {
   PaymentMethod,
@@ -211,6 +212,26 @@ export function SubscriptionBilling({
   const checkoutCycle = cycles.find((cycle) => cycle.planId === checkoutPlanId && !cycle.disabled);
   const selectedPlan = checkoutCycle?.plan;
   const canStartCheckout = Boolean(!hasActiveSubscription && acceptedTerms && selectedPlan && onStartCheckout && !isCheckoutPending);
+  const trackCheckoutOpened = React.useCallback(
+    (planId: string, checkoutOrigin: 'campaign_intent' | 'plan_card'): void => {
+      const cycle = cycles.find((item) => item.planId === planId && !item.disabled);
+
+      if (!cycle?.plan) {
+        return;
+      }
+
+      trackAnalyticsEvent('begin_checkout', {
+        ...getCheckoutAnalyticsParameters(checkoutIntent ?? null),
+        billing_cycle: cycle.interval,
+        checkout_origin: checkoutOrigin,
+        currency: cycle.currency,
+        plan: cycle.plan.id,
+        trial_days: cycle.trial?.days,
+        value: cycle.priceUsd,
+      });
+    },
+    [checkoutIntent, cycles]
+  );
 
   React.useEffect(() => {
     if (hasActiveSubscription || !checkoutIntent) {
@@ -230,6 +251,7 @@ export function SubscriptionBilling({
     }
 
     handledCheckoutIntentRef.current = intentKey;
+    trackCheckoutOpened(intendedPlanId, 'campaign_intent');
 
     if (checkoutPlanId !== intendedPlanId) {
       setAcceptedTerms(false);
@@ -237,13 +259,14 @@ export function SubscriptionBilling({
     }
 
     onCheckoutIntentHandled?.();
-  }, [checkoutIntent, checkoutPlanId, cycles, hasActiveSubscription, onCheckoutIntentHandled]);
+  }, [checkoutIntent, checkoutPlanId, cycles, hasActiveSubscription, onCheckoutIntentHandled, trackCheckoutOpened]);
 
   const handleOpenCheckout = React.useCallback((planId: string): void => {
     onCheckoutErrorClear?.();
+    trackCheckoutOpened(planId, 'plan_card');
     setAcceptedTerms(false);
     setCheckoutPlanId(planId);
-  }, [onCheckoutErrorClear]);
+  }, [onCheckoutErrorClear, trackCheckoutOpened]);
 
   const handleCloseCheckout = React.useCallback((): void => {
     if (isCheckoutPending) {

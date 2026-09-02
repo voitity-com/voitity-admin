@@ -22,7 +22,14 @@ import { z as zod } from 'zod';
 
 import { paths } from '@/paths';
 import { authClient } from '@/lib/auth/custom/client';
-import { buildAuthPathWithCheckoutIntent, persistCheckoutIntentFromSearch } from '@/lib/billing/checkout-intent';
+import {
+  buildAuthPathWithCheckoutIntent,
+  getCheckoutAnalyticsParameters,
+  getCheckoutIntentFromSearch,
+  getStoredCheckoutIntent,
+  persistCheckoutIntentFromSearch,
+} from '@/lib/billing/checkout-intent';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import { getSupportedLanguage } from '@/lib/i18n';
 import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
@@ -53,6 +60,7 @@ export function SignInForm(): React.JSX.Element {
   const [searchParams] = useSearchParams();
   const currentLanguage = i18n.resolvedLanguage ?? i18n.language;
   const previousLanguageRef = React.useRef(currentLanguage);
+  const verificationTrackedRef = React.useRef(false);
 
   const [showPassword, setShowPassword] = React.useState<boolean>();
 
@@ -61,6 +69,10 @@ export function SignInForm(): React.JSX.Element {
   const localeParam = searchParams.get('locale');
   const signUpHref = React.useMemo(
     () => buildAuthPathWithCheckoutIntent(paths.auth.custom.signUp, searchParams),
+    [searchParams]
+  );
+  const analyticsParameters = React.useMemo(
+    () => getCheckoutAnalyticsParameters(getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent()),
     [searchParams]
   );
 
@@ -82,6 +94,15 @@ export function SignInForm(): React.JSX.Element {
   React.useEffect(() => {
     persistCheckoutIntentFromSearch(searchParams);
   }, [searchParams]);
+
+  React.useEffect(() => {
+    if (verificationStatus !== 'verified' || verificationTrackedRef.current) {
+      return;
+    }
+
+    verificationTrackedRef.current = true;
+    trackAnalyticsEvent('email_verified', analyticsParameters);
+  }, [analyticsParameters, verificationStatus]);
 
   const verificationAlert = React.useMemo((): null | { color: 'error' | 'success' | 'warning'; message: string } => {
     if (!verificationStatus) {

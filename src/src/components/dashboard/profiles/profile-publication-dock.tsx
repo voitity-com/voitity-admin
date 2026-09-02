@@ -36,6 +36,7 @@ import {
 } from '@/lib/profiles/api-client';
 import { getPublicProfileUrl } from '@/lib/profiles/public-profile-url';
 import { logger } from '@/lib/default-logger';
+import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import { usePathname } from '@/hooks/use-pathname';
 import { toast } from '@/components/core/toaster';
 
@@ -177,6 +178,9 @@ export function ProfilePublicationDock(): React.JSX.Element | null {
       const nextProfile =
         publicationAction === 'deactivate' ? await deactivateProfile(profileId) : await activateProfile(profileId);
       setProfile(nextProfile);
+      if (publicationAction === 'activate') {
+        trackAnalyticsEvent('profile_published', { publication_surface: 'profile_dashboard' });
+      }
       setPublicationAction(null);
       window.dispatchEvent(new Event('profile-publication:changed'));
       toast.success(
