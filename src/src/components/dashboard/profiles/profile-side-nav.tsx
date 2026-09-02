@@ -25,6 +25,7 @@ import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
 import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
+import { Palette as PaletteIcon } from '@phosphor-icons/react/dist/ssr/Palette';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { ShareNetwork as ShareNetworkIcon } from '@phosphor-icons/react/dist/ssr/ShareNetwork';
 import { UserCircle as UserCircleIcon } from '@phosphor-icons/react/dist/ssr/UserCircle';
@@ -52,6 +53,7 @@ const icons = {
   settings: GearIcon,
   socialNetworks: ShareNetworkIcon,
   sources: FileIcon,
+  template: PaletteIcon,
   voice: MicrophoneIcon,
 } as Record<string, Icon>;
 
@@ -111,6 +113,12 @@ export function ProfileSideNav(): React.JSX.Element {
 
   const items = React.useMemo<NavEntry[]>(
     () => [
+      {
+        key: 'template',
+        title: t('dashboard.profiles.detail.nav.template'),
+        href: paths.dashboard.profileDetails.template(profileId),
+        icon: 'template',
+      },
       {
         key: 'profile',
         title: t('dashboard.profiles.detail.nav.profile'),

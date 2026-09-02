@@ -42,8 +42,6 @@ import {
 import { toast } from '@/components/core/toaster';
 
 interface ProfileTemplateEditorProps {
-  onClose: () => void;
-  open: boolean;
   profileAvatarUrl: null | string;
   previewUrl: string;
   profileId: string;
@@ -58,26 +56,25 @@ interface AppearanceDraft {
 const MAX_BACKGROUND_IMAGE_SIZE = 10 * 1024 * 1024;
 
 export function ProfileTemplateEditor({
-  onClose,
-  open,
   profileAvatarUrl,
   previewUrl,
   profileId,
   profileName,
 }: ProfileTemplateEditorProps): React.JSX.Element {
   const { t } = useTranslation();
-  const iframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const desktopIframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const mobileIframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const [activeTab, setActiveTab] = React.useState<'background' | 'templates'>('templates');
   const [configuration, setConfiguration] = React.useState<null | ProfileAppearanceConfiguration>(null);
   const [draft, setDraft] = React.useState<AppearanceDraft>({ backgroundType: 'css', templateKey: 'profile01' });
   const [error, setError] = React.useState('');
   const [iframeVersion, setIframeVersion] = React.useState(0);
+  const [isDesktopPreviewOpen, setIsDesktopPreviewOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [pendingReplacement, setPendingReplacement] = React.useState<null | File>(null);
   const [selectedFile, setSelectedFile] = React.useState<null | File>(null);
   const [selectedFilePreview, setSelectedFilePreview] = React.useState<null | string>(null);
-  const [viewport, setViewport] = React.useState<'desktop' | 'mobile'>('desktop');
   const editorPreviewUrl = React.useMemo(() => buildEditorPreviewUrl(previewUrl), [previewUrl]);
   const currentAppearance = configuration?.appearance;
   const previewBackgroundImageUrl = selectedFilePreview ?? currentAppearance?.backgroundImageUrl ?? null;
@@ -110,35 +107,29 @@ export function ProfileTemplateEditor({
   }, [profileId, t]);
 
   React.useEffect(() => {
-    if (!open) {
-      return;
-    }
-
     setActiveTab('templates');
-    setViewport('desktop');
+    setIsDesktopPreviewOpen(false);
     loadConfiguration().catch((loadError) => {
       logger.error(loadError);
     });
-  }, [loadConfiguration, open]);
+  }, [loadConfiguration]);
 
   React.useEffect(() => {
-    if (!open || !iframeRef.current?.contentWindow) {
-      return;
-    }
-
-    iframeRef.current.contentWindow.postMessage(
-      {
-        appearance: {
-          backgroundImageUrl: previewBackgroundImageUrl,
-          backgroundType: draft.backgroundType,
-          hasBackgroundImage: Boolean(previewBackgroundImageUrl),
-          templateKey: draft.templateKey,
+    for (const iframe of [mobileIframeRef.current, desktopIframeRef.current]) {
+      iframe?.contentWindow?.postMessage(
+        {
+          appearance: {
+            backgroundImageUrl: previewBackgroundImageUrl,
+            backgroundType: draft.backgroundType,
+            hasBackgroundImage: Boolean(previewBackgroundImageUrl),
+            templateKey: draft.templateKey,
+          },
+          type: 'bigmelo:profile-appearance-preview',
         },
-        type: 'bigmelo:profile-appearance-preview',
-      },
-      new URL(editorPreviewUrl).origin
-    );
-  }, [draft.backgroundType, draft.templateKey, editorPreviewUrl, iframeVersion, open, previewBackgroundImageUrl]);
+        new URL(editorPreviewUrl).origin
+      );
+    }
+  }, [draft.backgroundType, draft.templateKey, editorPreviewUrl, iframeVersion, previewBackgroundImageUrl]);
 
   const acceptFile = React.useCallback(
     async (file: File): Promise<void> => {
@@ -229,30 +220,38 @@ export function ProfileTemplateEditor({
 
   return (
     <React.Fragment>
-      <Dialog fullScreen onClose={isSaving ? undefined : onClose} open={open}>
+      <Paper
+        elevation={0}
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: { md: 'calc(100dvh - 128px)', xs: 'auto' },
+          minHeight: { md: 680, xs: 0 },
+          overflow: 'hidden',
+        }}
+        variant="outlined"
+      >
         <AppBar color="inherit" elevation={0} position="static">
-          <Toolbar sx={{ gap: 2 }}>
+          <Toolbar sx={{ gap: { sm: 2, xs: 1 }, px: { sm: 3, xs: 1.5 } }}>
             <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
-              <Typography noWrap variant="h6">
+              <Typography noWrap sx={{ fontSize: { sm: '1.125rem', xs: '1rem' } }} variant="h6">
                 {t('dashboard.profiles.detail.widgetLauncher.templateEditor.title')}
               </Typography>
               <Typography color="text.secondary" noWrap variant="body2">
                 {profileName}
               </Typography>
             </Box>
-            <Button disabled={!canSave} onClick={handleSave} variant="contained">
+            <Button
+              disabled={!canSave}
+              onClick={handleSave}
+              size="small"
+              sx={{ flex: '0 0 auto', whiteSpace: 'nowrap' }}
+              variant="contained"
+            >
               {isSaving
                 ? t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.saving')
                 : t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.save')}
             </Button>
-            <IconButton
-              aria-label={t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.close')}
-              disabled={isSaving}
-              edge="end"
-              onClick={onClose}
-            >
-              <XIcon />
-            </IconButton>
           </Toolbar>
         </AppBar>
         <Divider />
@@ -265,21 +264,18 @@ export function ProfileTemplateEditor({
             <Stack direction="row" spacing={1} sx={{ justifyContent: 'center' }}>
               <Button
                 onClick={() => {
-                  setViewport('desktop');
+                  setIsDesktopPreviewOpen(true);
                 }}
                 size="small"
                 startIcon={<DesktopIcon />}
-                variant={viewport === 'desktop' ? 'contained' : 'outlined'}
+                variant="outlined"
               >
                 {t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.desktop')}
               </Button>
               <Button
-                onClick={() => {
-                  setViewport('mobile');
-                }}
                 size="small"
                 startIcon={<DeviceMobileIcon />}
-                variant={viewport === 'mobile' ? 'contained' : 'outlined'}
+                variant="contained"
               >
                 {t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.mobile')}
               </Button>
@@ -291,8 +287,7 @@ export function ProfileTemplateEditor({
                   height: '100%',
                   maxWidth: '100%',
                   overflow: 'hidden',
-                  transition: 'width 180ms ease',
-                  width: viewport === 'mobile' ? 390 : '100%',
+                  width: 390,
                 }}
               >
                 <Box
@@ -301,7 +296,7 @@ export function ProfileTemplateEditor({
                   onLoad={() => {
                     setIframeVersion((current) => current + 1);
                   }}
-                  ref={iframeRef}
+                  ref={mobileIframeRef}
                   sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
                   src={editorPreviewUrl}
                   sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
@@ -524,6 +519,55 @@ export function ProfileTemplateEditor({
             </Box>
           </Paper>
         </Box>
+      </Paper>
+
+      <Dialog
+        fullScreen
+        onClose={() => {
+          setIsDesktopPreviewOpen(false);
+        }}
+        open={isDesktopPreviewOpen}
+      >
+        <Stack sx={{ height: '100dvh', minHeight: 0 }}>
+          <AppBar color="inherit" elevation={0} position="static">
+            <Toolbar sx={{ gap: 2 }}>
+              <Box sx={{ flex: '1 1 auto', minWidth: 0 }}>
+                <Typography noWrap variant="h6">
+                  {t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.desktop')}
+                </Typography>
+                <Typography color="text.secondary" noWrap variant="body2">
+                  {profileName}
+                </Typography>
+              </Box>
+              <IconButton
+                aria-label={t('dashboard.profiles.detail.widgetLauncher.templateEditor.actions.close')}
+                edge="end"
+                onClick={() => {
+                  setIsDesktopPreviewOpen(false);
+                }}
+              >
+                <XIcon />
+              </IconButton>
+            </Toolbar>
+          </AppBar>
+          <Divider />
+          <Box sx={{ bgcolor: 'grey.100', flex: '1 1 auto', minHeight: 0, p: { sm: 2, xs: 0 } }}>
+            <Paper elevation={8} sx={{ height: '100%', overflow: 'hidden' }}>
+              <Box
+                allow="microphone"
+                component="iframe"
+                onLoad={() => {
+                  setIframeVersion((current) => current + 1);
+                }}
+                ref={desktopIframeRef}
+                sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                src={editorPreviewUrl}
+                sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
+                title={String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.iframeTitle'))}
+              />
+            </Paper>
+          </Box>
+        </Stack>
       </Dialog>
 
       <Dialog

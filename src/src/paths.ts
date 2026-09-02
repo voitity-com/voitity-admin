@@ -101,6 +101,7 @@ export const paths = {
       settings: (profileId: string) => `/dashboard/profiles/${profileId}/settings`,
       socialNetworks: (profileId: string) => `/dashboard/profiles/${profileId}/social-networks`,
       sources: (profileId: string) => `/dashboard/profiles/${profileId}/sources`,
+      template: (profileId: string) => `/dashboard/profiles/${profileId}/template`,
       voice: (profileId: string) => `/dashboard/profiles/${profileId}/voice`,
     },
     blog: {

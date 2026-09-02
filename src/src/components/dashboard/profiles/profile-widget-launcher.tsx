@@ -21,7 +21,7 @@ import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
 import { User as UserIcon } from '@phosphor-icons/react/dist/ssr/User';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { config } from '@/config';
 import { paths } from '@/paths';
@@ -34,16 +34,14 @@ import { profileQualityRefreshEvent } from '@/lib/profiles/profile-quality-event
 import { usePathname } from '@/hooks/use-pathname';
 import { RouterLink } from '@/components/core/link';
 
-import { ProfileTemplateEditor } from './profile-template-editor';
-
 export function ProfileWidgetLauncher(): React.JSX.Element | null {
   const pathname = usePathname();
   const { profileId = '' } = useParams();
+  const navigate = useNavigate();
   const { t } = useTranslation();
   const [error, setError] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(true);
   const [isOpen, setIsOpen] = React.useState(false);
-  const [isTemplateEditorOpen, setIsTemplateEditorOpen] = React.useState(false);
   const [profile, setProfile] = React.useState<null | Profile>(null);
   const [widget, setWidget] = React.useState<null | ProfileWidgetSettings>(null);
 
@@ -84,7 +82,6 @@ export function ProfileWidgetLauncher(): React.JSX.Element | null {
 
   React.useEffect(() => {
     setIsOpen(false);
-    setIsTemplateEditorOpen(false);
     loadLauncher().catch((loadError) => {
       logger.error(loadError);
     });
@@ -164,7 +161,8 @@ export function ProfileWidgetLauncher(): React.JSX.Element | null {
                   setIsOpen(false);
                 }}
                 onEditTemplate={() => {
-                  setIsTemplateEditorOpen(true);
+                  setIsOpen(false);
+                  navigate(paths.dashboard.profileDetails.template(profileId));
                 }}
                 profileName={profile?.name ?? ''}
               />
@@ -248,19 +246,6 @@ export function ProfileWidgetLauncher(): React.JSX.Element | null {
             </ButtonBase>
           </Badge>
         </Tooltip>
-
-        {profile?.alias ? (
-          <ProfileTemplateEditor
-            onClose={() => {
-              setIsTemplateEditorOpen(false);
-            }}
-            open={isTemplateEditorOpen}
-            previewUrl={buildPublicProfileUrl(profile.alias)}
-            profileAvatarUrl={avatarUrl}
-            profileId={profileId}
-            profileName={profile.name ?? ''}
-          />
-        ) : null}
       </Box>
     </ClickAwayListener>
   );
