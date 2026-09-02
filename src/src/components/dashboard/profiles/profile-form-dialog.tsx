@@ -206,7 +206,7 @@ export function ProfileFormDialog({
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button color="secondary" disabled={isSubmitting} onClick={onClose}>
+          <Button color="secondary" disabled={isSubmitting} onClick={onClose} type="button">
             {t('dashboard.profiles.actions.cancel')}
           </Button>
           <Button disabled={isSubmitting} type="submit" variant="contained">

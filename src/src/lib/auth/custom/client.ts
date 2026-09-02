@@ -1,6 +1,7 @@
 'use client';
 
 import type { User } from '@/types/user';
+import { saveCheckoutIntent, type CheckoutIntent } from '@/lib/billing/checkout-intent';
 import type { GoogleProfile } from '@/lib/google/profile';
 
 import { clearAdminImpersonationSession } from './admin-impersonation-store';
@@ -30,6 +31,7 @@ export interface SignUpParams {
   locale?: string;
   password: string;
   passwordConfirmation: string;
+  checkoutIntent?: CheckoutIntent;
 }
 
 export interface GoogleAuthParams {
@@ -87,6 +89,7 @@ class AuthClient {
         locale: params.locale,
         password: params.password,
         password_confirmation: params.passwordConfirmation,
+        checkout_intent: params.checkoutIntent,
       });
 
       return { message: response.message };
@@ -211,6 +214,9 @@ class AuthClient {
 
     try {
       const apiUser = await getCurrentUser(session.accessToken);
+      if (apiUser.checkout_intent) {
+        saveCheckoutIntent(apiUser.checkout_intent);
+      }
       const user = mapApiUser(apiUser, session.user);
       persistAuthUser(user);
       return { data: user };
@@ -251,6 +257,9 @@ class AuthClient {
   ): Promise<{ error?: string; status?: number }> {
     try {
       const response = await authenticate(createGoogleAuthPayload(params));
+      if (response.user?.checkout_intent) {
+        saveCheckoutIntent(response.user.checkout_intent);
+      }
       persistAuthSession(response.access_token, mapApiUser(response.user, buildUserFromGoogleProfile(params.profile)));
       return {};
     } catch (err) {

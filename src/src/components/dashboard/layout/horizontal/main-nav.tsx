@@ -99,6 +99,7 @@ export function MainNav({ color = 'evident', items = [] }: MainNavProps): React.
         >
           <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: '1 1 auto' }}>
             <IconButton
+              aria-label={t('dashboard.layout.openNavigation')}
               onClick={(): void => {
                 setOpenNav(true);
               }}
@@ -191,11 +192,7 @@ function NotificationsButton(): React.JSX.Element {
           </IconButton>
         </Badge>
       </Tooltip>
-      <NotificationsPopover
-        anchorEl={popover.anchorRef.current}
-        onClose={popover.handleClose}
-        open={popover.open}
-      />
+      <NotificationsPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
   );
 }
@@ -328,14 +325,7 @@ function renderNavItems({
     const { key, ...item } = curr;
 
     acc.push(
-      <NavItem
-        key={key}
-        pathname={pathname}
-        t={t}
-        unreadCount={unreadCount}
-        {...item}
-        title={getNavTitle(curr, t)}
-      />
+      <NavItem key={key} pathname={pathname} t={t} unreadCount={unreadCount} {...item} title={getNavTitle(curr, t)} />
     );
 
     return acc;
@@ -491,7 +481,7 @@ function NavIconBadge({
 }
 
 function getNavTitle(item: NavItemConfig, t: TFunction): string {
-  return item.titleKey ? t(item.titleKey, { defaultValue: item.title ?? item.titleKey }) : (item.title ?? '');
+  return item.titleKey ? t(item.titleKey, { defaultValue: item.title ?? item.titleKey }) : item.title ?? '';
 }
 
 function renderDropdownItems({

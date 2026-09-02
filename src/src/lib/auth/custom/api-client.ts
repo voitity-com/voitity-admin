@@ -1,5 +1,6 @@
 import type { User } from '@/types/user';
 import { config } from '@/config';
+import type { CheckoutIntent } from '@/lib/billing/checkout-intent';
 
 export interface ApiUser {
   id: number | string;
@@ -12,6 +13,7 @@ export interface ApiUser {
   locale?: null | string;
   provider?: null | string;
   role?: null | string;
+  checkout_intent?: CheckoutIntent | null;
 }
 
 export interface AuthApiResponse {
@@ -31,6 +33,7 @@ export interface EmailSignUpPayload {
   locale?: string;
   password: string;
   password_confirmation: string;
+  checkout_intent?: CheckoutIntent;
 }
 
 export interface GoogleAuthPayload {

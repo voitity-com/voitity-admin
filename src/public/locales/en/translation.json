@@ -13,6 +13,10 @@
   },
   "auth": {
     "language": "Language",
+    "passwordVisibility": {
+      "hide": "Hide password",
+      "show": "Show password"
+    },
     "signIn": {
       "actions": {
         "back": "← Back",
@@ -117,6 +121,9 @@
     }
   },
   "dashboard": {
+    "layout": {
+      "openNavigation": "Open navigation menu"
+    },
     "redirect": {
       "actions": {
         "billing": "Go to billing and plans",

@@ -85,6 +85,7 @@ export interface SubscriptionBillingProps extends SubscriptionLimitsProps {
   onCancelTrial?: () => Promise<void>;
   onCheckoutErrorClear?: () => void;
   onCheckoutIntentHandled?: () => void;
+  onCheckoutOpenChange?: (open: boolean) => void;
   onReactivateRenewal?: () => Promise<void>;
   onRetryRenewal?: () => Promise<void>;
   onStartCheckout?: (plan: SubscriptionPlan, trialPaymentMethod?: TrialPaymentMethod) => Promise<void>;
@@ -179,6 +180,7 @@ export function SubscriptionBilling({
   onCancelTrial,
   onCheckoutErrorClear,
   onCheckoutIntentHandled,
+  onCheckoutOpenChange,
   onReactivateRenewal,
   onRetryRenewal,
   onStartCheckout,
@@ -210,8 +212,18 @@ export function SubscriptionBilling({
 
   const cycles = getBillingCycles({ hasActiveSubscription: hasCurrentSubscription, language, plansData, selectedPlanId: checkoutPlanId, subscription, t });
   const checkoutCycle = cycles.find((cycle) => cycle.planId === checkoutPlanId && !cycle.disabled);
+  const checkoutOpen = Boolean(checkoutCycle);
   const selectedPlan = checkoutCycle?.plan;
   const canStartCheckout = Boolean(!hasActiveSubscription && acceptedTerms && selectedPlan && onStartCheckout && !isCheckoutPending);
+
+  React.useEffect(() => {
+    onCheckoutOpenChange?.(checkoutOpen);
+
+    return () => {
+      onCheckoutOpenChange?.(false);
+    };
+  }, [checkoutOpen, onCheckoutOpenChange]);
+
   const trackCheckoutOpened = React.useCallback(
     (planId: string, checkoutOrigin: 'campaign_intent' | 'plan_card'): void => {
       const cycle = cycles.find((item) => item.planId === planId && !item.disabled);
@@ -350,7 +362,7 @@ export function SubscriptionBilling({
           onCheckoutErrorClear={onCheckoutErrorClear}
           onClose={handleCloseCheckout}
           onStartCheckout={handleStartCheckout}
-          open={Boolean(checkoutCycle)}
+          open={checkoutOpen}
           paymentMethods={paymentMethods}
           t={t}
           trialPaymentSourceSetup={trialPaymentSourceSetup}

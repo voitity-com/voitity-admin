@@ -98,7 +98,7 @@ function LanguageSwitch(): React.JSX.Element {
           onClick={popover.handleOpen}
           ref={popover.anchorRef}
           size="small"
-          sx={{ minWidth: 'auto', px: 1 }}
+          sx={{ minHeight: 44, minWidth: 44, px: 1 }}
         >
           <Box sx={{ height: '22px', mr: 0.75, width: '22px' }}>
             <Box alt={language.toUpperCase()} component="img" src={flag} sx={{ height: 'auto', width: '100%' }} />

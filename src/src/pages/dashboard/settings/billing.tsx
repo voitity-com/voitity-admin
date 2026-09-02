@@ -63,6 +63,7 @@ import {
   retrySubscriptionRenewal,
   SubscriptionApiError,
 } from '@/lib/subscription/api-client';
+import { useNoPlanTutorial } from '@/components/dashboard/layout/no-plan-tutorial-context';
 import { CreditWalletCard } from '@/components/dashboard/settings/credit-wallet-card';
 import { PaymentMethodFormDialog } from '@/components/dashboard/settings/payment-method-form-dialog';
 import { SubscriptionBilling, type TrialPaymentMethod } from '@/components/dashboard/settings/subscription-limits';
@@ -84,10 +85,12 @@ type PaymentMethodDialogOrigin = 'billing' | 'credits';
 export function Page(): React.JSX.Element {
   const navigate = useNavigate();
   const { i18n, t } = useTranslation();
+  const { setSuppressed: setNoPlanTutorialSuppressed } = useNoPlanTutorial();
   const translationRef = React.useRef(t);
   const [searchParams, setSearchParams] = useSearchParams();
   const language = i18n.resolvedLanguage ?? i18n.language;
   const [billing, setBilling] = React.useState<BillingState | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = React.useState(false);
   const [error, setError] = React.useState<string>('');
   const [checkoutError, setCheckoutError] = React.useState<string>('');
   const [pendingAction, setPendingAction] = React.useState<
@@ -434,12 +437,35 @@ export function Page(): React.JSX.Element {
         setIsCheckoutPending(false);
       }
     },
-    [billing?.plans.trial, checkoutAnalyticsParameters, checkoutIntent?.attribution, loadBilling, navigate, t, trialPaymentSourceSetup]
+    [
+      billing?.plans.trial,
+      checkoutAnalyticsParameters,
+      checkoutIntent?.attribution,
+      loadBilling,
+      navigate,
+      t,
+      trialPaymentSourceSetup,
+    ]
   );
 
   const handleCheckoutErrorClear = React.useCallback((): void => {
     setCheckoutError('');
   }, []);
+
+  const handleCheckoutOpenChange = React.useCallback(
+    (open: boolean): void => {
+      setIsCheckoutOpen(open);
+    },
+    []
+  );
+
+  React.useEffect(() => {
+    setNoPlanTutorialSuppressed(Boolean(checkoutIntent) || isCheckoutOpen);
+
+    return () => {
+      setNoPlanTutorialSuppressed(false);
+    };
+  }, [checkoutIntent, isCheckoutOpen, setNoPlanTutorialSuppressed]);
 
   const runSubscriptionAction = React.useCallback(
     async (
@@ -709,6 +735,7 @@ export function Page(): React.JSX.Element {
               onCancelTrial={handleCancelTrial}
               onCheckoutErrorClear={handleCheckoutErrorClear}
               onCheckoutIntentHandled={handleCheckoutIntentHandled}
+              onCheckoutOpenChange={handleCheckoutOpenChange}
               onReactivateRenewal={handleReactivateRenewal}
               onRetryRenewal={handleRetryRenewal}
               onStartCheckout={handleStartCheckout}

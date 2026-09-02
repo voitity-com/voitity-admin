@@ -62,7 +62,7 @@ export function Page(): React.JSX.Element {
   const [pageSearchParams, setPageSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { status: noPlanTutorialStatus } = useNoPlanTutorial();
+  const { setSuppressed: setNoPlanTutorialSuppressed, status: noPlanTutorialStatus } = useNoPlanTutorial();
   const [profiles, setProfiles] = React.useState<Profile[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
@@ -80,6 +80,15 @@ export function Page(): React.JSX.Element {
   const [subscriptionStatus, setSubscriptionStatus] = React.useState<SubscriptionStatus>('loading');
   const addButtonRef = React.useRef<HTMLButtonElement | null>(null);
   const createIntentHandledRef = React.useRef(false);
+  const hasPendingCreateIntent = pageSearchParams.get('create') === '1' && !createIntentHandledRef.current;
+
+  React.useEffect(() => {
+    setNoPlanTutorialSuppressed(hasPendingCreateIntent || formOpen || profileLimitDialogOpen);
+
+    return () => {
+      setNoPlanTutorialSuppressed(false);
+    };
+  }, [formOpen, hasPendingCreateIntent, profileLimitDialogOpen, setNoPlanTutorialSuppressed]);
 
   const loadProfiles = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -197,14 +206,7 @@ export function Page(): React.JSX.Element {
     const nextSearchParams = new URLSearchParams(pageSearchParams);
     nextSearchParams.delete('create');
     setPageSearchParams(nextSearchParams, { replace: true });
-  }, [
-    handleCreateOpen,
-    isLoading,
-    isProfileLimitLoaded,
-    pageSearchParams,
-    setPageSearchParams,
-    subscriptionStatus,
-  ]);
+  }, [handleCreateOpen, isLoading, isProfileLimitLoaded, pageSearchParams, setPageSearchParams, subscriptionStatus]);
 
   const handleFormClose = React.useCallback((): void => {
     setFormOpen(false);
@@ -270,8 +272,7 @@ export function Page(): React.JSX.Element {
 
     return isProfileIncompleteForPublication(profile) ? profile : null;
   }, [profiles]);
-  const noPlanTutorialBlocksOnboarding =
-    noPlanTutorialStatus === 'checking' || noPlanTutorialStatus === 'open';
+  const noPlanTutorialBlocksOnboarding = noPlanTutorialStatus === 'checking' || noPlanTutorialStatus === 'open';
   const profileOnboardingReady =
     !profileOnboardingDismissed &&
     !isLoading &&
