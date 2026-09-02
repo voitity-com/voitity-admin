@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
+import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -30,9 +31,9 @@ import {
   persistCheckoutIntentFromSearch,
 } from '@/lib/billing/checkout-intent';
 import { trackAnalyticsEvent } from '@/lib/google-analytics';
-import { getSupportedLanguage } from '@/lib/i18n';
-import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
+import { fetchGoogleProfile } from '@/lib/google/profile';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { useUser } from '@/hooks/use-user';
 import { RouterLink } from '@/components/core/link';
 import { DynamicLogo } from '@/components/core/logo';
@@ -219,6 +220,7 @@ export function SignInForm(): React.JSX.Element {
                 endIcon={<Box alt="" component="img" height={24} src={provider.logo} width={24} />}
                 key={provider.id}
                 onClick={handleGoogleAuth}
+                sx={{ minHeight: 48 }}
                 variant="outlined"
               >
                 {t('auth.signIn.continueWith', { provider: provider.name })}
@@ -235,8 +237,14 @@ export function SignInForm(): React.JSX.Element {
                 name="email"
                 render={({ field }) => (
                   <FormControl error={Boolean(errors.email)}>
-                    <InputLabel>{t('auth.signIn.fields.email')}</InputLabel>
-                    <OutlinedInput {...field} type="email" />
+                    <InputLabel htmlFor="sign-in-email">{t('auth.signIn.fields.email')}</InputLabel>
+                    <OutlinedInput
+                      {...field}
+                      id="sign-in-email"
+                      label={t('auth.signIn.fields.email')}
+                      sx={{ minHeight: 48 }}
+                      type="email"
+                    />
                     {errors.email ? <FormHelperText>{errors.email.message}</FormHelperText> : null}
                   </FormControl>
                 )}
@@ -246,29 +254,24 @@ export function SignInForm(): React.JSX.Element {
                 name="password"
                 render={({ field }) => (
                   <FormControl error={Boolean(errors.password)}>
-                    <InputLabel>{t('auth.signIn.fields.password')}</InputLabel>
+                    <InputLabel htmlFor="sign-in-password">{t('auth.signIn.fields.password')}</InputLabel>
                     <OutlinedInput
                       {...field}
                       endAdornment={
-                        showPassword ? (
-                          <EyeIcon
-                            cursor="pointer"
-                            fontSize="var(--icon-fontSize-md)"
-                            onClick={(): void => {
-                              setShowPassword(false);
-                            }}
-                          />
-                        ) : (
-                          <EyeSlashIcon
-                            cursor="pointer"
-                            fontSize="var(--icon-fontSize-md)"
-                            onClick={(): void => {
-                              setShowPassword(true);
-                            }}
-                          />
-                        )
+                        <IconButton
+                          aria-label={t(showPassword ? 'auth.passwordVisibility.hide' : 'auth.passwordVisibility.show')}
+                          edge="end"
+                          onClick={(): void => {
+                            setShowPassword((current) => !current);
+                          }}
+                          sx={{ minHeight: 44, minWidth: 44 }}
+                        >
+                          {showPassword ? <EyeIcon /> : <EyeSlashIcon />}
+                        </IconButton>
                       }
+                      id="sign-in-password"
                       label={t('auth.signIn.fields.password')}
+                      sx={{ minHeight: 48 }}
                       type={showPassword ? 'text' : 'password'}
                     />
                     {errors.password ? <FormHelperText>{errors.password.message}</FormHelperText> : null}
@@ -278,16 +281,25 @@ export function SignInForm(): React.JSX.Element {
               {verificationAlert ? <Alert color={verificationAlert.color}>{verificationAlert.message}</Alert> : null}
               {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
               <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Link component={RouterLink} href={paths.auth.custom.resetPassword} variant="subtitle2">
+                <Link
+                  component={RouterLink}
+                  href={paths.auth.custom.resetPassword}
+                  sx={{ alignItems: 'center', display: 'inline-flex', minHeight: 44 }}
+                  variant="subtitle2"
+                >
                   {t('auth.signIn.forgotPassword')}
                 </Link>
               </Box>
-              <Button disabled={isPending} type="submit" variant="contained">
+              <Button disabled={isPending} sx={{ minHeight: 48 }} type="submit" variant="contained">
                 {t('auth.signIn.actions.submit')}
               </Button>
             </Stack>
           </form>
-          <Link href={backHref} sx={{ alignSelf: 'flex-start' }} variant="subtitle2">
+          <Link
+            href={backHref}
+            sx={{ alignItems: 'center', alignSelf: 'flex-start', display: 'inline-flex', minHeight: 44 }}
+            variant="subtitle2"
+          >
             {t('auth.signIn.actions.back')}
           </Link>
         </Stack>

@@ -34,6 +34,7 @@ export interface MainNavProps {
 }
 
 export function MainNav({ items }: MainNavProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [openNav, setOpenNav] = React.useState<boolean>(false);
 
   return (
@@ -64,6 +65,7 @@ export function MainNav({ items }: MainNavProps): React.JSX.Element {
         >
           <Stack direction="row" spacing={2} sx={{ alignItems: 'center', flex: '1 1 auto' }}>
             <IconButton
+              aria-label={t('dashboard.layout.openNavigation')}
               onClick={(): void => {
                 setOpenNav(true);
               }}
@@ -139,11 +141,7 @@ function NotificationsButton(): React.JSX.Element {
           </IconButton>
         </Badge>
       </Tooltip>
-      <NotificationsPopover
-        anchorEl={popover.anchorRef.current}
-        onClose={popover.handleClose}
-        open={popover.open}
-      />
+      <NotificationsPopover anchorEl={popover.anchorRef.current} onClose={popover.handleClose} open={popover.open} />
     </React.Fragment>
   );
 }

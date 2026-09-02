@@ -10,6 +10,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router-dom';
 
 import { logger } from '@/lib/default-logger';
 import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
@@ -22,9 +23,10 @@ const tutorialStep = 'createProfile';
 
 export function NoPlanTutorialDialog(): React.JSX.Element {
   const { t } = useTranslation();
+  const location = useLocation();
   const { user } = useUser();
-  const { setStatus, status } = useNoPlanTutorial();
-  const open = status === 'open';
+  const { setStatus, status, suppressed } = useNoPlanTutorial();
+  const open = status === 'open' && !suppressed;
   const tutorial = profileGuideTutorials[tutorialStep];
   const stepNumber = profileGuideStepKeys.indexOf(tutorialStep) + 1;
   const embedUrl = `https://www.youtube-nocookie.com/embed/${tutorial.id}?autoplay=1&playsinline=1&rel=0&origin=${encodeURIComponent(window.location.origin)}`;
@@ -65,7 +67,7 @@ export function NoPlanTutorialDialog(): React.JSX.Element {
     return () => {
       isMounted = false;
     };
-  }, [setStatus, user?.id]);
+  }, [location.pathname, setStatus, user?.id]);
 
   return (
     <Dialog aria-labelledby="no-plan-tutorial-dialog-title" disableEscapeKeyDown fullWidth maxWidth="md" open={open}>

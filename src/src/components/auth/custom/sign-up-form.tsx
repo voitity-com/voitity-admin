@@ -8,6 +8,7 @@ import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import FormHelperText from '@mui/material/FormHelperText';
+import IconButton from '@mui/material/IconButton';
 import InputLabel from '@mui/material/InputLabel';
 import Link from '@mui/material/Link';
 import OutlinedInput from '@mui/material/OutlinedInput';
@@ -30,9 +31,9 @@ import {
   persistCheckoutIntentFromSearch,
 } from '@/lib/billing/checkout-intent';
 import { trackAnalyticsEvent } from '@/lib/google-analytics';
-import { getSupportedLanguage } from '@/lib/i18n';
-import { fetchGoogleProfile } from '@/lib/google/profile';
 import { requestGoogleAccessToken } from '@/lib/google/oauth';
+import { fetchGoogleProfile } from '@/lib/google/profile';
+import { getSupportedLanguage } from '@/lib/i18n';
 import { useUser } from '@/hooks/use-user';
 import { RouterLink } from '@/components/core/link';
 import { DynamicLogo } from '@/components/core/logo';
@@ -70,10 +71,11 @@ export function SignUpForm(): React.JSX.Element {
     () => buildAuthPathWithCheckoutIntent(paths.auth.custom.signIn, searchParams),
     [searchParams]
   );
-  const analyticsParameters = React.useMemo(
-    () => getCheckoutAnalyticsParameters(getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent()),
+  const checkoutIntent = React.useMemo(
+    () => getCheckoutIntentFromSearch(searchParams) ?? getStoredCheckoutIntent(),
     [searchParams]
   );
+  const analyticsParameters = React.useMemo(() => getCheckoutAnalyticsParameters(checkoutIntent), [checkoutIntent]);
 
   const markSignupStarted = React.useCallback(
     (method: 'email' | 'google'): void => {
@@ -95,7 +97,10 @@ export function SignUpForm(): React.JSX.Element {
             .string()
             .min(1, { message: t('auth.signUp.validation.emailRequired') })
             .email({ message: t('auth.signUp.validation.emailInvalid') }),
-          name: zod.string().trim().min(1, { message: t('auth.signUp.validation.nameRequired') }),
+          name: zod
+            .string()
+            .trim()
+            .min(1, { message: t('auth.signUp.validation.nameRequired') }),
           password: zod.string().min(8, { message: t('auth.signUp.validation.passwordMin') }),
           passwordConfirmation: zod.string().min(1, {
             message: t('auth.signUp.validation.passwordConfirmationRequired'),
@@ -177,6 +182,7 @@ export function SignUpForm(): React.JSX.Element {
         name: values.name.trim(),
         password: values.password,
         passwordConfirmation: values.passwordConfirmation,
+        checkoutIntent: checkoutIntent ?? undefined,
       });
 
       if (error) {
@@ -192,7 +198,7 @@ export function SignUpForm(): React.JSX.Element {
       toast.success(t('auth.signUp.verificationSentToast'));
       setIsPending(false);
     },
-    [analyticsParameters, clearErrors, currentLanguage, markSignupStarted, reset, setError, t]
+    [analyticsParameters, checkoutIntent, clearErrors, currentLanguage, markSignupStarted, reset, setError, t]
   );
 
   return (
@@ -221,6 +227,7 @@ export function SignUpForm(): React.JSX.Element {
                 endIcon={<Box alt="" component="img" height={24} src={provider.logo} width={24} />}
                 key={provider.id}
                 onClick={handleGoogleAuth}
+                sx={{ minHeight: 48 }}
                 variant="outlined"
               >
                 {t('auth.signUp.continueWith', { provider: provider.name })}
@@ -241,8 +248,13 @@ export function SignUpForm(): React.JSX.Element {
               name="name"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.name)}>
-                  <InputLabel>{t('auth.signUp.fields.name')}</InputLabel>
-                  <OutlinedInput {...field} label={t('auth.signUp.fields.name')} />
+                  <InputLabel htmlFor="sign-up-name">{t('auth.signUp.fields.name')}</InputLabel>
+                  <OutlinedInput
+                    {...field}
+                    id="sign-up-name"
+                    label={t('auth.signUp.fields.name')}
+                    sx={{ minHeight: 48 }}
+                  />
                   {errors.name ? <FormHelperText>{errors.name.message}</FormHelperText> : null}
                 </FormControl>
               )}
@@ -252,8 +264,14 @@ export function SignUpForm(): React.JSX.Element {
               name="email"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.email)}>
-                  <InputLabel>{t('auth.signUp.fields.email')}</InputLabel>
-                  <OutlinedInput {...field} label={t('auth.signUp.fields.email')} type="email" />
+                  <InputLabel htmlFor="sign-up-email">{t('auth.signUp.fields.email')}</InputLabel>
+                  <OutlinedInput
+                    {...field}
+                    id="sign-up-email"
+                    label={t('auth.signUp.fields.email')}
+                    sx={{ minHeight: 48 }}
+                    type="email"
+                  />
                   {errors.email ? <FormHelperText>{errors.email.message}</FormHelperText> : null}
                 </FormControl>
               )}
@@ -263,29 +281,24 @@ export function SignUpForm(): React.JSX.Element {
               name="password"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.password)}>
-                  <InputLabel>{t('auth.signUp.fields.password')}</InputLabel>
+                  <InputLabel htmlFor="sign-up-password">{t('auth.signUp.fields.password')}</InputLabel>
                   <OutlinedInput
                     {...field}
                     endAdornment={
-                      showPassword ? (
-                        <EyeIcon
-                          cursor="pointer"
-                          fontSize="var(--icon-fontSize-md)"
-                          onClick={(): void => {
-                            setShowPassword(false);
-                          }}
-                        />
-                      ) : (
-                        <EyeSlashIcon
-                          cursor="pointer"
-                          fontSize="var(--icon-fontSize-md)"
-                          onClick={(): void => {
-                            setShowPassword(true);
-                          }}
-                        />
-                      )
+                      <IconButton
+                        aria-label={t(showPassword ? 'auth.passwordVisibility.hide' : 'auth.passwordVisibility.show')}
+                        edge="end"
+                        onClick={(): void => {
+                          setShowPassword((current) => !current);
+                        }}
+                        sx={{ minHeight: 44, minWidth: 44 }}
+                      >
+                        {showPassword ? <EyeIcon /> : <EyeSlashIcon />}
+                      </IconButton>
                     }
+                    id="sign-up-password"
                     label={t('auth.signUp.fields.password')}
+                    sx={{ minHeight: 48 }}
                     type={showPassword ? 'text' : 'password'}
                   />
                   {errors.password ? <FormHelperText>{errors.password.message}</FormHelperText> : null}
@@ -297,10 +310,14 @@ export function SignUpForm(): React.JSX.Element {
               name="passwordConfirmation"
               render={({ field }) => (
                 <FormControl error={Boolean(errors.passwordConfirmation)}>
-                  <InputLabel>{t('auth.signUp.fields.passwordConfirmation')}</InputLabel>
+                  <InputLabel htmlFor="sign-up-password-confirmation">
+                    {t('auth.signUp.fields.passwordConfirmation')}
+                  </InputLabel>
                   <OutlinedInput
                     {...field}
+                    id="sign-up-password-confirmation"
                     label={t('auth.signUp.fields.passwordConfirmation')}
+                    sx={{ minHeight: 48 }}
                     type={showPassword ? 'text' : 'password'}
                   />
                   {errors.passwordConfirmation ? (
@@ -311,7 +328,7 @@ export function SignUpForm(): React.JSX.Element {
             />
             {successMessage ? <Alert color="success">{successMessage}</Alert> : null}
             {errors.root ? <Alert color="error">{errors.root.message}</Alert> : null}
-            <Button disabled={isPending} type="submit" variant="contained">
+            <Button disabled={isPending} sx={{ minHeight: 48 }} type="submit" variant="contained">
               {t('auth.signUp.actions.submit')}
             </Button>
           </Stack>
