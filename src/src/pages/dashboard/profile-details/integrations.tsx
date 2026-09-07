@@ -180,6 +180,9 @@ const copy = {
       instagram: {
         connect: 'Connect Instagram',
         connectedNoSync: 'Instagram connected. Sync did not finish; use Sync to retry.',
+        connectionDenied: 'Instagram authorization was cancelled. No account was connected.',
+        connectionFailed:
+          'Instagram could not be connected. Verify that the account is Business or Creator and try again.',
         empty: 'No Instagram media has been synced yet.',
         emptySelected: 'No selected Instagram media yet.',
         filterLabel: 'Instagram media filter',
@@ -297,6 +300,9 @@ const copy = {
       instagram: {
         connect: 'Conectar Instagram',
         connectedNoSync: 'Instagram conectado. La sincronización no terminó; usa Sincronizar para reintentar.',
+        connectionDenied: 'Cancelaste la autorización de Instagram. No se conectó ninguna cuenta.',
+        connectionFailed:
+          'No fue posible conectar Instagram. Verifica que la cuenta sea Business o Creator e inténtalo de nuevo.',
         empty: 'Aún no hay contenido sincronizado de Instagram.',
         emptySelected: 'Aún no hay imágenes seleccionadas de Instagram.',
         filterLabel: 'Filtro de publicaciones de Instagram',
@@ -483,6 +489,17 @@ export function Page(): React.JSX.Element {
 
   React.useEffect(() => {
     const connectedProvider = normalizeProvider(searchParams.get('provider'));
+    const oauthResult = searchParams.get('oauth');
+
+    if (connectedProvider === 'instagram' && oauthResult === 'denied') {
+      toast.warning(t.providers.instagram.connectionDenied);
+      return;
+    }
+
+    if (connectedProvider === 'instagram' && oauthResult === 'error') {
+      toast.error(t.providers.instagram.connectionFailed);
+      return;
+    }
 
     if (connectedProvider && connectedProvider !== 'other' && searchParams.get('connected') === '1') {
       const messages = t.providers[connectedProvider];
