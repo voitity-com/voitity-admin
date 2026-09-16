@@ -5,6 +5,10 @@ import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -14,7 +18,12 @@ import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
+import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Check as CheckIcon } from '@phosphor-icons/react/dist/ssr/Check';
+import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
+import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
+import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { Palette as PaletteIcon } from '@phosphor-icons/react/dist/ssr/Palette';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -37,8 +46,27 @@ import {
 import { toast } from '@/components/core/toaster';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 import { ProfileSocialNetworksDialog } from '@/components/dashboard/profiles/profile-social-networks-dialog';
+import { ProfileTemplatePickerDialog } from '@/components/dashboard/profiles/profile-template-picker-dialog';
 
 const metadata = { title: `Profile chat | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
+const ProfileAvatarPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/avatar');
+  return { default: module.Page };
+});
+const ProfileVoicePage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/voice');
+  return { default: module.Page };
+});
+const ProfileMessagesPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/messages');
+  return { default: module.Page };
+});
+const ProfileSourcesPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/sources');
+  return { default: module.Page };
+});
+
+type ProfileMediaEditor = 'avatar' | 'messages' | 'voice';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -52,6 +80,10 @@ export function Page(): React.JSX.Element {
   const [createFormOpen, setCreateFormOpen] = React.useState(false);
   const [editFormOpen, setEditFormOpen] = React.useState(false);
   const [socialNetworksOpen, setSocialNetworksOpen] = React.useState(false);
+  const [mediaMenuOpen, setMediaMenuOpen] = React.useState(false);
+  const [mediaEditor, setMediaEditor] = React.useState<null | ProfileMediaEditor>(null);
+  const [templatesOpen, setTemplatesOpen] = React.useState(false);
+  const [sourcesOpen, setSourcesOpen] = React.useState(false);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
@@ -141,8 +173,10 @@ export function Page(): React.JSX.Element {
 
       if (event.data.type === 'bigmelo:admin-edit-profile') {
         setEditFormOpen(true);
-      } else {
+      } else if (event.data.type === 'bigmelo:admin-edit-social-networks') {
         setSocialNetworksOpen(true);
+      } else {
+        setMediaMenuOpen(true);
       }
     };
 
@@ -228,48 +262,74 @@ export function Page(): React.JSX.Element {
         {error ? <Alert color="error">{error}</Alert> : null}
         {isLoading ? <CircularProgress sx={{ my: 'auto' }} /> : null}
         {!isLoading && !error && profile?.alias ? (
-          <Stack spacing={1} sx={{ height: '100%', maxWidth: '100%', minHeight: 0, width: 430 }}>
-            <Button
-              aria-controls={selectorAnchor ? 'profile-chat-selector' : undefined}
-              aria-expanded={Boolean(selectorAnchor)}
-              aria-haspopup="dialog"
-              endIcon={<CaretDownIcon />}
-              onClick={(event) => {
-                setSelectorAnchor(event.currentTarget);
-              }}
-              sx={{ alignSelf: 'center', color: 'text.primary', flex: '0 0 auto', textTransform: 'none' }}
-              variant="text"
-            >
-              <Typography component="span" fontWeight={600} variant="subtitle1">
-                @{profile.alias}
-              </Typography>
-            </Button>
-            <ProfileSelector
-              anchorEl={selectorAnchor}
-              canCreateProfile={canCreateProfile}
-              currentProfileId={profileId}
-              onClose={() => {
-                setSelectorAnchor(null);
-              }}
-              onCreate={() => {
-                setSelectorAnchor(null);
-                setCreateFormOpen(true);
-              }}
-              onSelect={handleProfileSelect}
-              profiles={profiles}
-            />
-            <Paper elevation={8} sx={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden', width: '100%' }}>
-              <Box
-                allow="microphone"
-                component="iframe"
-                ref={chatIframeRef}
-                sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                src={buildPublicProfileUrl(profile.alias, chatRevision)}
-                sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
-                title={String(t('dashboard.profiles.detail.widgetLauncher.preview.iframeTitle'))}
+          <Box sx={{ height: '100%', maxWidth: '100%', position: 'relative', width: 430 }}>
+            <Stack spacing={1} sx={{ height: '100%', minHeight: 0, width: '100%' }}>
+              <Button
+                aria-controls={selectorAnchor ? 'profile-chat-selector' : undefined}
+                aria-expanded={Boolean(selectorAnchor)}
+                aria-haspopup="dialog"
+                endIcon={<CaretDownIcon />}
+                onClick={(event) => {
+                  setSelectorAnchor(event.currentTarget);
+                }}
+                sx={{ alignSelf: 'center', color: 'text.primary', flex: '0 0 auto', textTransform: 'none' }}
+                variant="text"
+              >
+                <Typography component="span" fontWeight={600} variant="subtitle1">
+                  @{profile.alias}
+                </Typography>
+              </Button>
+              <ProfileSelector
+                anchorEl={selectorAnchor}
+                canCreateProfile={canCreateProfile}
+                currentProfileId={profileId}
+                onClose={() => {
+                  setSelectorAnchor(null);
+                }}
+                onCreate={() => {
+                  setSelectorAnchor(null);
+                  setCreateFormOpen(true);
+                }}
+                onSelect={handleProfileSelect}
+                profiles={profiles}
               />
-            </Paper>
-          </Stack>
+              <Paper elevation={8} sx={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden', width: '100%' }}>
+                <Box
+                  allow="microphone"
+                  component="iframe"
+                  ref={chatIframeRef}
+                  sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                  src={buildPublicProfileUrl(profile.alias, chatRevision)}
+                  sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
+                  title={String(t('dashboard.profiles.detail.widgetLauncher.preview.iframeTitle'))}
+                />
+              </Paper>
+            </Stack>
+            <Stack
+              sx={{
+                left: { sm: 'calc(100% + 16px)', xs: 'auto' },
+                position: 'absolute',
+                right: { sm: 'auto', xs: 8 },
+                top: 48,
+                zIndex: 2,
+              }}
+            >
+              <ProfileChatNavButton
+                icon={<PaletteIcon />}
+                label={String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.tabs.templates'))}
+                onClick={() => {
+                  setTemplatesOpen(true);
+                }}
+              />
+              <ProfileChatNavButton
+                icon={<DatabaseIcon />}
+                label={String(t('dashboard.profiles.detail.nav.data'))}
+                onClick={() => {
+                  setSourcesOpen(true);
+                }}
+              />
+            </Stack>
+          </Box>
         ) : null}
         {!isLoading && !error && !profile?.alias ? (
           <Stack sx={{ maxWidth: 520, width: '100%' }}>
@@ -294,24 +354,197 @@ export function Page(): React.JSX.Element {
         profile={profile}
       />
       {profile ? (
-        <ProfileSocialNetworksDialog
-          onClose={() => {
-            setSocialNetworksOpen(false);
-          }}
-          onSaved={(updatedProfile) => {
-            setProfile(updatedProfile);
-            setProfiles((currentProfiles) =>
-              currentProfiles.map((item) =>
-                String(item.id) === String(updatedProfile.id) ? updatedProfile : item
-              )
-            );
-            setChatRevision((currentRevision) => currentRevision + 1);
-          }}
-          open={socialNetworksOpen}
-          profileId={profile.id}
-        />
+        <React.Fragment>
+          <ProfileSocialNetworksDialog
+            onClose={() => {
+              setSocialNetworksOpen(false);
+            }}
+            onSaved={(updatedProfile) => {
+              setProfile(updatedProfile);
+              setProfiles((currentProfiles) =>
+                currentProfiles.map((item) =>
+                  String(item.id) === String(updatedProfile.id) ? updatedProfile : item
+                )
+              );
+              setChatRevision((currentRevision) => currentRevision + 1);
+            }}
+            open={socialNetworksOpen}
+            profileId={profile.id}
+          />
+          <ProfileTemplatePickerDialog
+            onClose={() => {
+              setTemplatesOpen(false);
+            }}
+            onSaved={() => {
+              setChatRevision((currentRevision) => currentRevision + 1);
+            }}
+            open={templatesOpen}
+            profileId={profile.id}
+            profileName={profile.name}
+          />
+        </React.Fragment>
       ) : null}
+      <Dialog
+        fullWidth
+        maxWidth="xs"
+        onClose={() => {
+          setMediaMenuOpen(false);
+        }}
+        open={mediaMenuOpen}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.profileChat.mediaMenu.title')}</DialogTitle>
+        <DialogContent>
+          <Stack spacing={1.5} sx={{ pt: 1 }}>
+            <Button
+              fullWidth
+              onClick={() => {
+                setMediaMenuOpen(false);
+                setMediaEditor('avatar');
+              }}
+              startIcon={<ImagesSquareIcon />}
+              variant="outlined"
+            >
+              {t('dashboard.profiles.detail.profileChat.mediaMenu.editAvatar')}
+            </Button>
+            <Button
+              fullWidth
+              onClick={() => {
+                setMediaMenuOpen(false);
+                setMediaEditor('voice');
+              }}
+              startIcon={<MicrophoneIcon />}
+              variant="outlined"
+            >
+              {t('dashboard.profiles.detail.profileChat.mediaMenu.editVoice')}
+            </Button>
+            <Button
+              fullWidth
+              onClick={() => {
+                setMediaMenuOpen(false);
+                setMediaEditor('messages');
+              }}
+              startIcon={<ChatTextIcon />}
+              variant="outlined"
+            >
+              {t('dashboard.profiles.detail.profileChat.mediaMenu.editMessages')}
+            </Button>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            color="secondary"
+            onClick={() => {
+              setMediaMenuOpen(false);
+            }}
+          >
+            {t('dashboard.profiles.actions.cancel')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth="lg"
+        onClose={() => {
+          setSourcesOpen(false);
+        }}
+        open={sourcesOpen}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.nav.data')}</DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: 'background.default', maxHeight: 'calc(100dvh - 160px)' }}>
+          <React.Suspense
+            fallback={
+              <Stack sx={{ alignItems: 'center', p: 5 }}>
+                <CircularProgress />
+              </Stack>
+            }
+          >
+            {sourcesOpen ? <ProfileSourcesPage /> : null}
+          </React.Suspense>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setSourcesOpen(false);
+            }}
+          >
+            {t('dashboard.profiles.detail.profileChat.mediaMenu.close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth="lg"
+        onClose={() => {
+          setMediaEditor(null);
+          setChatRevision((currentRevision) => currentRevision + 1);
+        }}
+        open={mediaEditor !== null}
+      >
+        <DialogTitle>
+          {mediaEditor === 'avatar'
+            ? t('dashboard.profiles.detail.profileChat.mediaMenu.editAvatar')
+            : mediaEditor === 'voice'
+              ? t('dashboard.profiles.detail.profileChat.mediaMenu.editVoice')
+              : t('dashboard.profiles.detail.profileChat.mediaMenu.editMessages')}
+        </DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: 'background.default', maxHeight: 'calc(100dvh - 160px)' }}>
+          <React.Suspense
+            fallback={
+              <Stack sx={{ alignItems: 'center', p: 5 }}>
+                <CircularProgress />
+              </Stack>
+            }
+          >
+            {mediaEditor === 'avatar' ? <ProfileAvatarPage /> : null}
+            {mediaEditor === 'voice' ? <ProfileVoicePage /> : null}
+            {mediaEditor === 'messages' ? <ProfileMessagesPage /> : null}
+          </React.Suspense>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setMediaEditor(null);
+              setChatRevision((currentRevision) => currentRevision + 1);
+            }}
+          >
+            {t('dashboard.profiles.detail.profileChat.mediaMenu.close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </React.Fragment>
+  );
+}
+
+function ProfileChatNavButton({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}): React.JSX.Element {
+  return (
+    <Button
+      onClick={onClick}
+      startIcon={icon}
+      sx={{
+        borderRadius: 1,
+        color: 'var(--mui-palette-text-secondary)',
+        justifyContent: 'flex-start',
+        p: '6px 16px',
+        textTransform: 'none',
+        whiteSpace: 'nowrap',
+        '&:hover': {
+          bgcolor: 'var(--mui-palette-action-hover)',
+          color: 'var(--mui-palette-text-primary)',
+        },
+        '& .MuiButton-startIcon': { mr: 1 },
+      }}
+      variant="text"
+    >
+      {label}
+    </Button>
   );
 }
 
@@ -396,7 +629,10 @@ function getPublicProfileOrigin(): string {
 }
 
 interface ProfileAdminActionMessage {
-  type: 'bigmelo:admin-edit-profile' | 'bigmelo:admin-edit-social-networks';
+  type:
+    | 'bigmelo:admin-edit-avatar-voice'
+    | 'bigmelo:admin-edit-profile'
+    | 'bigmelo:admin-edit-social-networks';
 }
 
 function isProfileAdminActionMessage(value: unknown): value is ProfileAdminActionMessage {
@@ -404,7 +640,9 @@ function isProfileAdminActionMessage(value: unknown): value is ProfileAdminActio
     typeof value === 'object' &&
     value !== null &&
     'type' in value &&
-    (value.type === 'bigmelo:admin-edit-profile' || value.type === 'bigmelo:admin-edit-social-networks')
+    (value.type === 'bigmelo:admin-edit-avatar-voice' ||
+      value.type === 'bigmelo:admin-edit-profile' ||
+      value.type === 'bigmelo:admin-edit-social-networks')
   );
 }
 

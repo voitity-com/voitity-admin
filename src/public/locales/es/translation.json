@@ -1554,7 +1554,14 @@
       },
       "detail": {
         "profileChat": {
-          "chooseProfile": "Cambiar perfil"
+          "chooseProfile": "Cambiar perfil",
+          "mediaMenu": {
+            "close": "Cerrar",
+            "editAvatar": "Editar avatar",
+            "editMessages": "Mensajes automáticos",
+            "editVoice": "Editar voz",
+            "title": "Avatar y voz"
+          }
         },
         "avatar": {
           "alt": {
