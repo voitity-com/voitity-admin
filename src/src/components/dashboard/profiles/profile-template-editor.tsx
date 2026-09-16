@@ -834,7 +834,7 @@ function profileAppearanceSaveErrorKey(error: unknown): string {
   return `${prefix}.save`;
 }
 
-function TemplateMobileThumbnail({
+export function TemplateMobileThumbnail({
   avatarUrl,
   backgroundColor,
   profileName,

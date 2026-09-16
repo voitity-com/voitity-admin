@@ -483,7 +483,14 @@ export const route: RouteObject = {
         {
           index: true,
           lazy: async () => {
-            const { Page } = await import('@/pages/dashboard/profiles');
+            const { Page } = await import('@/pages/dashboard/profile-entry');
+            return { Component: Page };
+          },
+        },
+        {
+          path: ':profileId/profile',
+          lazy: async () => {
+            const { Page } = await import('@/pages/dashboard/profile-details/profile-chat');
             return { Component: Page };
           },
         },
@@ -506,13 +513,6 @@ export const route: RouteObject = {
               path: 'template',
               lazy: async () => {
                 const { Page } = await import('@/pages/dashboard/profile-details/template');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'profile',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/profile');
                 return { Component: Page };
               },
             },

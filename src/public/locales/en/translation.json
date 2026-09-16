@@ -1549,9 +1549,20 @@
         "stop": "Stop",
         "uploadImage": "Upload image",
         "viewProfile": "View profile",
-        "openProfile": "Open profile {{name}}"
+        "openProfile": "Open profile {{name}}",
+        "retry": "Retry"
       },
       "detail": {
+        "profileChat": {
+          "chooseProfile": "Switch profile",
+          "mediaMenu": {
+            "close": "Close",
+            "editAvatar": "Edit avatar",
+            "editMessages": "Automatic messages",
+            "editVoice": "Edit voice",
+            "title": "Avatar and voice"
+          }
+        },
         "avatar": {
           "alt": {
             "empty": "No avatar loaded",
