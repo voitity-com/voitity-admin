@@ -1,5 +1,8 @@
 import * as React from 'react';
 import Box from '@mui/material/Box';
+import { useParams } from 'react-router-dom';
+
+import { saveLastVisitedProfileId } from '@/lib/profiles/last-visited-profile';
 
 import { ProfilePublicationDock } from './profile-publication-dock';
 import { ProfilePublicationOnboarding } from './profile-publication-onboarding';
@@ -12,6 +15,14 @@ interface ProfileLayoutProps {
 }
 
 export function ProfileLayout({ children }: ProfileLayoutProps): React.JSX.Element {
+  const { profileId } = useParams();
+
+  React.useEffect(() => {
+    if (profileId) {
+      saveLastVisitedProfileId(profileId);
+    }
+  }, [profileId]);
+
   return (
     <Box
       sx={{
