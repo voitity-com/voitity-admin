@@ -36,6 +36,7 @@ import {
 } from '@/lib/subscription/profile-limits';
 import { toast } from '@/components/core/toaster';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
+import { ProfileSocialNetworksDialog } from '@/components/dashboard/profiles/profile-social-networks-dialog';
 
 const metadata = { title: `Profile chat | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 
@@ -50,6 +51,7 @@ export function Page(): React.JSX.Element {
   const [selectorAnchor, setSelectorAnchor] = React.useState<HTMLElement | null>(null);
   const [createFormOpen, setCreateFormOpen] = React.useState(false);
   const [editFormOpen, setEditFormOpen] = React.useState(false);
+  const [socialNetworksOpen, setSocialNetworksOpen] = React.useState(false);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
@@ -132,12 +134,16 @@ export function Page(): React.JSX.Element {
       if (
         event.origin !== publicProfileOrigin ||
         event.source !== chatIframeRef.current?.contentWindow ||
-        !isEditProfileMessage(event.data)
+        !isProfileAdminActionMessage(event.data)
       ) {
         return;
       }
 
-      setEditFormOpen(true);
+      if (event.data.type === 'bigmelo:admin-edit-profile') {
+        setEditFormOpen(true);
+      } else {
+        setSocialNetworksOpen(true);
+      }
     };
 
     window.addEventListener('message', handleProfileChatMessage);
@@ -287,6 +293,24 @@ export function Page(): React.JSX.Element {
         open={editFormOpen}
         profile={profile}
       />
+      {profile ? (
+        <ProfileSocialNetworksDialog
+          onClose={() => {
+            setSocialNetworksOpen(false);
+          }}
+          onSaved={(updatedProfile) => {
+            setProfile(updatedProfile);
+            setProfiles((currentProfiles) =>
+              currentProfiles.map((item) =>
+                String(item.id) === String(updatedProfile.id) ? updatedProfile : item
+              )
+            );
+            setChatRevision((currentRevision) => currentRevision + 1);
+          }}
+          open={socialNetworksOpen}
+          profileId={profile.id}
+        />
+      ) : null}
     </React.Fragment>
   );
 }
@@ -371,12 +395,16 @@ function getPublicProfileOrigin(): string {
   return new URL(config.publicProfile?.baseUrl || 'http://localhost:3001').origin;
 }
 
-function isEditProfileMessage(value: unknown): value is { type: 'bigmelo:admin-edit-profile' } {
+interface ProfileAdminActionMessage {
+  type: 'bigmelo:admin-edit-profile' | 'bigmelo:admin-edit-social-networks';
+}
+
+function isProfileAdminActionMessage(value: unknown): value is ProfileAdminActionMessage {
   return (
     typeof value === 'object' &&
     value !== null &&
     'type' in value &&
-    value.type === 'bigmelo:admin-edit-profile'
+    (value.type === 'bigmelo:admin-edit-profile' || value.type === 'bigmelo:admin-edit-social-networks')
   );
 }
 
