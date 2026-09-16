@@ -18,12 +18,18 @@ import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
+import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
+import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Check as CheckIcon } from '@phosphor-icons/react/dist/ssr/Check';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
+import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
+import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
 import { Microphone as MicrophoneIcon } from '@phosphor-icons/react/dist/ssr/Microphone';
+import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
 import { Palette as PaletteIcon } from '@phosphor-icons/react/dist/ssr/Palette';
+import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
@@ -65,8 +71,33 @@ const ProfileSourcesPage = React.lazy(async () => {
   const module = await import('@/pages/dashboard/profile-details/sources');
   return { default: module.Page };
 });
+const ProfileIntegrationsPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/integrations');
+  return { default: module.Page };
+});
+const ProfileProductsPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/products');
+  return { default: module.Page };
+});
+const ProfileChatsPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/chats');
+  return { default: module.Page };
+});
+const ProfileQualityPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/quality');
+  return { default: module.Page };
+});
+const ProfileInsightsPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/insights');
+  return { default: module.Page };
+});
+const ProfileSettingsPage = React.lazy(async () => {
+  const module = await import('@/pages/dashboard/profile-details/settings');
+  return { default: module.Page };
+});
 
 type ProfileMediaEditor = 'avatar' | 'messages' | 'voice';
+type ProfileSectionEditor = 'chats' | 'insights' | 'integrations' | 'products' | 'quality' | 'settings';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -84,6 +115,7 @@ export function Page(): React.JSX.Element {
   const [mediaEditor, setMediaEditor] = React.useState<null | ProfileMediaEditor>(null);
   const [templatesOpen, setTemplatesOpen] = React.useState(false);
   const [sourcesOpen, setSourcesOpen] = React.useState(false);
+  const [sectionEditor, setSectionEditor] = React.useState<null | ProfileSectionEditor>(null);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
@@ -328,6 +360,48 @@ export function Page(): React.JSX.Element {
                   setSourcesOpen(true);
                 }}
               />
+              <ProfileChatNavButton
+                icon={<PlugsConnectedIcon />}
+                label={String(t('dashboard.profiles.detail.nav.integrations'))}
+                onClick={() => {
+                  setSectionEditor('integrations');
+                }}
+              />
+              <ProfileChatNavButton
+                icon={<PackageIcon />}
+                label={String(t('dashboard.profiles.detail.nav.products'))}
+                onClick={() => {
+                  setSectionEditor('products');
+                }}
+              />
+              <ProfileChatNavButton
+                icon={<ChatsCircleIcon />}
+                label={String(t('dashboard.profiles.detail.nav.chats'))}
+                onClick={() => {
+                  setSectionEditor('chats');
+                }}
+              />
+              <ProfileChatNavButton
+                icon={<GaugeIcon />}
+                label={String(t('dashboard.profiles.detail.nav.quality'))}
+                onClick={() => {
+                  setSectionEditor('quality');
+                }}
+              />
+              <ProfileChatNavButton
+                icon={<ChartLineUpIcon />}
+                label={String(t('dashboard.profiles.detail.nav.insights'))}
+                onClick={() => {
+                  setSectionEditor('insights');
+                }}
+              />
+              <ProfileChatNavButton
+                icon={<GearIcon />}
+                label={String(t('dashboard.profiles.detail.nav.settings'))}
+                onClick={() => {
+                  setSectionEditor('settings');
+                }}
+              />
             </Stack>
           </Box>
         ) : null}
@@ -473,6 +547,43 @@ export function Page(): React.JSX.Element {
       </Dialog>
       <Dialog
         fullWidth
+        maxWidth="xl"
+        onClose={() => {
+          setSectionEditor(null);
+          setChatRevision((currentRevision) => currentRevision + 1);
+        }}
+        open={sectionEditor !== null}
+      >
+        <DialogTitle>{sectionEditor ? getProfileSectionTitle(sectionEditor, t) : ''}</DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: 'background.default', maxHeight: 'calc(100dvh - 160px)' }}>
+          <React.Suspense
+            fallback={
+              <Stack sx={{ alignItems: 'center', p: 5 }}>
+                <CircularProgress />
+              </Stack>
+            }
+          >
+            {sectionEditor === 'integrations' ? <ProfileIntegrationsPage /> : null}
+            {sectionEditor === 'products' ? <ProfileProductsPage /> : null}
+            {sectionEditor === 'chats' ? <ProfileChatsPage /> : null}
+            {sectionEditor === 'quality' ? <ProfileQualityPage /> : null}
+            {sectionEditor === 'insights' ? <ProfileInsightsPage /> : null}
+            {sectionEditor === 'settings' ? <ProfileSettingsPage /> : null}
+          </React.Suspense>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setSectionEditor(null);
+              setChatRevision((currentRevision) => currentRevision + 1);
+            }}
+          >
+            {t('dashboard.profiles.detail.profileChat.mediaMenu.close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        fullWidth
         maxWidth="lg"
         onClose={() => {
           setMediaEditor(null);
@@ -513,6 +624,26 @@ export function Page(): React.JSX.Element {
       </Dialog>
     </React.Fragment>
   );
+}
+
+function getProfileSectionTitle(
+  section: ProfileSectionEditor,
+  t: ReturnType<typeof useTranslation>['t']
+): string {
+  switch (section) {
+    case 'chats':
+      return String(t('dashboard.profiles.detail.nav.chats'));
+    case 'insights':
+      return String(t('dashboard.profiles.detail.nav.insights'));
+    case 'integrations':
+      return String(t('dashboard.profiles.detail.nav.integrations'));
+    case 'products':
+      return String(t('dashboard.profiles.detail.nav.products'));
+    case 'quality':
+      return String(t('dashboard.profiles.detail.nav.quality'));
+    case 'settings':
+      return String(t('dashboard.profiles.detail.nav.settings'));
+  }
 }
 
 function ProfileChatNavButton({
