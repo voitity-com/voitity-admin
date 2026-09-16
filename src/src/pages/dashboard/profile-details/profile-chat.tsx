@@ -10,12 +10,15 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
+import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
+import Modal from '@mui/material/Modal';
 import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
+import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
@@ -116,6 +119,7 @@ export function Page(): React.JSX.Element {
   const [templatesOpen, setTemplatesOpen] = React.useState(false);
   const [sourcesOpen, setSourcesOpen] = React.useState(false);
   const [sectionEditor, setSectionEditor] = React.useState<null | ProfileSectionEditor>(null);
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
@@ -219,6 +223,39 @@ export function Page(): React.JSX.Element {
     };
   }, []);
 
+  React.useEffect(() => {
+    let gestureStartX: null | number = null;
+
+    const handlePointerDown = (event: PointerEvent): void => {
+      if (event.pointerType === 'touch' && window.innerWidth < 600 && event.clientX >= window.innerWidth - 28) {
+        gestureStartX = event.clientX;
+      }
+    };
+
+    const handlePointerMove = (event: PointerEvent): void => {
+      if (gestureStartX !== null && gestureStartX - event.clientX >= 44) {
+        setMobileNavOpen(true);
+        gestureStartX = null;
+      }
+    };
+
+    const clearGesture = (): void => {
+      gestureStartX = null;
+    };
+
+    window.addEventListener('pointerdown', handlePointerDown, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
+    window.addEventListener('pointerup', clearGesture, { passive: true });
+    window.addEventListener('pointercancel', clearGesture, { passive: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', clearGesture);
+      window.removeEventListener('pointercancel', clearGesture);
+    };
+  }, []);
+
   const handleProfileSelect = React.useCallback(
     (nextProfile: Profile): void => {
       setSelectorAnchor(null);
@@ -273,6 +310,94 @@ export function Page(): React.JSX.Element {
     },
     [profile, t]
   );
+
+  const closeMobileNavAndRun = React.useCallback((action: () => void): void => {
+    setMobileNavOpen(false);
+    action();
+  }, []);
+
+  const profileChatNavItems: ProfileChatNavItem[] = [
+    {
+      icon: <PaletteIcon />,
+      key: 'templates',
+      label: String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.tabs.templates')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setTemplatesOpen(true);
+        });
+      },
+    },
+    {
+      icon: <DatabaseIcon />,
+      key: 'data',
+      label: String(t('dashboard.profiles.detail.nav.data')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSourcesOpen(true);
+        });
+      },
+    },
+    {
+      icon: <PlugsConnectedIcon />,
+      key: 'integrations',
+      label: String(t('dashboard.profiles.detail.nav.integrations')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSectionEditor('integrations');
+        });
+      },
+    },
+    {
+      icon: <PackageIcon />,
+      key: 'products',
+      label: String(t('dashboard.profiles.detail.nav.products')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSectionEditor('products');
+        });
+      },
+    },
+    {
+      icon: <ChatsCircleIcon />,
+      key: 'chats',
+      label: String(t('dashboard.profiles.detail.nav.chats')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSectionEditor('chats');
+        });
+      },
+    },
+    {
+      icon: <GaugeIcon />,
+      key: 'quality',
+      label: String(t('dashboard.profiles.detail.nav.quality')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSectionEditor('quality');
+        });
+      },
+    },
+    {
+      icon: <ChartLineUpIcon />,
+      key: 'insights',
+      label: String(t('dashboard.profiles.detail.nav.insights')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSectionEditor('insights');
+        });
+      },
+    },
+    {
+      icon: <GearIcon />,
+      key: 'settings',
+      label: String(t('dashboard.profiles.detail.nav.settings')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setSectionEditor('settings');
+        });
+      },
+    },
+  ];
 
   return (
     <React.Fragment>
@@ -339,6 +464,7 @@ export function Page(): React.JSX.Element {
             </Stack>
             <Stack
               sx={{
+                display: { sm: 'flex', xs: 'none' },
                 left: { sm: 'calc(100% + 16px)', xs: 'auto' },
                 position: 'absolute',
                 right: { sm: 'auto', xs: 8 },
@@ -346,63 +472,44 @@ export function Page(): React.JSX.Element {
                 zIndex: 2,
               }}
             >
-              <ProfileChatNavButton
-                icon={<PaletteIcon />}
-                label={String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.tabs.templates'))}
-                onClick={() => {
-                  setTemplatesOpen(true);
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<DatabaseIcon />}
-                label={String(t('dashboard.profiles.detail.nav.data'))}
-                onClick={() => {
-                  setSourcesOpen(true);
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<PlugsConnectedIcon />}
-                label={String(t('dashboard.profiles.detail.nav.integrations'))}
-                onClick={() => {
-                  setSectionEditor('integrations');
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<PackageIcon />}
-                label={String(t('dashboard.profiles.detail.nav.products'))}
-                onClick={() => {
-                  setSectionEditor('products');
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<ChatsCircleIcon />}
-                label={String(t('dashboard.profiles.detail.nav.chats'))}
-                onClick={() => {
-                  setSectionEditor('chats');
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<GaugeIcon />}
-                label={String(t('dashboard.profiles.detail.nav.quality'))}
-                onClick={() => {
-                  setSectionEditor('quality');
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<ChartLineUpIcon />}
-                label={String(t('dashboard.profiles.detail.nav.insights'))}
-                onClick={() => {
-                  setSectionEditor('insights');
-                }}
-              />
-              <ProfileChatNavButton
-                icon={<GearIcon />}
-                label={String(t('dashboard.profiles.detail.nav.settings'))}
-                onClick={() => {
-                  setSectionEditor('settings');
-                }}
-              />
+              {profileChatNavItems.map((item) => (
+                <ProfileChatNavButton {...item} key={item.key} />
+              ))}
             </Stack>
+            <Paper
+              elevation={5}
+              onMouseEnter={() => {
+                setMobileNavOpen(true);
+              }}
+              sx={{
+                bgcolor: 'common.white',
+                border: 0,
+                borderRadius: 2,
+                display: { sm: 'none', xs: 'flex' },
+                flexDirection: 'column',
+                maxHeight: 'calc(100dvh - 144px)',
+                overflowY: 'auto',
+                outline: 'none',
+                p: 0.5,
+                position: 'fixed',
+                right: 6,
+                top: 'calc(var(--MainNav-height, 64px) + 48px)',
+                zIndex: 'var(--mui-zIndex-speedDial)',
+              }}
+            >
+              {profileChatNavItems.map((item) => (
+                <Tooltip key={item.key} placement="left" title={item.label}>
+                  <IconButton
+                    aria-label={item.label}
+                    onClick={item.onClick}
+                    size="small"
+                    sx={{ color: '#52525b' }}
+                  >
+                    {item.icon}
+                  </IconButton>
+                </Tooltip>
+              ))}
+            </Paper>
           </Box>
         ) : null}
         {!isLoading && !error && !profile?.alias ? (
@@ -411,6 +518,34 @@ export function Page(): React.JSX.Element {
           </Stack>
         ) : null}
       </Box>
+      <Modal
+        onClose={() => {
+          setMobileNavOpen(false);
+        }}
+        open={mobileNavOpen}
+        slotProps={{ backdrop: { sx: { bgcolor: 'transparent' } } }}
+      >
+        <Paper
+          elevation={10}
+          sx={{
+            bgcolor: 'common.white',
+            border: 0,
+            borderRadius: 2,
+            maxHeight: 'calc(100dvh - 144px)',
+            overflowY: 'auto',
+            outline: 'none',
+            p: 0.75,
+            position: 'fixed',
+            right: 8,
+            top: 'calc(var(--MainNav-height, 64px) + 48px)',
+            width: 'min(210px, calc(100vw - 32px))',
+          }}
+        >
+          {profileChatNavItems.map((item) => (
+            <ProfileChatNavButton {...item} key={item.key} lightBackground />
+          ))}
+        </Paper>
+      </Modal>
       <ProfileFormDialog
         onClose={() => {
           setCreateFormOpen(false);
@@ -649,10 +784,12 @@ function getProfileSectionTitle(
 function ProfileChatNavButton({
   icon,
   label,
+  lightBackground = false,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
+  lightBackground?: boolean;
   onClick: () => void;
 }): React.JSX.Element {
   return (
@@ -661,14 +798,14 @@ function ProfileChatNavButton({
       startIcon={icon}
       sx={{
         borderRadius: 1,
-        color: 'var(--mui-palette-text-secondary)',
+        color: lightBackground ? '#52525b' : 'var(--mui-palette-text-secondary)',
         justifyContent: 'flex-start',
         p: '6px 16px',
         textTransform: 'none',
         whiteSpace: 'nowrap',
         '&:hover': {
-          bgcolor: 'var(--mui-palette-action-hover)',
-          color: 'var(--mui-palette-text-primary)',
+          bgcolor: lightBackground ? 'rgba(15, 23, 42, 0.06)' : 'var(--mui-palette-action-hover)',
+          color: lightBackground ? '#111827' : 'var(--mui-palette-text-primary)',
         },
         '& .MuiButton-startIcon': { mr: 1 },
       }}
@@ -677,6 +814,13 @@ function ProfileChatNavButton({
       {label}
     </Button>
   );
+}
+
+interface ProfileChatNavItem {
+  icon: React.ReactNode;
+  key: string;
+  label: string;
+  onClick: () => void;
 }
 
 interface ProfileSelectorProps {
