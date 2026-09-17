@@ -33,6 +33,19 @@ export interface Profile {
   updated_at?: null | string;
 }
 
+export interface ProfileAdminPreview {
+  avatar: null | {
+    file?: null | string;
+    image_url?: null | string;
+  };
+  preview: {
+    interactive: boolean;
+    is_published: boolean;
+  };
+  profile: Record<string, unknown>;
+  social_networks: Record<string, { icon?: null | string; name?: null | string }>;
+}
+
 export type VoiceCloneStatus = 'completed' | 'failed' | 'pending' | 'processing';
 
 export type ProfileNetworks = Record<string, string>;
@@ -510,6 +523,15 @@ export async function getProfile(id: number | string): Promise<Profile> {
     method: 'GET',
   });
   return unwrapProfile(response);
+}
+
+export async function getProfileAdminPreview(id: number | string): Promise<ProfileAdminPreview> {
+  const response = await requestJson<ApiEnvelope<ProfileAdminPreview> | ProfileAdminPreview>(
+    `/api/profile/${encodeURIComponent(String(id))}/preview`,
+    { method: 'GET' }
+  );
+
+  return isApiEnvelope<ProfileAdminPreview>(response) ? response.data : response;
 }
 
 export async function createProfile(payload: ProfilePayload): Promise<Profile> {

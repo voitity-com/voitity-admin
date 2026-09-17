@@ -1532,6 +1532,12 @@
       "validation": { "email": "Ingresa un email válido", "nameRequired": "El nombre del negocio es obligatorio", "originRequired": "Agrega al menos un origen permitido" }
     },
     "profiles": {
+      "planRequired": {
+        "action": "Adquirir plan",
+        "description": "Para abrir y administrar este perfil necesitas una suscripción activa. Elige un plan para recuperar el acceso a sus herramientas y publicación.",
+        "error": "No pudimos comprobar el estado de tu suscripción.",
+        "title": "Necesitas un plan para administrar este perfil"
+      },
       "actions": {
         "add": "Agregar",
         "apply": "Aplicar",
@@ -1564,6 +1570,22 @@
             "editMessages": "Mensajes automáticos",
             "editVoice": "Editar voz",
             "title": "Avatar y voz"
+          },
+          "publication": {
+            "deactivateAction": "Desactivar",
+            "deactivateDescription": "El perfil dejará de estar disponible públicamente. Puedes volver a publicarlo cuando quieras.",
+            "deactivateItem": "Desactivar",
+            "deactivateTitle": "Desactivar perfil",
+            "loadError": "No se pudo comprobar el estado de publicación.",
+            "missingDescription": "Todavía faltan elementos requeridos. Complétalos para habilitar la publicación.",
+            "publishAction": "Publicar",
+            "published": "Publicado",
+            "publishItem": "Publicar",
+            "publishTitle": "Publicar perfil",
+            "readyDescription": "Todos los elementos requeridos están completos. El perfil está listo para publicarse.",
+            "requirementComplete": "Completo",
+            "requirementMissing": "Pendiente",
+            "unpublished": "No Publicado"
           },
           "webVersion": {
             "iframeTitle": "Vista web del chat del perfil",

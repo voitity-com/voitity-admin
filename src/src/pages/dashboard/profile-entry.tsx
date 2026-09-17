@@ -18,6 +18,7 @@ import { trackAnalyticsEvent } from '@/lib/google-analytics';
 import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
 import { createProfile, listProfiles, ProfileApiError } from '@/lib/profiles/api-client';
 import { getLastVisitedProfileId, saveLastVisitedProfileId } from '@/lib/profiles/last-visited-profile';
+import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
 import { toast } from '@/components/core/toaster';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 
@@ -35,6 +36,17 @@ export function Page(): React.JSX.Element {
     setError('');
 
     try {
+      try {
+        await getSubscriptionLimits();
+      } catch (subscriptionError) {
+        if (subscriptionError instanceof SubscriptionApiError && subscriptionError.status === 404) {
+          navigate(paths.dashboard.settings.billing, { replace: true });
+          return;
+        }
+
+        throw subscriptionError;
+      }
+
       const profiles = await listProfiles();
       const targetProfile = getEntryProfile(profiles);
 
@@ -141,7 +153,14 @@ function getEntryProfile(profiles: Profile[]): Profile | undefined {
       return profile;
     }
 
-    return toTimestamp(profile.created_at) > toTimestamp(latest.created_at) ? profile : latest;
+    const profileTimestamp = toTimestamp(profile.created_at);
+    const latestTimestamp = toTimestamp(latest.created_at);
+
+    if (profileTimestamp !== latestTimestamp) {
+      return profileTimestamp > latestTimestamp ? profile : latest;
+    }
+
+    return Number(profile.id) > Number(latest.id) ? profile : latest;
   }, undefined);
 }
 

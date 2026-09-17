@@ -12,6 +12,7 @@ import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
 
+import { paths } from '@/paths';
 import { logger } from '@/lib/default-logger';
 import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
 import { useUser } from '@/hooks/use-user';
@@ -35,6 +36,19 @@ export function NoPlanTutorialDialog(): React.JSX.Element {
     let isMounted = true;
 
     setStatus('checking');
+
+    if (
+      location.pathname === '/dashboard' ||
+      location.pathname === paths.dashboard.settings.billing ||
+      location.pathname.startsWith(`${paths.dashboard.profiles}/`) ||
+      location.pathname === paths.dashboard.profiles
+    ) {
+      setStatus('not-required');
+
+      return () => {
+        isMounted = false;
+      };
+    }
 
     if (!user?.id) {
       setStatus('not-required');

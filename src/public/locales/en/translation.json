@@ -1532,6 +1532,12 @@
       "validation": { "email": "Enter a valid email", "nameRequired": "Business name is required", "originRequired": "Add at least one allowed origin" }
     },
     "profiles": {
+      "planRequired": {
+        "action": "Get a plan",
+        "description": "You need an active subscription to open and manage this profile. Choose a plan to regain access to its tools and publishing controls.",
+        "error": "We could not check your subscription status.",
+        "title": "You need a plan to manage this profile"
+      },
       "actions": {
         "add": "Add",
         "apply": "Apply",
@@ -1564,6 +1570,22 @@
             "editMessages": "Automatic messages",
             "editVoice": "Edit voice",
             "title": "Avatar and voice"
+          },
+          "publication": {
+            "deactivateAction": "Deactivate",
+            "deactivateDescription": "The profile will no longer be publicly available. You can publish it again whenever you want.",
+            "deactivateItem": "Deactivate",
+            "deactivateTitle": "Deactivate profile",
+            "loadError": "The publication status could not be checked.",
+            "missingDescription": "Some required elements are still missing. Complete them to enable publishing.",
+            "publishAction": "Publish",
+            "published": "Published",
+            "publishItem": "Publish",
+            "publishTitle": "Publish profile",
+            "readyDescription": "All required elements are complete. The profile is ready to publish.",
+            "requirementComplete": "Complete",
+            "requirementMissing": "Pending",
+            "unpublished": "Not Published"
           },
           "webVersion": {
             "iframeTitle": "Profile chat web view",
