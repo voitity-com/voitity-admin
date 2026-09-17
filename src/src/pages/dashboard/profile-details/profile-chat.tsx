@@ -10,7 +10,6 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
@@ -18,7 +17,6 @@ import Modal from '@mui/material/Modal';
 import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
@@ -126,6 +124,7 @@ export function Page(): React.JSX.Element {
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
   const webChatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const mobileNavGestureRef = React.useRef<null | { pointerId: number; startX: number }>(null);
 
   React.useEffect(() => {
     if (profileId) {
@@ -227,39 +226,6 @@ export function Page(): React.JSX.Element {
     };
   }, []);
 
-  React.useEffect(() => {
-    let gestureStartX: null | number = null;
-
-    const handlePointerDown = (event: PointerEvent): void => {
-      if (event.pointerType === 'touch' && window.innerWidth < 600 && event.clientX >= window.innerWidth - 28) {
-        gestureStartX = event.clientX;
-      }
-    };
-
-    const handlePointerMove = (event: PointerEvent): void => {
-      if (gestureStartX !== null && gestureStartX - event.clientX >= 44) {
-        setMobileNavOpen(true);
-        gestureStartX = null;
-      }
-    };
-
-    const clearGesture = (): void => {
-      gestureStartX = null;
-    };
-
-    window.addEventListener('pointerdown', handlePointerDown, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    window.addEventListener('pointerup', clearGesture, { passive: true });
-    window.addEventListener('pointercancel', clearGesture, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', clearGesture);
-      window.removeEventListener('pointercancel', clearGesture);
-    };
-  }, []);
-
   const handleProfileSelect = React.useCallback(
     (nextProfile: Profile): void => {
       setSelectorAnchor(null);
@@ -318,6 +284,36 @@ export function Page(): React.JSX.Element {
   const closeMobileNavAndRun = React.useCallback((action: () => void): void => {
     setMobileNavOpen(false);
     action();
+  }, []);
+
+  const handleMobileNavPointerDown = React.useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    if (event.pointerType === 'mouse') {
+      return;
+    }
+
+    mobileNavGestureRef.current = { pointerId: event.pointerId, startX: event.clientX };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
+
+  const handleMobileNavPointerMove = React.useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    const gesture = mobileNavGestureRef.current;
+
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (gesture.startX - event.clientX >= 32) {
+      setMobileNavOpen(true);
+      mobileNavGestureRef.current = null;
+    }
+  }, []);
+
+  const clearMobileNavGesture = React.useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    mobileNavGestureRef.current = null;
   }, []);
 
   const profileChatNavItems: ProfileChatNavItem[] = [
@@ -426,7 +422,7 @@ export function Page(): React.JSX.Element {
           height: 'calc(100dvh - var(--MainNav-height, 64px))',
           minHeight: 560,
           overflow: 'hidden',
-          px: { sm: 2, xs: 0 },
+          px: { sm: 2, xs: 1.5 },
           py: { sm: 1.5, xs: 1 },
         }}
       >
@@ -491,10 +487,25 @@ export function Page(): React.JSX.Element {
               ))}
             </Stack>
             <Paper
+              aria-label={String(t('dashboard.profiles.detail.profileChat.mobileMenu.open'))}
               elevation={5}
+              onClick={() => {
+                setMobileNavOpen(true);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setMobileNavOpen(true);
+                }
+              }}
               onMouseEnter={() => {
                 setMobileNavOpen(true);
               }}
+              onPointerCancel={clearMobileNavGesture}
+              onPointerDown={handleMobileNavPointerDown}
+              onPointerMove={handleMobileNavPointerMove}
+              onPointerUp={clearMobileNavGesture}
+              role="button"
               sx={{
                 bgcolor: 'common.white',
                 border: 0,
@@ -507,21 +518,20 @@ export function Page(): React.JSX.Element {
                 p: 0.5,
                 position: 'fixed',
                 right: 6,
+                touchAction: 'pan-y',
                 top: 'calc(var(--MainNav-height, 64px) + 48px)',
                 zIndex: 'var(--mui-zIndex-speedDial)',
               }}
+              tabIndex={0}
             >
               {mobileProfileChatNavItems.map((item) => (
-                <Tooltip key={item.key} placement="left" title={item.label}>
-                  <IconButton
-                    aria-label={item.label}
-                    onClick={item.onClick}
-                    size="small"
-                    sx={{ color: '#52525b' }}
-                  >
-                    {item.icon}
-                  </IconButton>
-                </Tooltip>
+                <Box
+                  aria-hidden="true"
+                  key={item.key}
+                  sx={{ alignItems: 'center', color: '#52525b', display: 'flex', height: 34, justifyContent: 'center', width: 34 }}
+                >
+                  {item.icon}
+                </Box>
               ))}
             </Paper>
           </Box>

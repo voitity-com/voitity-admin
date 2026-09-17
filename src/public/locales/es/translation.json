@@ -1555,6 +1555,9 @@
       "detail": {
         "profileChat": {
           "chooseProfile": "Cambiar perfil",
+          "mobileMenu": {
+            "open": "Abrir menú del perfil"
+          },
           "mediaMenu": {
             "close": "Cerrar",
             "editAvatar": "Editar avatar",
