@@ -1532,6 +1532,11 @@
       "validation": { "email": "Ingresa un email válido", "nameRequired": "El nombre del negocio es obligatorio", "originRequired": "Agrega al menos un origen permitido" }
     },
     "profiles": {
+      "entry": {
+        "description": "Comparte quién eres, conecta tus redes y configura un chat que responda por ti.",
+        "eyebrow": "Tu espacio en Bigmelo",
+        "title": "Crea tu primer perfil"
+      },
       "planRequired": {
         "action": "Adquirir plan",
         "description": "Para abrir y administrar este perfil necesitas una suscripción activa. Elige un plan para recuperar el acceso a sus herramientas y publicación.",
