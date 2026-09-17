@@ -48,8 +48,10 @@ import {
   updateVoice,
   uploadVoiceSample,
 } from '@/lib/profiles/api-client';
+import { useCurrentPlan } from '@/lib/subscription/use-current-plan';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
+import { FreePlanFeatureLock } from '@/components/dashboard/profiles/free-plan-feature-lock';
 
 const metadata = { title: `Voice | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 type VoiceLanguageCode = 'es' | 'en';
@@ -62,6 +64,7 @@ type SampleRecordingStep = 'intro' | 'countdown' | 'recording' | 'review';
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
+  const { isFreePlan } = useCurrentPlan();
   const [profile, setProfile] = React.useState<null | Profile>(null);
   const [voiceId, setVoiceId] = React.useState<string>(() => getStoredVoiceId(profileId));
   const [voiceName, setVoiceName] = React.useState<string>('');
@@ -544,129 +547,131 @@ export function Page(): React.JSX.Element {
       <Helmet>
         <title>{metadata.title}</title>
       </Helmet>
-      <Stack spacing={3}>
-        {error ? <Alert color="error">{error}</Alert> : null}
-        <ProfileGuideTutorialLink step="avatarAndVoice" />
-        <Card>
-          <CardHeader
-            subheader={profile ? profile.name : t('dashboard.profiles.detail.voice.createSubheader')}
-            title={t('dashboard.profiles.detail.voice.title')}
-          />
-          {isLoading ? (
-            <Stack sx={{ alignItems: 'center', p: 4 }}>
-              <CircularProgress />
-            </Stack>
-          ) : (
-            <React.Fragment>
-              <CardContent>
-                <Stack spacing={3}>
-                  <Stack spacing={2}>
-                    {isCloneProcessing ? (
-                      <Alert color="info">{t('dashboard.profiles.detail.voice.cloneProcessing')}</Alert>
-                    ) : profile?.voice_clone_status === 'failed' ? (
-                      <Alert color="error">{t('dashboard.profiles.detail.voice.cloneFailed')}</Alert>
-                    ) : !hasConfiguredVoice ? (
-                      <Alert color="warning">{t('dashboard.profiles.detail.voice.noClonedVoice')}</Alert>
-                    ) : null}
-                    <FormControl>
-                      <InputLabel id="voice-language-label">
-                        {t('dashboard.profiles.detail.voice.fields.language')}
-                      </InputLabel>
-                      <Select
-                        label={t('dashboard.profiles.detail.voice.fields.language')}
-                        labelId="voice-language-label"
-                        onChange={(event) => {
-                          setVoiceLanguageCode(normalizeVoiceLanguageCode(String(event.target.value)));
-                        }}
-                        value={voiceLanguageCode}
-                      >
-                        {VOICE_LANGUAGE_CODES.map((code) => (
-                          <MenuItem key={code} value={code}>
-                            {t(`dashboard.profiles.detail.voice.languages.${code}`)}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      <FormHelperText>{t('dashboard.profiles.detail.voice.fields.languageHelper')}</FormHelperText>
-                    </FormControl>
-                    {hasConfiguredVoice ? (
-                      <React.Fragment>
-                        <Box>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={voiceResponsesEnabled}
-                                onChange={(event) => {
-                                  const checked = event.target.checked;
-                                  setVoiceResponsesEnabled(checked);
+      <FreePlanFeatureLock locked={isFreePlan}>
+        <Stack spacing={3}>
+          {error ? <Alert color="error">{error}</Alert> : null}
+          <ProfileGuideTutorialLink step="avatarAndVoice" />
+          <Card>
+            <CardHeader
+              subheader={profile ? profile.name : t('dashboard.profiles.detail.voice.createSubheader')}
+              title={t('dashboard.profiles.detail.voice.title')}
+            />
+            {isLoading ? (
+              <Stack sx={{ alignItems: 'center', p: 4 }}>
+                <CircularProgress />
+              </Stack>
+            ) : (
+              <React.Fragment>
+                <CardContent>
+                  <Stack spacing={3}>
+                    <Stack spacing={2}>
+                      {isCloneProcessing ? (
+                        <Alert color="info">{t('dashboard.profiles.detail.voice.cloneProcessing')}</Alert>
+                      ) : profile?.voice_clone_status === 'failed' ? (
+                        <Alert color="error">{t('dashboard.profiles.detail.voice.cloneFailed')}</Alert>
+                      ) : !hasConfiguredVoice ? (
+                        <Alert color="warning">{t('dashboard.profiles.detail.voice.noClonedVoice')}</Alert>
+                      ) : null}
+                      <FormControl>
+                        <InputLabel id="voice-language-label">
+                          {t('dashboard.profiles.detail.voice.fields.language')}
+                        </InputLabel>
+                        <Select
+                          label={t('dashboard.profiles.detail.voice.fields.language')}
+                          labelId="voice-language-label"
+                          onChange={(event) => {
+                            setVoiceLanguageCode(normalizeVoiceLanguageCode(String(event.target.value)));
+                          }}
+                          value={voiceLanguageCode}
+                        >
+                          {VOICE_LANGUAGE_CODES.map((code) => (
+                            <MenuItem key={code} value={code}>
+                              {t(`dashboard.profiles.detail.voice.languages.${code}`)}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                        <FormHelperText>{t('dashboard.profiles.detail.voice.fields.languageHelper')}</FormHelperText>
+                      </FormControl>
+                      {hasConfiguredVoice ? (
+                        <React.Fragment>
+                          <Box>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={voiceResponsesEnabled}
+                                  onChange={(event) => {
+                                    const checked = event.target.checked;
+                                    setVoiceResponsesEnabled(checked);
 
-                                  if (!checked) {
-                                    setVoiceAutoplayEnabled(false);
-                                  }
-                                }}
-                              />
-                            }
-                            label={t('dashboard.profiles.detail.voice.fields.voiceEnabled')}
-                          />
-                          <FormHelperText sx={{ ml: 4 }}>
-                            {t('dashboard.profiles.detail.voice.fields.voiceEnabledHelper')}
-                          </FormHelperText>
-                        </Box>
-                        <Box>
-                          <FormControlLabel
-                            control={
-                              <Checkbox
-                                checked={Boolean(voiceResponsesEnabled && voiceAutoplayEnabled)}
-                                disabled={!voiceResponsesEnabled}
-                                onChange={(event) => {
-                                  setVoiceAutoplayEnabled(event.target.checked);
-                                }}
-                              />
-                            }
-                            label={t('dashboard.profiles.detail.voice.fields.voiceAutoplayEnabled')}
-                          />
-                          <FormHelperText sx={{ ml: 4 }}>
-                            {voiceResponsesEnabled
-                              ? t('dashboard.profiles.detail.voice.fields.voiceAutoplayHelper')
-                              : t('dashboard.profiles.detail.voice.fields.voiceAutoplayDisabledHelper')}
-                          </FormHelperText>
-                        </Box>
-                      </React.Fragment>
-                    ) : null}
+                                    if (!checked) {
+                                      setVoiceAutoplayEnabled(false);
+                                    }
+                                  }}
+                                />
+                              }
+                              label={t('dashboard.profiles.detail.voice.fields.voiceEnabled')}
+                            />
+                            <FormHelperText sx={{ ml: 4 }}>
+                              {t('dashboard.profiles.detail.voice.fields.voiceEnabledHelper')}
+                            </FormHelperText>
+                          </Box>
+                          <Box>
+                            <FormControlLabel
+                              control={
+                                <Checkbox
+                                  checked={Boolean(voiceResponsesEnabled && voiceAutoplayEnabled)}
+                                  disabled={!voiceResponsesEnabled}
+                                  onChange={(event) => {
+                                    setVoiceAutoplayEnabled(event.target.checked);
+                                  }}
+                                />
+                              }
+                              label={t('dashboard.profiles.detail.voice.fields.voiceAutoplayEnabled')}
+                            />
+                            <FormHelperText sx={{ ml: 4 }}>
+                              {voiceResponsesEnabled
+                                ? t('dashboard.profiles.detail.voice.fields.voiceAutoplayHelper')
+                                : t('dashboard.profiles.detail.voice.fields.voiceAutoplayDisabledHelper')}
+                            </FormHelperText>
+                          </Box>
+                        </React.Fragment>
+                      ) : null}
+                    </Stack>
                   </Stack>
-                </Stack>
-              </CardContent>
-              <CardActions sx={{ justifyContent: hasConfiguredVoice ? 'space-between' : 'flex-end', p: 3, pt: 0 }}>
-                {hasConfiguredVoice ? (
-                  <Button disabled={isCreating || isUploading} onClick={handleSaveVoice} variant="outlined">
-                    {t('dashboard.profiles.actions.save')}
-                  </Button>
-                ) : null}
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                  <Button
-                    disabled={isCloneProcessing || isCreating || isUploading}
-                    onClick={handleOpenSampleDialog}
-                    startIcon={<MicrophoneIcon />}
-                    variant="contained"
-                  >
-                    {isCloneProcessing ? t('dashboard.profiles.detail.voice.cloningVoice') : cloneActionLabel}
-                  </Button>
+                </CardContent>
+                <CardActions sx={{ justifyContent: hasConfiguredVoice ? 'space-between' : 'flex-end', p: 3, pt: 0 }}>
                   {hasConfiguredVoice ? (
-                    <Button
-                      color="secondary"
-                      onClick={() => {
-                        setTestDialogOpen(true);
-                      }}
-                      variant="outlined"
-                    >
-                      {t('dashboard.profiles.detail.voice.testVoice')}
+                    <Button disabled={isCreating || isUploading} onClick={handleSaveVoice} variant="outlined">
+                      {t('dashboard.profiles.actions.save')}
                     </Button>
                   ) : null}
-                </Stack>
-              </CardActions>
-            </React.Fragment>
-          )}
-        </Card>
-      </Stack>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                    <Button
+                      disabled={isCloneProcessing || isCreating || isUploading}
+                      onClick={handleOpenSampleDialog}
+                      startIcon={<MicrophoneIcon />}
+                      variant="contained"
+                    >
+                      {isCloneProcessing ? t('dashboard.profiles.detail.voice.cloningVoice') : cloneActionLabel}
+                    </Button>
+                    {hasConfiguredVoice ? (
+                      <Button
+                        color="secondary"
+                        onClick={() => {
+                          setTestDialogOpen(true);
+                        }}
+                        variant="outlined"
+                      >
+                        {t('dashboard.profiles.detail.voice.testVoice')}
+                      </Button>
+                    ) : null}
+                  </Stack>
+                </CardActions>
+              </React.Fragment>
+            )}
+          </Card>
+        </Stack>
+      </FreePlanFeatureLock>
       <Dialog
         fullWidth
         maxWidth="md"

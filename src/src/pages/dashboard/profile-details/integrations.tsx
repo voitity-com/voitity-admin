@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
@@ -28,6 +29,7 @@ import { ArrowsClockwise as ArrowsClockwiseIcon } from '@phosphor-icons/react/di
 import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
 import { InstagramLogo as InstagramLogoIcon } from '@phosphor-icons/react/dist/ssr/InstagramLogo';
 import { LinkSimple as LinkSimpleIcon } from '@phosphor-icons/react/dist/ssr/LinkSimple';
+import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { PencilSimple as PencilSimpleIcon } from '@phosphor-icons/react/dist/ssr/PencilSimple';
 import { Play as PlayIcon } from '@phosphor-icons/react/dist/ssr/Play';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
@@ -42,6 +44,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { paths } from '@/paths';
 import { logger } from '@/lib/default-logger';
 import {
   enabledIntegrationProviders as enabledIntegrationFeatureProviders,
@@ -76,6 +79,8 @@ import {
   type YouTubeConnectionInput,
   type YouTubeMediaInput,
 } from '@/lib/integrations/api-client';
+import { useCurrentPlan } from '@/lib/subscription/use-current-plan';
+import { RouterLink } from '@/components/core/link';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 import { OtherMediaForm } from '@/components/dashboard/profiles/integrations/other-media-form';
@@ -395,6 +400,7 @@ const copy = {
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { i18n, t: translate } = useTranslation();
+  const { isFreePlan, isLoading: isPlanLoading } = useCurrentPlan();
   const [searchParams] = useSearchParams();
   const language = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
   const t = copy[language];
@@ -466,6 +472,11 @@ export function Page(): React.JSX.Element {
         return;
       }
 
+      if (isFreePlan) {
+        setDestinations([]);
+        return;
+      }
+
       const [nextPage, nextDestinations] = await Promise.all([
         getIntegrationMedia(profileId, activeTab, language),
         activeTab === 'other' ? getIntegrationDestinations(language) : Promise.resolve([]),
@@ -479,13 +490,17 @@ export function Page(): React.JSX.Element {
     } finally {
       setIsLoading(false);
     }
-  }, [activeTab, language, profileId, t.common.error]);
+  }, [activeTab, isFreePlan, language, profileId, t.common.error]);
 
   React.useEffect(() => {
+    if (isPlanLoading) {
+      return;
+    }
+
     loadIntegration().catch((err) => {
       logger.error(err);
     });
-  }, [loadIntegration]);
+  }, [isPlanLoading, loadIntegration]);
 
   React.useEffect(() => {
     const connectedProvider = normalizeProvider(searchParams.get('provider'));
@@ -787,7 +802,11 @@ export function Page(): React.JSX.Element {
           <Card>
             <CardHeader
               avatar={<PlugsConnectedIcon fontSize="var(--icon-fontSize-lg)" />}
-              subheader={interpolate(providerText.hint, { limit: selectionLimitLabel })}
+              subheader={
+                isFreePlan
+                  ? translate('dashboard.profiles.detail.integrations.freePlan.description')
+                  : interpolate(providerText.hint, { limit: selectionLimitLabel })
+              }
               title={t.common.title}
             />
             <Divider />
@@ -824,37 +843,60 @@ export function Page(): React.JSX.Element {
             </Tabs>
             <Divider />
             <CardContent>
-              <IntegrationPanel
-                common={t.common}
-                destinations={destinations}
-                disconnectConfirmation={disconnectConfirmation}
-                isConnecting={isConnecting}
-                isDisconnecting={isDisconnecting}
-                isLoading={isLoading}
-                isSaving={isSaving}
-                isSyncing={isSyncing}
-                isUploading={isUploading}
-                language={language}
-                media={media}
-                onConnect={handleConnect}
-                onDeleteMedia={handleDeleteMedia}
-                onDisconnect={handleDisconnect}
-                onObservationChange={handleObservationChange}
-                onOnlyFansConnect={handleOnlyFansConnect}
-                onOnlyFansUpload={handleOnlyFansUpload}
-                onOtherMediaSave={handleOtherMediaSave}
-                onSave={handleSave}
-                onSync={handleSync}
-                onToggleSelected={handleToggleSelected}
-                onYouTubeAddMedia={handleYouTubeAddMedia}
-                onYouTubeConnect={handleYouTubeConnect}
-                page={page}
-                provider={activeTab}
-                providerConfig={providerConfigs[activeTab]}
-                providerText={providerText}
-                selectedCount={selectedCount}
-                selectionLimit={selectionLimit}
-              />
+              {isFreePlan ? (
+                <Alert
+                  icon={<LockKeyIcon fontSize="var(--icon-fontSize-lg)" />}
+                  severity="warning"
+                  sx={{ alignItems: 'flex-start', mx: 'auto', my: 2, maxWidth: 680, p: 2 }}
+                  variant="outlined"
+                >
+                  <AlertTitle>
+                    {translate('dashboard.profiles.detail.integrations.freePlan.title', {
+                      provider: providerText.label,
+                    })}
+                  </AlertTitle>
+                  <Typography color="text.secondary" sx={{ mb: 2 }} variant="body2">
+                    {translate('dashboard.profiles.detail.integrations.freePlan.providerDescription', {
+                      provider: providerText.label,
+                    })}
+                  </Typography>
+                  <Button component={RouterLink} href={paths.dashboard.settings.billing} size="small" variant="contained">
+                    {translate('dashboard.profiles.freePlanLock.upgrade')}
+                  </Button>
+                </Alert>
+              ) : (
+                <IntegrationPanel
+                  common={t.common}
+                  destinations={destinations}
+                  disconnectConfirmation={disconnectConfirmation}
+                  isConnecting={isConnecting}
+                  isDisconnecting={isDisconnecting}
+                  isLoading={isLoading}
+                  isSaving={isSaving}
+                  isSyncing={isSyncing}
+                  isUploading={isUploading}
+                  language={language}
+                  media={media}
+                  onConnect={handleConnect}
+                  onDeleteMedia={handleDeleteMedia}
+                  onDisconnect={handleDisconnect}
+                  onObservationChange={handleObservationChange}
+                  onOnlyFansConnect={handleOnlyFansConnect}
+                  onOnlyFansUpload={handleOnlyFansUpload}
+                  onOtherMediaSave={handleOtherMediaSave}
+                  onSave={handleSave}
+                  onSync={handleSync}
+                  onToggleSelected={handleToggleSelected}
+                  onYouTubeAddMedia={handleYouTubeAddMedia}
+                  onYouTubeConnect={handleYouTubeConnect}
+                  page={page}
+                  provider={activeTab}
+                  providerConfig={providerConfigs[activeTab]}
+                  providerText={providerText}
+                  selectedCount={selectedCount}
+                  selectionLimit={selectionLimit}
+                />
+              )}
             </CardContent>
           </Card>
         ) : null}

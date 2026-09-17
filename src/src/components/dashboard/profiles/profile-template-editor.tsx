@@ -5,6 +5,7 @@ import Alert from '@mui/material/Alert';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -26,6 +27,7 @@ import { CloudArrowUp as CloudArrowUpIcon } from '@phosphor-icons/react/dist/ssr
 import { Desktop as DesktopIcon } from '@phosphor-icons/react/dist/ssr/Desktop';
 import { DeviceMobile as DeviceMobileIcon } from '@phosphor-icons/react/dist/ssr/DeviceMobile';
 import { Image as ImageIcon } from '@phosphor-icons/react/dist/ssr/Image';
+import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { Palette as PaletteIcon } from '@phosphor-icons/react/dist/ssr/Palette';
 import { X as XIcon } from '@phosphor-icons/react/dist/ssr/X';
 import type { FileRejection } from 'react-dropzone';
@@ -33,7 +35,8 @@ import { useDropzone } from 'react-dropzone';
 import { useTranslation } from 'react-i18next';
 
 import { logger } from '@/lib/default-logger';
-import type { ProfileAppearanceConfiguration } from '@/lib/profile-appearance/api-client';
+import { paths } from '@/paths';
+import type { ProfileAppearanceConfiguration, ProfileTemplateOption } from '@/lib/profile-appearance/api-client';
 import {
   getProfileAppearance,
   ProfileAppearanceApiError,
@@ -41,6 +44,7 @@ import {
   uploadProfileBackgroundImage,
 } from '@/lib/profile-appearance/api-client';
 import { toast } from '@/components/core/toaster';
+import { RouterLink } from '@/components/core/link';
 
 interface ProfileTemplateEditorProps {
   profileAvatarUrl: null | string;
@@ -77,6 +81,7 @@ export function ProfileTemplateEditor({
   const [isMobileAppearanceEditorOpen, setIsMobileAppearanceEditorOpen] = React.useState(false);
   const [isSaving, setIsSaving] = React.useState(false);
   const [pendingReplacement, setPendingReplacement] = React.useState<null | File>(null);
+  const [blockedTemplate, setBlockedTemplate] = React.useState<null | ProfileTemplateOption>(null);
   const [selectedFile, setSelectedFile] = React.useState<null | File>(null);
   const [selectedFilePreview, setSelectedFilePreview] = React.useState<null | string>(null);
   const editorPreviewUrl = React.useMemo(() => buildEditorPreviewUrl(previewUrl), [previewUrl]);
@@ -87,7 +92,17 @@ export function ProfileTemplateEditor({
     Boolean(configuration) &&
     !isLoading &&
     !isSaving &&
+    selectedTemplate?.included !== false &&
     (draft.backgroundType === 'css' || Boolean(previewBackgroundImageUrl));
+
+  const handleTemplateSelection = React.useCallback((template: ProfileTemplateOption): void => {
+    if (!template.included) {
+      setBlockedTemplate(template);
+      return;
+    }
+
+    setDraft((current) => ({ ...current, templateKey: template.key }));
+  }, []);
 
   const loadConfiguration = React.useCallback(async (): Promise<void> => {
     setIsLoading(true);
@@ -468,12 +483,19 @@ export function ProfileTemplateEditor({
                           <Paper
                             key={template.key}
                             onClick={() => {
-                              setDraft((current) => ({ ...current, templateKey: template.key }));
+                              handleTemplateSelection(template);
+                            }}
+                            onKeyDown={(event) => {
+                              if (event.key === 'Enter' || event.key === ' ') {
+                                event.preventDefault();
+                                handleTemplateSelection(template);
+                              }
                             }}
                             role="button"
                             sx={{
                               border: '2px solid',
                               borderColor: selected ? 'primary.main' : 'divider',
+                              bgcolor: template.included ? 'background.paper' : 'action.disabledBackground',
                               cursor: 'pointer',
                               overflow: 'hidden',
                               p: 1.5,
@@ -494,6 +516,15 @@ export function ProfileTemplateEditor({
                               <Typography sx={{ fontWeight: 700 }}>{template.label}</Typography>
                               {selected ? (
                                 <CheckCircleIcon color="var(--mui-palette-primary-main)" weight="fill" />
+                              ) : !template.included ? (
+                                <Chip
+                                  icon={<LockKeyIcon />}
+                                  label={t(
+                                    'dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.badge'
+                                  )}
+                                  size="small"
+                                  variant="outlined"
+                                />
                               ) : null}
                             </Stack>
                           </Paper>
@@ -679,6 +710,38 @@ export function ProfileTemplateEditor({
             title={String(t('dashboard.profiles.detail.widgetLauncher.templateEditor.preview.iframeTitle'))}
           />
         </Stack>
+      </Dialog>
+
+      <Dialog
+        fullWidth
+        maxWidth="xs"
+        onClose={() => {
+          setBlockedTemplate(null);
+        }}
+        open={Boolean(blockedTemplate)}
+      >
+        <DialogTitle>
+          {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.title')}
+        </DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.description', {
+              template: blockedTemplate?.label ?? '',
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setBlockedTemplate(null);
+            }}
+          >
+            {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.understood')}
+          </Button>
+          <Button component={RouterLink} href={paths.dashboard.settings.billing} variant="contained">
+            {t('dashboard.profiles.freePlanLock.upgrade')}
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Dialog

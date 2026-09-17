@@ -37,6 +37,7 @@ import { activateProfileAvatar, generateAvatar, listProfileAvatarHistory } from 
 import type { AvatarFaceValidationReason } from '@/lib/avatar/face-detector';
 import { validateAvatarFace } from '@/lib/avatar/face-detector';
 import { logger } from '@/lib/default-logger';
+import { useCurrentPlan } from '@/lib/subscription/use-current-plan';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 import { AvatarVariantDetails } from '@/components/dashboard/profiles/avatar-variant-details';
@@ -65,6 +66,7 @@ type AvatarDialogTab = 'history' | 'upload';
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { t } = useTranslation();
+  const { isFreePlan } = useCurrentPlan();
   const [avatar, setAvatar] = React.useState<null | ProfileAvatar>(null);
   const [avatars, setAvatars] = React.useState<ProfileAvatar[]>([]);
   const [processingAvatar, setProcessingAvatar] = React.useState<null | ProfileAvatar>(null);
@@ -321,15 +323,31 @@ export function Page(): React.JSX.Element {
       const generated = await generateAvatar(profileId, croppedFile);
       const generatedAvatar = generated.avatar ?? null;
 
-      if (generatedAvatar) {
+      if (generatedAvatar?.status === 'active') {
+        setProcessingAvatar(null);
+        setAvatars((current) =>
+          upsertAvatar(
+            current.map((item) => (item.status === 'active' ? { ...item, status: 'inactive' } : item)),
+            generatedAvatar
+          )
+        );
+        setAvatar(generatedAvatar);
+        setIsPollingAvatar(false);
+        setStatus('active');
+        window.dispatchEvent(new Event('profile-publication:refresh'));
+        toast.success(t('dashboard.profiles.detail.avatar.toasts.uploaded'));
+      } else if (generatedAvatar) {
         setProcessingAvatar(generatedAvatar);
         setAvatars((current) => upsertAvatar(current, generatedAvatar));
         setAvatar((current) => current ?? generatedAvatar);
+        setIsPollingAvatar(true);
+        setStatus('processing');
+        toast.success(t('dashboard.profiles.detail.avatar.toasts.generationStarted'));
+      } else {
+        setIsPollingAvatar(true);
+        setStatus('processing');
+        toast.success(t('dashboard.profiles.detail.avatar.toasts.generationStarted'));
       }
-
-      setIsPollingAvatar(true);
-      setStatus('processing');
-      toast.success(t('dashboard.profiles.detail.avatar.toasts.generationStarted'));
       handleCloseDialog();
     } catch (err) {
       logger.error(err);
@@ -639,7 +657,11 @@ export function Page(): React.JSX.Element {
                   </React.Fragment>
                 ) : (
                   <Typography color="text.secondary" variant="body2">
-                    {t('dashboard.profiles.detail.avatar.uploadHint')}
+                    {t(
+                      isFreePlan
+                        ? 'dashboard.profiles.detail.avatar.uploadStaticHint'
+                        : 'dashboard.profiles.detail.avatar.uploadHint'
+                    )}
                   </Typography>
                 )}
               </React.Fragment>

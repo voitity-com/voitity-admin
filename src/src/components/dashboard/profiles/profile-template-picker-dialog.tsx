@@ -3,19 +3,25 @@
 import * as React from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import { CheckCircle as CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle';
+import { LockKey as LockKeyIcon } from '@phosphor-icons/react/dist/ssr/LockKey';
 import { useTranslation } from 'react-i18next';
 
 import { logger } from '@/lib/default-logger';
-import type { ProfileAppearanceConfiguration } from '@/lib/profile-appearance/api-client';
+import { paths } from '@/paths';
+import type { ProfileAppearanceConfiguration, ProfileTemplateOption } from '@/lib/profile-appearance/api-client';
 import { getProfileAppearance, updateProfileAppearance } from '@/lib/profile-appearance/api-client';
+import { RouterLink } from '@/components/core/link';
 import { toast } from '@/components/core/toaster';
 import { TemplateMobileThumbnail } from '@/components/dashboard/profiles/profile-template-editor';
 
@@ -38,6 +44,7 @@ export function ProfileTemplatePickerDialog({
   const [configuration, setConfiguration] = React.useState<null | ProfileAppearanceConfiguration>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [savingTemplateKey, setSavingTemplateKey] = React.useState<null | string>(null);
+  const [blockedTemplate, setBlockedTemplate] = React.useState<null | ProfileTemplateOption>(null);
   const [error, setError] = React.useState('');
 
   React.useEffect(() => {
@@ -75,11 +82,17 @@ export function ProfileTemplatePickerDialog({
   }, [open, profileId, t]);
 
   const handleSelect = React.useCallback(
-    async (templateKey: string): Promise<void> => {
+    async (template: ProfileTemplateOption): Promise<void> => {
       if (!configuration || savingTemplateKey) {
         return;
       }
 
+      if (!template.included) {
+        setBlockedTemplate(template);
+        return;
+      }
+
+      const templateKey = template.key;
       setSavingTemplateKey(templateKey);
       setError('');
 
@@ -104,20 +117,19 @@ export function ProfileTemplatePickerDialog({
   );
 
   return (
-    <Dialog
-      fullWidth
-      maxWidth="md"
-      onClose={() => {
-        if (!savingTemplateKey) {
-          onClose();
-        }
-      }}
-      open={open}
-    >
-      <DialogTitle>
-        {t('dashboard.profiles.detail.widgetLauncher.templateEditor.tabs.templates')}
-      </DialogTitle>
-      <DialogContent dividers>
+    <React.Fragment>
+      <Dialog
+        fullWidth
+        maxWidth="md"
+        onClose={() => {
+          if (!savingTemplateKey) {
+            onClose();
+          }
+        }}
+        open={open}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.widgetLauncher.templateEditor.tabs.templates')}</DialogTitle>
+        <DialogContent dividers>
         <Typography color="text.secondary" sx={{ mb: 2 }} variant="body2">
           {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.description')}
         </Typography>
@@ -143,18 +155,19 @@ export function ProfileTemplatePickerDialog({
                   aria-busy={saving}
                   key={template.key}
                   onClick={() => {
-                    void handleSelect(template.key);
+                    void handleSelect(template);
                   }}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
-                      void handleSelect(template.key);
+                      void handleSelect(template);
                     }
                   }}
                   role="button"
                   sx={{
                     border: '2px solid',
                     borderColor: selected ? 'primary.main' : 'divider',
+                    bgcolor: template.included ? 'background.paper' : 'action.disabledBackground',
                     cursor: savingTemplateKey ? 'default' : 'pointer',
                     opacity: savingTemplateKey && !saving ? 0.55 : 1,
                     overflow: 'hidden',
@@ -178,6 +191,13 @@ export function ProfileTemplatePickerDialog({
                     {saving ? <CircularProgress size={20} /> : null}
                     {!saving && selected ? (
                       <CheckCircleIcon color="var(--mui-palette-primary-main)" weight="fill" />
+                    ) : !template.included ? (
+                      <Chip
+                        icon={<LockKeyIcon />}
+                        label={t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.badge')}
+                        size="small"
+                        variant="outlined"
+                      />
                     ) : null}
                   </Stack>
                 </Paper>
@@ -185,7 +205,39 @@ export function ProfileTemplatePickerDialog({
             })}
           </Box>
         )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        fullWidth
+        maxWidth="xs"
+        onClose={() => {
+          setBlockedTemplate(null);
+        }}
+        open={Boolean(blockedTemplate)}
+      >
+        <DialogTitle>
+          {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.title')}
+        </DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.description', {
+              template: blockedTemplate?.label ?? '',
+            })}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setBlockedTemplate(null);
+            }}
+          >
+            {t('dashboard.profiles.detail.widgetLauncher.templateEditor.templates.freePlan.understood')}
+          </Button>
+          <Button component={RouterLink} href={paths.dashboard.settings.billing} variant="contained">
+            {t('dashboard.profiles.freePlanLock.upgrade')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </React.Fragment>
   );
 }
