@@ -488,132 +488,136 @@ export const route: RouteObject = {
           },
         },
         {
-          path: ':profileId/profile',
-          lazy: async () => {
-            const { Page } = await import('@/pages/dashboard/profile-details/profile-chat');
-            return { Component: Page };
-          },
-        },
-        {
           path: ':profileId',
-          element: (
-            <ProfileLayout>
-              <Outlet />
-            </ProfileLayout>
-          ),
           children: [
             {
               index: true,
               lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/profile');
+                const { Page } = await import('@/pages/dashboard/profile-details/profile-chat');
                 return { Component: Page };
               },
             },
             {
-              path: 'template',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/template');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'data',
-              element: <Navigate replace to="../sources" />,
-            },
-            {
-              path: 'social-networks',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/social-networks');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'sources',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/sources');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'quality',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/quality');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'avatar',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/avatar');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'chats',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/chats');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'chats/:chatId',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/chat-messages');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'voice',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/voice');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'messages',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/messages');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'integrations',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/integrations');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'products',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/products');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'settings',
-              lazy: async () => {
-                const { Page } = await import('@/pages/dashboard/profile-details/settings');
-                return { Component: Page };
-              },
-            },
-            {
-              path: 'insights',
+              element: (
+                <ProfileLayout>
+                  <Outlet />
+                </ProfileLayout>
+              ),
               children: [
                 {
-                  index: true,
+                  path: 'profile',
                   lazy: async () => {
-                    const { Page } = await import('@/pages/dashboard/profile-details/insights');
+                    const { Page } = await import('@/pages/dashboard/profile-details/profile');
                     return { Component: Page };
                   },
                 },
-                ...['dashboard', 'chats', 'products', 'v1', 'v2', 'v3', 'v4', 'v5'].map((path) => ({
-                  path,
+                {
+                  path: 'template',
                   lazy: async () => {
-                    const { Page } = await import('@/pages/dashboard/profile-details/insights');
+                    const { Page } = await import('@/pages/dashboard/profile-details/template');
                     return { Component: Page };
                   },
-                })),
+                },
+                {
+                  path: 'data',
+                  element: <Navigate replace to="../sources" />,
+                },
+                {
+                  path: 'social-networks',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/social-networks');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'sources',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/sources');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'quality',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/quality');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'avatar',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/avatar');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'chats',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/chats');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'chats/:chatId',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/chat-messages');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'voice',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/voice');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'messages',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/messages');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'integrations',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/integrations');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'products',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/products');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'settings',
+                  lazy: async () => {
+                    const { Page } = await import('@/pages/dashboard/profile-details/settings');
+                    return { Component: Page };
+                  },
+                },
+                {
+                  path: 'insights',
+                  children: [
+                    {
+                      index: true,
+                      lazy: async () => {
+                        const { Page } = await import('@/pages/dashboard/profile-details/insights');
+                        return { Component: Page };
+                      },
+                    },
+                    ...['dashboard', 'chats', 'products', 'v1', 'v2', 'v3', 'v4', 'v5'].map((path) => ({
+                      path,
+                      lazy: async () => {
+                        const { Page } = await import('@/pages/dashboard/profile-details/insights');
+                        return { Component: Page };
+                      },
+                    })),
+                  ],
+                },
               ],
             },
           ],

@@ -10,7 +10,6 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemText from '@mui/material/ListItemText';
@@ -18,7 +17,6 @@ import Modal from '@mui/material/Modal';
 import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
@@ -26,6 +24,7 @@ import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/C
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Check as CheckIcon } from '@phosphor-icons/react/dist/ssr/Check';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
+import { Desktop as DesktopIcon } from '@phosphor-icons/react/dist/ssr/Desktop';
 import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
@@ -120,9 +119,12 @@ export function Page(): React.JSX.Element {
   const [sourcesOpen, setSourcesOpen] = React.useState(false);
   const [sectionEditor, setSectionEditor] = React.useState<null | ProfileSectionEditor>(null);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [webVersionOpen, setWebVersionOpen] = React.useState(false);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const webChatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const mobileNavGestureRef = React.useRef<null | { pointerId: number; startX: number }>(null);
 
   React.useEffect(() => {
     if (profileId) {
@@ -201,7 +203,8 @@ export function Page(): React.JSX.Element {
     const handleProfileChatMessage = (event: MessageEvent): void => {
       if (
         event.origin !== publicProfileOrigin ||
-        event.source !== chatIframeRef.current?.contentWindow ||
+        (event.source !== chatIframeRef.current?.contentWindow &&
+          event.source !== webChatIframeRef.current?.contentWindow) ||
         !isProfileAdminActionMessage(event.data)
       ) {
         return;
@@ -220,39 +223,6 @@ export function Page(): React.JSX.Element {
 
     return () => {
       window.removeEventListener('message', handleProfileChatMessage);
-    };
-  }, []);
-
-  React.useEffect(() => {
-    let gestureStartX: null | number = null;
-
-    const handlePointerDown = (event: PointerEvent): void => {
-      if (event.pointerType === 'touch' && window.innerWidth < 600 && event.clientX >= window.innerWidth - 28) {
-        gestureStartX = event.clientX;
-      }
-    };
-
-    const handlePointerMove = (event: PointerEvent): void => {
-      if (gestureStartX !== null && gestureStartX - event.clientX >= 44) {
-        setMobileNavOpen(true);
-        gestureStartX = null;
-      }
-    };
-
-    const clearGesture = (): void => {
-      gestureStartX = null;
-    };
-
-    window.addEventListener('pointerdown', handlePointerDown, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
-    window.addEventListener('pointerup', clearGesture, { passive: true });
-    window.addEventListener('pointercancel', clearGesture, { passive: true });
-
-    return () => {
-      window.removeEventListener('pointerdown', handlePointerDown);
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', clearGesture);
-      window.removeEventListener('pointercancel', clearGesture);
     };
   }, []);
 
@@ -314,6 +284,36 @@ export function Page(): React.JSX.Element {
   const closeMobileNavAndRun = React.useCallback((action: () => void): void => {
     setMobileNavOpen(false);
     action();
+  }, []);
+
+  const handleMobileNavPointerDown = React.useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    if (event.pointerType === 'mouse') {
+      return;
+    }
+
+    mobileNavGestureRef.current = { pointerId: event.pointerId, startX: event.clientX };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }, []);
+
+  const handleMobileNavPointerMove = React.useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    const gesture = mobileNavGestureRef.current;
+
+    if (!gesture || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (gesture.startX - event.clientX >= 32) {
+      setMobileNavOpen(true);
+      mobileNavGestureRef.current = null;
+    }
+  }, []);
+
+  const clearMobileNavGesture = React.useCallback((event: React.PointerEvent<HTMLDivElement>): void => {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    mobileNavGestureRef.current = null;
   }, []);
 
   const profileChatNavItems: ProfileChatNavItem[] = [
@@ -397,7 +397,17 @@ export function Page(): React.JSX.Element {
         });
       },
     },
+    {
+      desktopOnly: true,
+      icon: <DesktopIcon />,
+      key: 'web-version',
+      label: String(t('dashboard.profiles.detail.profileChat.webVersion.title')),
+      onClick: () => {
+        setWebVersionOpen(true);
+      },
+    },
   ];
+  const mobileProfileChatNavItems = profileChatNavItems.filter((item) => !item.desktopOnly);
 
   return (
     <React.Fragment>
@@ -412,7 +422,7 @@ export function Page(): React.JSX.Element {
           height: 'calc(100dvh - var(--MainNav-height, 64px))',
           minHeight: 560,
           overflow: 'hidden',
-          px: { sm: 2, xs: 0 },
+          px: { sm: 2, xs: 1.5 },
           py: { sm: 1.5, xs: 1 },
         }}
       >
@@ -477,10 +487,25 @@ export function Page(): React.JSX.Element {
               ))}
             </Stack>
             <Paper
+              aria-label={String(t('dashboard.profiles.detail.profileChat.mobileMenu.open'))}
               elevation={5}
+              onClick={() => {
+                setMobileNavOpen(true);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setMobileNavOpen(true);
+                }
+              }}
               onMouseEnter={() => {
                 setMobileNavOpen(true);
               }}
+              onPointerCancel={clearMobileNavGesture}
+              onPointerDown={handleMobileNavPointerDown}
+              onPointerMove={handleMobileNavPointerMove}
+              onPointerUp={clearMobileNavGesture}
+              role="button"
               sx={{
                 bgcolor: 'common.white',
                 border: 0,
@@ -493,21 +518,20 @@ export function Page(): React.JSX.Element {
                 p: 0.5,
                 position: 'fixed',
                 right: 6,
+                touchAction: 'pan-y',
                 top: 'calc(var(--MainNav-height, 64px) + 48px)',
                 zIndex: 'var(--mui-zIndex-speedDial)',
               }}
+              tabIndex={0}
             >
-              {profileChatNavItems.map((item) => (
-                <Tooltip key={item.key} placement="left" title={item.label}>
-                  <IconButton
-                    aria-label={item.label}
-                    onClick={item.onClick}
-                    size="small"
-                    sx={{ color: '#52525b' }}
-                  >
-                    {item.icon}
-                  </IconButton>
-                </Tooltip>
+              {mobileProfileChatNavItems.map((item) => (
+                <Box
+                  aria-hidden="true"
+                  key={item.key}
+                  sx={{ alignItems: 'center', color: '#52525b', display: 'flex', height: 34, justifyContent: 'center', width: 34 }}
+                >
+                  {item.icon}
+                </Box>
               ))}
             </Paper>
           </Box>
@@ -541,11 +565,49 @@ export function Page(): React.JSX.Element {
             width: 'min(210px, calc(100vw - 32px))',
           }}
         >
-          {profileChatNavItems.map((item) => (
+          {mobileProfileChatNavItems.map((item) => (
             <ProfileChatNavButton {...item} key={item.key} lightBackground />
           ))}
         </Paper>
       </Modal>
+      <Dialog
+        fullWidth
+        maxWidth="xl"
+        onClose={() => {
+          setWebVersionOpen(false);
+        }}
+        open={webVersionOpen}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.profileChat.webVersion.title')}</DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: 'background.default', p: 0 }}>
+          {profile?.alias && webVersionOpen ? (
+            <Box
+              allow="microphone"
+              component="iframe"
+              ref={webChatIframeRef}
+              sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+              src={buildPublicProfileUrl(profile.alias, chatRevision)}
+              sx={{
+                border: 0,
+                display: 'block',
+                height: 'min(800px, calc(100dvh - 190px))',
+                minHeight: 560,
+                width: '100%',
+              }}
+              title={String(t('dashboard.profiles.detail.profileChat.webVersion.iframeTitle'))}
+            />
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setWebVersionOpen(false);
+            }}
+          >
+            {t('dashboard.profiles.detail.profileChat.mediaMenu.close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <ProfileFormDialog
         onClose={() => {
           setCreateFormOpen(false);
@@ -782,11 +844,13 @@ function getProfileSectionTitle(
 }
 
 function ProfileChatNavButton({
+  desktopOnly = false,
   icon,
   label,
   lightBackground = false,
   onClick,
 }: {
+  desktopOnly?: boolean;
   icon: React.ReactNode;
   label: string;
   lightBackground?: boolean;
@@ -799,6 +863,7 @@ function ProfileChatNavButton({
       sx={{
         borderRadius: 1,
         color: lightBackground ? '#52525b' : 'var(--mui-palette-text-secondary)',
+        display: desktopOnly ? { md: 'inline-flex', xs: 'none' } : 'inline-flex',
         justifyContent: 'flex-start',
         p: '6px 16px',
         textTransform: 'none',
@@ -817,6 +882,7 @@ function ProfileChatNavButton({
 }
 
 interface ProfileChatNavItem {
+  desktopOnly?: boolean;
   icon: React.ReactNode;
   key: string;
   label: string;

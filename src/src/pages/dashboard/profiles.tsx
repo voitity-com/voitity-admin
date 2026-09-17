@@ -318,7 +318,7 @@ export function Page(): React.JSX.Element {
         setProfileCompletionOnboardingDismissed(true);
       }
 
-      navigate(paths.dashboard.profileDetails.profile(String(profile.id)));
+      navigate(paths.dashboard.profileDetails.profileChat(String(profile.id)));
     },
     [navigate, singleIncompleteProfile]
   );
@@ -333,7 +333,7 @@ export function Page(): React.JSX.Element {
     }
 
     setProfileCompletionOnboardingDismissed(true);
-    navigate(paths.dashboard.profileDetails.profile(String(singleIncompleteProfile.id)));
+    navigate(paths.dashboard.profileDetails.profileChat(String(singleIncompleteProfile.id)));
   }, [navigate, singleIncompleteProfile]);
 
   return (

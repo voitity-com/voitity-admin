@@ -1555,12 +1555,19 @@
       "detail": {
         "profileChat": {
           "chooseProfile": "Switch profile",
+          "mobileMenu": {
+            "open": "Open profile menu"
+          },
           "mediaMenu": {
             "close": "Close",
             "editAvatar": "Edit avatar",
             "editMessages": "Automatic messages",
             "editVoice": "Edit voice",
             "title": "Avatar and voice"
+          },
+          "webVersion": {
+            "iframeTitle": "Profile chat web view",
+            "title": "Web version"
           }
         },
         "avatar": {

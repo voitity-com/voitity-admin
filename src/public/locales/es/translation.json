@@ -1555,12 +1555,19 @@
       "detail": {
         "profileChat": {
           "chooseProfile": "Cambiar perfil",
+          "mobileMenu": {
+            "open": "Abrir menú del perfil"
+          },
           "mediaMenu": {
             "close": "Cerrar",
             "editAvatar": "Editar avatar",
             "editMessages": "Mensajes automáticos",
             "editVoice": "Editar voz",
             "title": "Avatar y voz"
+          },
+          "webVersion": {
+            "iframeTitle": "Vista web del chat del perfil",
+            "title": "Versión web"
           }
         },
         "avatar": {
