@@ -54,6 +54,7 @@ import {
   updateProfileProduct,
   updateProfileProductSettings,
 } from '@/lib/products/api-client';
+import { useCurrentPlan } from '@/lib/subscription/use-current-plan';
 import type { Selection } from '@/hooks/use-selection';
 import { useSelection } from '@/hooks/use-selection';
 import type { ColumnDef } from '@/components/core/data-table';
@@ -66,6 +67,7 @@ import { interpolate, productCopy } from '@/components/dashboard/products/profil
 import { ProfileProductDialog } from '@/components/dashboard/products/profile-product-dialog';
 import { ProfileProductImportDialog } from '@/components/dashboard/products/profile-product-import-dialog';
 import { ProfileProductRecommendationGuideDialog } from '@/components/dashboard/products/profile-product-recommendation-guide-dialog';
+import { FreePlanFeatureLock } from '@/components/dashboard/profiles/free-plan-feature-lock';
 
 const metadata = { title: `Products | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const emptyPage: ProfileProductsPage = {
@@ -80,6 +82,7 @@ const emptyPage: ProfileProductsPage = {
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { i18n, t } = useTranslation();
+  const { isFreePlan } = useCurrentPlan();
   const language: ProductLanguage = i18n.resolvedLanguage?.startsWith('en') ? 'en' : 'es';
   const copy = productCopy[language];
   const [bulkDeleteProductIds, setBulkDeleteProductIds] = React.useState<number[]>([]);
@@ -316,249 +319,252 @@ export function Page(): React.JSX.Element {
     [copy, handleBulkStatus, language]
   );
   const atLimit = page.available_slots <= 0;
+  const isFreePlanLocked = isFreePlan && page.pagination.total > 0;
 
   return (
     <React.Fragment>
       <Helmet>
         <title>{metadata.title}</title>
       </Helmet>
-      <Stack spacing={3}>
-        {error ? <Alert color="error">{error}</Alert> : null}
-        <ProfileGuideTutorialLink step="products" />
+      <FreePlanFeatureLock locked={isFreePlanLocked}>
+        <Stack spacing={3}>
+          {error ? <Alert color="error">{error}</Alert> : null}
+          <ProfileGuideTutorialLink step="products" />
 
-        {isLoading ? (
-          <Stack sx={{ alignItems: 'center', p: 5 }}>
-            <CircularProgress />
-          </Stack>
-        ) : null}
-
-        {!isLoading && !productsFeatureEnabled ? (
-          <Alert color="info">
-            {language === 'en'
-              ? 'Products are not enabled for this profile. Enable Products from profile Settings first.'
-              : 'Productos no está habilitado para este perfil. Activa Productos desde Configuración del perfil primero.'}
-          </Alert>
-        ) : null}
-
-        {productsFeatureEnabled ? (
-          <Stack
-            direction={{ md: 'row', xs: 'column' }}
-            spacing={2}
-            sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between' }}
-          >
-            <Stack spacing={0.5}>
-              <Typography variant="h4">{copy.intro.title}</Typography>
-              <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
-                {interpolate(copy.intro.description, { max: page.max_products })}
-              </Typography>
+          {isLoading ? (
+            <Stack sx={{ alignItems: 'center', p: 5 }}>
+              <CircularProgress />
             </Stack>
-            <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1}>
-              <Button
-                disabled={atLimit}
-                onClick={() => {
-                  setEditingProduct(null);
-                  setProductDialogOpen(true);
-                }}
-                startIcon={<PlusIcon />}
-                variant="contained"
-              >
-                {copy.actions.add}
-              </Button>
-              <Button
-                onClick={() => {
-                  setImportOpen(true);
-                }}
-                startIcon={<FileCsvIcon />}
-                variant="outlined"
-              >
-                {copy.actions.import}
-              </Button>
-            </Stack>
-          </Stack>
-        ) : null}
+          ) : null}
 
-        {productsFeatureEnabled && atLimit ? (
-          <Alert color="warning">{interpolate(copy.import.limit, { max: page.max_products })}</Alert>
-        ) : null}
+          {!isLoading && !productsFeatureEnabled ? (
+            <Alert color="info">
+              {language === 'en'
+                ? 'Products are not enabled for this profile. Enable Products from profile Settings first.'
+                : 'Productos no está habilitado para este perfil. Activa Productos desde Configuración del perfil primero.'}
+            </Alert>
+          ) : null}
 
-        {productsFeatureEnabled ? (
-          <Card>
-            <CardHeader
-              action={
-                <Stack spacing={0.5} sx={{ alignItems: { sm: 'flex-end', xs: 'stretch' } }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={page.products_enabled}
-                        disabled={isLoading || isMutating}
-                        onChange={(_, checked) => {
-                          setSettingsConfirmation(checked);
-                        }}
-                      />
-                    }
-                    label={copy.settings.label}
-                    sx={{ m: 0 }}
-                  />
-                  <Button
-                    disabled={isLoading || isMutating}
-                    onClick={() => {
-                      setRecommendationGuideOpen(true);
-                    }}
-                    size="small"
-                    startIcon={<PencilSimpleIcon />}
-                  >
-                    {t('dashboard.products.recommendationGuide.open')}
-                  </Button>
-                </Stack>
-              }
-              subheader={
-                <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.5 }}>
-                  <Chip
-                    color={page.products_enabled ? 'success' : 'default'}
-                    label={page.products_enabled ? copy.settings.enabled : copy.settings.disabled}
-                    size="small"
-                  />
-                  <Typography color="text.secondary" variant="body2">
-                    {interpolate(copy.intro.usage, {
-                      count: page.products.length,
-                      total: page.pagination.total,
-                    })}
-                  </Typography>
-                </Stack>
-              }
-              sx={{
-                alignItems: { sm: 'center', xs: 'flex-start' },
-                flexDirection: { sm: 'row', xs: 'column' },
-                gap: { sm: 2, xs: 1.5 },
-                '& .MuiCardHeader-action': {
-                  alignSelf: { sm: 'center', xs: 'stretch' },
-                  m: 0,
-                  width: { sm: 'auto', xs: '100%' },
-                },
-                '& .MuiCardHeader-content': { minWidth: 0 },
-              }}
-              title={copy.intro.title}
-            />
-
-            {selection.selectedAny ? (
-              <Stack
-                direction={{ sm: 'row', xs: 'column' }}
-                spacing={1}
-                sx={{
-                  alignItems: { sm: 'center' },
-                  bgcolor: 'background.level1',
-                  borderBlock: '1px solid var(--mui-palette-divider)',
-                  px: 2,
-                  py: 1.5,
-                }}
-              >
-                <Typography sx={{ flex: '1 1 auto', fontWeight: 600 }} variant="body2">
-                  {interpolate(copy.bulk.selected, { count: selection.selected.size })}
+          {productsFeatureEnabled ? (
+            <Stack
+              direction={{ md: 'row', xs: 'column' }}
+              spacing={2}
+              sx={{ alignItems: { md: 'center' }, justifyContent: 'space-between' }}
+            >
+              <Stack spacing={0.5}>
+                <Typography variant="h4">{copy.intro.title}</Typography>
+                <Typography color="text.secondary" sx={{ maxWidth: 760 }} variant="body2">
+                  {interpolate(copy.intro.description, { max: page.max_products })}
                 </Typography>
+              </Stack>
+              <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1}>
                 <Button
-                  disabled={isMutating}
+                  disabled={atLimit}
                   onClick={() => {
-                    handleBulkStatus('published').catch((err) => {
-                      logger.error(err);
-                    });
+                    setEditingProduct(null);
+                    setProductDialogOpen(true);
                   }}
-                  size="small"
+                  startIcon={<PlusIcon />}
+                  variant="contained"
                 >
-                  {copy.actions.publish}
+                  {copy.actions.add}
                 </Button>
                 <Button
-                  disabled={isMutating}
                   onClick={() => {
-                    handleBulkStatus('draft').catch((err) => {
-                      logger.error(err);
-                    });
+                    setImportOpen(true);
                   }}
-                  size="small"
-                >
-                  {copy.actions.draft}
-                </Button>
-                <Button
-                  disabled={isMutating}
-                  onClick={() => {
-                    setBulkDestinationOpen(true);
-                  }}
-                  size="small"
+                  startIcon={<FileCsvIcon />}
                   variant="outlined"
                 >
-                  {copy.actions.setDestination}
-                </Button>
-                <Button
-                  color="error"
-                  disabled={isMutating}
-                  onClick={() => {
-                    setBulkDeleteProductIds(Array.from(selection.selected));
-                  }}
-                  size="small"
-                  startIcon={<TrashIcon />}
-                  variant="outlined"
-                >
-                  {copy.actions.deleteSelected}
+                  {copy.actions.import}
                 </Button>
               </Stack>
-            ) : null}
+            </Stack>
+          ) : null}
 
-            {isLoading ? (
-              <Stack sx={{ alignItems: 'center', p: 5 }}>
-                <CircularProgress />
-              </Stack>
-            ) : (
-              <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-                {page.products.length ? (
-                  <React.Fragment>
-                    <ProfileProductMobileList
-                      copy={copy}
-                      language={language}
-                      onDelete={setDeleteProduct}
-                      onEdit={(product) => {
-                        setEditingProduct(product);
-                        setProductDialogOpen(true);
-                      }}
-                      onStatus={(product) => {
-                        handleBulkStatus(product.status === 'published' ? 'draft' : 'published', [product.id]).catch(
-                          (err) => {
-                            logger.error(err);
-                          }
-                        );
-                      }}
-                      products={page.products}
-                      selection={selection}
+          {productsFeatureEnabled && atLimit ? (
+            <Alert color="warning">{interpolate(copy.import.limit, { max: page.max_products })}</Alert>
+          ) : null}
+
+          {productsFeatureEnabled ? (
+            <Card>
+              <CardHeader
+                action={
+                  <Stack spacing={0.5} sx={{ alignItems: { sm: 'flex-end', xs: 'stretch' } }}>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={page.products_enabled}
+                          disabled={isLoading || isMutating}
+                          onChange={(_, checked) => {
+                            setSettingsConfirmation(checked);
+                          }}
+                        />
+                      }
+                      label={copy.settings.label}
+                      sx={{ m: 0 }}
                     />
-                    <Box sx={{ display: { xs: 'none', sm: 'block' }, overflowX: 'auto' }}>
-                      <DataTable<ProfileProduct>
-                        columns={columns}
-                        hover
-                        onDeselectAll={selection.deselectAll}
-                        onDeselectOne={(_, product) => {
-                          selection.deselectOne(product.id);
-                        }}
-                        onSelectAll={selection.selectAll}
-                        onSelectOne={(_, product) => {
-                          selection.selectOne(product.id);
-                        }}
-                        rows={page.products}
-                        selectable
-                        selected={selection.selected}
-                      />
-                    </Box>
-                  </React.Fragment>
-                ) : (
-                  <Stack sx={{ alignItems: 'center', p: 5 }}>
-                    <StorefrontIcon size={36} />
-                    <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
-                      {copy.empty}
+                    <Button
+                      disabled={isLoading || isMutating}
+                      onClick={() => {
+                        setRecommendationGuideOpen(true);
+                      }}
+                      size="small"
+                      startIcon={<PencilSimpleIcon />}
+                    >
+                      {t('dashboard.products.recommendationGuide.open')}
+                    </Button>
+                  </Stack>
+                }
+                subheader={
+                  <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mt: 0.5 }}>
+                    <Chip
+                      color={page.products_enabled ? 'success' : 'default'}
+                      label={page.products_enabled ? copy.settings.enabled : copy.settings.disabled}
+                      size="small"
+                    />
+                    <Typography color="text.secondary" variant="body2">
+                      {interpolate(copy.intro.usage, {
+                        count: page.products.length,
+                        total: page.pagination.total,
+                      })}
                     </Typography>
                   </Stack>
-                )}
-              </CardContent>
-            )}
-          </Card>
-        ) : null}
-      </Stack>
+                }
+                sx={{
+                  alignItems: { sm: 'center', xs: 'flex-start' },
+                  flexDirection: { sm: 'row', xs: 'column' },
+                  gap: { sm: 2, xs: 1.5 },
+                  '& .MuiCardHeader-action': {
+                    alignSelf: { sm: 'center', xs: 'stretch' },
+                    m: 0,
+                    width: { sm: 'auto', xs: '100%' },
+                  },
+                  '& .MuiCardHeader-content': { minWidth: 0 },
+                }}
+                title={copy.intro.title}
+              />
+
+              {selection.selectedAny ? (
+                <Stack
+                  direction={{ sm: 'row', xs: 'column' }}
+                  spacing={1}
+                  sx={{
+                    alignItems: { sm: 'center' },
+                    bgcolor: 'background.level1',
+                    borderBlock: '1px solid var(--mui-palette-divider)',
+                    px: 2,
+                    py: 1.5,
+                  }}
+                >
+                  <Typography sx={{ flex: '1 1 auto', fontWeight: 600 }} variant="body2">
+                    {interpolate(copy.bulk.selected, { count: selection.selected.size })}
+                  </Typography>
+                  <Button
+                    disabled={isMutating}
+                    onClick={() => {
+                      handleBulkStatus('published').catch((err) => {
+                        logger.error(err);
+                      });
+                    }}
+                    size="small"
+                  >
+                    {copy.actions.publish}
+                  </Button>
+                  <Button
+                    disabled={isMutating}
+                    onClick={() => {
+                      handleBulkStatus('draft').catch((err) => {
+                        logger.error(err);
+                      });
+                    }}
+                    size="small"
+                  >
+                    {copy.actions.draft}
+                  </Button>
+                  <Button
+                    disabled={isMutating}
+                    onClick={() => {
+                      setBulkDestinationOpen(true);
+                    }}
+                    size="small"
+                    variant="outlined"
+                  >
+                    {copy.actions.setDestination}
+                  </Button>
+                  <Button
+                    color="error"
+                    disabled={isMutating}
+                    onClick={() => {
+                      setBulkDeleteProductIds(Array.from(selection.selected));
+                    }}
+                    size="small"
+                    startIcon={<TrashIcon />}
+                    variant="outlined"
+                  >
+                    {copy.actions.deleteSelected}
+                  </Button>
+                </Stack>
+              ) : null}
+
+              {isLoading ? (
+                <Stack sx={{ alignItems: 'center', p: 5 }}>
+                  <CircularProgress />
+                </Stack>
+              ) : (
+                <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
+                  {page.products.length ? (
+                    <React.Fragment>
+                      <ProfileProductMobileList
+                        copy={copy}
+                        language={language}
+                        onDelete={setDeleteProduct}
+                        onEdit={(product) => {
+                          setEditingProduct(product);
+                          setProductDialogOpen(true);
+                        }}
+                        onStatus={(product) => {
+                          handleBulkStatus(product.status === 'published' ? 'draft' : 'published', [product.id]).catch(
+                            (err) => {
+                              logger.error(err);
+                            }
+                          );
+                        }}
+                        products={page.products}
+                        selection={selection}
+                      />
+                      <Box sx={{ display: { xs: 'none', sm: 'block' }, overflowX: 'auto' }}>
+                        <DataTable<ProfileProduct>
+                          columns={columns}
+                          hover
+                          onDeselectAll={selection.deselectAll}
+                          onDeselectOne={(_, product) => {
+                            selection.deselectOne(product.id);
+                          }}
+                          onSelectAll={selection.selectAll}
+                          onSelectOne={(_, product) => {
+                            selection.selectOne(product.id);
+                          }}
+                          rows={page.products}
+                          selectable
+                          selected={selection.selected}
+                        />
+                      </Box>
+                    </React.Fragment>
+                  ) : (
+                    <Stack sx={{ alignItems: 'center', p: 5 }}>
+                      <StorefrontIcon size={36} />
+                      <Typography color="text.secondary" sx={{ mt: 1 }} variant="body2">
+                        {copy.empty}
+                      </Typography>
+                    </Stack>
+                  )}
+                </CardContent>
+              )}
+            </Card>
+          ) : null}
+        </Stack>
+      </FreePlanFeatureLock>
 
       <ProfileProductDialog
         language={language}

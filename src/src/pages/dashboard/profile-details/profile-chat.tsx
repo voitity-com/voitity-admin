@@ -18,6 +18,7 @@ import Paper from '@mui/material/Paper';
 import Popover from '@mui/material/Popover';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { ArrowSquareOut as ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut';
 import { CaretDown as CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown';
 import { ChartLineUp as ChartLineUpIcon } from '@phosphor-icons/react/dist/ssr/ChartLineUp';
 import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/ChatsCircle';
@@ -33,6 +34,8 @@ import { Package as PackageIcon } from '@phosphor-icons/react/dist/ssr/Package';
 import { Palette as PaletteIcon } from '@phosphor-icons/react/dist/ssr/Palette';
 import { PlugsConnected as PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected';
 import { Plus as PlusIcon } from '@phosphor-icons/react/dist/ssr/Plus';
+import { Power as PowerIcon } from '@phosphor-icons/react/dist/ssr/Power';
+import { RocketLaunch as RocketLaunchIcon } from '@phosphor-icons/react/dist/ssr/RocketLaunch';
 import { Helmet } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -42,9 +45,17 @@ import { config } from '@/config';
 import { paths } from '@/paths';
 import { logger } from '@/lib/default-logger';
 import { trackAnalyticsEvent } from '@/lib/google-analytics';
-import type { Profile, ProfilePayload } from '@/lib/profiles/api-client';
-import { createProfile, getProfile, listProfiles, ProfileApiError, updateProfile } from '@/lib/profiles/api-client';
+import type { Profile, ProfileAdminPreview, ProfilePayload } from '@/lib/profiles/api-client';
+import {
+  createProfile,
+  getProfile,
+  getProfileAdminPreview,
+  listProfiles,
+  ProfileApiError,
+  updateProfile,
+} from '@/lib/profiles/api-client';
 import { saveLastVisitedProfileId } from '@/lib/profiles/last-visited-profile';
+import { getPublicProfileUrl, isPublishedProfile } from '@/lib/profiles/public-profile-url';
 import { getSubscriptionLimits, SubscriptionApiError } from '@/lib/subscription/api-client';
 import {
   canCreateProfileWithLimit,
@@ -52,6 +63,7 @@ import {
   isSingleProfilePlan,
 } from '@/lib/subscription/profile-limits';
 import { toast } from '@/components/core/toaster';
+import { ProfileChatPublicationDialog } from '@/components/dashboard/profiles/profile-chat-publication-dialog';
 import { ProfileFormDialog } from '@/components/dashboard/profiles/profile-form-dialog';
 import { ProfileSocialNetworksDialog } from '@/components/dashboard/profiles/profile-social-networks-dialog';
 import { ProfileTemplatePickerDialog } from '@/components/dashboard/profiles/profile-template-picker-dialog';
@@ -100,6 +112,7 @@ const ProfileSettingsPage = React.lazy(async () => {
 
 type ProfileMediaEditor = 'avatar' | 'messages' | 'voice';
 type ProfileSectionEditor = 'chats' | 'insights' | 'integrations' | 'products' | 'quality' | 'settings';
+type ProfileChatNavTone = 'default' | 'error' | 'success';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -109,6 +122,8 @@ export function Page(): React.JSX.Element {
   const [profile, setProfile] = React.useState<null | Profile>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState('');
+  const [adminPreview, setAdminPreview] = React.useState<null | ProfileAdminPreview>(null);
+  const [adminPreviewError, setAdminPreviewError] = React.useState('');
   const [selectorAnchor, setSelectorAnchor] = React.useState<HTMLElement | null>(null);
   const [createFormOpen, setCreateFormOpen] = React.useState(false);
   const [editFormOpen, setEditFormOpen] = React.useState(false);
@@ -120,6 +135,7 @@ export function Page(): React.JSX.Element {
   const [sectionEditor, setSectionEditor] = React.useState<null | ProfileSectionEditor>(null);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
   const [webVersionOpen, setWebVersionOpen] = React.useState(false);
+  const [publicationDialogOpen, setPublicationDialogOpen] = React.useState(false);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
@@ -171,6 +187,36 @@ export function Page(): React.JSX.Element {
   React.useEffect(() => {
     let isMounted = true;
 
+    if (!profileId) {
+      setAdminPreview(null);
+      return undefined;
+    }
+
+    setAdminPreview(null);
+    setAdminPreviewError('');
+
+    getProfileAdminPreview(profileId)
+      .then((nextPreview) => {
+        if (isMounted) {
+          setAdminPreview(nextPreview);
+        }
+      })
+      .catch((previewError) => {
+        logger.error(previewError);
+
+        if (isMounted) {
+          setAdminPreviewError(t('dashboard.profiles.detail.errors.generic'));
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [chatRevision, profileId, t]);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
     getSubscriptionLimits()
       .then((limits) => {
         if (!isMounted) {
@@ -197,16 +243,46 @@ export function Page(): React.JSX.Element {
     };
   }, [profiles.length]);
 
+  const postAdminPreview = React.useCallback(
+    (targetWindow: null | Window): void => {
+      if (!adminPreview || !targetWindow) {
+        return;
+      }
+
+      targetWindow.postMessage(
+        {
+          payload: adminPreview,
+          type: 'bigmelo:admin-profile-preview',
+        },
+        getPublicProfileOrigin()
+      );
+    },
+    [adminPreview]
+  );
+
+  React.useEffect(() => {
+    postAdminPreview(chatIframeRef.current?.contentWindow ?? null);
+    postAdminPreview(webChatIframeRef.current?.contentWindow ?? null);
+  }, [postAdminPreview]);
+
   React.useEffect(() => {
     const publicProfileOrigin = getPublicProfileOrigin();
 
     const handleProfileChatMessage = (event: MessageEvent): void => {
-      if (
-        event.origin !== publicProfileOrigin ||
-        (event.source !== chatIframeRef.current?.contentWindow &&
-          event.source !== webChatIframeRef.current?.contentWindow) ||
-        !isProfileAdminActionMessage(event.data)
-      ) {
+      const chatWindow = chatIframeRef.current?.contentWindow ?? null;
+      const webChatWindow = webChatIframeRef.current?.contentWindow ?? null;
+      const sourceWindow = event.source === chatWindow ? chatWindow : event.source === webChatWindow ? webChatWindow : null;
+
+      if (event.origin !== publicProfileOrigin || !sourceWindow) {
+        return;
+      }
+
+      if (isProfileAdminPreviewReadyMessage(event.data)) {
+        postAdminPreview(sourceWindow);
+        return;
+      }
+
+      if (!isProfileAdminActionMessage(event.data)) {
         return;
       }
 
@@ -224,7 +300,7 @@ export function Page(): React.JSX.Element {
     return () => {
       window.removeEventListener('message', handleProfileChatMessage);
     };
-  }, []);
+  }, [postAdminPreview]);
 
   const handleProfileSelect = React.useCallback(
     (nextProfile: Profile): void => {
@@ -316,6 +392,20 @@ export function Page(): React.JSX.Element {
     mobileNavGestureRef.current = null;
   }, []);
 
+  const handlePublicationProfileChange = React.useCallback((nextProfile: Profile, refreshChat = false): void => {
+    setProfile(nextProfile);
+    setProfiles((currentProfiles) =>
+      currentProfiles.map((item) => (String(item.id) === String(nextProfile.id) ? nextProfile : item))
+    );
+
+    if (refreshChat) {
+      setChatRevision((currentRevision) => currentRevision + 1);
+    }
+  }, []);
+
+  const isPublished = profile ? isPublishedProfile(profile) : false;
+  const publicProfileUrl = profile && isPublished ? getPublicProfileUrl(profile) : null;
+
   const profileChatNavItems: ProfileChatNavItem[] = [
     {
       icon: <PaletteIcon />,
@@ -406,6 +496,37 @@ export function Page(): React.JSX.Element {
         setWebVersionOpen(true);
       },
     },
+    ...(publicProfileUrl
+      ? [
+          {
+            icon: <ArrowSquareOutIcon />,
+            key: 'view-profile',
+            label: String(t('dashboard.profiles.actions.viewProfile')),
+            onClick: () => {
+              closeMobileNavAndRun(() => {
+                window.open(publicProfileUrl, '_blank', 'noopener,noreferrer');
+              });
+            },
+          } satisfies ProfileChatNavItem,
+        ]
+      : []),
+    {
+      icon: isPublished ? <PowerIcon /> : <RocketLaunchIcon />,
+      key: 'publication',
+      label: String(
+        t(
+          isPublished
+            ? 'dashboard.profiles.detail.profileChat.publication.deactivateItem'
+            : 'dashboard.profiles.detail.profileChat.publication.publishItem'
+        )
+      ),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setPublicationDialogOpen(true);
+        });
+      },
+      tone: isPublished ? 'error' : 'success',
+    },
   ];
   const mobileProfileChatNavItems = profileChatNavItems.filter((item) => !item.desktopOnly);
 
@@ -442,9 +563,23 @@ export function Page(): React.JSX.Element {
                 sx={{ alignSelf: 'center', color: 'text.primary', flex: '0 0 auto', textTransform: 'none' }}
                 variant="text"
               >
-                <Typography component="span" fontWeight={600} variant="subtitle1">
-                  @{profile.alias}
-                </Typography>
+                <Stack component="span" direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                  <Typography
+                    color={isPublished ? 'success.main' : 'error.main'}
+                    component="span"
+                    fontWeight={700}
+                    variant="caption"
+                  >
+                    {t(
+                      isPublished
+                        ? 'dashboard.profiles.detail.profileChat.publication.published'
+                        : 'dashboard.profiles.detail.profileChat.publication.unpublished'
+                    )}
+                  </Typography>
+                  <Typography component="span" fontWeight={600} variant="subtitle1">
+                    @{profile.alias}
+                  </Typography>
+                </Stack>
               </Button>
               <ProfileSelector
                 anchorEl={selectorAnchor}
@@ -461,15 +596,24 @@ export function Page(): React.JSX.Element {
                 profiles={profiles}
               />
               <Paper elevation={8} sx={{ flex: '1 1 auto', minHeight: 0, overflow: 'hidden', width: '100%' }}>
-                <Box
-                  allow="microphone"
-                  component="iframe"
-                  ref={chatIframeRef}
-                  sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-                  src={buildPublicProfileUrl(profile.alias, chatRevision)}
-                  sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
-                  title={String(t('dashboard.profiles.detail.widgetLauncher.preview.iframeTitle'))}
-                />
+                {adminPreviewError ? (
+                  <Stack sx={{ alignItems: 'center', height: '100%', justifyContent: 'center', p: 3 }}>
+                    <Alert color="error">{adminPreviewError}</Alert>
+                  </Stack>
+                ) : (
+                  <Box
+                    allow="microphone"
+                    component="iframe"
+                    onLoad={() => {
+                      postAdminPreview(chatIframeRef.current?.contentWindow ?? null);
+                    }}
+                    ref={chatIframeRef}
+                    sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                    src={buildPublicProfileUrl(profile.alias, chatRevision)}
+                    sx={{ border: 0, display: 'block', height: '100%', width: '100%' }}
+                    title={String(t('dashboard.profiles.detail.widgetLauncher.preview.iframeTitle'))}
+                  />
+                )}
               </Paper>
             </Stack>
             <Stack
@@ -528,7 +672,14 @@ export function Page(): React.JSX.Element {
                 <Box
                   aria-hidden="true"
                   key={item.key}
-                  sx={{ alignItems: 'center', color: '#52525b', display: 'flex', height: 34, justifyContent: 'center', width: 34 }}
+                  sx={{
+                    alignItems: 'center',
+                    color: getProfileChatNavColor(item.tone, true),
+                    display: 'flex',
+                    height: 34,
+                    justifyContent: 'center',
+                    width: 34,
+                  }}
                 >
                   {item.icon}
                 </Box>
@@ -581,21 +732,30 @@ export function Page(): React.JSX.Element {
         <DialogTitle>{t('dashboard.profiles.detail.profileChat.webVersion.title')}</DialogTitle>
         <DialogContent dividers sx={{ bgcolor: 'background.default', p: 0 }}>
           {profile?.alias && webVersionOpen ? (
-            <Box
-              allow="microphone"
-              component="iframe"
-              ref={webChatIframeRef}
-              sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
-              src={buildPublicProfileUrl(profile.alias, chatRevision)}
-              sx={{
-                border: 0,
-                display: 'block',
-                height: 'min(800px, calc(100dvh - 190px))',
-                minHeight: 560,
-                width: '100%',
-              }}
-              title={String(t('dashboard.profiles.detail.profileChat.webVersion.iframeTitle'))}
-            />
+            adminPreviewError ? (
+              <Stack sx={{ alignItems: 'center', minHeight: 560, justifyContent: 'center', p: 3 }}>
+                <Alert color="error">{adminPreviewError}</Alert>
+              </Stack>
+            ) : (
+              <Box
+                allow="microphone"
+                component="iframe"
+                onLoad={() => {
+                  postAdminPreview(webChatIframeRef.current?.contentWindow ?? null);
+                }}
+                ref={webChatIframeRef}
+                sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+                src={buildPublicProfileUrl(profile.alias, chatRevision)}
+                sx={{
+                  border: 0,
+                  display: 'block',
+                  height: 'min(800px, calc(100dvh - 190px))',
+                  minHeight: 560,
+                  width: '100%',
+                }}
+                title={String(t('dashboard.profiles.detail.profileChat.webVersion.iframeTitle'))}
+              />
+            )
           ) : null}
         </DialogContent>
         <DialogActions>
@@ -624,6 +784,16 @@ export function Page(): React.JSX.Element {
         open={editFormOpen}
         profile={profile}
       />
+      {profile ? (
+        <ProfileChatPublicationDialog
+          onClose={() => {
+            setPublicationDialogOpen(false);
+          }}
+          onProfileChange={handlePublicationProfileChange}
+          open={publicationDialogOpen}
+          profile={profile}
+        />
+      ) : null}
       {profile ? (
         <React.Fragment>
           <ProfileSocialNetworksDialog
@@ -849,12 +1019,14 @@ function ProfileChatNavButton({
   label,
   lightBackground = false,
   onClick,
+  tone = 'default',
 }: {
   desktopOnly?: boolean;
   icon: React.ReactNode;
   label: string;
   lightBackground?: boolean;
   onClick: () => void;
+  tone?: ProfileChatNavTone;
 }): React.JSX.Element {
   return (
     <Button
@@ -862,7 +1034,7 @@ function ProfileChatNavButton({
       startIcon={icon}
       sx={{
         borderRadius: 1,
-        color: lightBackground ? '#52525b' : 'var(--mui-palette-text-secondary)',
+        color: getProfileChatNavColor(tone, lightBackground),
         display: desktopOnly ? { md: 'inline-flex', xs: 'none' } : 'inline-flex',
         justifyContent: 'flex-start',
         p: '6px 16px',
@@ -870,7 +1042,7 @@ function ProfileChatNavButton({
         whiteSpace: 'nowrap',
         '&:hover': {
           bgcolor: lightBackground ? 'rgba(15, 23, 42, 0.06)' : 'var(--mui-palette-action-hover)',
-          color: lightBackground ? '#111827' : 'var(--mui-palette-text-primary)',
+          color: getProfileChatNavHoverColor(tone, lightBackground),
         },
         '& .MuiButton-startIcon': { mr: 1 },
       }}
@@ -887,6 +1059,27 @@ interface ProfileChatNavItem {
   key: string;
   label: string;
   onClick: () => void;
+  tone?: ProfileChatNavTone;
+}
+
+function getProfileChatNavColor(tone: ProfileChatNavTone = 'default', lightBackground = false): string {
+  if (tone === 'success') {
+    return 'var(--mui-palette-success-main)';
+  }
+
+  if (tone === 'error') {
+    return 'var(--mui-palette-error-main)';
+  }
+
+  return lightBackground ? '#52525b' : 'var(--mui-palette-text-secondary)';
+}
+
+function getProfileChatNavHoverColor(tone: ProfileChatNavTone, lightBackground: boolean): string {
+  if (tone !== 'default') {
+    return getProfileChatNavColor(tone, lightBackground);
+  }
+
+  return lightBackground ? '#111827' : 'var(--mui-palette-text-primary)';
 }
 
 interface ProfileSelectorProps {
@@ -974,6 +1167,19 @@ interface ProfileAdminActionMessage {
     | 'bigmelo:admin-edit-avatar-voice'
     | 'bigmelo:admin-edit-profile'
     | 'bigmelo:admin-edit-social-networks';
+}
+
+interface ProfileAdminPreviewReadyMessage {
+  type: 'bigmelo:admin-profile-preview-ready';
+}
+
+function isProfileAdminPreviewReadyMessage(value: unknown): value is ProfileAdminPreviewReadyMessage {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'type' in value &&
+    value.type === 'bigmelo:admin-profile-preview-ready'
+  );
 }
 
 function isProfileAdminActionMessage(value: unknown): value is ProfileAdminActionMessage {

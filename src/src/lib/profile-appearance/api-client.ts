@@ -16,6 +16,7 @@ export interface ProfileAppearanceSettings {
 
 export interface ProfileTemplateOption {
   backgroundColor: string;
+  included: boolean;
   key: string;
   label: string;
 }
@@ -91,6 +92,7 @@ function normalizeConfiguration(value: unknown): ProfileAppearanceConfiguration 
       return [
         {
           backgroundColor: stringValue(template.background_color) || '#ffffff',
+          included: template.included !== false,
           key,
           label: stringValue(template.label) || key,
         },

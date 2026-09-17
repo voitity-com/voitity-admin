@@ -128,6 +128,15 @@ export class IntegrationApiError extends Error {
   }
 }
 
+export async function listProfileIntegrations(profileId: number | string): Promise<ProfileIntegration[]> {
+  const response = await requestJson<
+    ApiEnvelope<{ integrations?: ProfileIntegration[] }> | { integrations?: ProfileIntegration[] }
+  >(`/api/profile/${encodeURIComponent(String(profileId))}/integrations`, { method: 'GET' });
+  const data = isApiEnvelope<{ integrations?: ProfileIntegration[] }>(response) ? response.data : response;
+
+  return Array.isArray(data.integrations) ? data.integrations : [];
+}
+
 export async function createIntegrationConnectUrl(
   profileId: number | string,
   provider: IntegrationProvider
@@ -161,10 +170,11 @@ export async function getIntegrationMedia(
 
 export async function getIntegrationDestinations(locale: string): Promise<IntegrationDestination[]> {
   const response = await requestJson<
-    ApiEnvelope<{ destinations: IntegrationDestination[]; locale: string }> | {
-      destinations: IntegrationDestination[];
-      locale: string;
-    }
+    | ApiEnvelope<{ destinations: IntegrationDestination[]; locale: string }>
+    | {
+        destinations: IntegrationDestination[];
+        locale: string;
+      }
   >(`/api/profile/integration-destinations?locale=${encodeURIComponent(locale)}`, { method: 'GET' });
   const data = isApiEnvelope<{ destinations: IntegrationDestination[] }>(response) ? response.data : response;
 
@@ -267,10 +277,7 @@ export async function saveYouTubeIntegration(
   return response.data.integration;
 }
 
-export async function addYouTubeMedia(
-  profileId: number | string,
-  input: YouTubeMediaInput
-): Promise<IntegrationMedia> {
+export async function addYouTubeMedia(profileId: number | string, input: YouTubeMediaInput): Promise<IntegrationMedia> {
   const response = await requestJson<ApiEnvelope<{ media: IntegrationMedia }>>(
     `/api/profile/${encodeURIComponent(String(profileId))}/integrations/youtube/media`,
     {

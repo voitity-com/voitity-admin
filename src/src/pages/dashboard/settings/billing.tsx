@@ -125,7 +125,7 @@ export function Page(): React.JSX.Element {
   );
 
   React.useEffect(() => {
-    if (!billing || !checkoutIntent || !hasActiveSubscriptionData(billing.limits)) return;
+    if (!billing || !checkoutIntent || !hasCheckoutBlockingSubscriptionData(billing.limits)) return;
 
     clearCheckoutIntent();
     const nextSearchParams = new URLSearchParams(searchParams);
@@ -298,7 +298,7 @@ export function Page(): React.JSX.Element {
   }, [t]);
 
   React.useEffect(() => {
-    if (!billing || hasActiveSubscriptionData(billing.limits)) {
+    if (!billing || hasCheckoutBlockingSubscriptionData(billing.limits)) {
       setTrialPaymentSourceSetup(null);
       setHasRequestedTrialPaymentSourceSetup(false);
       return;
@@ -452,12 +452,9 @@ export function Page(): React.JSX.Element {
     setCheckoutError('');
   }, []);
 
-  const handleCheckoutOpenChange = React.useCallback(
-    (open: boolean): void => {
-      setIsCheckoutOpen(open);
-    },
-    []
-  );
+  const handleCheckoutOpenChange = React.useCallback((open: boolean): void => {
+    setIsCheckoutOpen(open);
+  }, []);
 
   React.useEffect(() => {
     setNoPlanTutorialSuppressed(Boolean(checkoutIntent) || isCheckoutOpen);
@@ -863,6 +860,16 @@ function hasActivePaidSubscriptionData(data: SubscriptionLimits): boolean {
   return (
     subscription?.status !== 'trialing' && subscription?.billing_mode === 'recurring' && subscription?.plan !== 'admin'
   );
+}
+
+function hasCheckoutBlockingSubscriptionData(data: SubscriptionLimits): boolean {
+  if (!hasActiveSubscriptionData(data)) {
+    return false;
+  }
+
+  const subscription = isRecord(data.subscription) ? data.subscription : undefined;
+
+  return subscription?.plan !== 'free' && subscription?.plan_id !== 'free' && subscription?.planId !== 'free';
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

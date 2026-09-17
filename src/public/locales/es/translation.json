@@ -735,7 +735,7 @@
   "currentPlan": {
     "cancelRenewalHelper": "Mantendrás el acceso hasta el final del período pagado. Después no se hará otro cobro automático.",
     "cancelRenewalDialog": {
-      "accessEnds": "Tu servicio permanecerá activo hasta {{date}}. Después de esa fecha se desactivarán tus perfiles.",
+      "accessEnds": "Tu plan pago permanecerá activo hasta {{date}}. Después, la cuenta pasará al plan gratuito; conservaremos tus datos y bloquearemos lo que exceda sus límites.",
       "confirm": "Sí, cancelar renovación",
       "keep": "Conservar renovación",
       "question": "No se realizarán más cobros automáticos. ¿Estás seguro de que quieres cancelar la renovación?",
@@ -744,14 +744,28 @@
     "cancelTrialHelper": "Si cancelas ahora, mantendrás el acceso hasta que termine la prueba y no se realizará el primer cobro.",
     "eyebrow": "Plan adquirido",
     "fallbackName": "Starter",
+    "free": {
+      "createProfile": "Crear perfil gratis",
+      "eyebrow": "Plan actual",
+      "features": {
+        "analytics": "Analítica básica de los últimos 30 días",
+        "avatar": "Avatar estático, sin procesamiento con IA",
+        "integration": "Integraciones no incluidas",
+        "messages": "100 respuestas de texto al mes",
+        "product": "1 producto",
+        "profile": "1 perfil publicable con marca Bigmelo",
+        "source": "1 fuente de hasta 2 MB y 20.000 caracteres"
+      },
+      "subheader": "Empieza sin costo y mejora tu plan cuando necesites más capacidad, voz o automatización."
+    },
     "reactivateHelper": "Puedes reactivar la renovación antes de la fecha final para conservar el acceso sin interrupciones.",
-    "renewalCancelledSubheader": "La renovación automática está cancelada. El acceso sigue activo hasta {{date}}.",
+    "renewalCancelledSubheader": "La renovación automática está cancelada. El plan pago sigue activo hasta {{date}} y después cambiará al plan gratuito.",
     "subheader": "Este es el plan activo para la cuenta.",
     "trialCancelledSubheader": "La prueba está cancelada. El acceso sigue activo hasta {{date}} y no habrá cobro automático.",
     "trialSubheader": "Estás en tus días sin costo. Terminan el {{date}} y el primer cobro se hará al finalizar."
   },
   "paymentRecovery": {
-    "accessSuspended": "No se pudo procesar la renovación. La suscripción y los perfiles están desactivados hasta que se apruebe el pago.",
+    "accessSuspended": "No se pudo procesar la renovación. Conservas el plan durante los reintentos automáticos; si todos fallan, la cuenta pasará al plan gratuito.",
     "addPaymentMethod": "Agregar método de pago",
     "changePaymentMethod": "Cambiar método de pago",
     "nextRetry": "Próximo intento automático: {{date}}.",
@@ -760,7 +774,7 @@
     "paymentMethod": "Tarjeta para la renovación",
     "paymentMethodRequired": "Agrega o selecciona una tarjeta válida antes de renovar.",
     "paymentMethodRejected": "El último cobro con esta tarjeta fue rechazado. Agrega otro método de pago para renovar.",
-    "planSubheader": "Este plan está desactivado mientras el pago de renovación está pendiente.",
+    "planSubheader": "El pago está pendiente y volveremos a intentarlo automáticamente. Tu acceso se mantiene durante este periodo.",
     "pending": "Pago pendiente",
     "renewNow": "Renovar suscripción",
     "renewing": "Renovando",
@@ -1532,6 +1546,23 @@
       "validation": { "email": "Ingresa un email válido", "nameRequired": "El nombre del negocio es obligatorio", "originRequired": "Agrega al menos un origen permitido" }
     },
     "profiles": {
+      "entry": {
+        "description": "Comparte quién eres, conecta tus redes y configura un chat que responda por ti.",
+        "eyebrow": "Tu espacio en Bigmelo",
+        "title": "Crea tu primer perfil"
+      },
+      "planRequired": {
+        "action": "Adquirir plan",
+        "description": "Para abrir y administrar este perfil necesitas una suscripción activa. Elige un plan para recuperar el acceso a sus herramientas y publicación.",
+        "error": "No pudimos comprobar el estado de tu suscripción.",
+        "title": "Necesitas un plan para administrar este perfil"
+      },
+      "freePlanLock": {
+        "description": "Esta sección queda en modo de solo lectura con el plan gratuito. Mejora tu plan para habilitar todas sus acciones.",
+        "disconnect": "Desconectar {{provider}}",
+        "title": "No habilitado en el plan gratuito",
+        "upgrade": "Mejorar plan"
+      },
       "actions": {
         "add": "Agregar",
         "apply": "Aplicar",
@@ -1564,6 +1595,22 @@
             "editMessages": "Mensajes automáticos",
             "editVoice": "Editar voz",
             "title": "Avatar y voz"
+          },
+          "publication": {
+            "deactivateAction": "Desactivar",
+            "deactivateDescription": "El perfil dejará de estar disponible públicamente. Puedes volver a publicarlo cuando quieras.",
+            "deactivateItem": "Desactivar",
+            "deactivateTitle": "Desactivar perfil",
+            "loadError": "No se pudo comprobar el estado de publicación.",
+            "missingDescription": "Todavía faltan elementos requeridos. Complétalos para habilitar la publicación.",
+            "publishAction": "Publicar",
+            "published": "Publicado",
+            "publishItem": "Publicar",
+            "publishTitle": "Publicar perfil",
+            "readyDescription": "Todos los elementos requeridos están completos. El perfil está listo para publicarse.",
+            "requirementComplete": "Completo",
+            "requirementMissing": "Pendiente",
+            "unpublished": "No Publicado"
           },
           "webVersion": {
             "iframeTitle": "Vista web del chat del perfil",
@@ -1618,9 +1665,11 @@
           "title": "Avatar",
           "toasts": {
             "avatarActivated": "Avatar activado",
-            "generationStarted": "Generación de avatar iniciada"
+            "generationStarted": "Generación de avatar iniciada",
+            "uploaded": "Avatar cargado y activado"
           },
           "unavailableHint": "No disponible para seleccionar",
+          "uploadStaticHint": "Sube una imagen JPG, PNG o WEBP. Se guardará directamente como avatar, sin procesamiento con IA.",
           "uploadHint": "Sube una imagen JPG, PNG o WEBP para generar un nuevo avatar.",
           "validatingFace": "Validando rostro...",
           "variants": {
@@ -1800,6 +1849,11 @@
               "body": "Al desconectar YouTube se eliminarán el canal y los videos incluidos, junto con la selección actual y sus descripciones. Si agregas nuevamente el mismo canal u otro, deberás incluir otra vez los videos que quieras usar y volver a agregar la descripción de cada uno.",
               "title": "¿Desconectar YouTube?"
             }
+          },
+          "freePlan": {
+            "description": "Las integraciones no están incluidas en el plan gratuito.",
+            "providerDescription": "{{provider}} no se puede conectar ni administrar con el plan gratuito. Mejora tu plan para habilitar esta integración.",
+            "title": "{{provider}} no está incluido en el plan gratuito"
           },
           "other": {
             "actionPreview": "El botón público dirá: {{action}}",
@@ -2293,6 +2347,11 @@
         },
         "listSubheader": "Las fuentes se aprueban, sincronizan e indexan automáticamente para las conversaciones del perfil.",
         "listTitle": "Fuentes importadas",
+        "freeLimit": {
+          "description": "El plan gratuito permite una sola fuente por perfil. Puedes eliminar la fuente actual para agregar otra o mejorar tu plan para usar más fuentes.",
+          "title": "Alcanzaste el límite del plan gratuito",
+          "understood": "Entendido"
+        },
         "intro": {
           "description": "Puedes subir una biografía, documentos, textos sobre ti, proyectos, servicios, logros o cualquier archivo compatible con información importante del perfil que estás creando. La información aprobada se usará para responder mejor en las conversaciones.",
           "eyebrow": "Conocimiento del perfil",
@@ -2344,7 +2403,7 @@
         "validation": {
           "fileOrText": "Selecciona un archivo o agrega el texto de la fuente.",
           "nameMax": "El nombre debe tener máximo 150 caracteres",
-          "textMax": "El texto debe tener máximo 50000 caracteres"
+          "textMax": "El texto debe tener máximo {{max}} caracteres"
         }
       },
       "quality": {
@@ -2466,6 +2525,12 @@
           },
           "templates": {
             "description": "Selecciona el estilo visual que usará este perfil.",
+            "freePlan": {
+              "badge": "Plan pago",
+              "description": "{{template}} no está incluido en el plan gratuito. Este plan permite usar únicamente el primer template.",
+              "title": "Template no incluido",
+              "understood": "Entendido"
+            },
             "title": "Template del perfil"
           },
           "title": "Editar template",

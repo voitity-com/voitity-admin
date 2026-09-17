@@ -37,6 +37,7 @@ import { z as zod } from 'zod';
 
 import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
+import { paths } from '@/paths';
 import { logger } from '@/lib/default-logger';
 import type { ProfileKnowledgeSource, ProfileSourcesPage } from '@/lib/profiles/api-client';
 import {
@@ -47,8 +48,10 @@ import {
   uploadProfileCvSource,
 } from '@/lib/profiles/api-client';
 import { notifyProfileQualityChanged } from '@/lib/profiles/profile-quality-events';
+import { getPlanCapabilityNumber, useCurrentPlan } from '@/lib/subscription/use-current-plan';
 import type { ColumnDef } from '@/components/core/data-table';
 import { DataTable } from '@/components/core/data-table';
+import { RouterLink } from '@/components/core/link';
 import { toast } from '@/components/core/toaster';
 import { ProfileGuideTutorialLink } from '@/components/dashboard/help/profile-guide-tutorial-link';
 
@@ -60,11 +63,17 @@ interface Values {
   text: string;
 }
 
-function createSchema(t: (key: string) => string, hasFile: boolean): zod.ZodType<Values> {
+function createSchema(
+  t: (key: string, options?: Record<string, unknown>) => string,
+  hasFile: boolean,
+  maxCharacters: number
+): zod.ZodType<Values> {
   return zod
     .object({
       name: zod.string().max(150, t('dashboard.profiles.detail.sources.validation.nameMax')),
-      text: zod.string().max(50000, t('dashboard.profiles.detail.sources.validation.textMax')),
+      text: zod
+        .string()
+        .max(maxCharacters, t('dashboard.profiles.detail.sources.validation.textMax', { max: maxCharacters })),
     })
     .refine((values) => hasFile || values.text.trim().length > 0, {
       message: t('dashboard.profiles.detail.sources.validation.fileOrText'),
@@ -80,18 +89,24 @@ const defaultValues = {
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
   const { i18n, t } = useTranslation();
+  const { capabilities, isFreePlan, isLoading: isPlanLoading } = useCurrentPlan();
   const language = i18n.resolvedLanguage ?? i18n.language;
+  const maxSourceCharacters = getPlanCapabilityNumber(capabilities, ['source_max_characters']) ?? 50000;
   const [sourcesPage, setSourcesPage] = React.useState<ProfileSourcesPage>({ page: 1, sources: [] });
   const [file, setFile] = React.useState<File | null>(null);
   const [error, setError] = React.useState<string>('');
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = React.useState<boolean>(false);
+  const [isSourceLimitDialogOpen, setIsSourceLimitDialogOpen] = React.useState<boolean>(false);
   const [retryingId, setRetryingId] = React.useState<null | string>(null);
   const [deletingSource, setDeletingSource] = React.useState<null | ProfileKnowledgeSource>(null);
   const [failureSource, setFailureSource] = React.useState<null | ProfileKnowledgeSource>(null);
   const [isDeleting, setIsDeleting] = React.useState<boolean>(false);
   const [previewingId, setPreviewingId] = React.useState<null | string>(null);
-  const schema = React.useMemo(() => createSchema(t, Boolean(file)), [file, t]);
+  const schema = React.useMemo(
+    () => createSchema(t, Boolean(file), maxSourceCharacters),
+    [file, maxSourceCharacters, t]
+  );
   const {
     control,
     handleSubmit,
@@ -243,6 +258,17 @@ export function Page(): React.JSX.Element {
       }),
     [handlePreviewFile, handleRetry, language, previewingId, retryingId, t]
   );
+  const sourceCount = sourcesPage.total ?? sourcesPage.sources.length;
+  const sourceLimit = getPlanCapabilityNumber(capabilities, ['sources_per_profile']) ?? Number.POSITIVE_INFINITY;
+
+  const handleAddSource = React.useCallback((): void => {
+    if (isFreePlan && sourceCount >= sourceLimit) {
+      setIsSourceLimitDialogOpen(true);
+      return;
+    }
+
+    setIsUploadDialogOpen(true);
+  }, [isFreePlan, sourceCount, sourceLimit]);
 
   return (
     <React.Fragment>
@@ -250,193 +276,219 @@ export function Page(): React.JSX.Element {
         <title>{metadata.title}</title>
       </Helmet>
       <Stack spacing={3}>
-        {error ? <Alert color="error">{error}</Alert> : null}
-        <ProfileGuideTutorialLink step="informationSources" />
-        <Box
-          sx={(theme) => ({
-            bgcolor: alpha(theme.palette.primary.main, 0.06),
-            border: '1px solid',
-            borderColor: alpha(theme.palette.primary.main, 0.22),
-            borderLeft: '4px solid',
-            borderLeftColor: 'primary.main',
-            borderRadius: 1,
-            p: { md: 3, xs: 2 },
-          })}
-        >
-          <Stack spacing={2}>
-            <Stack spacing={0.75}>
-              <Typography
-                color="primary.main"
-                sx={{ fontWeight: 700, letterSpacing: 0, textTransform: 'uppercase' }}
-                variant="overline"
-              >
-                {t('dashboard.profiles.detail.sources.intro.eyebrow')}
-              </Typography>
-              <Typography
-                sx={{
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 800,
-                  letterSpacing: 0,
-                }}
-                variant="h5"
-              >
-                {t('dashboard.profiles.detail.sources.intro.title')}
-              </Typography>
-              <Typography color="text.secondary" sx={{ maxWidth: '860px' }} variant="body1">
-                {t('dashboard.profiles.detail.sources.intro.description')}
-              </Typography>
-            </Stack>
-            <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
-              <Typography color="text.secondary" sx={{ fontWeight: 600 }} variant="body2">
-                {t('dashboard.profiles.detail.sources.intro.formats')}
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-                {acceptedSourceFormats.map((format) => (
-                  <Chip color="primary" key={format} label={format} size="small" variant="outlined" />
-                ))}
+          {error ? <Alert color="error">{error}</Alert> : null}
+          <ProfileGuideTutorialLink step="informationSources" />
+          <Box
+            sx={(theme) => ({
+              bgcolor: alpha(theme.palette.primary.main, 0.06),
+              border: '1px solid',
+              borderColor: alpha(theme.palette.primary.main, 0.22),
+              borderLeft: '4px solid',
+              borderLeftColor: 'primary.main',
+              borderRadius: 1,
+              p: { md: 3, xs: 2 },
+            })}
+          >
+            <Stack spacing={2}>
+              <Stack spacing={0.75}>
+                <Typography
+                  color="primary.main"
+                  sx={{ fontWeight: 700, letterSpacing: 0, textTransform: 'uppercase' }}
+                  variant="overline"
+                >
+                  {t('dashboard.profiles.detail.sources.intro.eyebrow')}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontWeight: 800,
+                    letterSpacing: 0,
+                  }}
+                  variant="h5"
+                >
+                  {t('dashboard.profiles.detail.sources.intro.title')}
+                </Typography>
+                <Typography color="text.secondary" sx={{ maxWidth: '860px' }} variant="body1">
+                  {t('dashboard.profiles.detail.sources.intro.description')}
+                </Typography>
+              </Stack>
+              <Stack direction={{ sm: 'row', xs: 'column' }} spacing={1.5} sx={{ alignItems: { sm: 'center' } }}>
+                <Typography color="text.secondary" sx={{ fontWeight: 600 }} variant="body2">
+                  {t('dashboard.profiles.detail.sources.intro.formats')}
+                </Typography>
+                <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                  {acceptedSourceFormats.map((format) => (
+                    <Chip color="primary" key={format} label={format} size="small" variant="outlined" />
+                  ))}
+                </Stack>
               </Stack>
             </Stack>
-          </Stack>
-        </Box>
-        <Card>
-          <CardHeader
-            action={
-              <Button
-                onClick={() => {
-                  setIsUploadDialogOpen(true);
-                }}
-                startIcon={<PlusIcon />}
-                variant="contained"
-              >
-                {t('dashboard.profiles.detail.sources.actions.addSource')}
-              </Button>
-            }
-            subheader={t('dashboard.profiles.detail.sources.listSubheader')}
-            sx={{
-              alignItems: { sm: 'center', xs: 'flex-start' },
-              flexDirection: { sm: 'row', xs: 'column' },
-              gap: { sm: 2, xs: 1.5 },
-              '& .MuiCardHeader-action': { alignSelf: { sm: 'center', xs: 'stretch' }, m: 0 },
-              '& .MuiCardHeader-content': { minWidth: 0 },
-            }}
-            title={t('dashboard.profiles.detail.sources.listTitle')}
-          />
-          {isLoading ? (
-            <Stack sx={{ alignItems: 'center', p: 4 }}>
-              <CircularProgress />
-            </Stack>
-          ) : (
-            <CardContent>
-              {sourcesPage.sources.length ? (
-                <React.Fragment>
-                  <Stack spacing={1.5} sx={{ display: { sm: 'none', xs: 'flex' } }}>
-                    {sourcesPage.sources.map((source) => (
-                      <Box
-                        key={source.id}
-                        sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 2 }}
-                      >
-                        <Stack spacing={1.5}>
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}
-                          >
-                            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-                              <Typography sx={{ overflowWrap: 'anywhere' }} variant="subtitle2">
-                                {source.name}
+          </Box>
+          <Card>
+            <CardHeader
+              action={
+                <Button
+                  disabled={isPlanLoading}
+                  onClick={handleAddSource}
+                  startIcon={<PlusIcon />}
+                  variant="contained"
+                >
+                  {t('dashboard.profiles.detail.sources.actions.addSource')}
+                </Button>
+              }
+              subheader={t('dashboard.profiles.detail.sources.listSubheader')}
+              sx={{
+                alignItems: { sm: 'center', xs: 'flex-start' },
+                flexDirection: { sm: 'row', xs: 'column' },
+                gap: { sm: 2, xs: 1.5 },
+                '& .MuiCardHeader-action': { alignSelf: { sm: 'center', xs: 'stretch' }, m: 0 },
+                '& .MuiCardHeader-content': { minWidth: 0 },
+              }}
+              title={t('dashboard.profiles.detail.sources.listTitle')}
+            />
+            {isLoading ? (
+              <Stack sx={{ alignItems: 'center', p: 4 }}>
+                <CircularProgress />
+              </Stack>
+            ) : (
+              <CardContent>
+                {sourcesPage.sources.length ? (
+                  <React.Fragment>
+                    <Stack spacing={1.5} sx={{ display: { sm: 'none', xs: 'flex' } }}>
+                      {sourcesPage.sources.map((source) => (
+                        <Box
+                          key={source.id}
+                          sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, p: 2 }}
+                        >
+                          <Stack spacing={1.5}>
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              sx={{ alignItems: 'flex-start', justifyContent: 'space-between' }}
+                            >
+                              <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+                                <Typography sx={{ overflowWrap: 'anywhere' }} variant="subtitle2">
+                                  {source.name}
+                                </Typography>
+                                <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="body2">
+                                  {getSourceFileName(source) || t('dashboard.profiles.detail.sources.textOnlySource')}
+                                </Typography>
+                              </Stack>
+                              <Chip
+                                color={sourceStatusColor(source.status)}
+                                label={t(`dashboard.profiles.detail.sources.status.${source.status ?? 'unknown'}`, {
+                                  defaultValue: source.status ?? t('dashboard.profiles.detail.sources.status.unknown'),
+                                })}
+                                size="small"
+                                variant="outlined"
+                              />
+                            </Stack>
+                            <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
+                              <Typography color="text.secondary" variant="caption">
+                                {t('dashboard.profiles.detail.sources.fields.type')}:{' '}
+                                {t(`dashboard.profiles.detail.sources.types.${source.type}`, {
+                                  defaultValue: source.type,
+                                })}
                               </Typography>
-                              <Typography color="text.secondary" sx={{ overflowWrap: 'anywhere' }} variant="body2">
-                                {getSourceFileName(source) || t('dashboard.profiles.detail.sources.textOnlySource')}
+                              <Typography color="text.secondary" variant="caption">
+                                {t('dashboard.profiles.detail.sources.fields.facts')}: {getFactCount(source)}
+                              </Typography>
+                              <Typography color="text.secondary" variant="caption">
+                                {formatDate(source.updated_at ?? source.created_at, language)}
                               </Typography>
                             </Stack>
-                            <Chip
-                              color={sourceStatusColor(source.status)}
-                              label={t(`dashboard.profiles.detail.sources.status.${source.status ?? 'unknown'}`, {
-                                defaultValue: source.status ?? t('dashboard.profiles.detail.sources.status.unknown'),
-                              })}
-                              size="small"
-                              variant="outlined"
-                            />
-                          </Stack>
-                          <Stack direction="row" spacing={2} sx={{ flexWrap: 'wrap', rowGap: 0.5 }}>
-                            <Typography color="text.secondary" variant="caption">
-                              {t('dashboard.profiles.detail.sources.fields.type')}:{' '}
-                              {t(`dashboard.profiles.detail.sources.types.${source.type}`, {
-                                defaultValue: source.type,
-                              })}
-                            </Typography>
-                            <Typography color="text.secondary" variant="caption">
-                              {t('dashboard.profiles.detail.sources.fields.facts')}: {getFactCount(source)}
-                            </Typography>
-                            <Typography color="text.secondary" variant="caption">
-                              {formatDate(source.updated_at ?? source.created_at, language)}
-                            </Typography>
-                          </Stack>
-                          <Stack
-                            direction="row"
-                            spacing={0.5}
-                            sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}
-                          >
-                            <Button
-                              disabled={!hasSourceFile(source) || previewingId === String(source.id)}
-                              onClick={() => {
-                                void handlePreviewFile(source);
-                              }}
-                              size="small"
-                              startIcon={<EyeIcon />}
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              sx={{ alignItems: 'center', flexWrap: 'wrap', rowGap: 0.5 }}
                             >
-                              {t('dashboard.profiles.detail.sources.actions.previewFile')}
-                            </Button>
-                            {source.status === 'failed' && source.retryable ? (
                               <Button
-                                disabled={retryingId === String(source.id)}
-                                onClick={() => void handleRetry(source)}
+                                disabled={!hasSourceFile(source) || previewingId === String(source.id)}
+                                onClick={() => {
+                                  void handlePreviewFile(source);
+                                }}
                                 size="small"
-                                startIcon={<ArrowClockwiseIcon />}
+                                startIcon={<EyeIcon />}
                               >
-                                {t('dashboard.profiles.detail.sources.actions.sync')}
+                                {t('dashboard.profiles.detail.sources.actions.previewFile')}
                               </Button>
-                            ) : null}
-                            {source.status === 'failed' ? (
+                              {source.status === 'failed' && source.retryable ? (
+                                <Button
+                                  disabled={retryingId === String(source.id)}
+                                  onClick={() => void handleRetry(source)}
+                                  size="small"
+                                  startIcon={<ArrowClockwiseIcon />}
+                                >
+                                  {t('dashboard.profiles.detail.sources.actions.sync')}
+                                </Button>
+                              ) : null}
+                              {source.status === 'failed' ? (
+                                <IconButton
+                                  aria-label={t('dashboard.profiles.detail.sources.actions.viewError')}
+                                  color="error"
+                                  onClick={() => {
+                                    setFailureSource(source);
+                                  }}
+                                  size="small"
+                                >
+                                  <WarningCircleIcon />
+                                </IconButton>
+                              ) : null}
                               <IconButton
-                                aria-label={t('dashboard.profiles.detail.sources.actions.viewError')}
+                                aria-label={t('dashboard.profiles.detail.sources.actions.delete')}
                                 color="error"
                                 onClick={() => {
-                                  setFailureSource(source);
+                                  setDeletingSource(source);
                                 }}
                                 size="small"
                               >
-                                <WarningCircleIcon />
+                                <TrashIcon />
                               </IconButton>
-                            ) : null}
-                            <IconButton
-                              aria-label={t('dashboard.profiles.detail.sources.actions.delete')}
-                              color="error"
-                              onClick={() => {
-                                setDeletingSource(source);
-                              }}
-                              size="small"
-                            >
-                              <TrashIcon />
-                            </IconButton>
+                            </Stack>
                           </Stack>
-                        </Stack>
-                      </Box>
-                    ))}
-                  </Stack>
-                  <Box sx={{ display: { sm: 'block', xs: 'none' }, overflowX: 'auto' }}>
-                    <DataTable<ProfileKnowledgeSource> columns={columns} rows={sourcesPage.sources} />
-                  </Box>
-                </React.Fragment>
-              ) : (
-                <Typography color="text.secondary" variant="body2">
-                  {t('dashboard.profiles.detail.sources.empty')}
-                </Typography>
-              )}
-            </CardContent>
-          )}
-        </Card>
+                        </Box>
+                      ))}
+                    </Stack>
+                    <Box sx={{ display: { sm: 'block', xs: 'none' }, overflowX: 'auto' }}>
+                      <DataTable<ProfileKnowledgeSource> columns={columns} rows={sourcesPage.sources} />
+                    </Box>
+                  </React.Fragment>
+                ) : (
+                  <Typography color="text.secondary" variant="body2">
+                    {t('dashboard.profiles.detail.sources.empty')}
+                  </Typography>
+                )}
+              </CardContent>
+            )}
+          </Card>
       </Stack>
+      <Dialog
+        fullWidth
+        maxWidth="xs"
+        onClose={() => {
+          setIsSourceLimitDialogOpen(false);
+        }}
+        open={isSourceLimitDialogOpen}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.sources.freeLimit.title')}</DialogTitle>
+        <DialogContent>
+          <Typography color="text.secondary">
+            {t('dashboard.profiles.detail.sources.freeLimit.description')}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setIsSourceLimitDialogOpen(false);
+            }}
+          >
+            {t('dashboard.profiles.detail.sources.freeLimit.understood')}
+          </Button>
+          <Button component={RouterLink} href={paths.dashboard.settings.billing} variant="contained">
+            {t('dashboard.profiles.freePlanLock.upgrade')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         PaperProps={{ sx: { maxHeight: { sm: 'calc(100% - 64px)', xs: 'calc(100dvh - 32px)' }, overflow: 'hidden' } }}
         fullWidth

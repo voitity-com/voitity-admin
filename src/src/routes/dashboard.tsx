@@ -7,6 +7,7 @@ import { Layout as JobCompanyLayout } from '@/components/dashboard/jobs/company-
 import { Layout as DashboardLayout } from '@/components/dashboard/layout/layout';
 import { Layout as MailLayout } from '@/components/dashboard/mail/layout';
 import { ProfileLayout } from '@/components/dashboard/profiles/profile-layout';
+import { ProfileSubscriptionGate } from '@/components/dashboard/profiles/profile-subscription-gate';
 import { BusinessLayout } from '@/components/dashboard/business/business-layout';
 import { BusinessFeatureGuard } from '@/components/auth/business-feature-guard';
 import { AdminRoleGuard } from '@/components/auth/admin-role-guard';
@@ -489,6 +490,11 @@ export const route: RouteObject = {
         },
         {
           path: ':profileId',
+          element: (
+            <ProfileSubscriptionGate>
+              <Outlet />
+            </ProfileSubscriptionGate>
+          ),
           children: [
             {
               index: true,
