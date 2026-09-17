@@ -26,6 +26,7 @@ import { ChatsCircle as ChatsCircleIcon } from '@phosphor-icons/react/dist/ssr/C
 import { ChatText as ChatTextIcon } from '@phosphor-icons/react/dist/ssr/ChatText';
 import { Check as CheckIcon } from '@phosphor-icons/react/dist/ssr/Check';
 import { Database as DatabaseIcon } from '@phosphor-icons/react/dist/ssr/Database';
+import { Desktop as DesktopIcon } from '@phosphor-icons/react/dist/ssr/Desktop';
 import { Gauge as GaugeIcon } from '@phosphor-icons/react/dist/ssr/Gauge';
 import { Gear as GearIcon } from '@phosphor-icons/react/dist/ssr/Gear';
 import { ImagesSquare as ImagesSquareIcon } from '@phosphor-icons/react/dist/ssr/ImagesSquare';
@@ -120,9 +121,11 @@ export function Page(): React.JSX.Element {
   const [sourcesOpen, setSourcesOpen] = React.useState(false);
   const [sectionEditor, setSectionEditor] = React.useState<null | ProfileSectionEditor>(null);
   const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+  const [webVersionOpen, setWebVersionOpen] = React.useState(false);
   const [canCreateProfile, setCanCreateProfile] = React.useState(false);
   const [chatRevision, setChatRevision] = React.useState(0);
   const chatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
+  const webChatIframeRef = React.useRef<HTMLIFrameElement | null>(null);
 
   React.useEffect(() => {
     if (profileId) {
@@ -201,7 +204,8 @@ export function Page(): React.JSX.Element {
     const handleProfileChatMessage = (event: MessageEvent): void => {
       if (
         event.origin !== publicProfileOrigin ||
-        event.source !== chatIframeRef.current?.contentWindow ||
+        (event.source !== chatIframeRef.current?.contentWindow &&
+          event.source !== webChatIframeRef.current?.contentWindow) ||
         !isProfileAdminActionMessage(event.data)
       ) {
         return;
@@ -397,7 +401,17 @@ export function Page(): React.JSX.Element {
         });
       },
     },
+    {
+      desktopOnly: true,
+      icon: <DesktopIcon />,
+      key: 'web-version',
+      label: String(t('dashboard.profiles.detail.profileChat.webVersion.title')),
+      onClick: () => {
+        setWebVersionOpen(true);
+      },
+    },
   ];
+  const mobileProfileChatNavItems = profileChatNavItems.filter((item) => !item.desktopOnly);
 
   return (
     <React.Fragment>
@@ -497,7 +511,7 @@ export function Page(): React.JSX.Element {
                 zIndex: 'var(--mui-zIndex-speedDial)',
               }}
             >
-              {profileChatNavItems.map((item) => (
+              {mobileProfileChatNavItems.map((item) => (
                 <Tooltip key={item.key} placement="left" title={item.label}>
                   <IconButton
                     aria-label={item.label}
@@ -541,11 +555,49 @@ export function Page(): React.JSX.Element {
             width: 'min(210px, calc(100vw - 32px))',
           }}
         >
-          {profileChatNavItems.map((item) => (
+          {mobileProfileChatNavItems.map((item) => (
             <ProfileChatNavButton {...item} key={item.key} lightBackground />
           ))}
         </Paper>
       </Modal>
+      <Dialog
+        fullWidth
+        maxWidth="xl"
+        onClose={() => {
+          setWebVersionOpen(false);
+        }}
+        open={webVersionOpen}
+      >
+        <DialogTitle>{t('dashboard.profiles.detail.profileChat.webVersion.title')}</DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: 'background.default', p: 0 }}>
+          {profile?.alias && webVersionOpen ? (
+            <Box
+              allow="microphone"
+              component="iframe"
+              ref={webChatIframeRef}
+              sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"
+              src={buildPublicProfileUrl(profile.alias, chatRevision)}
+              sx={{
+                border: 0,
+                display: 'block',
+                height: 'min(800px, calc(100dvh - 190px))',
+                minHeight: 560,
+                width: '100%',
+              }}
+              title={String(t('dashboard.profiles.detail.profileChat.webVersion.iframeTitle'))}
+            />
+          ) : null}
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setWebVersionOpen(false);
+            }}
+          >
+            {t('dashboard.profiles.detail.profileChat.mediaMenu.close')}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <ProfileFormDialog
         onClose={() => {
           setCreateFormOpen(false);
@@ -782,11 +834,13 @@ function getProfileSectionTitle(
 }
 
 function ProfileChatNavButton({
+  desktopOnly = false,
   icon,
   label,
   lightBackground = false,
   onClick,
 }: {
+  desktopOnly?: boolean;
   icon: React.ReactNode;
   label: string;
   lightBackground?: boolean;
@@ -799,6 +853,7 @@ function ProfileChatNavButton({
       sx={{
         borderRadius: 1,
         color: lightBackground ? '#52525b' : 'var(--mui-palette-text-secondary)',
+        display: desktopOnly ? { md: 'inline-flex', xs: 'none' } : 'inline-flex',
         justifyContent: 'flex-start',
         p: '6px 16px',
         textTransform: 'none',
@@ -817,6 +872,7 @@ function ProfileChatNavButton({
 }
 
 interface ProfileChatNavItem {
+  desktopOnly?: boolean;
   icon: React.ReactNode;
   key: string;
   label: string;

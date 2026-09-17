@@ -432,7 +432,7 @@ function UserProfileCell({ row }: { row: ActivationReportUser }): React.JSX.Elem
   return row.profile ? (
     <Button
       component={RouterLink}
-      href={paths.dashboard.profileDetails.profile(String(row.profile.id))}
+      href={paths.dashboard.profileDetails.profileChat(String(row.profile.id))}
       size="small"
       variant="text"
     >

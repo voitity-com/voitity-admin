@@ -39,7 +39,7 @@ export function Page(): React.JSX.Element {
       const targetProfile = getEntryProfile(profiles);
 
       if (targetProfile) {
-        navigate(paths.dashboard.profileDetails.template(String(targetProfile.id)), { replace: true });
+        navigate(paths.dashboard.profileDetails.profileChat(String(targetProfile.id)), { replace: true });
         return;
       }
 
@@ -65,7 +65,7 @@ export function Page(): React.JSX.Element {
         trackAnalyticsEvent('profile_created', { creation_surface: 'profiles_dashboard' });
         toast.success(t('dashboard.profiles.list.toasts.created'));
         saveLastVisitedProfileId(profile.id);
-        navigate(paths.dashboard.profileDetails.template(String(profile.id)), { replace: true });
+        navigate(paths.dashboard.profileDetails.profileChat(String(profile.id)), { replace: true });
       } catch (err) {
         if (!(err instanceof ProfileApiError && Object.keys(err.errors).length > 0)) {
           toast.error(getErrorMessage(err, t('dashboard.profiles.errors.generic')));

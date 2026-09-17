@@ -1561,6 +1561,10 @@
             "editMessages": "Mensajes automáticos",
             "editVoice": "Editar voz",
             "title": "Avatar y voz"
+          },
+          "webVersion": {
+            "iframeTitle": "Vista web del chat del perfil",
+            "title": "Versión web"
           }
         },
         "avatar": {
