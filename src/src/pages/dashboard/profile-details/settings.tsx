@@ -25,14 +25,13 @@ import type { Metadata } from '@/types/metadata';
 import { config } from '@/config';
 import { logger } from '@/lib/default-logger';
 import type { FeatureFlag, FeatureKey } from '@/lib/features/api-client';
-import { getProfileFeatures, isFeatureEffective, updateProfileFeatures } from '@/lib/features/api-client';
+import { getProfileFeatures, updateProfileFeatures } from '@/lib/features/api-client';
 import { toast } from '@/components/core/toaster';
-import { ProfileDomainSettingsPanel } from '@/components/dashboard/profiles/profile-domain-settings';
 import { ProfileWidgetSettingsPanel } from '@/components/dashboard/profiles/profile-widget-settings';
 
 const metadata = { title: `Settings | Profiles | Dashboard | ${config.site.name}` } satisfies Metadata;
 const PROFILE_FEATURE_TOAST_ID = 'profile-feature-setting';
-type SettingsTab = 'domain' | 'features' | 'widget';
+type SettingsTab = 'features' | 'widget';
 
 export function Page(): React.JSX.Element {
   const { profileId = '' } = useParams();
@@ -88,9 +87,7 @@ export function Page(): React.JSX.Element {
     [profileId, t]
   );
 
-  const customDomainsAvailable = isLoading || isFeatureEffective(features, 'domains.custom');
-  const requestedTab: SettingsTab = tabParam === 'widget' || tabParam === 'domain' ? tabParam : 'features';
-  const selectedTab: SettingsTab = requestedTab === 'domain' && !customDomainsAvailable ? 'features' : requestedTab;
+  const selectedTab: SettingsTab = tabParam === 'widget' ? 'widget' : 'features';
   const availableFeatures = features.filter((feature) => feature.available && feature.profile_configurable !== false);
   const productsFeature = availableFeatures.find((feature) => feature.key === 'products') ?? null;
   const integrationFeatures = availableFeatures.filter((feature) => feature.group === 'integrations');
@@ -130,14 +127,9 @@ export function Page(): React.JSX.Element {
         >
           <Tab label={t('dashboard.profiles.detail.settings.tabs.features')} value="features" />
           <Tab label={t('dashboard.profiles.detail.settings.tabs.widget')} value="widget" />
-          {customDomainsAvailable ? (
-            <Tab label={t('dashboard.profiles.detail.settings.tabs.domain')} value="domain" />
-          ) : null}
         </Tabs>
 
-        {selectedTab === 'domain' ? (
-          <ProfileDomainSettingsPanel profileId={profileId} />
-        ) : selectedTab === 'widget' ? (
+        {selectedTab === 'widget' ? (
           <ProfileWidgetSettingsPanel profileId={profileId} />
         ) : (
           <React.Fragment>

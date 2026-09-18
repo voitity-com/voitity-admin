@@ -66,6 +66,9 @@ type SectionRequestState =
   | { data: ProfileInsights; section: 'dashboard'; status: 'success' }
   | { data: ProfileProductInsights; section: 'products'; status: 'success' };
 type SuccessfulSectionState = Extract<SectionRequestState, { status: 'success' }>;
+interface PageProps {
+  embedded?: boolean;
+}
 type MetricKey = keyof Pick<
   ProfileInsightsSummary,
   | 'instagram_external_clicks'
@@ -103,17 +106,21 @@ const metricKeys: MetricKey[] = [
   'youtube_channel_clicks',
 ];
 
-export function Page(): React.JSX.Element {
+export function Page({ embedded = false }: PageProps): React.JSX.Element {
   const { profileId = '' } = useParams();
   const location = useLocation();
   const { i18n, t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialRange = React.useMemo(getInitialRange, []);
-  const from = searchParams.get('from') ?? initialRange.from;
-  const to = searchParams.get('to') ?? initialRange.to;
+  const [embeddedSection, setEmbeddedSection] = React.useState<Section>('dashboard');
+  const [embeddedRange, setEmbeddedRange] = React.useState(initialRange);
+  const routeFrom = searchParams.get('from') ?? initialRange.from;
+  const routeTo = searchParams.get('to') ?? initialRange.to;
+  const from = embedded ? embeddedRange.from : routeFrom;
+  const to = embedded ? embeddedRange.to : routeTo;
   const [draftFrom, setDraftFrom] = React.useState(from);
   const [draftTo, setDraftTo] = React.useState(to);
-  const section = getSection(location.pathname);
+  const section = embedded ? embeddedSection : getSection(location.pathname);
   const [reportState, setReportState] = React.useState<SectionRequestState>(() => ({ section, status: 'loading' }));
   const [productsAvailability, setProductsAvailability] = React.useState<null | {
     profileId: string;
@@ -156,6 +163,11 @@ export function Page(): React.JSX.Element {
 
   const applyRange = (): void => {
     if (!draftFrom || !draftTo || draftFrom > draftTo) return;
+    if (embedded) {
+      setEmbeddedRange({ from: draftFrom, to: draftTo });
+      return;
+    }
+
     setSearchParams({ from: draftFrom, to: draftTo });
   };
   const activeReportState = reportState.section === section ? reportState : null;
@@ -168,12 +180,20 @@ export function Page(): React.JSX.Element {
   const showProductsTab = productsAvailable || (section === 'products' && isLoading);
   const selectedTab = section === 'products' && !showProductsTab ? false : section;
   const tabHref = (target: Section): string => `${paths.dashboard.profileDetails.insights[target](profileId)}?${query}`;
+  const renderTab = (target: Section, label: React.ReactNode): React.JSX.Element =>
+    embedded ? (
+      <Tab label={label} value={target} />
+    ) : (
+      <Tab component={RouterLink} href={tabHref(target)} label={label} value={target} />
+    );
 
   return (
     <React.Fragment>
-      <Helmet>
-        <title>{metadata.title}</title>
-      </Helmet>
+      {embedded ? null : (
+        <Helmet>
+          <title>{metadata.title}</title>
+        </Helmet>
+      )}
       <Stack spacing={3}>
         <Stack spacing={0.5}>
           <Typography variant="h4">{t('dashboard.profiles.detail.insights.title')}</Typography>
@@ -186,30 +206,22 @@ export function Page(): React.JSX.Element {
           <Tabs
             allowScrollButtonsMobile
             aria-label={t('dashboard.profiles.detail.insights.tabs.label')}
+            onChange={
+              embedded
+                ? (_event, value: Section) => {
+                    setEmbeddedSection(value);
+                  }
+                : undefined
+            }
             scrollButtons="auto"
             value={selectedTab}
             variant="scrollable"
           >
-            <Tab
-              component={RouterLink}
-              href={tabHref('dashboard')}
-              label={t('dashboard.profiles.detail.insights.tabs.dashboard')}
-              value="dashboard"
-            />
-            <Tab
-              component={RouterLink}
-              href={tabHref('chats')}
-              label={t('dashboard.profiles.detail.insights.tabs.chats')}
-              value="chats"
-            />
-            {showProductsTab ? (
-              <Tab
-                component={RouterLink}
-                href={tabHref('products')}
-                label={t('dashboard.profiles.detail.insights.tabs.products')}
-                value="products"
-              />
-            ) : null}
+            {renderTab('dashboard', t('dashboard.profiles.detail.insights.tabs.dashboard'))}
+            {renderTab('chats', t('dashboard.profiles.detail.insights.tabs.chats'))}
+            {showProductsTab
+              ? renderTab('products', t('dashboard.profiles.detail.insights.tabs.products'))
+              : null}
           </Tabs>
           <Divider />
           <CardContent>

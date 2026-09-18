@@ -418,12 +418,32 @@ export function Page(): React.JSX.Element {
       },
     },
     {
+      icon: <MicrophoneIcon />,
+      key: 'voice',
+      label: String(t('dashboard.profiles.detail.nav.voice')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setMediaEditor('voice');
+        });
+      },
+    },
+    {
       icon: <DatabaseIcon />,
       key: 'data',
       label: String(t('dashboard.profiles.detail.nav.data')),
       onClick: () => {
         closeMobileNavAndRun(() => {
           setSourcesOpen(true);
+        });
+      },
+    },
+    {
+      icon: <ChatTextIcon />,
+      key: 'messages',
+      label: String(t('dashboard.profiles.detail.nav.messages')),
+      onClick: () => {
+        closeMobileNavAndRun(() => {
+          setMediaEditor('messages');
         });
       },
     },
@@ -858,17 +878,6 @@ export function Page(): React.JSX.Element {
             >
               {t('dashboard.profiles.detail.profileChat.mediaMenu.editVoice')}
             </Button>
-            <Button
-              fullWidth
-              onClick={() => {
-                setMediaMenuOpen(false);
-                setMediaEditor('messages');
-              }}
-              startIcon={<ChatTextIcon />}
-              variant="outlined"
-            >
-              {t('dashboard.profiles.detail.profileChat.mediaMenu.editMessages')}
-            </Button>
           </Stack>
         </DialogContent>
         <DialogActions>
@@ -934,7 +943,7 @@ export function Page(): React.JSX.Element {
             {sectionEditor === 'products' ? <ProfileProductsPage /> : null}
             {sectionEditor === 'chats' ? <ProfileChatsPage /> : null}
             {sectionEditor === 'quality' ? <ProfileQualityPage /> : null}
-            {sectionEditor === 'insights' ? <ProfileInsightsPage /> : null}
+            {sectionEditor === 'insights' ? <ProfileInsightsPage embedded /> : null}
             {sectionEditor === 'settings' ? <ProfileSettingsPage /> : null}
           </React.Suspense>
         </DialogContent>
@@ -1040,6 +1049,7 @@ function ProfileChatNavButton({
         p: '6px 16px',
         textTransform: 'none',
         whiteSpace: 'nowrap',
+        width: lightBackground ? '100%' : 'auto',
         '&:hover': {
           bgcolor: lightBackground ? 'rgba(15, 23, 42, 0.06)' : 'var(--mui-palette-action-hover)',
           color: getProfileChatNavHoverColor(tone, lightBackground),
