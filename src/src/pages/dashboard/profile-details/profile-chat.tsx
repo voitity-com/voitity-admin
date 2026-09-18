@@ -934,7 +934,7 @@ export function Page(): React.JSX.Element {
             {sectionEditor === 'products' ? <ProfileProductsPage /> : null}
             {sectionEditor === 'chats' ? <ProfileChatsPage /> : null}
             {sectionEditor === 'quality' ? <ProfileQualityPage /> : null}
-            {sectionEditor === 'insights' ? <ProfileInsightsPage /> : null}
+            {sectionEditor === 'insights' ? <ProfileInsightsPage embedded /> : null}
             {sectionEditor === 'settings' ? <ProfileSettingsPage /> : null}
           </React.Suspense>
         </DialogContent>
